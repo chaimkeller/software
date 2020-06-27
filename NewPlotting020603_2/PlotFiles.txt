@@ -1,0 +1,6 @@
+"This file is used by Plot. Don't erase it!"
+"X-values"
+"Y-values"
+""
+" 1"," 0"," 0","1","0","1","0","C:\DevStudio\Vb\Nvei_Yaakov_ast_sunrise_2020_timedif.csv","none:none","1"
+" 1"," 0"," 0","1","0","1","0","C:\DevStudio\Vb\Menat-VDW-Ref-dif.txt","none:none","1"

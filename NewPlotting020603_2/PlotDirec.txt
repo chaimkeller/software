@@ -1,0 +1,3 @@
+"This file is used by Plot. Don't erase it!"
+"C:\DevStudio\Vb\NewPlotting020603_2","C:\cities\jerusalem_other_neighborhoods\netz","C:\Windows\SysWOW6"
+1,0,0,0,12,9,1,1

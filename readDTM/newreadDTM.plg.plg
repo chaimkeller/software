@@ -1,0 +1,34 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: newreadDTM - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x409 /fo"Debug/newreadDTM.res" /d "_DEBUG" /d "_AFXDLL" "C:\samples\Vc98\sdk\Graphics\DirectX\readDTM\newreadDTM.rc"" 
+Creating temporary file "C:\WINDOWS\TEMP\RSP8211.TMP" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Fp"Debug/Newrea~1.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\samples\Vc98\sdk\Graphics\DirectX\readDTM\newreadDTM.cpp"
+"C:\samples\Vc98\sdk\Graphics\DirectX\readDTM\newreadDTMDlg.cpp"
+]
+Creating command line "cl.exe @C:\WINDOWS\TEMP\RSP8211.TMP" 
+Creating command line "link.exe /nologo /subsystem:windows /incremental:yes /pdb:"Debug/Newrea~1.pdb" /debug /machine:I386 /out:"Debug/Newrea~1.exe" /pdbtype:sept  .\Debug\newreadDTM.obj .\Debug\newreadDTMDlg.obj .\Debug\StdAfx.obj .\Debug\newreadDTM.res "
+<h3>Output Window</h3>
+Compiling resources...
+Compiling...
+newreadDTM.cpp
+fatal error C1083: Cannot open source file: 'C:\samples\Vc98\sdk\Graphics\DirectX\readDTM\newreadDTM.cpp': No such file or directory
+newreadDTMDlg.cpp
+fatal error C1083: Cannot open source file: 'C:\samples\Vc98\sdk\Graphics\DirectX\readDTM\newreadDTMDlg.cpp': No such file or directory
+Generating Code...
+Error executing cl.exe.
+
+
+
+<h3>Results</h3>
+Newrea~1.exe - 2 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

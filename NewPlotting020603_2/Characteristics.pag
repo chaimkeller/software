@@ -1,0 +1,403 @@
+VERSION 5.00
+Begin VB.PropertyPage Characteristics 
+   Caption         =   "Characteristics"
+   ClientHeight    =   4200
+   ClientLeft      =   0
+   ClientTop       =   0
+   ClientWidth     =   5400
+   PaletteMode     =   0  'Halftone
+   ScaleHeight     =   4200
+   ScaleWidth      =   5400
+   Begin VB.CheckBox chkSelectOnMatch 
+      Caption         =   "SelectOnMatch"
+      Height          =   285
+      Left            =   912
+      TabIndex        =   23
+      ToolTipText     =   "Select the ListItem when the text match the ListItem"
+      Top             =   1632
+      Width           =   1692
+   End
+   Begin VB.ComboBox cboSort 
+      Height          =   288
+      Left            =   3312
+      TabIndex        =   22
+      Text            =   "Combo1"
+      Top             =   2400
+      Width           =   1836
+   End
+   Begin VB.ComboBox cboSelectedAppearence 
+      Height          =   288
+      Left            =   3312
+      TabIndex        =   21
+      Text            =   "Combo1"
+      Top             =   1728
+      Width           =   1836
+   End
+   Begin VB.ComboBox cboListStyle 
+      Height          =   288
+      Left            =   3312
+      TabIndex        =   20
+      Text            =   "Combo1"
+      Top             =   1008
+      Width           =   1836
+   End
+   Begin VB.ComboBox cboAlignment 
+      Height          =   288
+      Left            =   3312
+      TabIndex        =   19
+      Text            =   "Combo1"
+      Top             =   384
+      Width           =   1836
+   End
+   Begin VB.CheckBox chkLocked 
+      Caption         =   "Locked"
+      Height          =   285
+      Left            =   912
+      TabIndex        =   18
+      ToolTipText     =   "No selection can be made when selected (only for viewing purpose)"
+      Top             =   768
+      WhatsThisHelpID =   20
+      Width           =   1500
+   End
+   Begin VB.CheckBox chkNoDeSelect 
+      Caption         =   "NoDeSelect"
+      Height          =   285
+      Left            =   864
+      TabIndex        =   6
+      ToolTipText     =   "there must be at least one selected item in the list box"
+      Top             =   2772
+      WhatsThisHelpID =   20
+      Width           =   1980
+   End
+   Begin VB.CheckBox chkCausesValidation 
+      Caption         =   "CausesValidation"
+      Height          =   285
+      Left            =   912
+      TabIndex        =   4
+      ToolTipText     =   "causes an validate event when lost focus"
+      Top             =   1920
+      WhatsThisHelpID =   20
+      Width           =   2028
+   End
+   Begin VB.CheckBox chkAutoSelectItem 
+      Caption         =   "AutoSelectItem"
+      Height          =   285
+      Left            =   864
+      TabIndex        =   7
+      ToolTipText     =   "select list items without pressing the mouse button"
+      Top             =   3036
+      WhatsThisHelpID =   20
+      Width           =   1884
+   End
+   Begin VB.CheckBox chkCopyColorItemsToIcons 
+      Caption         =   "CopyColorItemsToIcons"
+      Height          =   285
+      Left            =   912
+      TabIndex        =   2
+      ToolTipText     =   "synchronize Backcolors of displayed items with icons (if any)"
+      Top             =   1056
+      WhatsThisHelpID =   20
+      Width           =   2076
+   End
+   Begin VB.CheckBox chkMousePreSelector 
+      Caption         =   "MousePreSelector"
+      Height          =   285
+      Left            =   912
+      TabIndex        =   5
+      ToolTipText     =   "display's an box around the list items"
+      Top             =   2160
+      WhatsThisHelpID =   20
+      Width           =   1980
+   End
+   Begin VB.CheckBox chkListExitOnSelection 
+      Caption         =   "ListExitOnSelection"
+      Height          =   285
+      Left            =   912
+      TabIndex        =   0
+      ToolTipText     =   "send a tab when a selection has take place"
+      Top             =   192
+      WhatsThisHelpID =   20
+      Width           =   2076
+   End
+   Begin VB.TextBox txtItemHeight 
+      Height          =   336
+      Left            =   4512
+      TabIndex        =   9
+      Text            =   "0"
+      Top             =   3216
+      WhatsThisHelpID =   20
+      Width           =   636
+   End
+   Begin VB.CheckBox chkEnabled 
+      Caption         =   "Enabled"
+      Height          =   285
+      Left            =   912
+      TabIndex        =   1
+      ToolTipText     =   "en/disable the FlexComboBox"
+      Top             =   528
+      WhatsThisHelpID =   20
+      Width           =   1740
+   End
+   Begin VB.TextBox txtColumns 
+      Height          =   276
+      Left            =   4752
+      TabIndex        =   10
+      Text            =   "0"
+      ToolTipText     =   "Number of columns that will be displayed in de ListBox"
+      Top             =   2880
+      WhatsThisHelpID =   20
+      Width           =   396
+   End
+   Begin VB.CheckBox chkMultiSelect 
+      Caption         =   "MultiSelect"
+      Height          =   285
+      Left            =   864
+      TabIndex        =   8
+      ToolTipText     =   "allowed to select multiple list items"
+      Top             =   3312
+      WhatsThisHelpID =   20
+      Width           =   1884
+   End
+   Begin VB.CheckBox chkExactMatch 
+      Caption         =   "ExactMatch"
+      Height          =   285
+      Left            =   912
+      TabIndex        =   3
+      ToolTipText     =   "How to compare's the text in the Text property when seek's an ListItem "
+      Top             =   1392
+      WhatsThisHelpID =   20
+      Width           =   1788
+   End
+   Begin VB.Label lblVersion 
+      Alignment       =   1  'Right Justify
+      Height          =   204
+      Left            =   2928
+      TabIndex        =   17
+      Top             =   3888
+      WhatsThisHelpID =   20
+      Width           =   2220
+   End
+   Begin VB.Label Label7 
+      Caption         =   "Sort"
+      Height          =   204
+      Left            =   3360
+      TabIndex        =   16
+      Top             =   2112
+      WhatsThisHelpID =   20
+      Width           =   1404
+   End
+   Begin VB.Label Label5 
+      Caption         =   "SelectedItemsAppearence"
+      Height          =   204
+      Left            =   3360
+      TabIndex        =   15
+      Top             =   1488
+      WhatsThisHelpID =   20
+      Width           =   1980
+   End
+   Begin VB.Label Label4 
+      Caption         =   "ListStyle"
+      Height          =   252
+      Left            =   3360
+      TabIndex        =   14
+      Top             =   768
+      WhatsThisHelpID =   20
+      Width           =   1740
+   End
+   Begin VB.Label Label3 
+      Caption         =   "Alignment"
+      Height          =   204
+      Left            =   3360
+      TabIndex        =   13
+      Top             =   144
+      WhatsThisHelpID =   20
+      Width           =   1548
+   End
+   Begin VB.Label lblRowHeight 
+      Caption         =   "ItemHeight:"
+      Height          =   240
+      Left            =   3360
+      TabIndex        =   12
+      Top             =   3312
+      WhatsThisHelpID =   20
+      Width           =   972
+   End
+   Begin VB.Label lblColumns 
+      Caption         =   "Columns:"
+      Height          =   240
+      Left            =   3360
+      TabIndex        =   11
+      Top             =   2880
+      WhatsThisHelpID =   20
+      Width           =   876
+   End
+End
+Attribute VB_Name = "Characteristics"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = True
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = True
+Option Explicit
+Private Sub chkSelectOnMatch_Click()
+    Changed = True
+End Sub
+
+
+
+
+'Developed by Ted Schopenhouer   ted.schopenhouer@12move.nl
+
+'with ideas and suggestions from Hans Scholten Wonen@Wonen.com
+'                                Eric de Decker secr VB Belgie
+'                                E.B. our API Killer  ProFinance Woerden
+'                                Willem secr VBgroup Ned vbg@vbgroup.nl
+
+'This sources may be used freely without the intention of commercial distribution. For all
+'For ALL other use of this control YOU MUST HAVE PERMISSION of the developer.
+
+Private Sub chkLocked_Click()
+Changed = True
+End Sub
+
+Private Sub chkNoDeSelect_Click()
+Changed = True
+End Sub
+
+Private Sub chkCausesValidation_Click()
+Changed = True
+End Sub
+
+Private Sub chkAutoSelectItem_Click()
+Changed = True
+End Sub
+
+Private Sub chkCopyColorItemsToIcons_Click()
+Changed = True
+End Sub
+
+Private Sub chkMousePreSelector_Click()
+Changed = True
+End Sub
+
+Private Sub chkListExitOnSelection_Click()
+Changed = True
+End Sub
+
+Private Sub chkEnabled_Click()
+Changed = True
+End Sub
+
+Private Sub cboAlignment_Click()
+Changed = True
+End Sub
+
+Private Sub cboSelectedAppearence_Click()
+Changed = True
+End Sub
+
+Private Sub cboListStyle_Click()
+Changed = True
+End Sub
+
+Private Sub txtItemHeight_Change()
+Changed = True
+End Sub
+
+Private Sub txtColumns_Change()
+Changed = True
+End Sub
+
+Private Sub chkMultiSelect_Click()
+Changed = True
+End Sub
+
+Private Sub chkExactMatch_Click()
+Changed = True
+End Sub
+
+Private Sub cboSort_Click()
+Changed = True
+End Sub
+
+Private Sub PropertyPage_ApplyChanges()
+    SelectedControls(0).SelectOnMatch = (chkSelectOnMatch.Value = vbChecked)
+SelectedControls(0).Locked = (chkLocked.Value = vbChecked)
+SelectedControls(0).NoDeSelect = (chkNoDeSelect.Value = vbChecked)
+SelectedControls(0).CausesValidation = (chkCausesValidation.Value = vbChecked)
+SelectedControls(0).ItemHeight = Val(txtItemHeight.Text)
+SelectedControls(0).Enabled = (chkEnabled.Value = vbChecked)
+SelectedControls(0).Columns = Abs(Val(txtColumns.Text))
+SelectedControls(0).MultiSelect = (chkMultiSelect.Value = vbChecked)
+SelectedControls(0).ExactMatch = (chkExactMatch.Value = vbChecked)
+SelectedControls(0).Sort = cboSort.ListIndex
+SelectedControls(0).Alignment = cboAlignment.ListIndex
+SelectedControls(0).ListStyle = cboListStyle.ListIndex
+'SelectedControls(0).SelectedAppearence = cboSelectedAppearence.ListIndex
+SelectedControls(0).MousePreSelector = (chkMousePreSelector = vbChecked)
+SelectedControls(0).ListExitOnSelection = (chkListExitOnSelection = vbChecked)
+SelectedControls(0).AutoSelectItem = (chkAutoSelectItem And vbChecked)
+SelectedControls(0).CopyColorItemsToIcons = (chkCopyColorItemsToIcons And vbChecked)
+Call PropertyPage_SelectionChanged
+End Sub
+
+Private Sub PropertyPage_SelectionChanged()
+    chkSelectOnMatch.Value = (SelectedControls(0).SelectOnMatch And vbChecked)
+chkLocked.Value = (SelectedControls(0).Locked And vbChecked)
+chkNoDeSelect.Value = (SelectedControls(0).NoDeSelect And vbChecked)
+chkCausesValidation.Value = (SelectedControls(0).CausesValidation And vbChecked)
+lblVersion = "Version: " & AppVersion()
+chkAutoSelectItem.Value = (SelectedControls(0).AutoSelectItem And vbChecked)
+chkCopyColorItemsToIcons.Value = (SelectedControls(0).CopyColorItemsToIcons And vbChecked)
+chkMousePreSelector.Value = (SelectedControls(0).MousePreSelector And vbChecked)
+chkListExitOnSelection.Value = (SelectedControls(0).ListExitOnSelection And vbChecked)
+With txtItemHeight
+   Set PropertyPage.Font = SelectedControls(0).FontUnselected
+   .ToolTipText = "Height Of UnSelected: " & CStr(PropertyPage.TextHeight("X"))
+   Set PropertyPage.Font = SelectedControls(0).FontSelected
+   .ToolTipText = .ToolTipText & ", Selected: " & CStr(PropertyPage.TextHeight("X"))
+   Set PropertyPage.Font = SelectedControls(0).FontDisabeled
+   .ToolTipText = .ToolTipText & ", Disabeled: " & CStr(PropertyPage.TextHeight("X"))
+   .ToolTipText = "Height of List Items; (if 0, Maximum of next three fonts is choosen) " & .ToolTipText
+   .Text = SelectedControls(0).ItemHeight
+End With
+chkEnabled.Value = (SelectedControls(0).Enabled And vbChecked)
+txtColumns.Text = SelectedControls(0).Columns
+chkMultiSelect.Value = (SelectedControls(0).MultiSelect And vbChecked)
+chkExactMatch.Value = (SelectedControls(0).ExactMatch And vbChecked)
+
+With cboAlignment
+   .Clear
+   .AddItem vbLeftJustify & " - vbLeftJustify"
+   .AddItem vbRightJustify & " - vbRightJustify"
+   .AddItem vbCenter & " - vbCenter"
+   .ListIndex = SelectedControls(0).Alignment
+End With
+
+With cboListStyle
+   .Clear
+   .AddItem "Normal"
+   .AddItem "CheckBox"
+   .AddItem "PictureBox"
+   .AddItem "ImageBox"
+   .ListIndex = SelectedControls(0).ListStyle
+End With
+
+With cboSelectedAppearence
+   .Clear
+   .AddItem "0 Flat"
+   .AddItem "3 D"
+   '.ListIndex = SelectedControls(0).SelectedAppearence
+End With
+
+With cboSort
+   .Clear
+   .AddItem "None"
+   .AddItem "Ascending"
+   .AddItem "Descending"
+   .ListIndex = SelectedControls(0).Sort
+End With
+Changed = False
+End Sub
+
+   
+

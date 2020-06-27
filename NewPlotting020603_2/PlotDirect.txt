@@ -1,0 +1,2 @@
+"This file is used by Plot. Don't erase it!"
+"C:\Program Files\DevStudio\Vb","D:\cities\jerusalem\netz","C:\Program Files\Accessories\"
