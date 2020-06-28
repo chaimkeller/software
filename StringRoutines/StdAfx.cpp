@@ -833,7 +833,7 @@ __asm{
 
 //================================================================================
 	////////////////process inputed parameters for php pages///////////////
-	if (argc != 26) // && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug as console application
+	if (argc != 26 && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug as console application
 	{
 		/* working as CGI  */
 
@@ -992,7 +992,7 @@ __asm{
 		//fprintf(stdout, "%s\n", TableType );
 
    }
- /*<--comment for CGI, uncomment for console application debugging
+ ///*<--comment for CGI, uncomment for console application debugging
 	else if (argc == 1) //not using console
 	{
 		strcpy( TableType, "BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
@@ -1031,8 +1031,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 10; //10;//10; //0;//10;//0; //10; //10;
+		types = 0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -6183,7 +6183,8 @@ short SunriseSunset( short types, short ExtTemp[] )
 {
 
 	short ier, nsetflag, i,tabletyp;
-	double kmxo, kmyo, hgt, aprn;
+	double kmxo, kmyo, lt, lg, hgt, aprn;
+	int N, E;
 	double re, rekm;
 	short MinTemp[12],AvgTemp[12],MaxTemp[12];
 
@@ -6265,7 +6266,24 @@ short SunriseSunset( short types, short ExtTemp[] )
                 break;
 		}
 
-		ier = Temperatures(kmyo, -kmxo, MinTemp, AvgTemp, MaxTemp);
+		if (!geo) 
+		{
+			//EY, need to convert ITM to WGS84 
+			N = (int)(kmyo * 1000 + 1000000); 
+			E = (int)(kmxo * 1000);
+			//use J. Gray's conversion from ITM to WGS84
+			//source: http://www.technion.ac.il/~zvikabh/software/ITM/isr84lib.cpp
+			ics2wgs84(N, E, &lt, &lg); 
+			lg = -lg; //convert this program's coordinate system where East longitude is positive
+		} 
+		else 
+		{
+
+			lt = kmyo;
+			lg = kmxo;
+		}
+
+		ier = Temperatures(lt, -lg, MinTemp, AvgTemp, MaxTemp);
 
 		if (ier) //error detected
 		{
@@ -6414,6 +6432,23 @@ short SunriseSunset( short types, short ExtTemp[] )
 			case 11:
 				nsetflag = 1; //visible sunset using 30 m DTM
 				break;
+		}
+
+		if (!geo) 
+		{
+			//EY, need to convert ITM to WGS84 
+			N = (int)(kmyo * 1000 + 1000000); 
+			E = (int)(kmxo * 1000);
+			//use J. Gray's conversion from ITM to WGS84
+			//source: http://www.technion.ac.il/~zvikabh/software/ITM/isr84lib.cpp
+			ics2wgs84(N, E, &lt, &lg); 
+			lg = -lg; //convert this program's coordinate system where East longitude is positive
+		} 
+		else 
+		{
+
+			lt = kmyo;
+			lg = kmxo;
 		}
 
 		ier = Temperatures(kmyo, -kmxo, MinTemp, AvgTemp, MaxTemp);
@@ -12707,8 +12742,8 @@ short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *
     	     }
     	}
 
-	fgets_CR( doclin, 255, stream ); //read header line of text
-	fgets_CR( doclin, 255, stream ); //read scan details as one line of text
+	fgets_CR( doclin, 255, stream ); //read first header line of text mostly containly text, but sometimes the mean temperataure
+									 //used for calculating the terrestrial refraction
 
 	if (VDW_REF) {
 		//determine version of profile file in order to remove the terrestrial refraction
@@ -12732,6 +12767,9 @@ short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *
 			Tground = atof(Tgroundch);
 		}
 	}
+
+	fgets_CR( doclin, 255, stream ); //read second line containing details of scan as one line of text
+
 
 	fgets_CR( doclin, 255, stream ); //read first line of data to determine angle range
 	short doclen = strlen(doclin);
@@ -13198,6 +13236,8 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 	short pos1 = 0, pos2 = 0, numzman = 0, numsort = 0;
 	double avekmxzman = 0, avekmyzman = 0, avehgtzman = 0;
 	short MinTemp[12], AvgTemp[12], MaxTemp[12];
+	double lt,lg;
+	int N,E;
 
 //	bool adhocset;
 
@@ -13430,7 +13470,24 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 	//now calculate and print simultaneous sunrise and sunset tables
 	//and/or the requested zemanim
 
-	short ier = Temperatures(avekmyzman, -avekmxzman, MinTemp, AvgTemp, MaxTemp);
+	if (!geo) 
+	{
+		//EY, need to convert ITM to WGS84 
+		N = (int)(avekmyzman * 1000 + 1000000); 
+		E = (int)(avekmxzman * 1000);
+		//use J. Gray's conversion from ITM to WGS84
+		//source: http://www.technion.ac.il/~zvikabh/software/ITM/isr84lib.cpp
+		ics2wgs84(N, E, &lt, &lg); 
+		lg = -lg; //convert this program's coordinate system where East longitude is positive
+	} 
+	else 
+	{
+
+		lt = avekmyzman;
+		lg = avekmxzman;
+	}
+
+	short ier = Temperatures(lt, -lg, MinTemp, AvgTemp, MaxTemp);
 
 	if (ier) //error detected
 	{
@@ -17602,6 +17659,7 @@ T50:
 			fclose(stream);
 
 		}else{
+			return Tempmode * 12 + i; //return index of missing bill file for error report
 		}
      
 	}
