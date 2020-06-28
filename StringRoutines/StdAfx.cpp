@@ -17602,7 +17602,6 @@ T50:
 			fclose(stream);
 
 		}else{
-			return -1;
 		}
      
 	}
