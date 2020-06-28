@@ -13347,7 +13347,7 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 	}
 
 	if ( WriteTables(TitleZman, numsort, numzman,
-		             &avekmxzman, &avekmyzman, &avehgtzman,
+		             &lg, &lt, &avehgtzman,
 					 MinTemp, AvgTemp, MaxTemp, ExtTemp ) )
 	{
 		//error in parameters detected
