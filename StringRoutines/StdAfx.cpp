@@ -34,9 +34,6 @@
 #define BEG_SUN_APPROX 1950 //first year to use simplified ephem of sun
 #define END_SUN_APPROX 2050 //last year to use simpliefied ephem of sun
 //#define MAX_ANGULAR_RANGE 45 //maximum azimuth range from -MAX_ANGULAR_RANGE to MAX_ANGULAR_RANGE
-//////////////////////////////////////////////////////////////////////////////////
-bool Linux = true; //default platform is Linux (UNIX)
-/////////////////////////////////////
 
 //**********declare functions*****************/
 
@@ -134,15 +131,15 @@ void AstronRefract( double *hgt, double *lt, short *nweather,
 				    double *dy, short *ns1, short *ns2,
 					double *air, double *a1, short mint[], short avgt[], short maxt[],
 					double *vdwsf, double *vdwrefr, double *vbweps, short *nyr);
-void InitWeatherRegions( bool *geo, double *kmxo, double *kmyo, double *lt,
-						 double *lg, short *nweather, short *ns1, short *ns2,
+void InitWeatherRegions( bool *geo, double *lt, double *lg, 
+						 short *nweather, short *ns1, short *ns2,
 						 short *ns3, short *ns4, double WinTemp,
 						 short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 
 short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *meantemp );
 
 ////////////////////////netzski6///////////////////////////////////////
-short netzski6(char *fileon, double kmxo, double kmyo, double hgt, double aprn
+short netzski6(char *fileon, double lg, double lt, double hgt, double aprn
 			              , float geotd, short nsetflag, short nfil, 
 						  short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 //////////////////////AstroNoon///////////////////////////////////////////////
@@ -182,7 +179,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 				 double *avekmxzman, double *avekmyzman, double *avehgtzman,
 		         short *ns1, short *ns2, short *ns3, short *ns4, short *nweather,
 				 short *numzman, short *numsort, double *t6, double *t3, double *t3sub99,
- 				 double *jdn, int *nyl, short *mday, short *mon, double *lt, double *lg,
+ 				 double *jdn, int *nyl, short *mday, short *mon,
 				 short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 ////////////////////////////cal (for zemanim)/////////////////////////////////////////////////////////
 short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *hgto, short *yro, double *td,
@@ -190,7 +187,7 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 		  double *aas, double *es, double *ob, double *fdy, double *ec, double *e2c, short *ns1,
 		  short *ns2, short *ns3, short *ns4, short *nweather, double *avekmxzman, double *avekmyzman,
 		  double *avehgtzman, double *t6, double *t3, double *t3sub, double *t3sub99,
-		  double *jdn, int *nyl, short *mday, short *mon, double *lt, double *lg,
+		  double *jdn, int *nyl, short *mday, short *mon, 
 		  short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 
 /////////////////ephem functions//////////////////////////////
@@ -833,24 +830,16 @@ __asm{
 
 //================================================================================
 	////////////////process inputed parameters for php pages///////////////
-	if (argc != 26 && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug as console application
+	if (argc != 26) // && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug as console application
 	{
 		/* working as CGI  */
 
-		//diagnostics
-		//WriteHtmlHeader();
-		//fprintf(stdout, "%s\n", "here1" );
-		//fprintf(stdout, "%s\n", "</html>");
-		//return 0;
-
-
-	   if (cgiinput( &NumCgiInputs )) //something wrong with cgi
-	   {
+		if (cgiinput( &NumCgiInputs )) //something wrong with cgi
+		{
 			strcpy( drivweb, "/home/chkeller/domains/chaitables.com/public_html/cgi-bin/" ); //default path to log file directory
-	   	    ErrorHandler(0,0);
-	   	    return -1;
-	   }
-		//fprintf(stdout, "%s\n", "here2" );
+			ErrorHandler(0,0);
+			return -1;
+		}
 
 		try
 		{
@@ -865,21 +854,10 @@ __asm{
             ErrorHandler(0, ier);
             exit(-1);
         }
-		//fprintf(stdout, "%s\n", "here3" );
 
 		UserNumber = atoi(getpair(&NumCgiInputs, "cgi_UserNumber")); //usernumber
 		g_yrheb = atoi(getpair(&NumCgiInputs, "cgi_yrheb")); //Hebrew Year
 
-		//fprintf(stdout, "%s\n", "here4" );
-		/*
-		zmanyes = 1;
-		if (strstr(Trim(getpair(&NumCgiInputs, "cgi_zmanyes")), "Not found") )
-		{
-				//checkbox is OFF so no cgi input returned for cgi_zmanyes
-		//Therefore getpair returns "Error - Not found"
-		zmanyes = 0;
-		}
-		*/
 		typezman = atoi(getpair(&NumCgiInputs, "cgi_typezman")); // acc. to which opinion
 		zmanyes = 0;
 		if (typezman != -1) zmanyes = 1;
@@ -900,12 +878,6 @@ __asm{
 			yesmetro = 0; //found city area
 		}
 		
-		//fprintf(stdout, "%s\n", "here5" );
-
-/*
-		yesmetro = atoi(getpair(&NumCgiInputs, "cgi_yesmetro"));  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
-*/
-
 		//Place Naee, test lat,lon, hgt inputs
 		strcpy ( eroscityin, Trim(getpair(&NumCgiInputs, "cgi_Placename")) ); //Place Name
 		//remove the added underlines
@@ -926,20 +898,6 @@ __asm{
         }
 
 		geotz = atof(getpair(&NumCgiInputs, "cgi_geotz"));//-8;
-		/*
-		sunsyes = atoi(getpair(&NumCgiInputs, "cgi_sunyes")); //= 1 print individual sunrise/sunset tables
-					 //= 0 don't print individual sunrise/sunset tables
-        */
-
-		///////////////////astronomical type//////////////////////
-		//not used for cgi, rather define as specific "types" below
-		/*
-		short astnum = 0;
-		astnum = atoi(getpair(&NumCgiInputs, "cgi_ast")); //= 0 for false, = 1 for true
-		ast = false; //= false for mishor, = true for astronomical
-		if (astnum) ast = true;
-		*/
-		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
 		types = atoi(getpair(&NumCgiInputs, "cgi_types")); //8;
@@ -986,13 +944,8 @@ __asm{
 
 		CGI = 1;
 
-		//diagnostics
-		//fprintf(stdout, "%s\n", eroslatitudestr );
-		//fprintf(stdout, "%s\n", eroslongitudestr );
-		//fprintf(stdout, "%s\n", TableType );
-
    }
- ///*<--comment for CGI, uncomment for console application debugging
+/*<--comment for CGI, uncomment for console application debugging
 	else if (argc == 1) //not using console
 	{
 		strcpy( TableType, "BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
@@ -1351,20 +1304,7 @@ __asm{
 
 			fgets_CR(doclin, 255, stream2); //read in line of text
 			strcpy( hebcityname, doclin );
-/*
-			if (Linux)
-			{
-				if (langMetro == 0)
-				{
-				  IsoToUnicode( MetroArea, buff );
-				  strcpy( MetroArea, buff );
-				}
-				IsoToUnicode( hebcityname, buff );
-				strcpy( hebcityname, buff );
-			}
-*/
-//			if ( ( langMetro == 0 && strstr(MetroArea, engcityname) ) ||
-//				 ( langMetro == 1 && strstr(MetroArea, hebcityname) )    )
+
 			if ( ( !HebrewInterface && !strcmp(MetroArea, engcityname) ) ||
 				  (  HebrewInterface && !strcmp(MetroArea, hebcityname) )    )
 				{
@@ -2022,13 +1962,6 @@ short RdHebStrings()
 
 				if (strlen(doclin) > 1 ) //ignore blank lines containing just "\n"
 				{
-/*
-					if (Linux) //convert DOS Hebrew to ISO Hebrew
-					{
-						IsoToUnicode( doclin, buff );
-						strcpy( doclin, buff );
-					}
-*/
 					switch (flgheb)
 					{
 						case 0:
@@ -2070,13 +2003,6 @@ short RdHebStrings()
 		{
 			fgets_CR( doclin, 255, stream );
 			strcpy( &monthh[0][i][0], doclin );
-/*
-			if (Linux) //convert to ISO Hebrew string
-			{
-				IsoToUnicode( &monthh[0][i][0], doclin );
-				strcpy( &monthh[0][i][0], doclin );
-			}
-*/
 		}
 		fclose( stream );
 	}
@@ -2281,25 +2207,11 @@ short LoadParshiotNames()
 						case 0:
 						case 1:
 							sprintf( &arrStrParshiot[PMode][nn][0], "%s%s", doclin, "\0");
-/*
-							if (Linux) //convert DOS Hebrew to ISO Hebrew
-							{
-								IsoToUnicode( &arrStrParshiot[PMode][nn][0], buff );
-								strcpy( &arrStrParshiot[PMode][nn][0], buff );
-							}
-*/
 							nn++;
 							break;
 						case 2:
 						case 3:
 							sprintf( &holidays[PMode - 2][numhol][0], doclin, "\0");
-/*
-							if (Linux) //convert DOS Hebrew to ISO Hebrew
-							{
-								IsoToUnicode( &holidays[PMode - 2][numhol][0], buff );
-								strcpy( &holidays[PMode - 2][numhol][0], buff );
-							}
-*/
 							numhol++;
 							break;
 						default:
@@ -3294,7 +3206,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 	short iheb = 0;
 
 	//////////////variables from newzemanim/cal//////////
-	double jdn, lt, lg;
+	double jdn;
 	int nyl;
 	short mday, mon;
 
@@ -3539,7 +3451,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 					&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
 					&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
 					&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
-					&jdn, &nyl, &mday, &mon, &lt, &lg, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+					&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
 				{
 					//exectued without error, all the zemanim strings are in array c_zmantimes
 					//add them to table using parseit
@@ -3595,7 +3507,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 					&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
 					&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
 					&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
-					&jdn, &nyl, &mday, &mon, &lt, &lg, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+					&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
 				{
 					//exectued without error, all the zemanim strings are in array c_zmantimes
 					//add them to table using parseit
@@ -3650,7 +3562,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 					&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
 					&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
 					&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
-					&jdn, &nyl, &mday, &mon, &lt, &lg, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+					&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
 				{
 					//exectued without error, all the zemanim strings are in array c_zmantimes
 					//add them to table using parseit
@@ -5871,13 +5783,7 @@ short calnearsearch( char *bat, char *sun )
 		Trim(Replace( hebcityname, '\"', ' ' )); //get rid of "\"
 		geotz = atof( &strarr[1][0] );
 	}
-/*
-	if (Linux) //convert DOS Hebrew to ISO Hebrew
-	{
-		IsoToUnicode( hebcityname, buff );
-		strcpy( hebcityname, buff );
-	}
-*/
+
 	//search for vantage points within the search radius
 	while( ! feof(stream) )
 	{
@@ -6268,7 +6174,7 @@ short SunriseSunset( short types, short ExtTemp[] )
 
 		if (!geo) 
 		{
-			//EY, need to convert ITM to WGS84 
+			//EY, so need to convert ITM to WGS84 lt,lg
 			N = (int)(kmyo * 1000 + 1000000); 
 			E = (int)(kmxo * 1000);
 			//use J. Gray's conversion from ITM to WGS84
@@ -6276,9 +6182,9 @@ short SunriseSunset( short types, short ExtTemp[] )
 			ics2wgs84(N, E, &lt, &lg); 
 			lg = -lg; //convert this program's coordinate system where East longitude is positive
 		} 
-		else 
+		else
 		{
-
+			//geo coordinates are identical with the kmx,kmy coordinates
 			lt = kmyo;
 			lg = kmxo;
 		}
@@ -6291,7 +6197,7 @@ short SunriseSunset( short types, short ExtTemp[] )
 			return -1;
 		}
 
-		ier = netzski6( myfile, kmxo, kmyo, hgt, aprn, geotz, nsetflag, i, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 		if (ier) //error detected
 		{
@@ -6444,14 +6350,14 @@ short SunriseSunset( short types, short ExtTemp[] )
 			ics2wgs84(N, E, &lt, &lg); 
 			lg = -lg; //convert this program's coordinate system where East longitude is positive
 		} 
-		else 
+		else
 		{
-
+			//geo coordinates are identical with the kmx,kmy coordinates
 			lt = kmyo;
 			lg = kmxo;
 		}
 
-		ier = Temperatures(kmyo, -kmxo, MinTemp, AvgTemp, MaxTemp);
+		ier = Temperatures(lt, -lg, MinTemp, AvgTemp, MaxTemp);
 
 		if (ier) //error detected
 		{
@@ -6459,7 +6365,7 @@ short SunriseSunset( short types, short ExtTemp[] )
 			return -1;
 		}
 
-		ier = netzski6( myfile, kmxo, kmyo, hgt, aprn, geotz, nsetflag, i, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 		if (ier) //error detected
 		{
@@ -9183,15 +9089,6 @@ short LoadTitlesSponsors()
 				sprintf( &SponsorLine[4][0], "%s%s", doclin, "\0" ); //Sponsor's internet address
 				fgets_CR(doclin, 255, stream); //read in line of text
 				sprintf( &SponsorLine[5][0], "%s%s", doclin, "\0" ); //Sponsor's name
-/*
-				if (Linux) //convert DOS Hebrew to ISO Hebrew
-				{
-					IsoToUnicode( &SponsorLine[0][0], buff );
-					strcpy( &SponsorLine[0][0], buff );
-					IsoToUnicode( &SponsorLine[1][0], buff );
-					strcpy( &SponsorLine[1][0], buff );
-				}
-*/
 			}
 
 			if ((strstr( doclin,"[titles]")) && optionheb)
@@ -9210,13 +9107,7 @@ short LoadTitlesSponsors()
 					fgets_CR(doclin, 255, stream); //read in line of text
 				}
 					strcpy( TitleLine, doclin );
-/*
-				if (Linux) //convert DOS Hebrew to ISO Hebrew
-				{
-					IsoToUnicode( TitleLine, buff );
-					strcpy( TitleLine, buff );
-				}
-*/
+
 				strncpy(buff, &heb3[1][0], 1);
 				buff[1] = 0;
 
@@ -9253,25 +9144,11 @@ short LoadTitlesSponsors()
 			{
 				strcpy( TitleLine, &heb1[2][0] );  //Chai in Hebrew
 				strcat( TitleLine, "\0");
-/*
-				if (Linux) //convert DOS Hebrew to ISO Hebrew
-				{
-					IsoToUnicode( TitleLine, buff );
-					strcpy( TitleLine, buff );
-				}
-*/
 			}
 			else
 			{
 				strcpy( TitleLine, &heb1[4][0] );  //Bikurei Ysoef in Hebrew
 				strcat( TitleLine, "\0");
-/*
-				if (Linux) //convert DOS Hebrew to ISO Hebrew
-				{
-					IsoToUnicode( TitleLine, buff );
-					strcpy( TitleLine, buff );
-				}
-*/
 			}
 			//memory of Seidee in Hebrew Unicode
 			strcpy( &SponsorLine[1][0], "&#1500;&#1494;&#1499;&#1512;&#1493;&#1503;&#32;&#1506;&#1493;&#1500;&#1501;&#32;&#1493;&#1500;&#1506;&#34;&#1504;&#32;&#1488;&#1489;&#1512;&#1492;&#1501;&#32;&#1497;&#1510;&#1495;&#1511;&#32;&#1489;&#1503;&#32;&#1510;&#1489;&#1497;&#32;&#1494;&#34;&#1500;" );
@@ -9403,7 +9280,6 @@ short LoadConstants( short zmanyes, short typezman, char filzman[] )
 
 				//////////////platform////////////////////
 				fgets_CR( doclin, 255, stream);
-				if (InStr(strlwr(doclin), "windows") ) Linux = false;
 				ipath = 0;
 				break;
 
@@ -9845,7 +9721,7 @@ char *IsoToUnicode( char *str )
 
 
 /////////////////////netzski6////////////////////////////////////////
-short netzski6(char *fileon, double kmxo, double kmyo, double hgt, double aprn
+short netzski6(char *fileon, double lg, double lt, double hgt, double aprn
 			              , float geotd, short nsetflag, short nfil,
 						  short mint[], short avgt[], short maxt[], short ExtTemp[] )
 //////////////////////////////////////////////////////////////////////
@@ -9870,27 +9746,27 @@ short netzski6(char *fileon, double kmxo, double kmyo, double hgt, double aprn
     double elevintx, elevinty, d__, p, t, z__;
     short nplaceflg;
     bool adhocrise;
-    double a1, t3, t6, lg;//, df; ra, e2, e3, e4,
-    double ac, mc, ec, e2c, ap, mp, ob;//, ob1;
+    double a1, t3, t6;
+    double ac, mc, ec, e2c, ap, mp, ob;
 
     short ne;
-    double td, tf, es, lr, dy, lt, ms; //, et;
+    double td, tf, es, lr, dy, ms;
     short nn;
-    double pt, al1, dy1; //sr
+    double pt, al1, dy1; 
     short ns1, ns2, ns3, ns4;
-    double sr1;//, sr2;
+    double sr1;
     short nac;
     double aas;
     double air, ref;
-    double azi, eps; //fdy
-    short nyd, nyr, nyf;//, nyl;
-    double al1o, alt1, azi1, azi2; //,tss, chd62;
+    double azi, eps; 
+    short nyd, nyr, nyf;
+    double al1o, alt1, azi1, azi2; 
 
     double hran;
     double hgto;
     double t3sub;
 
-    double dobss;//, lnhgt;
+    double dobss;;
     short nyear;
     double dobsy;
     short niter, nloop;
@@ -9901,7 +9777,7 @@ short netzski6(char *fileon, double kmxo, double kmyo, double hgt, double aprn
     short nlpend, nfound;
     short nloops, ndystp;
     double refrac1;
-    short nyrstp;//, nyltst;//, nyrtst;
+    short nyrstp;
     double stepsec, elevint;
     short nacurr;
 	double jdn, hrs, ra;
@@ -9966,6 +9842,7 @@ short netzski6(char *fileon, double kmxo, double kmyo, double hgt, double aprn
 /* --------------------------<<<<USER INPUT>>>---------------------------------- */
 /* Version 19: Now uses VDW raytracing if VDW_REF = true
 /*			   for that method reads the WorldClim temperatures
+/*			   For EY, ITM coordinates were already converted to WGS84 lt, lg
 /* ---------------------------------------------------------------------------------- */ 
     nplaceflg = 1;
 /*                                  '=0 calculates earliest sunrise/latest sunset for selected places in Jerus
@@ -10021,7 +9898,7 @@ alem */
 	//also calculate the longitude and latitude if not inputed
 
 
-	InitWeatherRegions( &geo, &kmxo, &kmyo, &lt, &lg, &nweather,
+	InitWeatherRegions( &geo, &lt, &lg, &nweather,
      		                &ns1, &ns2, &ns3, &ns4, WinTemp,
 							mint, avgt, maxt, ExtTemp);
 
@@ -10058,16 +9935,16 @@ alem */
 	else if ( SRTMflag == 10 || SRTMflag == 11) //visible sunrise/sunset based on 30m DTM calculations
 	{
 		//determine maximum angular range from latitude
-		maxdecl = (66.5 - fabs(kmyo)) + 23.5; //approximate formula for maximum declination as function of latitude (kmyo)
+		maxdecl = (66.5 - fabs(lt)) + 23.5; //approximate formula for maximum declination as function of latitude (kmyo)
 		//source: chart of declination range vs latitude from http://en.wikipedia.org/wiki/Declination
 		maxang = (int)(fabs(asin(cos(maxdecl * cd)))/cd); //approximate formula for half maximum angle range as function of declination
 		//source: http://en.wikipedia.org/wiki/Solar_azimuth_angle
 		//add another few degrees on either side for a cushion for latitudes greater than 60
-		if (fabs(kmyo) >= 60 && fabs(kmyo) < 62 )
+		if (fabs(lt) >= 60 && fabs(lt) < 62 )
 		{
 			maxang = maxang + 3;
 		}
-		else if (fabs(kmyo) >= 62)
+		else if (fabs(lt) >= 62)
 		{
 			maxang = maxang + 10;
 		}
@@ -10075,7 +9952,7 @@ alem */
 		if (maxang < 30) maxang = 30.; //set minimum maxang
 
 		//maxang = MAX_ANGULAR_RANGE;
-        ier = readDTM( &kmxo, &kmyo, &hgt, &maxang, &aprn, &p, &meantemp, SRTMflag );
+        ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, &p, &meantemp, SRTMflag );
 		if (ier) //error detected
 		{
 			return ier;
@@ -12223,8 +12100,8 @@ L590:
 }
 
 ////////////////////InitWeatherRegions/////////////////////////////////////
-void InitWeatherRegions( bool *geo, double *kmxo, double *kmyo, double *lt,
-						 double *lg, short *nweather, short *ns1, short *ns2,
+void InitWeatherRegions( bool *geo, double *lg, double *lt,
+						 short *nweather, short *ns1, short *ns2,
 						 short *ns3, short *ns4, double WinTemp,
 						 short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[])
 //////////////////////////////////////////////////////////////////////
@@ -12233,20 +12110,14 @@ void InitWeatherRegions( bool *geo, double *kmxo, double *kmyo, double *lt,
 {
 
     double lt_w = 0.0; //define year dependent latitude variable
-	int N, E;
 	short iTemp;
 	short MaxMinTemp = -999;
 	short ier = 0;
 	short itk = 0;
 
-	WriteHtmlHeader(); //<-------diagnostics
-
 
     if (*geo) //rest of the world uses geographic coordinates of longitude and latitude
 	{
-		*lg = *kmxo;
-		*lt = *kmyo;
-
 		//effect of global warming on weather zones from carbon soot
 		//assume that global warming will take over the effect within the next 50 years
         //and then be optimistic and assume that it stabilizes
@@ -12358,13 +12229,6 @@ void InitWeatherRegions( bool *geo, double *kmxo, double *kmyo, double *lt,
 	}
 	else
 	{  //Eretz Yisroel
-		//casgeo_(kmyo, kmxo, lt, lg);
-		N = (int)(*kmyo * 1000 + 1000000); 
-		E = (int)(*kmxo * 1000);
-		//use J. Gray's conversion from ITM to WGS84
-		//source: http://www.technion.ac.il/~zvikabh/software/ITM/isr84lib.cpp
-		ics2wgs84(N, E, lt, lg); 
-		*lg = - *lg; //convert to our sign convention where East longitude is negative
 
 		if (!VDW_REF) {
 
@@ -13286,13 +13150,7 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 				{
 					strncpy( zmanstring, doclin, strlen(doclin) - 1);
 					zmanstring[strlen(doclin) - 1] = 0;
-/*
-					if (Linux && InStr(filzman, "_heb" ) ) //convert win Hebrew to standard Hebrew
-					{
-					  IsoToUnicode( zmanstring, doclin );
-					  strcpy( zmanstring, doclin );
-					}
-*/
+
 					//parse out the zemanim elements
 					pos1 = 1;
 					for (short j = 0; j < 8; j++)
@@ -13323,13 +13181,6 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 			{
 				fgets_CR( doclin, 255, stream );
 				strcpy( TitleZman, doclin );
-/*
-				if (Linux && InStr(filzman, "_heb" ) ) //convert win Hebrew to standard Hebrew
-				{
-				  IsoToUnicode( TitleZman, doclin );
-				  strcpy( TitleZman, doclin );
-				}
-*/
 				typeread = 0; //reset flag to find other parameters
 			}
 			else if (typeread == 2)
@@ -13514,13 +13365,13 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 		  double *aas, double *es, double *ob, double *fdy, double *ec, double *e2c, short *ns1,
 		  short *ns2, short *ns3, short *ns4, short *nweather, double *avekmxzman, double *avekmyzman,
 		  double *avehgtzman, double *t6, double *t3, double *t3sub, double *t3sub99,
-		  double *jdn, int *nyl, short *mday, short *mon, double *lt, double *lg,
+		  double *jdn, int *nyl, short *mday, short *mon, 
 		  short mint[], short avgt[], short maxt[], short ExtTemp[])
 ////////////////////////////////////////////////////////////////////////////////////
 {
 
 	double dy1, ra, df, d__, et, air2, sr, sr1, sr2, ZA1;
-	double latitude, longitude, a1;
+	double a1;
 	short nyr, nyd, nyf;
 	double hrs;
 	double WinTemp = 0.0;
@@ -13535,25 +13386,22 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 		//initialize weather constants and coordinates
 		if (!Israel_neigh) //invert coordinate due to nonstandard convention
 		{
-			InitWeatherRegions( &geo, avekmxzman, avekmyzman, &latitude, &longitude, nweather,
+			InitWeatherRegions( &geo, avekmxzman, avekmyzman, nweather,
 								ns1, ns2, ns3, ns4, WinTemp, mint, avgt, maxt, ExtTemp ); //<<<<<<<<<<check this for coordinates
 		}
 		else
 		{
-			InitWeatherRegions( &geo, avekmyzman, avekmxzman, &latitude, &longitude, nweather,
+			InitWeatherRegions( &geo, avekmyzman, avekmxzman, nweather,
 								ns1, ns2, ns3, ns4, WinTemp, mint, avgt, maxt, ExtTemp ); //<<<<<<<<<<check this for coordinates
 		}
-
-		*lt = latitude;
-		*lg = longitude;
 
 		//---------------------------------------
 		*td = (double)geotz;
 		/*       time difference from Greenwich England */
 		//---------------------------------------
 
-		*lr = cd * *lt;
-		*tf = *td * 60. + *lg * 4.;
+		*lr = cd * *avekmyzman;;
+		*tf = *td * 60. + *avekmxzman * 4.;
 
 		if (nyr >= BEG_SUN_APPROX && nyr <= END_SUN_APPROX)
 		{
@@ -13567,8 +13415,8 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 	}
 	else
 	{
-		*lr = cd * *lt;
-		*tf = *td * 60. + *lg * 4.;
+		*lr = cd * *avekmyzman;
+		*tf = *td * 60. + *avekmxzman * 4.;
 		nyr = *yr;
 	}
 
@@ -13578,18 +13426,11 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 
 		*dyo = *dy;
 		*hgto = *avehgtzman;
-		/* //diagnostics
-		short cc;
-		if (*dy == 266)
-		{
-			cc = 1;
-		}
-		*/
 
 		//initialize astronomical constants once a day
 
 		///////////Astronomical total refraction//////////////////////////////////
-		AstronRefract( avehgtzman, lt, nweather, dy, ns1, ns2, air, &a1, mint, avgt, maxt, 
+		AstronRefract( avehgtzman, avekmyzman, nweather, dy, ns1, ns2, air, &a1, mint, avgt, maxt, 
 			&vdwsf, &vdwrefr, &vbweps, &nyr);
         ///////////////////////////////////////////////////////////////////
 
@@ -13873,7 +13714,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 						double *avekmxzman, double *avekmyzman, double *avehgtzman,
 						short *ns1, short *ns2, short *ns3, short *ns4, short *nweather,
 						short *numzman, short *numsort, double *t6, double *t3, double *t3sub99,
-						double *jdn, int *nyl, short *mday, short *mon, double *lt, double *lg,
+						double *jdn, int *nyl, short *mday, short *mon,
 						short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[])
 ///////////////////////////////////////////////////////////////
 //parses the .zma files to calculate the requested zemanim
@@ -13904,7 +13745,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 					ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
 								aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
 								avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99,
-								jdn, nyl, mday, mon, lt, lg, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+								jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 					zmantimes[i] = t3sub;
 					zmannumber[0][atoi(&zmannames[i][1][0])] = i;
@@ -14030,7 +13871,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 					ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
 							aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
 							avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99, 
-							jdn, nyl, mday, mon, lt, lg, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+							jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 					zmantimes[i] = t3sub;
 					zmannumber[1][atoi(&zmannames[i][1][0])] = i;
@@ -14157,7 +13998,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
              ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
 							aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
 							avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99,
-							jdn, nyl, mday, mon, lt, lg, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+							jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 				 zmantimes[i] = t3sub;
              astnetznum = i;
@@ -14172,7 +14013,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 				ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
 						aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
 						avekmxzman, avekmyzman, &mishorhgt, t6, t3, &t3sub, t3sub99,
-						jdn, nyl, mday, mon, lt, lg, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+						jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 				 zmantimes[i] = t3sub;
              mishornetznum = i;
@@ -14194,7 +14035,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
              ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
 						aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
 					   avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99,
-					   jdn, nyl, mday, mon, lt, lg, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+					   jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 				 zmantimes[i] = t3sub;
              astskiynum = i;
@@ -14209,7 +14050,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 				ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
 							aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
 						   avekmxzman, avekmyzman, &mishorhgt, t6, t3, &t3sub, t3sub99,
-						   jdn, nyl, mday, mon, lt, lg, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+						   jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 				 zmantimes[i] = t3sub;
              mishorskiynum = i;
@@ -14246,7 +14087,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 			ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
 					aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
 					avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99,
-					jdn, nyl, mday, mon, lt, lg, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+					jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 			zmantimes[i] = t3sub;
 			sprintf( &zmannames[i][0][0], "%s","Noon (exact): " );
