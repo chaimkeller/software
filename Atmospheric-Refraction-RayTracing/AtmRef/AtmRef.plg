@@ -1,0 +1,26 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: AtmRef - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\Users\DR-JOH~1\AppData\Local\Temp\RSPF1A1.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /incremental:no /pdb:"Release/AtmRef.pdb" /machine:I386 /def:".\AtmRef.def" /out:"Release/AtmRef.dll" /implib:"Release/AtmRef.lib" 
+".\Release\AtmRef.obj"
+".\Release\StdAfx.obj"
+]
+Creating command line "link.exe @"C:\Users\DR-JOH~1\AppData\Local\Temp\RSPF1A1.tmp""
+<h3>Output Window</h3>
+Linking...
+   Creating library Release/AtmRef.lib and object Release/AtmRef.exp
+
+
+
+<h3>Results</h3>
+AtmRef.dll - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
