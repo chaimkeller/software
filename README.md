@@ -17,9 +17,9 @@ Also needs access to the WorldClim 2 temperature model files converted to bil fo
 
 Progams written in c ------------------------
 
-1. netzski6_c - porgram for calcuating zemanim, written in calcuating
-2. rdhalba4 -program for calculating profiles from ITM based EY DTM
-3. readDTM - program for calculating profiles for SRTM and DEM DTM'sheeting
+1. netzski6_c - porgram for calcuating zemanim, written in c
+2. rdhalba4 -program for calculating profiles from JKH's 25 m DTM for Israel
+3. readDTM - program for calculating profiles for SRTM and DEM DTMs (SRTM hgt format)
 4. StringRoutines - programs used for calculating the ChaiTables
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
