@@ -1,0 +1,2 @@
+"This file is used by the MapDigitizer program. Don't erase it!"
+3960,2802,
