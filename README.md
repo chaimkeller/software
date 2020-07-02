@@ -14,6 +14,9 @@ Do work properly needs access to a DTM database, typically the JKH 25 m DTM of I
 also needs bmp map tiles for EY, and any other map image supported by VB6 for other places, also requires access to DTMS, both
 the JKH's 25 m DTM of EY, and the USGEO 30 m DEM of the world in hgt (SRTM hgt file) format.
 Also needs access to the WorldClim 2 temperature model files converted to bil format
+5. Atmospheric-Refraction-RayTracing - calculates atmospheric raytracing using many methods, i.e., Bruton, Menat, and VDW
+allows for using different atmospheres and also custom atmospheres.  Some calculations facilitated using dll writing in c
+(AtmRef- todo- extend to any atmosphere that the VB6 code can handle)
 
 Progams written in c ------------------------
 
