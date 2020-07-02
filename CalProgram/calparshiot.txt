@@ -1,0 +1,157 @@
+[hebparshiot]
+בראשית
+נח
+לך לך
+וירא
+חיי שרה
+תולדות
+ויצא
+וישלח
+וישב
+מקץ
+ויגש
+ויחי
+שמות
+וארא
+בא
+בשלח
+יתרו
+משפטים
+תרומה
+תצוה
+כי תשא
+ויקהל
+פקודי
+ויקרא
+צו
+שמיני
+תזריע
+מצורע
+אחרי מות
+קדשים
+אמור
+בהר
+בחוקותי
+במדבר
+נשא
+בהעלותך
+שלח לך
+קרח
+חקת
+בלק
+פנחס
+מטות
+מסעי
+דברים
+ואתחנן
+עקב
+ראה
+שופטים
+כי תצא
+כי תבא
+נצבים
+וילך
+האזינו
+זאת הברכה
+שבת וראש השנה
+שבת ויום הכיפורים
+שבת וחג הסוכות
+שבת חול המועד סוכות
+שבת וחג שמיני העצרת
+שבת וחג הפסח
+שבת חול המועד פסח
+שבת ויום האחרון פסח
+שבת וחג השבועות
+
+[engparshiot]
+Bereshis
+Noach
+Lech-Lecha
+Vayera
+Chayei Sara
+Toldos
+Vayetzei
+Vayishlach
+Vayeshev
+Miketz
+Vayigash
+Vayechi
+Shemos
+Vaera
+Bo
+Beshalach
+Yisro
+Mishpatim
+Terumah
+Tetzaveh
+Ki Sisa
+Vayakhel
+Pekudei
+Vayikra
+Tzav
+Shmini
+Sazria
+Metzora
+Achrei Mos
+Kedoshim
+Emor
+Behar
+Bechukosai
+Bamidbar
+Nasso
+Beha'aloscha
+Sh'lach
+Korach
+Chukas
+Balak
+Pinchas
+Matos
+Masei
+Devarim
+Vaeschanan
+Eikev
+Re'eh
+Shoftim
+Ki Seitzei
+Ki Savo
+Nitzavim
+Vayeilech
+Ha'Azinu
+Zos Habrocho
+Shabbos Rosh Hashono
+Shabbos Yom Hakipurim
+Shabbos Succos
+Shabbos Chol Hamoed Succos
+Shabbos Shemini Ha'azeres
+Shabbos Pesach
+Shabbos Chol Hamoed Pesach
+Shabbos Last Day of Pesach
+Shabbos Shavuos
+
+[hebholidays]
+ראש השנה
+יום הכיפורים
+חג הסוכות
+חול המועד סוכות
+חג שמיני העצרת
+חג שמחת התורה
+חנוכה
+פורים
+שושן פורים
+חג הפסח
+חול המועד פסח
+חג השבועות
+
+[engholidays]
+Rosh Hashono
+Yom Hakipurim
+Succos
+Chol Hamoed Succos
+Smini Azares
+Simchas Torah
+Chanukah
+Purim
+Shushan Purim
+Pesach
+Chol Hamoed Pesach
+Shavuos
