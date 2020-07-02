@@ -1,0 +1,6 @@
+LIBRARY MapDigitizer
+EXPORTS
+SolveEquationsC
+SolveEquationsDTM
+Profiles
+Profiles2

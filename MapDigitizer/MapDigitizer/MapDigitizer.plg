@@ -1,0 +1,43 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: MapDigitizer - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\Users\DR-JOH~1\AppData\Local\Temp\RSP2A35.tmp" with contents
+[
+/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "MAPDIGITIZER_EXPORTS" /Fp"Release/MapDigitizer.pch" /Yu"stdafx.h" /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\DEVSTUDIO\VB\DIGITIZER-PROJECT\DLL\MapDigitizer\MapDigitizer.cpp"
+]
+Creating command line "cl.exe @"C:\Users\DR-JOH~1\AppData\Local\Temp\RSP2A35.tmp"" 
+Creating temporary file "C:\Users\DR-JOH~1\AppData\Local\Temp\RSP2A36.tmp" with contents
+[
+/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "MAPDIGITIZER_EXPORTS" /Fp"Release/MapDigitizer.pch" /Yc"stdafx.h" /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\DEVSTUDIO\VB\DIGITIZER-PROJECT\DLL\MapDigitizer\StdAfx.cpp"
+]
+Creating command line "cl.exe @"C:\Users\DR-JOH~1\AppData\Local\Temp\RSP2A36.tmp"" 
+Creating temporary file "C:\Users\DR-JOH~1\AppData\Local\Temp\RSP2A37.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /incremental:no /pdb:"Release/MapDigitizer.pdb" /machine:I386 /def:".\MapDigitizer.def" /out:"Release/MapDigitizer.dll" /implib:"Release/MapDigitizer.lib" 
+".\Release\MapDigitizer.obj"
+".\Release\StdAfx.obj"
+]
+Creating command line "link.exe @"C:\Users\DR-JOH~1\AppData\Local\Temp\RSP2A37.tmp""
+<h3>Output Window</h3>
+Compiling...
+StdAfx.cpp
+Compiling...
+MapDigitizer.cpp
+C:\DEVSTUDIO\VB\DIGITIZER-PROJECT\DLL\MapDigitizer\MapDigitizer.cpp(3020) : warning C4715: 'Nint' : not all control paths return a value
+Linking...
+   Creating library Release/MapDigitizer.lib and object Release/MapDigitizer.exp
+
+
+
+<h3>Results</h3>
+MapDigitizer.dll - 0 error(s), 1 warning(s)
+</pre>
+</body>
+</html>
