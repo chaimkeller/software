@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form mapgraphfm 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Plot of horizon profile"
@@ -679,12 +679,12 @@ Private Sub Calendarbut_Click()
             End If
          myname = Dir    ' Get next entry.
       Loop
-      If myname = sEmpty Then
-         If Mode% = 0 Then
+      If Combo2.ListCount = 0 Then 'myname = sEmpty Then
+         If Mode% = 1 Then
             myname = "visual_tmp"
             mynew = mypath + myname + "\NETZ\visu.bat"
             GoTo 160
-         ElseIf Mode% = 1 Then
+         ElseIf Mode% = 0 Then
             myname = "visual_tmp"
             mynew = mypath + myname + "\SKIY\visu.bat"
             GoTo 160

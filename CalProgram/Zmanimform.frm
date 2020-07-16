@@ -3155,9 +3155,12 @@ cal:
                k% = 2
                If (yl = 366) Then k% = 1
                m% = Int(9 * (k% + dy) / 275 + 0.98)
-            
+               
+               'refraction is determined by what part of the day
+               'refraction is minimum near sunrise and maximum approximately at
                'TK = MT(m%) + 273.15 'mean minimum temperature for this month in degrees Kelvin
-               TK = MaxT(m%) + 273.15 'use maximum temperature for zemanim, etc.
+               TK = AvgT(m%) + 273.15 'use average temperatures for zemanim
+               'TK = MaxT(m%) + 273.15 'use maximum temperature for zemanim, etc.
                'calculate van der Werf temperature scaling factor for refraction
                VDWSF = (288.15 / TK) ^ 1.687 ' 1.7081
                'calculate van der Werf scaling factor for view angles
