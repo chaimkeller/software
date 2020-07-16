@@ -127,7 +127,7 @@ short refvdw_(double *hgt, double *x, double *fref);
 void InitAstConst(short *nyr, short *nyd, double *ac, double *mc,
 							   double *ec, double *e2c, double *ap, double *mp,
 							   double *ob, short *nyf, double *td);
-void AstronRefract( double *hgt, double *lt, short *nweather,
+void AstronRefract( double *hgt, double *lt, short *nweather, short *PartOfDay,
 				    double *dy, short *ns1, short *ns2,
 					double *air, double *a1, short mint[], short avgt[], short maxt[],
 					double *vdwsf, double *vdwrefr, double *vbweps, short *nyr);
@@ -185,9 +185,9 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *hgto, short *yro, double *td,
 		  short *yr, double *dy, double *mp, double *mc, double *ap, double *ac, double *ms,
 		  double *aas, double *es, double *ob, double *fdy, double *ec, double *e2c, short *ns1,
-		  short *ns2, short *ns3, short *ns4, short *nweather, double *avekmxzman, double *avekmyzman,
-		  double *avehgtzman, double *t6, double *t3, double *t3sub, double *t3sub99,
-		  double *jdn, int *nyl, short *mday, short *mon, 
+		  short *ns2, short *ns3, short *ns4, short *nweather, short *PartOfDay, 
+		  double *avekmxzman, double *avekmyzman, double *avehgtzman, double *t6,
+		  double *t3, double *t3sub, double *t3sub99, double *jdn, int *nyl, short *mday, short *mon, 
 		  short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 
 /////////////////ephem functions//////////////////////////////
@@ -830,7 +830,7 @@ __asm{
 
 //================================================================================
 	////////////////process inputed parameters for php pages///////////////
-	if (argc != 26) // && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug as console application
+	if (argc != 26 && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug
 	{
 		/* working as CGI  */
 
@@ -945,7 +945,7 @@ __asm{
 		CGI = 1;
 
    }
-/*<--comment for CGI, uncomment for console application debugging
+///*<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
 	else if (argc == 1) //not using console
 	{
 		strcpy( TableType, "BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
@@ -953,8 +953,8 @@ __asm{
 		strcpy( MetroArea, "jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
-		g_yrheb = 5779;//5776; //5775;
-		zmanyes = 1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
+		g_yrheb = 5781; //5779;//5776; //5775;
+		zmanyes = 0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
 		typezman = 2; // acc. to which opinion
 		optionheb = false;//true;//false;
 		RoundSecondsin = 1;//5;
@@ -984,8 +984,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -1225,7 +1225,7 @@ __asm{
 	}
 	else //can't find version file, use default
 	{
-		datavernum = 12;
+		datavernum = 14;
 	}
 
 ///////////////////////////////end of input parameters/////////////////////////
@@ -9805,6 +9805,11 @@ short netzski6(char *fileon, double lg, double lt, double hgt, double aprn
 	double trbasis, d__3;
 	double hgtdifx = 0., hgtdif = 0., pathlength = 0., exponent = 0., dist = 0., distx = 0.;
 
+	short PartOfDay = 0; //where is zman in the diurnal cycle flag -- determines what temperature is used to calculate the refraction for nweather = 5
+						   //= 1 for using minimum @orldClim temperatures
+						   //  2 for using average WorldClim temperatures
+						   //  3 for using maximum WorldClim temperatures
+
 /**************************************************************/
 
 /*       Version 19 (of netzski6) */
@@ -9986,6 +9991,7 @@ alem */
 		nloop = 72;
 //    start search 2 minutes above astronomical horizon
 		nlpend = 2000;
+		PartOfDay = 1;  //refraction scaled according on minimum temperatures
 	}
     else if (nsetflag % 2 != 0)
 	{
@@ -9993,6 +9999,7 @@ alem */
 		nloop = 370;
 		if (nplaceflg == 0) nloop = 75;
 		nlpend = -10;
+		PartOfDay = 2;  //refraction scaled according to average temperatures
 	}
 ////////////////////////////////////////////////////////////////////////////
 
@@ -10054,8 +10061,8 @@ alem */
 			}
 
 			///////////Astronomical total refraction/////////////////////////////////////////////////////////
-			AstronRefract( &hgt, &lt, &nweather, &dy, &ns1, &ns2, &air, &a1, mint, avgt, maxt, 
-				&vdwsf, &vdwrefr, &vbweps, &nyr);
+			AstronRefract( &hgt, &lt, &nweather, &PartOfDay, &dy, &ns1, &ns2, &air,
+				&a1, mint, avgt, maxt, &vdwsf, &vdwrefr, &vbweps, &nyr);
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
 			//////////////////////////conserved portion of atmospheric refraction//////////////////////////
@@ -11960,9 +11967,8 @@ void InitAstConst(short *nyr, short *nyd, double *ac, double *mc,
 }
 
 ////////////////////////////AstronRefract////////////////////////
-void AstronRefract( double *hgt, double *lt, short *nweather,
-				    double *dy, short *ns1, short *ns2,
-					double *air, double *a1,
+void AstronRefract( double *hgt, double *lt, short *nweather, short *PartOfDay,
+				    double *dy, short *ns1, short *ns2,	double *air, double *a1,
 					short mint[], short avgt[], short maxt[], 
 					double *vdwsf, double *vdwrefr, double *vbweps, short *nyr)
 //////////////////////////////////////////////////////////////////////////////////
@@ -11987,6 +11993,9 @@ void AstronRefract( double *hgt, double *lt, short *nweather,
 //MENAT.FOR (MENAT.FOR cam be found in the archive section of this source code).
 //eps  = ELTOT, ref = REFT3.  The actual values of eps and ref can be found in
 //the menatsum.ren and menatwin.ren files (not included)
+//
+//fix on 071620 -- added nsetflag as a parameter since the refraction is different
+//				   for sunrise and sunset
 /////////////////////////////////////////////////////////////////////////////////////
 {
 
@@ -12008,14 +12017,21 @@ double tk, d__2, refrac1;
 		{
 		case 1:
 			//use minimum WorldClim temperature
-			tk = mint[(int) m - 1] + 273.15f;
+			if (*PartOfDay == 1) //using minimum temperatures
+			{
+				tk = mint[(int) m - 1] + 273.15f;
+			}
+			else //use average temperature for anything else
+			{
+				tk = avgt[(int) m - 1] + 273.15f;
+			}
 			break;
 		case 2:
-			//use average WorldClim temperature
+			//use average WorldClim temperature for both sunrise and sunset
 			tk = avgt[(int) m - 1] + 273.15f;
 			break;
 		case 3:
-			//use maximum WorldClim temperature
+			//use maximum WorldClim temperature for both sunrie and sunset
 			tk = maxt[(int) m - 1] + 273.15f;
 			break;
 		}
@@ -13360,11 +13376,13 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 
 
 ///////////////////////cal/////////////////////////////////////////////////////////
-short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *hgto, short *yro, double *td,
-		  short *yr, double *dy, double *mp, double *mc, double *ap, double *ac, double *ms,
-		  double *aas, double *es, double *ob, double *fdy, double *ec, double *e2c, short *ns1,
-		  short *ns2, short *ns3, short *ns4, short *nweather, double *avekmxzman, double *avekmyzman,
-		  double *avehgtzman, double *t6, double *t3, double *t3sub, double *t3sub99,
+short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *hgto,
+		  short *yro, double *td, short *yr, double *dy, double *mp, double *mc,
+		  double *ap, double *ac, double *ms,double *aas, double *es, double *ob,
+		  double *fdy, double *ec, double *e2c, short *ns1,short *ns2, short *ns3,short *ns4,
+		  short *nweather, short *PartOfDay, 
+		  double *avekmxzman, double *avekmyzman, double *avehgtzman,
+		  double *t6, double *t3, double *t3sub, double *t3sub99,
 		  double *jdn, int *nyl, short *mday, short *mon, 
 		  short mint[], short avgt[], short maxt[], short ExtTemp[])
 ////////////////////////////////////////////////////////////////////////////////////
@@ -13430,8 +13448,8 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 		//initialize astronomical constants once a day
 
 		///////////Astronomical total refraction//////////////////////////////////
-		AstronRefract( avehgtzman, avekmyzman, nweather, dy, ns1, ns2, air, &a1, mint, avgt, maxt, 
-			&vdwsf, &vdwrefr, &vbweps, &nyr);
+		AstronRefract( avehgtzman, avekmyzman, nweather, PartOfDay, dy, ns1, ns2,
+			air, &a1, mint, avgt, maxt, &vdwsf, &vdwrefr, &vbweps, &nyr);
         ///////////////////////////////////////////////////////////////////
 
 		//change from noon of previous day to noon of today
@@ -13720,6 +13738,11 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 //parses the .zma files to calculate the requested zemanim
 ///////////////////////////////////////////////////////////////////
 //ZA is zenith angle (degrees)
+// PartOfDay = 2; //1 -- sunrise uses averaged minimum temperatures to calculate the refraction
+				  //     everything else uses average temperature
+				  //2 -- uses average temperatures for the zemanim calculations
+				  //3 -- uses maximum temperatures for the zemanim calculations
+
 /////////////////////////////////////////////////////////////////
 {
 
@@ -13729,6 +13752,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
    double ZA, t3sub, sunrise, sunsets, dawn, twilight, hourszemanios;
    short mishornetznum, mishorskiynum, astnetznum, astskiynum, chazosnum;
    double mishorhgt = 0.0;
+   short PartOfDay = 2; //always use average WorldClim temepratures for zemanim
 
    for (short i = 0; i < *numzman; i++ )
    {
@@ -13743,7 +13767,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 					ZA = -90 - atof(&zmannames[i][3][0]);
 					*dy = (double)*jday;
 					ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
-								aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
+								aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather, &PartOfDay,
 								avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99,
 								jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
@@ -13869,7 +13893,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 					ZA = 90 + atof(&zmannames[i][3][0]);
 					*dy = (double)*jday;
 					ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
-							aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
+							aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather, &PartOfDay,
 							avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99, 
 							jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
@@ -13996,7 +14020,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
              ZA = -90;
              *dy = (double)*jday;
              ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
-							aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
+							aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather, &PartOfDay,
 							avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99,
 							jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
@@ -14011,7 +14035,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 				*dy = (double)*jday;
 			// set avehgtzman = 0.0 (mishor)
 				ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
-						aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
+						aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather, &PartOfDay,
 						avekmxzman, avekmyzman, &mishorhgt, t6, t3, &t3sub, t3sub99,
 						jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
@@ -14033,7 +14057,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
              ZA = 90;
              *dy = (double)*jday;
              ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
-						aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
+						aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather, &PartOfDay,
 					   avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99,
 					   jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
@@ -14048,7 +14072,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 				*dy = (double)*jday;
 			// set avehgtzman = 0.0 (mishor)
 				ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
-							aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
+							aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather, &PartOfDay,
 						   avekmxzman, avekmyzman, &mishorhgt, t6, t3, &t3sub, t3sub99,
 						   jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
@@ -14085,7 +14109,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 			ZA = 0;
 			*dy = (double)*jday;
 			ier = cal(&ZA, air, lr, tf, dyo, hgto, yro, td, yr, dy, mp, mc, ap, ac, ms,
-					aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather,
+					aas, es, ob, fdy, ec, e2c, ns1, ns2, ns3, ns4, nweather, &PartOfDay,
 					avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99,
 					jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
