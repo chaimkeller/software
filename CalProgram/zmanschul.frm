@@ -1514,6 +1514,9 @@ Private Sub Command3_Click()
   
   RemoveUnderline = True
   
+  If hebcal Then fshabos% = fshabos0%
+  lenyr1% = yrend%(0)
+  
   If DSTcheck Then
   
      'open DST_EY.txt file and determine the daynumber of the beginning and end of DST in EY
@@ -2262,6 +2265,9 @@ Private Sub Command3_Click()
             
             numday% = numday% + 1 'skip another line but make it smaller in size
             
+            nshabos% = 0: newschulyr% = 0: dayweek% = rhday% - 1: addmon% = 0
+            ntotshabos% = 0
+            
             For isc% = 1 To endyr%
                
                'If isc% = 1 Then rowhgt% = ExcelSheet.Rows.RowHeight
@@ -2276,8 +2282,22 @@ Private Sub Command3_Click()
                       outdoc$ = sEmpty
                       
                       'check for Shabbosim
+                      changit% = 0
+                      If newhebcalfm.Check4.Value = vbChecked And fshabos% + nshabos% * 7 = j% Then 'this is shabbos
+                         nshabos% = nshabos% + 1 '<<<2--->>>
+                         ntotshabos% = ntotshabos% + 1
+                         changit% = 1
+                         'check for end of year
+                         If fshabos% + nshabos% * 7 > lenyr1% Then
+                            newschulyr% = 1
+                            fshabos% = 7 - (lenyr1% - (fshabos% + (nshabos% - 1) * 7))
+                            nshabos% = 0
+                            End If
+                       End If
+                      
                       RemovedUnderlined = False
-                      If InStr(stortim$(0, isc% - 1, ks% - 1), "_") Then
+                      If InStr(stortim$(0, isc% - 1, ks% - 1), "_") Or changit% = 1 Then
+                         changit% = 0
                          'highlight the entire row
                          For icol% = 1 To numcol%
                             ExcelSheet.Cells(numday%, icol%).Interior.Color = RGB(216, 214, 214) 'grey highlighting
@@ -2375,15 +2395,21 @@ Private Sub Command3_Click()
                          End If
                       ColNum% = ColNum% + 1
                       
-                      If DSTadd = 1 Then
-                         'add hour for DST
-                         t3sub = Trim$(stortim$(0, isc% - 1, ks% - 1))
-                         DSThour = Mid(t3sub, 1, 1)
-                         Mid(t3sub, 1, 1) = Trim$(Str$(Val(DSThour) + 1))
-                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = t3sub
-                      Else
-                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = Trim$(stortim$(0, isc% - 1, ks% - 1))
-                         End If
+                      'now print the netz time
+                      t3sub = netz
+                      GoSub 1500
+                      GoSub round
+                      ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = t3subb$
+                      
+'                      If DSTadd = 1 Then
+'                         'add hour for DST
+'                         t3sub = Trim$(stortim$(0, isc% - 1, ks% - 1))
+'                         DSThour = Mid(t3sub, 1, 1)
+'                         Mid(t3sub, 1, 1) = Trim$(Str$(Val(DSThour) + 1))
+'                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = t3sub
+'                      Else
+'                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = Trim$(stortim$(0, isc% - 1, ks% - 1))
+'                         End If
                          
                       'GoSub underline
                       
@@ -2431,8 +2457,22 @@ Private Sub Command3_Click()
                       outdoc$ = sEmpty
                       
                       'check for Shabbosim
+                      changit% = 0
+                      If newhebcalfm.Check4.Value = vbChecked And fshabos% + nshabos% * 7 = j% Then 'this is shabbos
+                         nshabos% = nshabos% + 1
+                         ntotshabos% = ntotshabos% + 1
+                         changit% = 1
+                         'check for end of year
+                         If fshabos% + nshabos% * 7 > lenyr1% Then
+                            newschulyr% = 1
+                            fshabos% = 7 - (lenyr1% - (fshabos% + (nshabos% - 1) * 7))
+                            nshabos% = 0
+                            End If
+                         End If
+                      
                       RemovedUnderlined = False
-                      If InStr(stortim$(0, isc% - 1, ks% - 1), "_") Then
+                      If InStr(stortim$(0, isc% - 1, ks% - 1), "_") Or changit% = 1 Then
+                         changit% = 0
                          'highlight the entire row
                          For icol% = 1 To numcol%
                             ExcelSheet.Cells(numday%, icol%).Interior.Color = RGB(216, 214, 214) 'grey highlighting
@@ -2530,15 +2570,21 @@ Private Sub Command3_Click()
                          End If
                       ColNum% = ColNum% + 1
                       
-                      If DSTadd = 1 Then
-                         'add hour for DST
-                         t3sub = Trim$(stortim$(0, isc% - 1, ks% - 1))
-                         DSThour = Mid(t3sub, 1, 1)
-                         Mid(t3sub, 1, 1) = Trim$(Str$(Val(DSThour) + 1))
-                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = t3sub
-                      Else
-                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = Trim$(stortim$(0, isc% - 1, ks% - 1))
-                         End If
+                      'now print the netz time
+                      t3sub = netz
+                      GoSub 1500
+                      GoSub round
+                      ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = t3subb$
+                      
+'                      If DSTadd = 1 Then
+'                         'add hour for DST
+'                         t3sub = Trim$(stortim$(0, isc% - 1, ks% - 1))
+'                         DSThour = Mid(t3sub, 1, 1)
+'                         Mid(t3sub, 1, 1) = Trim$(Str$(Val(DSThour) + 1))
+'                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = t3sub
+'                      Else
+'                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = Trim$(stortim$(0, isc% - 1, ks% - 1))
+'                         End If
                          
                       'GoSub underline
                       ExcelSheet.Cells(numday%, numcol% - 2).Value = Trim$(stortim$(2, isc% - 1, ks% - 1))
@@ -2576,8 +2622,23 @@ Private Sub Command3_Click()
                       outdoc$ = sEmpty
                       
                       'check for Shabbosim
+                      If newhebcalfm.Check4.Value = vbChecked And fshabos% + nshabos% * 7 = j% Then 'this is shabbos
+                         nshabos% = nshabos% + 1  '<<<--->>>
+                         ntotshabos% = ntotshabos% + 1
+                         changit% = 1
+                         
+                         'check for end of year
+                         If fshabos% + nshabos% * 7 > lenyr1% Then
+                            newschulyr% = 1
+                            fshabos% = 7 - (lenyr1% - (fshabos% + (nshabos% - 1) * 7))
+                            nshabos% = 0
+                            End If
+  
+                         End If
+                      
                       RemovedUnderlined = False
-                      If InStr(stortim$(0, isc% - 1, ks% - 1), "_") Then
+                      If InStr(stortim$(0, isc% - 1, ks% - 1), "_") Or changit% = 1 Then
+                         changit% = 0
                          'highlight the entire row
                          For icol% = 1 To numcol%
                             ExcelSheet.Cells(numday%, icol%).Interior.Color = RGB(216, 214, 214) 'grey highlighting
@@ -2675,15 +2736,21 @@ Private Sub Command3_Click()
                          End If
                       ColNum% = ColNum% + 1
                       
-                      If DSTadd = 1 Then
-                         'add hour for DST in netz entry
-                         t3sub = Trim$(stortim$(0, isc% - 1, ks% - 1))
-                         DSThour = Mid(t3sub, 1, 1)
-                         Mid(t3sub, 1, 1) = Trim$(Str$(Val(DSThour) + 1))
-                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = t3sub
-                      Else
-                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = Trim$(stortim$(0, isc% - 1, ks% - 1))
-                         End If
+                      'now print the netz time
+                      t3sub = netz
+                      GoSub 1500
+                      GoSub round
+                      ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = t3subb$
+                      
+'                      If DSTadd = 1 Then
+'                         'add hour for DST in netz entry
+'                         t3sub = Trim$(stortim$(0, isc% - 1, ks% - 1))
+'                         DSThour = Mid(t3sub, 1, 1)
+'                         Mid(t3sub, 1, 1) = Trim$(Str$(Val(DSThour) + 1))
+'                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = t3sub
+'                      Else
+'                         ExcelSheet.Cells(numday%, numcol% - 4 - ColNum%).Value = Trim$(stortim$(0, isc% - 1, ks% - 1))
+'                         End If
                       
                       'GoSub underline
                       ExcelSheet.Cells(numday%, numcol% - 2).Value = Trim$(stortim$(2, isc% - 1, ks% - 1))
