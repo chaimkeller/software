@@ -22,17 +22,25 @@
 #define dtr(x) ((x) * (PI / 180.0))                       /* Degree->Radian */
 #define rtd(x) ((x) / (PI / 180.0))                       /* Radian->Degree */
 
+/*  //<--uncomment for UNIX
+#define __min(a,b) (((a)<(b))?(a):(b)) 
+#define __max(a,b) (((a)>(b))?(a):(b))
+*/ //<--uncomment for UNIX
+
 
 //////////////////////global array bounds///////////////////////////////////////
 #define MAXANGRANGE 80 //maximum degrees assuming 0.1 degrees steps
 #define MAXCGIVARS 30 //maximum number of cgi variables
 #define MAXDBLSIZE 100 //maximum character size of data elements to be read using ParseString
-#define WIDTHFIELD 0 //0 for false - use predetermined html cell widths, = 1 for letting program determine it
+#define WIDTHFIELD 0 //0 for false - use predeter__mind html cell widths, = 1 for letting program deter__min it
 #define INPUT_TYPE 1 //0 for post, 1 for get
 #define MAX_NUM_TILES 15 //maximum possible number of tiles due to webmaster's memory limitiation for this thread
 #define MAX_HEIGHT_DISCREP 1000 //maximum acceptable height discrepency between inputed and DTM's height at chosen coords.
 #define BEG_SUN_APPROX 1950 //first year to use simplified ephem of sun
 #define END_SUN_APPROX 2050 //last year to use simpliefied ephem of sun
+#define MinGoldenDist 1 //minimum distance to Golden Horizon point to enable calculations
+#define MaxGoldenViewAng 50 //maximum view angle to allow Golden Horizon calculations
+
 //#define MAX_ANGULAR_RANGE 45 //maximum azimuth range from -MAX_ANGULAR_RANGE to MAX_ANGULAR_RANGE
 
 //**********declare functions*****************/
@@ -131,17 +139,20 @@ void AstronRefract( double *hgt, double *lt, short *nweather, short *PartOfDay,
 				    double *dy, short *ns1, short *ns2,
 					double *air, double *a1, short mint[], short avgt[], short maxt[],
 					double *vdwsf, double *vdwrefr, double *vbweps, short *nyr);
-void InitWeatherRegions( bool *geo, double *lt, double *lg, 
+void InitWeatherRegions( double *lt, double *lg, 
 						 short *nweather, short *ns1, short *ns2,
-						 short *ns3, short *ns4, double WinTemp,
+						 short *ns3, short *ns4, double *WinTemp,
 						 short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 
 short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *meantemp );
 
 ////////////////////////netzski6///////////////////////////////////////
-short netzski6(char *fileon, double lg, double lt, double hgt, double aprn
-			              , float geotd, short nsetflag, short nfil, 
-						  short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
+short netzski6(char *fileon, double lg, double lt, double hgt, double aprn,
+			               float geotd, short nsetflag, short nfil,
+						   short *nweather, double *meantemp, double *p,
+     		               short *ns1, short *ns2, short *ns3, short *ns4, double *WinTemp,
+						   short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
+
 //////////////////////AstroNoon///////////////////////////////////////////////
 void AstroNoon( double *jdn, double *td, double *dy1, double *mp, double *mc, double *ap,
 		   double *ac, double *ms, double *aas, double *es, double *ob,
@@ -292,7 +303,7 @@ double dobs[2][2][366];
 double tims[2][7][366];
 double azils[2][2][366];
 
-char heb1[80][255]; //[sunrisesunset] NOTICE: largest hebrew string is 99 characters long
+char heb1[85][255]; //[sunrisesunset] NOTICE: largest hebrew string is 99 characters long
 char heb2[25][255];//[newhebcalfm]
 char heb3[33][255];//[zmanlistfm]
 char heb4[8][100]; //[hebweek] NOTICE: largest hebrew string is 20 characters long
@@ -300,6 +311,7 @@ char heb5[40][100];//[holidays] NOTICE largest hebrew string is 20 characters lo
 char heb6[10][100];//[candle_ligthing] NOTICE largest hebrew string is 20 characters long
 char heb7[30][100];//Hebrew alphabet in Unicode
 char heb8[25][255];//Hebrew error messages
+char heb9[16][255]; //PlotGraphHTML5 Hebrew strings
 char holidays[2][12][255]; //NOTICE: largest holiday string is 40 characters long
 char arrStrParshiot[2][63][255]; //NOTICE: largest parshia name is 40 characters long
 char arrStrSedra[2][63][255]; //NOTICE: Sedra length must equla Parshiot name
@@ -310,7 +322,7 @@ short yrstrt[2]; //the first day number of the civil year within the Hebrew Year
 short FirstSecularYr = 0;  //first civil year within the Hebrew Year
 short SecondSecularYr = 0; //second civil year within the Hebrew Year
 short StartYr = 0;         //to be used to start the printed output at a certain civil year >= FirstSecularYr
-char storheader[2][7][500]; //stores the header and footer strings
+char storheader[2][9][500]; //stores the header and footer strings
 char monthh[2][15][50];  //Heberw month strings
 
 /////////////////////zemanim arrays/////////////////////////////////
@@ -439,6 +451,26 @@ bool AllowShavinginEY = false; //true to allow unlimited shaving for EY
 short GlobalWarmingCorrection = 1; //shift latitude when determining  ground temmperature to reflect
 									 //Global Warming
 
+/////////////First Light flag -- new flag for Version 20 initiated on 091920/////////////////
+short GoldenLight = 0; //0 for no GoldenLight calculation
+					   //1 for GoldenLight calculation, first pass
+					   //2 for GoldenLight calculation second pass
+
+typedef struct _strucGold
+{
+  short nkk; //index of elev array corresponding to highest viewangle in the horizon profile
+  double vert[6];
+	//.vert]0] = azimuth
+	// vert]1] = viewangle
+	// vert[2] = longitude
+	// vert[3] = latitude
+	// vert[4] = distance
+	// vert[5] = height
+} structGold;
+structGold Gold; 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 /////////////Hebrew Year/////////////////////
 short g_yrheb = 0; //Hebrew Year in numbers
 char g_yrcal[20] = ""; //Hebrew Year in Hebrew characters
@@ -563,10 +595,6 @@ short g_yrr = 0;
 //    Prof.Dutch's enlightening explanation about it in his link above.
 //
 //===================================================================================================
-
-//#define __min(a,b) (((a)<(b))?(a):(b)) //<--comment out for Windows
-//#define __max(a,b) (((a)>(b))?(a):(b))
-
 //double pi() { return 3.141592653589793; }
 double sin2(double x) { return sin(x)*sin(x); }
 double cos2(double x) { return cos(x)*cos(x); }
@@ -765,11 +793,12 @@ double MaxWinLen;  //minimum length of day for adding inversion fix
 This global is for CGI -- Yedidia
 ********************************/
 char *vars[2][MAXCGIVARS]; //<--up to 2*MAXCGIVARS + 2 of inputs
-bool CGI; //flag that determines if using CGI input and output
+bool CGI; //flag that deter__mins if using CGI input and output
+bool Windows = false; //debugging flag, if Windows always write out output file when generating Astro profiles
 /////////////////////////////////////////////////////////////////////
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 3.0f;
+float vernum = 4.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -830,7 +859,7 @@ __asm{
 
 //================================================================================
 	////////////////process inputed parameters for php pages///////////////
-	if (argc != 26 && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug
+	if (argc != 26) // && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug
 	{
 		/* working as CGI  */
 
@@ -945,18 +974,18 @@ __asm{
 		CGI = 1;
 
    }
-///*<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
+/*<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
 	else if (argc == 1) //not using console
 	{
-		strcpy( TableType, "BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "BY"); //"Astr"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		yesmetro = 0;
 		strcpy( MetroArea, "jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
 		g_yrheb = 5781; //5779;//5776; //5775;
-		zmanyes = 0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
-		typezman = 2; // acc. to which opinion
-		optionheb = false;//true;//false;
+		zmanyes = 1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
+		typezman = 8; // acc. to which opinion
+		optionheb = true;//false;
 		RoundSecondsin = 1;//5;
 
 		///unique to Chai tables
@@ -964,18 +993,19 @@ __asm{
 		numUSAcities2 = 2; //7;//0; //75; //city area
 		searchradius = 1;//4;//1; //search area
 		yesmetro = 1; //0;  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
+		GoldenLight = 1;
 
 		//test lat,lon, hgt inputs 32.027585
-		eroslatitudestr = "31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
-		eroslongitudestr = "-35.217";//"0.2074"; //"-35.201774";//"-35.217059"; //"-35.247203";//"1.11254";//"-34.841867";//"-35.004566";//"99.201608";//"-34.83177";//"74.222"; //"-34.83177"; //"-34.851612"; //-35.164481"; //-35.239226491"; //"-35.239291"; //"21.89521";
-		eroshgtstr = "800";//"0";//"684.3";//"164.1";//"26.93";//"68.69";//"2274.5"; //"63.5";//"22.72"; //"63.5";//"788.19"; //832.3"; //"832"; //"83.2";
+		eroslatitudestr = "31.706938"; //"30.960207"; //"37.683140"; //"30.92408"; //"31.858246"; //"31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
+		eroslongitudestr = "-35.123139"; //"-35.195719"; //"119.170837"; //"-34.96542"; //"-35.158354"; //"-35.217";//"0.2074"; //"-35.201774";//"-35.217059"; //"-35.247203";//"1.11254";//"-34.841867";//"-35.004566";//"99.201608";//"-34.83177";//"74.222"; //"-34.83177"; //"-34.851612"; //-35.164481"; //-35.239226491"; //"-35.239291"; //"21.89521";
+		eroshgtstr = "787.23"; //"29.70"; //"2843.73"; //"495.0"; //"644.26"; //"800";//"0";//"684.3";//"164.1";//"26.93";//"68.69";//"2274.5"; //"63.5";//"22.72"; //"63.5";//"788.19"; //832.3"; //"832"; //"83.2";
 		erosaprnstr = "0.5";//"1.5";//"0.5";
 		erosdiflatstr = "1";
 		erosdiflogstr = "1"; //"2";
 
 
 		searchradiusin = 1;//4; //0.9;
-		geotz = 2;//0;//-6; //2;//-5; //2; //0;//-8;
+		geotz = 2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
 		sunsyes = 1;//0; //1;//0; //= 1 print individual sunrise/sunset tables
 					 //= 0 don't print individual sunrise/sunset tables
 
@@ -984,8 +1014,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -1207,6 +1237,12 @@ __asm{
                 ast = true; //use inputed heights for calculation
                 SRTMflag = 11; //30 m DTM flag, i.e., JK's DTM in Israel, NED in the US
                 break;
+		    case 12: //visible sunrise/sunset and GoldenLight calculated from 30m DTM
+			case 13:
+				//first calculate the sunset profile to find the highest point on the Western horizon
+                ast = true; //use inputed heights for calculation
+                SRTMflag = types; //30 m DTM flag, i.e., JK's DTM in Israel, NED in the US
+                break;
 			default:
 				{
 				ErrorHandler( 1, 2 ); //uncrecogniable "types"
@@ -1225,7 +1261,7 @@ __asm{
 	}
 	else //can't find version file, use default
 	{
-		datavernum = 14;
+		datavernum = 15;
 	}
 
 ///////////////////////////////end of input parameters/////////////////////////
@@ -1269,7 +1305,7 @@ __asm{
 	steps[0] = RoundSeconds;
 	steps[1] = RoundSeconds;
 
-///////////////////determine which table will be generated///////////////////////
+///////////////////deter__min which table will be generated///////////////////////
 
 	//short langMetro = 0;
 
@@ -1637,7 +1673,7 @@ __asm{
 		lat = eroslatitudein;
 		lon = eroslongitudein;
 
-		if (ast || types == 10 || types == 11) //ast = true, astronomical times
+		if (ast || types > 9) //ast = true, astronomical times
 		{
 			hgt = eroshgtin;
 		}
@@ -1665,7 +1701,7 @@ __asm{
 			parshiotflag = 1;  //'inside the borders of Eretz Yisroel
 			cushion_factor = 1.0;
 
-			if (SRTMflag == 10 || SRTMflag == 11)
+			if (SRTMflag > 9)
 			{
 				//give error message that can only shave up to a techum Shabbos in Eretz Eretz acc. to the psak of Rav Elyashiv z"l,
 				//and anyone who has issues with this should send the request by Feedback.
@@ -1688,7 +1724,7 @@ __asm{
 			*/
 
 			//at different latitudes, spacing between 1 arcsec data points in longitude is about half of 30 m
-			//so determine the distance corresponding to 1 arcsec at the relevant latitude
+			//so deter__min the distance corresponding to 1 arcsec at the relevant latitude
 			//and adjust the cushions accordingly.
 			//The calculation is as follows:
 			//2*pi*cos(lat) * Re is distance corresponding to 2*pi radians
@@ -1761,6 +1797,17 @@ __asm{
 				distlim = distlims[3];
 				cushion[3] = __max(15, Cint(cushion[3] * cushion_factor));
 		  		break;
+		    case 12: //visible GokldenLight sunrise/sunset calculated from 30m DTM
+			case 13:
+				//first calculate the sunset horizon to find the highest point
+				//then use those coordinates to find the sunrise from that point
+				avekmx[0] = lon; //parameters used for z'manim tables
+				avekmy[0] = lat;
+				avehgt[0] = hgt;
+				distlims[3] = distlims[3] * cushion_factor;
+				distlim = distlims[3];
+				cushion[3] = __max(15, Cint(cushion[3] * cushion_factor));
+                break;
 		}
 
       //aveusa = true; //invert coordinates in SunriseSunset due to
@@ -1959,8 +2006,13 @@ short RdHebStrings()
 					flgheb = 6;
 					iheb = 0;
 				}
+				else if (strstr( doclin, "[PlotGraphHTML5]" ))
+				{
+					flgheb = 7;
+					iheb = 0;
+				}
 
-				if (strlen(doclin) > 1 ) //ignore blank lines containing just "\n"
+				if (strlen(Trim(doclin)) > 0 ) //ignore blank lines containing just "\n"
 				{
 					switch (flgheb)
 					{
@@ -1984,6 +2036,9 @@ short RdHebStrings()
 							break;
 						case 6: //leave heb7[0] as NULL
 							if (iheb != 0) strcpy( &heb7[iheb][0],  doclin );
+							break;
+						case 7:
+							strcpy( &heb9[iheb][0], doclin );
 							break;
 					}
 
@@ -2102,7 +2157,7 @@ short LoadParshiotNames()
 	char Iparsha[255] = ""; // Torah reading for Eretz Yisroel
 	FILE *stream;
 
-	//determine cycle name
+	//deter__min cycle name
 	switch (g_hebleapyear)
 	{
 		case false: //Hebrew calendar non-leapyear
@@ -2441,7 +2496,7 @@ void InsertHolidays(char *caldayHeb, char *caldayEng, char *calday, char *calheb
 
 	//passed variables are:
 	//(1) the day field = calday$
-	//(2) the increment variables i,k used to determine
+	//(2) the increment variables i,k used to deter__min
 	//    (a) the date field = CalDate$
 	//    (b) the Shabbos Parsha field = CalParsha$
 	//(3) variables that keep track of year, year length, day of week and shabbos:
@@ -2998,7 +3053,7 @@ char *hebyear(char *yrcal, short yr)
 	short hunds[4] = { 0,0,0,0 }; //if hunds[i] == 0 then blank
 	short tenss = 0;
 
-	//determine the hundreds, tens, ones that compose the Hebrew Year
+	//deter__min the hundreds, tens, ones that compose the Hebrew Year
 	hund = (int)Fix((yr - 5000) * 0.01);
 	tens = (int)Fix((yr - 5000 - hund * 100) * 0.1);
 	ones = (int)Fix(yr - 5000 - hund * 100 - tens * 10);
@@ -3606,7 +3661,7 @@ void parseit( char outdoc[], bool *closerow, short linnum, short mode)
 
 	if (WIDTHFIELD)
 	{
-		//program will independently determine witdth field
+		//program will independently deter__min witdth field
 		itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
 	}
 	else
@@ -3703,7 +3758,7 @@ void heb12monthHTML(short setflag)
 
 	WriteHtmlHeader(); //initialize header information for stdout html output
 
-	if (SRTMflag == 10 || SRTMflag == 11)
+	if (SRTMflag > 9)
 	{
 		fprintf(stdout, "%s\n", "<section>" );
 		fprintf(stdout, "%s\n", " <style scoped>" );
@@ -3733,6 +3788,17 @@ void heb12monthHTML(short setflag)
 		fprintf(stdout, "%s\n", buff1 );
 		fprintf(stdout, "%s\n", "        </td>");
 		fprintf(stdout, "%s\n", "    </tr>");
+
+		if (GoldenLight) //add information on azimuth and coordinates of first/last golden light
+		{
+			fprintf(stdout, "%s\n", "    <tr>");
+			fprintf(stdout, "%s\n", "        <td width=\"670\" valign=\"top\">");
+			buff1[0] = '\0'; //clear buffer
+			sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font size=\"1\" style=\"font-size: 8pt\">", &storheader[ii][8][0], "</font></p>" );
+			fprintf(stdout, "%s\n", buff1 );
+			fprintf(stdout, "%s\n", "        </td>");
+			fprintf(stdout, "%s\n", "    </tr>");
+		}
 
 		fprintf(stdout, "%s\n", "    <tr>");
 		fprintf(stdout, "%s\n", "        <td width=\"670\" valign=\"top\">");
@@ -3942,7 +4008,7 @@ void heb12monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\" bgcolor=\"#ffff00\">");
-				//now determine if this time is underlined or shabbos and add appropriate HTML ******
+				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 0, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"46\" bgcolor=\"#ffff00\">");
 				timestring( ii, 1, iii );
@@ -3993,7 +4059,7 @@ void heb12monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\" >");
-				//now determine if this time is underlined or shabbos and add appropriate HTML ******
+				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 0, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"46\">");
 				timestring( ii, 1, iii );
@@ -4050,7 +4116,7 @@ void heb12monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\" bgcolor=\"#ffff00\">");
-				//now determine if this time is underlined or shabbos and add appropriate HTML ******
+				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 11, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"41\" bgcolor=\"#ffff00\">");
 				timestring( ii, 10, iii );
@@ -4100,7 +4166,7 @@ void heb12monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\" >");
-				//now determine if this time is underlined or shabbos and add appropriate HTML ******
+				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 11, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"41\">");
 				timestring( ii, 10, iii );
@@ -4160,14 +4226,29 @@ void heb12monthHTML(short setflag)
    		buff1[0] = '\0'; //clear buffer
 		sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font size=\"1\" style=\"font-size: 8pt\"><b>", &storheader[ii][6][0], "</b></font></p>" );
 		fprintf(stdout, "%s\n", buff1 );
-	}	
+	}
+	if (GoldenLight)
+	{
+		if (SRTMflag == 12)
+		{
+   		buff1[0] = '\0'; //clear buffer
+		sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font color=\"red\" size=\"1\" style=\"font-size: 8pt\"><b>", &storheader[0][7][0], "</b></font></p>" );
+		fprintf(stdout, "%s\n", buff1 );
+		}
+		else if (SRTMflag == 13)
+		{
+   		buff1[0] = '\0'; //clear buffer
+		sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font color=\"red\" size=\"1\" style=\"font-size: 8pt\"\"><b>", &storheader[1][7][0], "</b></font></p>" );
+		fprintf(stdout, "%s\n", buff1 );
+		}
+	}
 	fprintf(stdout, "%s\n", "        </td>");
 	fprintf(stdout, "%s\n", "    </tr>");
 	fprintf(stdout, "%s\n", "</table>");
 	fprintf(stdout, "%s\n", "<p><br/><br/>");
 	fprintf(stdout, "%s\n", "</p>");
 
-	if (SRTMflag == 10 || SRTMflag == 11)
+	if (SRTMflag > 9)
 	{
 		fprintf( stdout, "%s\n", "</section>" );
 	}
@@ -4245,7 +4326,7 @@ void heb13monthHTML(short setflag)
 
 	WriteHtmlHeader();
 
-	if (SRTMflag == 10 || SRTMflag == 11)
+	if (SRTMflag > 9)
 	{
 		/*
 		fprintf(stdout, "%s\n", "<section>" );
@@ -4500,7 +4581,7 @@ void heb13monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"40\" bgcolor=\"#ffff00\">");
-				//now determine if this time is underlined or shabbos and add appropriate HTML ******
+				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 0, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"51\" bgcolor=\"#ffff00\">");
 				timestring( ii, 1, iii );
@@ -4552,7 +4633,7 @@ void heb13monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"40\">");
-				//now determine if this time is underlined or shabbos and add appropriate HTML ******
+				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 0, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"51\">");
 				timestring( ii, 1, iii );
@@ -4613,7 +4694,7 @@ void heb13monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\" bgcolor=\"#ffff00\">");
-				//now determine if this time is underlined or shabbos and add appropriate HTML ******
+				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 12, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"42\" bgcolor=\"#ffff00\">");
 				timestring( ii, 11, iii );
@@ -4665,7 +4746,7 @@ void heb13monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\">");
-				//now determine if this time is underlined or shabbos and add appropriate HTML ******
+				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 12, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"42\">");
 				timestring( ii, 11, iii );
@@ -4733,7 +4814,7 @@ void heb13monthHTML(short setflag)
 	fprintf(stdout, "%s\n", "<p><br/><br/>");
 	fprintf(stdout, "%s\n", "</p>");
 
-	if (SRTMflag == 10 || SRTMflag == 11)
+	if (SRTMflag > 9)
 	{
 		fprintf( stdout, "%s\n", "</section>" );
 	}
@@ -4817,6 +4898,12 @@ short WriteUserLog( int UserNumber, short zmanyes, short typezman, char *errorst
             break;
         case 11:
 			strcat( userloglin, ",visible sunset, 30m DTM" );
+            break;
+		case 12:
+			strcat( userloglin, ",Golden Light Sunrise, 30m DTM" );
+            break;
+        case 13:
+			strcat( userloglin, ",Golden Light Sunset, 30m DTM" );
             break;
 		default:
 		{
@@ -5373,6 +5460,41 @@ void ErrorHandler( short mode, short ier )
 //				 }
                  //strcpy(errorstr, "Missing DTM tiles detected.  Your chosen coordinates may be (a) outside supported geographic regions or (b) your calculation extends out to the ocean (see <a href=\"http://www.chaitables.com/Introduction_to_DTM_calculations.html\">documentation</a>).  For case (b), check the \"Ignore Missing Tiles\" check box" );
             }
+			else if (ier == -10)
+			{
+				//Golden Light sunset error
+				//signifies that the eastern horizon is too close
+                 InternalError = true;
+                 errornum = 60;
+
+					sprintf( filroot, "%s%d%s%d%s%s%s%s%s%s%s%s\n", "The highest point in the eastern horizon is closer than ",MinGoldenDist, "km, or its view angle is larger than ",  MaxGoldenViewAng,
+
+                                                       "<br>",
+                                                       "Two possible options are:",
+                                                       "<br>", "(a) Choose a different place to calculate the Golden Light sunset",
+                                                       "<br>",
+                                                       "(b) Choose to calculate the visible sunset instead of the Golden Light sunset",
+                                                       "<br>",
+                                                       "(N.b., Golden Light tables should not be used without consultation with a halochic authority)" );
+	                 strcpy(errorstr, filroot );
+			}
+			else if (ier == -11)
+			{
+				//Golden Light sunrise error
+				//signifies that the Western horizon is too close
+                 InternalError = true;
+                 errornum = 61;
+
+					sprintf( filroot, "%s%d%s%d%s%s%s%s%s%s%s%s\n", "The highest point in the western horizon is closer than ",MinGoldenDist, "km, or has a view angle is larger than ",  MaxGoldenViewAng,
+                                                       "<br>",
+                                                       "Two possible options are:",
+                                                       "<br>", "(a) Choose a different place to calculate the Golden Light surniset",
+                                                       "<br>",
+                                                       "(b) Choose to calculate the visible sunrise instead of the Golden Light sunrise",
+                                                       "<br>",
+                                                       "(N.b., Golden Light tables should not be used without consultation with a halochic authority)" );
+	                 strcpy(errorstr, filroot );
+			}
 			break;
 		case 11: //WriteHtmlHeader
 			if (ier == 1)
@@ -5549,6 +5671,7 @@ short Caldirectories()
 		case 7:
 		case 8:
         case 10:
+		case 12:
 			sun = "netz";
 
 			// need to calculate visible sunrise
@@ -5604,6 +5727,7 @@ short Caldirectories()
 	case 7:
 	case 8:
     case 11:
+	case 13:
 		sun = "skiy";
 
 		// need to calculate visible sunset
@@ -5649,8 +5773,8 @@ short Caldirectories()
 
 	//Hebrew calendar calculations///////////////////////////////////////
 
-	HebCal(g_yrheb); //determine if it is hebrew leap year
-			//and determine the beginning and ending daynumbers of the Hebrew year
+	HebCal(g_yrheb); //deter__min if it is hebrew leap year
+			//and deter__min the beginning and ending daynumbers of the Hebrew year
 	FirstSecularYr = (g_yrheb - 5758) + 1997;
 	SecondSecularYr = (g_yrheb - 5758) + 1998;
 	StartYr = FirstSecularYr; //default start year for calculations
@@ -5704,7 +5828,7 @@ short calnearsearch( char *bat, char *sun )
 
 	FILE *stream;
 
-	//open bat file and determine which vantage points are within the search radiusAstroNoon(
+	//open bat file and deter__min which vantage points are within the search radiusAstroNoon(
 	//try all case version of the bat file
 
 	//first make copy of original filename for manipulations
@@ -5723,7 +5847,7 @@ short calnearsearch( char *bat, char *sun )
 			{
 				if (InStr( sun, "skiy" ) && findnetz == 0 && types != 1 && types != 5 && types != 7)
 				//probably eros place outside of USA or Eretz Yisroel and calculating mishor/astro times
-				//so try using sunrise bat file instead to determine the average coordinates of vantage points
+				//so try using sunrise bat file instead to deter__min the average coordinates of vantage points
 				{
 					char * pch;
 					pch = strstr (bat,"skiy");
@@ -6088,11 +6212,27 @@ short SunriseSunset( short types, short ExtTemp[] )
 //////////////////////////////////////////////////////////////
 {
 
-	short ier, nsetflag, i,tabletyp;
+	short ier, nsetflag, i = 0,tabletyp;
 	double kmxo, kmyo, lt, lg, hgt, aprn;
 	int N, E;
-	double re, rekm;
 	short MinTemp[12],AvgTemp[12],MaxTemp[12];
+	short ns1, ns2, ns3, ns4;
+	double WinTemp = 0;
+	double maxdecl;
+	short maxang;
+	double meantemp;
+	double p;
+	short itk;
+
+    short nweather = 3;
+	p = Pressure0; //1013.25f;
+
+/*                                  '=0 for summer refraction */
+/*                                  '=1 for winter refraction */
+/*                                  '=2 for ASTRONOMICAL ALMANAC's refraction */
+/*                                  '=3 ad hoc summer length as function of latitude
+/*                                  '   ad hoc winter length as function of latitude
+
 
     re = 6371315.; //radius of earth in meters
     rekm = 6371.315f; //radius of earth in km
@@ -6114,9 +6254,9 @@ short SunriseSunset( short types, short ExtTemp[] )
     */     
 
 	////////////Printing Single Tables of Sunrise or Sunset////////////////////
+	if (SRTMflag < 12) {
 
 	///////////////////sunrises//////////////////////////////////////////
-
 	for (i = 0; i < nplac[0]; i++ ) //sunrises
 	{
 
@@ -6167,8 +6307,6 @@ short SunriseSunset( short types, short ExtTemp[] )
 		    case 10:
                 nsetflag = 0; //vis sunrise using 30m DTM
 			    break;
-		    case 11:
-                nsetflag = 1; //vis sunset using 30m DTM
                 break;
 		}
 
@@ -6197,7 +6335,30 @@ short SunriseSunset( short types, short ExtTemp[] )
 			return -1;
 		}
 
-		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+		//----Old Method: ad hoc summer and winter ranges for different latitudes----- 
+		//----- VDW_REF = true, read WorldClim temperatures and stuff into min,avg, max temperature arrays
+		//as well as calculationg the WinTemp used for finding probable inversion layer season within winter months
+		//also calculate the longitude and latitude if not inputed
+
+		InitWeatherRegions( &lt, &lg, &nweather,
+     						&ns1, &ns2, &ns3, &ns4, &WinTemp,
+							MinTemp, AvgTemp, MaxTemp, ExtTemp);
+
+		//for new calcualtion method, deter__min the ground temperatures, minimum, average, and yearly mean
+		if (VDW_REF) {
+
+			//find average temperature to use in removing profile's TR 
+			meantemp = 0.f;
+			for (itk = 1; itk <= 12; ++itk) {
+				meantemp += AvgTemp[itk - 1];
+			}
+			meantemp = meantemp / 12.f + 273.15f;
+
+		}
+
+		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
+					    &nweather, &meantemp, &p, &ns1, &ns2, &ns3, &ns4, &WinTemp,
+						MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 		if (ier) //error detected
 		{
@@ -6222,12 +6383,12 @@ short SunriseSunset( short types, short ExtTemp[] )
 	case 4:
 	case 10:
 
-		if (types == 10 && parshiotflag == 2) //set time cushion similar to 30m SRTM (outside EY)
+		if ((types > 9) && parshiotflag == 2) //set time cushion similar to 30m SRTM (outside EY)
 		{
 			accur[0] = cushion[3];
 			accur[1] = -cushion[3];
 		}
-		else if (types == 10 && parshiotflag == 1) //30 m DTM, similar to 30 m DRTM (EY)
+		else if ((types > 9) && parshiotflag == 1) //30 m DTM, similar to 30 m DRTM (EY)
 		{
 			accur[0] = cushion[3];
 			accur[1] = -cushion[3];
@@ -6365,7 +6526,30 @@ short SunriseSunset( short types, short ExtTemp[] )
 			return -1;
 		}
 
-		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, MinTemp, AvgTemp, MaxTemp, ExtTemp);
+		//----Old Method: ad hoc summer and winter ranges for different latitudes----- 
+		//----- VDW_REF = true, read WorldClim temperatures and stuff into min,avg, max temperature arrays
+		//as well as calculationg the WinTemp used for finding probable inversion layer season within winter months
+		//also calculate the longitude and latitude if not inputed
+
+		InitWeatherRegions( &lt, &lg, &nweather,
+     						&ns1, &ns2, &ns3, &ns4, &WinTemp,
+							MinTemp, AvgTemp, MaxTemp, ExtTemp);
+
+		//for new calcualtion method, deter__min the ground temperatures, minimum, average, and yearly mean
+		if (VDW_REF) {
+			//read WorldClim bil files to deter__min the minimum and average temperatures of the year
+
+			//find average temperature to use in removing profile's TR 
+			meantemp = 0.f;
+			for (itk = 1; itk <= 12; ++itk) {
+				meantemp += AvgTemp[itk - 1];
+			}
+			meantemp = meantemp / 12.f + 273.15f;
+		}
+
+		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
+					    &nweather, &meantemp, &p, &ns1, &ns2, &ns3, &ns4, &WinTemp,
+						MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 		if (ier) //error detected
 		{
@@ -6388,12 +6572,12 @@ short SunriseSunset( short types, short ExtTemp[] )
 		case 5:
 		case 11:
 
-			if (types == 11 && parshiotflag == 2) //set time cushions similar to 30 m SRTM
+			if (types > 10 && parshiotflag == 2) //set time cushions similar to 30 m SRTM
 			{
 				accur[0] = cushion[3];
 				accur[1] = -cushion[3];
 			}
-			else if (types == 11 && parshiotflag == 1) //30m DTM, similar to 30 m SRTM
+			else if (types > 10 && parshiotflag == 1) //30m DTM, similar to 30 m SRTM
 			{
 				accur[0] = cushion[3];
 				accur[1] = -cushion[3];
@@ -6454,6 +6638,198 @@ short SunriseSunset( short types, short ExtTemp[] )
 
 	////////////////printing sunrises and sunsets together, printing zemanim///////////
 
+	//////////////////Golden Light tables///////////////////////////////////////////
+	} else if (SRTMflag > 11) {
+
+		kmxo = eroslongitude;
+		kmyo = eroslatitude;
+		hgt = eroshgt;
+		aprn = erosaprn;  //how much to shave in km
+		GoldenLight = 1;
+
+		if (!geo) 
+		{
+			//EY, need to convert ITM to WGS84 
+			N = (int)(kmyo * 1000 + 1000000); 
+			E = (int)(kmxo * 1000);
+			//use J. Gray's conversion from ITM to WGS84
+			//source: http://www.technion.ac.il/~zvikabh/software/ITM/isr84lib.cpp
+			ics2wgs84(N, E, &lt, &lg); 
+			lg = -lg; //convert this program's coordinate system where East longitude is positive
+		} 
+		else
+		{
+			//geo coordinates are identical with the kmx,kmy coordinates
+			lt = kmyo;
+			lg = kmxo;
+		}
+
+		ier = Temperatures(lt, -lg, MinTemp, AvgTemp, MaxTemp);
+
+		if (ier) //error detected
+		{
+			ErrorHandler(17, ier);
+			return -1;
+		}
+
+		//----Old Method: ad hoc summer and winter ranges for different latitudes----- 
+		//----- VDW_REF = true, read WorldClim temperatures and stuff into min,avg, max temperature arrays
+		//as well as calculationg the WinTemp used for finding probable inversion layer season within winter months
+		//also calculate the longitude and latitude if not inputed
+
+		InitWeatherRegions( &lt, &lg, &nweather,
+     						&ns1, &ns2, &ns3, &ns4, &WinTemp,
+							MinTemp, AvgTemp, MaxTemp, ExtTemp);
+
+		//for new calcualtion method, deter__min the ground temperatures, minimum, average, and yearly mean
+		if (VDW_REF) {
+			//read WorldClim bil files to deter__min the minimum and average temperatures of the year
+
+			//find average temperature to use in removing profile's TR 
+			meantemp = 0.f;
+			for (itk = 1; itk <= 12; ++itk) {
+				meantemp += AvgTemp[itk - 1];
+			}
+			meantemp = meantemp / 12.f + 273.15f;
+		}
+
+		//N.b., if this is Golden Hour calculation, then first assume same temperatures as observer, calculate the rpfile
+		//find the coordinates of the first golden light, then go back and use this point to define the ground temperature, etc.
+
+		//deter__min maximum angular range from latitude
+		maxdecl = (66.5 - fabs(lt)) + 23.5; //approximate formula for maximum declination as function of latitude (kmyo)
+		//source: chart of declination range vs latitude from http://en.wikipedia.org/wiki/Declination
+		maxang = (int)(fabs(asin(cos(maxdecl * cd)))/cd); //approximate formula for half maximum angle range as function of declination
+		//source: http://en.wikipedia.org/wiki/Solar_azimuth_angle
+		//add another few degrees on either side for a cushion for latitudes greater than 60
+		if (fabs(lt) >= 60 && fabs(lt) < 62 )
+		{
+			maxang = maxang + 3;
+		}
+		else if (fabs(lt) >= 62)
+		{
+			maxang = maxang + 10;
+		}
+
+		if (maxang < 45) maxang = 45.; //set minimum maxang
+
+		//maxang = MAX_ANGULAR_RANGE;
+
+		if (SRTMflag == 12) {
+			SRTMflag = 11; //calculate profile of western horizon (where golden light will first appear)
+			ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, &p, &meantemp, SRTMflag );
+			SRTMflag = 12; //restore the SRTMflag value
+		} else if (SRTMflag == 13) {
+			SRTMflag = 10; //calculate profile of eastern horizon (where golden light will last appear)
+			ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, &p, &meantemp, SRTMflag );
+			SRTMflag = 13; //restore the SRTMflag value
+		}
+
+
+		//if highest point is located at very near obstruction, then return just return error message
+
+		if (ier) //error detected
+		{
+			ErrorHandler(10, ier); //-10 = Golden Light eastern horizon too close for golden light sunset calculations
+								   //-11 = Golden Light western horizon too close for golden light sunrise calculations
+			return -1;
+		}
+
+		if (GoldenLight == 1) {
+			//change the coordinates to the highest horizon coordinates
+			GoldenLight = 2;
+			lt = Gold.vert[3];
+			lg = -Gold.vert[2];
+			hgt = Gold.vert[5];
+		}
+
+		//recalculate coordinate dependent groond temperatures
+		ier = Temperatures(lt, -lg, MinTemp, AvgTemp, MaxTemp);
+
+		if (ier) //error detected
+		{
+			ErrorHandler(17, ier);
+			return -1;
+		}
+
+		//----Old Method: ad hoc summer and winter ranges for different latitudes----- 
+		//----- VDW_REF = true, read WorldClim temperatures and stuff into min,avg, max temperature arrays
+		//as well as calculationg the WinTemp used for finding probable inversion layer season within winter months
+		//also calculate the longitude and latitude if not inputed
+
+		InitWeatherRegions( &lt, &lg, &nweather,
+     						&ns1, &ns2, &ns3, &ns4, &WinTemp,
+							MinTemp, AvgTemp, MaxTemp, ExtTemp);
+
+		//for new calcualtion method, deter__min the ground temperatures, minimum, average, and yearly mean
+		if (VDW_REF) {
+			//read WorldClim bil files to deter__min the minimum and average temperatures of the year
+
+			//find average temperature to use in removing profile's TR 
+			meantemp = 0.f;
+			for (itk = 1; itk <= 12; ++itk) {
+				meantemp += AvgTemp[itk - 1];
+			}
+			meantemp = meantemp / 12.f + 273.15f;
+		}
+
+		//now calculate the sunrise/sunset table
+		if (SRTMflag == 12) {
+			nsetflag = 0; //sunrise
+			tabletyp = 0; //visible sunset index of tims
+			SRTMflag = 10; //calculate visible sunrise profile/sunrise table for the golden light coordinates
+		} else if (SRTMflag == 13) {
+			nsetflag = 1; //sunset
+			tabletyp = 1; //visible sunset index of tims
+			SRTMflag = 11; //calculate visible sunset profile/sunset table for the  golden light coordinates
+		}
+
+		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
+					    &nweather, &meantemp, &p, &ns1, &ns2, &ns3, &ns4, &WinTemp,
+						MinTemp, AvgTemp, MaxTemp, ExtTemp);
+
+		if (ier) //error detected
+		{
+			ErrorHandler(10, ier); //-1 = insufficient azimuthal range
+			                       //-2 = can't open profile file
+			                       //-3 = can't allocate memory for elev array
+			return -1;
+		}
+
+		//restore SRTMflags for Golden Light to flag the correct titles and headers
+
+		if (SRTMflag == 10)
+		{
+			SRTMflag = 12;
+		}
+		else if (SRTMflag == 11)
+		{
+			SRTMflag = 13;
+		}
+
+		if (CreateHeaders(types)) return -1; //create headers for all the different table types
+			 //return -1 if error detected	
+
+		//now convert calculated sunset time in fractional hours to time string and
+		//print out sunset table if only single table of sunset was requested
+		if (parshiotflag == 2) //set time cushions similar to 30 m SRTM
+			{
+				accur[0] = cushion[3];
+				accur[1] = -cushion[3];
+			}
+		else if (parshiotflag == 1) //30m DTM, similar to 30 m SRTM
+			{
+				accur[0] = cushion[3];
+				accur[1] = -cushion[3];
+			}
+
+		PrintSingleTable( nsetflag, tabletyp ); //converts "tims" array in fractional hours to
+				//time strings and prints out table to output
+
+		////////////////printing sunrises and sunsets together, printing zemanim///////////
+
+		}
+
 
 	return 0;
 
@@ -6469,6 +6845,7 @@ short CreateHeaders( short types )
 	char l_buffcopy[1255] = "";
 	char l_buffwarning[1255] = "";
 	char l_buffazimuth[1255] = "";
+	char i_buffergolden[1255] = "";
 	short ii, iii, iv = 28, iiv = 32; //astronomical sunrise/sunset captions
 	char st0[1255] = " of the Astronomical Sunrise of ";
 	char st4[1255] = " of the Astronomical Sunset of ";
@@ -6498,15 +6875,19 @@ short CreateHeaders( short types )
 			sprintf( title, "%s%s%s%s", &heb1[1][0], "\"", TitleLine, "\"" );
 		}
 */
-		sprintf( title, "%s%s%s%s", &heb1[1][0], "\"", TitleLine, "\"" );
+		sprintf( title, "%s %s%s%s", &heb1[1][0], "\"", TitleLine, "\"" );
 
 	  	//copyright and warning lines
-		if (SRTMflag == 10 || SRTMflag == 11)
+		if (SRTMflag > 9)
 		{
 			//sprintf( l_buffcopy, "%s%s%s%s", &heb2[17][0], ". ", &heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
 			sprintf( l_buffcopy, "%s%s%s%s%4.1f%s%s%s", &heb2[17][0], ". ", &heb2[23][0], " ", vernum, ", ",&heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
 	        sprintf( l_buffwarning, "%s%3.1f%s", &heb2[15][0], distlim, &heb1[72][0] );
 	        sprintf( l_buffazimuth, "%s", &heb2[24][0] );
+			if (GoldenLight && sqrt(pow(Gold.vert[4],2.0) + pow((Gold.vert[5] - eroshgt) * 0.001,2.0)) > 1.5) 
+			{
+				sprintf( i_buffergolden, "%s", &heb1[73][0] ); //print warning since golden light is further than techum Shabbos from observer
+			}
 		}
 		else
 		{
@@ -6531,12 +6912,16 @@ short CreateHeaders( short types )
 		//copyright and warning lines
 		//sprintf( l_buffcopy, "%s%s%s%d%s%d", "All times are according to Standard Time. Shabbosim are underlined. ", "&#169;", " Luchos Chai, Fahtal  56, Jerusalem  97430; Tel/Fax: +972-2-5713765. Version: ", datavernum, ".", progvernum );
 
-		if (SRTMflag == 10 || SRTMflag == 11)
+		if (SRTMflag > 9)
 		{
 			//sprintf( l_buffcopy, "%s%4.1f", "All <em>zemanim</em> are in Standard Time. <u>Shabbosim are underlined</u>. &#169;Luchos Chai&nbsp;<a href=\"http://www.chaitables.com\">www.chaitables.com</a>.  Version: ", vernum  );
 			sprintf( l_buffcopy, "%s%4.1f", "Add a hour for DST. <u>Shabbosim are underlined</u>. &#169;Luchos Chai&nbsp;<a href=\"http://www.chaitables.com\">www.chaitables.com</a>.  Version: ", vernum  );
 			sprintf( l_buffwarning, "%s%3.1f%s", "\"Green\" denotes diminished accuracy due to obstructions closer than ", distlim, " km." );
 	        sprintf( l_buffazimuth, "%s", "''?'' denotes insufficient azimuth range for calculation (pick a place with an unobstructed view, or shave obstructions)" );
+			if (GoldenLight && sqrt(pow(Gold.vert[4],2.0) + pow((Gold.vert[5] - eroshgt) * 0.001,2.0)) > 1.5) 
+			{
+				sprintf( i_buffergolden, "%s", "Warning: the place where Golden Light will appear may be beyound the techum! Consult a Rav before using this table." );
+			}
 		}
 		else
 		{
@@ -6595,13 +6980,13 @@ short CreateHeaders( short types )
 					//nsetflag = 0; //visible sunrise/astr. sunrise/chazos
 					if ( InStr( &storheader[0][0][0], "NA") || strlen(Trim(&storheader[0][0][0])) <= 2 ) //use defaults
 					{
-						sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+						sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 						sprintf( &storheader[0][1][0], "%s", &heb1[16][0] );
 						sprintf( &storheader[0][2][0], "%s", &heb1[21][0] );
 					}
 					else //use headers saved in the _port.sav file
 					{
-						sprintf( buff1, "%s%s%s%s", &storheader[0][0][0], &heb2[1][0], " ", g_yrcal );
+						sprintf( buff1, "%s%s%s%s%s", &storheader[0][0][0], " ", &heb2[1][0], " ", g_yrcal );
 						strcpy( &storheader[0][0][0], buff1 );
 					}
 					sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -6613,13 +6998,13 @@ short CreateHeaders( short types )
 					//nsetflag = 1; //visible sunset/astr. sunset/chazos
 					if ( InStr( &storheader[1][0][0], "NA") || strlen(Trim(&storheader[1][0][0])) <= 2 )// use defulats
 					{
-						sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+						sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 						sprintf( &storheader[1][1][0], "%s", &heb1[13][0] );
 						sprintf( &storheader[1][2][0], "%s", &heb1[21][0] );
 					}
 					else //use headers stored in the _port.sav file
 					{
-						sprintf( buff1, "%s%s%s%s", &storheader[1][0][0], &heb2[1][0], " ", g_yrcal );
+						sprintf( buff1, "%s%s%s%s%s", &storheader[1][0][0], " ", &heb2[1][0], " ", g_yrcal );
 						strcpy( &storheader[1][0][0], buff1 );
 					}
 					sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -6629,7 +7014,7 @@ short CreateHeaders( short types )
 					break;
 				case 2:
 					//nsetflag = 2; //astronomical sunrise for hgt != 0, otherwise mishor sunrise/chazos
-					sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[ii][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[ii][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 					sprintf( &storheader[0][1][0], "%s", &heb1[iv][0] );
 					sprintf( &storheader[0][2][0], "%s", &heb1[27][0] );
 					sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -6639,7 +7024,7 @@ short CreateHeaders( short types )
 					break;
 				case 3:
 					//nsetflag = 3; //astronomical sunset for hgt != 0, otherwise mishor sunset/chazos
-					sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[iii][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[iii][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 					sprintf( &storheader[1][1][0], "%s", &heb1[iiv][0] );
 					sprintf( &storheader[1][2][0], "%s", &heb1[27][0] );
 					sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -6651,7 +7036,7 @@ short CreateHeaders( short types )
 				  //nsetflag = 4; //vis sunrise/ mishor sunrise/ chazos
 				  if ( InStr( &storheader[0][0][0], "NA") || strlen(Trim(&storheader[0][0][0])) <= 2 )//use defulats
 					  {
-					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 					  sprintf( &storheader[0][1][0], "%s", &heb1[16][0] );
 					  sprintf( &storheader[0][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -6664,7 +7049,7 @@ short CreateHeaders( short types )
 				  //nsetflag = 5; //visible sunset/ mishor sunset/ chazos
 				  if ( InStr( &storheader[1][0][0], "NA") || strlen(Trim(&storheader[1][0][0])) <= 2 ) //use defulats
 					  {
-					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 					  sprintf( &storheader[1][1][0], "%s", &heb1[13][0] );
 					  sprintf( &storheader[1][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -6677,7 +7062,7 @@ short CreateHeaders( short types )
 				  //nsetflag = 6; //visible sunrise and visible sunset/ astr sunrise/astr sunset/ chazos
 				  if ( InStr( &storheader[0][0][0], "NA") || strlen(Trim(&storheader[0][0][0])) <= 2 ) //use defulats
 					  {
-					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 					  sprintf( &storheader[0][1][0], "%s", &heb1[16][0] );
 					  sprintf( &storheader[0][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -6687,7 +7072,7 @@ short CreateHeaders( short types )
 					  }
 				  if ( InStr( &storheader[1][0][0], "NA") || strlen(Trim(&storheader[1][0][0])) <= 2 ) //use defulats
 					  {
-					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 					  sprintf( &storheader[1][1][0], "%s", &heb1[13][0] );
 					  sprintf( &storheader[1][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -6700,7 +7085,7 @@ short CreateHeaders( short types )
 				  //nsetflag = 7; //visible sunrise/ mishor sunrise and /visible sunset/ mishor sunset
 				  if ( InStr( &storheader[0][0][0], "NA") || strlen(Trim(&storheader[0][0][0])) <= 2 ) //use defulats
 					  {
-					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 					  sprintf( &storheader[0][1][0], "%s", &heb1[16][0] );
 					  sprintf( &storheader[0][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -6710,7 +7095,7 @@ short CreateHeaders( short types )
 					  }
 				  if ( InStr( &storheader[1][0][0], "NA") || strlen(Trim(&storheader[1][0][0])) <= 2 ) //use defulats
 					  {
-					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 					  sprintf( &storheader[1][1][0], "%s", &heb1[13][0] );
 					  sprintf( &storheader[1][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -6721,14 +7106,14 @@ short CreateHeaders( short types )
 				  break;
 				case 8:
 				  //nsetflag = 8; //astronomical sunrise and sunset/ mishor sunrise and sunset if hgt = 0
-				  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[ii][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+				  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[ii][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 				  sprintf( &storheader[0][1][0], "%s", &heb1[iv][0] );
 				  sprintf( &storheader[0][2][0], "%s", &heb1[27][0] );
 				  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
 				  sprintf( &storheader[0][4][0], "%s", l_buffcopy );
 				  sprintf( &storheader[0][5][0], "%s", "\0" );
 				  sprintf( &storheader[0][6][0], "%s", "\0" );
-				  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[iii][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+				  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[iii][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
 				  sprintf( &storheader[1][1][0], "%s", &heb1[iiv][0] );
 				  sprintf( &storheader[1][2][0], "%s", &heb1[27][0] );
 				  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -6888,7 +7273,7 @@ short CreateHeaders( short types )
 
 		if (optionheb)
 		{
-		    if ((!astronplace && types !=2 && types != 3 && types !=8) || (types == 10 || types == 11) )
+		    if ((!astronplace && types !=2 && types != 3 && types !=8) || (types > 9) )
 		    {
 				switch( SRTMflag )
 				{
@@ -6937,10 +7322,27 @@ short CreateHeaders( short types )
 
 				  sprintf(buff, "%s", &heb1[56][0] );
 				  break;
+				case 12: //30 m DTM sunrise  ***************TO DO -- add hebrew for this option --
+				  //sprintf( buff2, "%s%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%s%s%s%3.1lf%s%s", &heb1[69][0], eroscity, " ", &heb2[1][0], " ", g_yrcal, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunrise
+				  sprintf( buff2, "%s%s%s%s %10.5lf %s %10.5lf %s %6.1lf %s%s%s%s %3.1lf %s%s", &heb1[74][0], eroscity, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunrise
+				  sprintf( buff3, "%s %5.1lf %s%s %10.5lf %s %10.5lf %s %6.1lf %s, %5.1lf %s", &heb1[76][0]  
+							   , Gold.vert[0], &heb9[14][0], &heb1[18][0], -Gold.vert[2], &heb1[17][0], Gold.vert[3], &heb1[67][0]
+							   , Gold.vert[5], &heb1[68][0], Gold.vert[4], &heb9[16][0] );
+				  sprintf(buff, "%s", &heb1[55][0] );
+                  break;
+                case 13: //30 m DTM sunset ****************TO DO -- add hebrew for this option --
 
+				  //sprintf( buff3, "%s%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%s%s%s%3.1lf%s%s", &heb1[70][0], eroscity, " ", &heb2[1][0], " ", g_yrcal, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunset
+				  sprintf( buff2, "%s%s%s%s %10.5lf %s %10.5lf %s %6.1lf %s%s%s%s %3.1lf %s%s", &heb1[75][0], eroscity, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunset
+				  sprintf( buff3, "%s %5.1lf %s%s %10.5lf %s %10.5lf %s %6.1lf %s, %5.1lf %s", &heb1[77][0]  
+							   , Gold.vert[0], &heb9[14][0], &heb1[18][0], -Gold.vert[2], &heb1[17][0], Gold.vert[3], &heb1[67][0]
+							   , Gold.vert[5], &heb1[68][0], Gold.vert[4], &heb9[16][0] );
+
+				  sprintf(buff, "%s", &heb1[56][0] );
+				  break;
 				}
 			}
-			else if ((astronplace || types == 2 || types == 3 || types == 8) && (types != 10 && types != 11) )
+			else if ((astronplace || types == 2 || types == 3 || types == 8) && (types < 10) )
 			{
 				if ( !ast ) // mishor
 			   {
@@ -7131,7 +7533,7 @@ short CreateHeaders( short types )
 			  break;
 			case 10:
 			  //nsetflag = 11; //visible sunrise for 30 m DTM
-			  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s %s %s%s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7141,7 +7543,7 @@ short CreateHeaders( short types )
 			  break;
             case 11:
 			  //nsetflag = 11; //visible sunset for 30 m DTM
-			  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s %s %s%s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7149,11 +7551,35 @@ short CreateHeaders( short types )
 			  sprintf( &storheader[1][5][0], "%s", l_buffwarning );
 			  sprintf( &storheader[1][6][0], "%s", l_buffazimuth );
 			  break;
+			case 12:
+			  //nsetflag = 11; //visible sunrise for 30 m DTM
+			  sprintf( &storheader[0][0][0], "%s %s %s %s%s%s", title, &heb1[74][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][1][0], "%s", buff2 );
+			  sprintf( &storheader[0][8][0], "%s", buff3 );
+			  sprintf( &storheader[0][2][0], "%s", buff );
+			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
+			  sprintf( &storheader[0][4][0], "%s", l_buffcopy );
+			  sprintf( &storheader[0][5][0], "%s", l_buffwarning );
+			  sprintf( &storheader[0][6][0], "%s", l_buffazimuth );
+			  sprintf( &storheader[0][7][0], "%s", i_buffergolden ); //add Golden Light warning
+			  break;
+            case 13:
+			  //nsetflag = 11; //visible sunset for 30 m DTM
+			  sprintf( &storheader[1][0][0], "%s %s %s %s%s%s", title, &heb1[75][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][1][0], "%s", buff2 );
+			  sprintf( &storheader[1][8][0], "%s", buff3 );
+			  sprintf( &storheader[1][2][0], "%s", buff );
+			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
+			  sprintf( &storheader[1][4][0], "%s", l_buffcopy );
+			  sprintf( &storheader[1][5][0], "%s", l_buffwarning );
+			  sprintf( &storheader[1][6][0], "%s", l_buffazimuth );
+			  sprintf( &storheader[1][7][0], "%s", i_buffergolden ); //add Golden Light warning
+			  break;
             }
 		}
 		else
 		{
-			if ((!astronplace  && types !=2 && types != 3 && types !=8) || (astronplace && (SRTMflag == 10 || SRTMflag == 11)) )
+			if ((!astronplace  && types !=2 && types != 3 && types !=8) || (astronplace && SRTMflag > 9 ))
 			{
 				switch( SRTMflag )
 				{
@@ -7241,6 +7667,44 @@ short CreateHeaders( short types )
 					  sprintf( buff3, "%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%3.1lf%s", "30 DTM based visible sunset of "
 							   , eroscity, " (longitude: ", eroslongitude, ", latitude: ", eroslatitude, ", height: "
 							   , eroshgt, " m, shaving: ", erosaprn, " km)" );
+					  sprintf( buff, "%s", "Terrain model: 30m DTM" );
+                     break;
+				   case 12:
+					   /*
+					  sprintf( buff2, "%s%3.1f%s%s%s%10.5lf%s%10.5f%s%6.1lf", "30m DTM based earliest sunrise, shaving "
+							   , erosaprn, " km. from ", eroscity, "; longitude: "
+							   , eroslongitude, ", latitude: ", eroslatitude, ", observer hgt: ", eroshgt + 1.8 );
+					  */
+					  /*
+					  sprintf( buff2, "%s%s%s%d%s%10.5lf%s%10.5lf%s%6.1lf%s%3.1lf%s", "30m DTM based visible sunrise of "
+							   , eroscity, " for the year: ", g_yrheb, " (longitude: ", eroslongitude, ", latitude: ", eroslatitude, ", height: "
+							   , eroshgt, " m, shaving: ", erosaprn, " km)" );
+					  */
+					  sprintf( buff2, "%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%3.1lf%s", "Earliest Western Horizon Golden Light Sunrise of "
+							   , eroscity, " (longitude: ", eroslongitude, ", latitude: ", eroslatitude, ", height: "
+							   , eroshgt, " m, shaving: ", erosaprn, " km)" );
+					  sprintf( buff3, "%s%5.1lf%s%10.5lf%s%10.5lf%s%6.1lf%s%5.1lf%s", "First Golden light will be seen at azimuth:"  
+							   , Gold.vert[0], " degrees, longitude: ", -Gold.vert[2], ", latitude: ", Gold.vert[3], ", height: "
+							   , Gold.vert[5], " m, ", Gold.vert[4], " km from the observer." );
+					  sprintf( buff, "%s", "Terrain model: 30m DTM" );
+                      break;
+                   case 13:
+					   /*
+ 					  sprintf( buff3, "%s%3.1f%s%s%s%10.5lf%s%10.5f%s%6.1lf", "30m DTM based latest sunset, shaving "
+							   , erosaprn, " km. from ", eroscity, "; longitude: "
+							   , eroslongitude, ", latitude: ", eroslatitude, ", observer hgt: ", eroshgt + 1.8 );
+					  */
+					  /*
+					  sprintf( buff3, "%s%s%s%d%s%10.5lf%s%10.5lf%s%6.1lf%s%3.1lf%s", "30 DTM based visible sunset of "
+							   , eroscity, " for the year: ", g_yrheb, " (longitude: ", eroslongitude, ", latitude: ", eroslatitude, ", height: "
+							   , eroshgt, " m, shaving: ", erosaprn, " km)" );
+					  */
+					  sprintf( buff2, "%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%3.1lf%s", "Latest Eastern Horizon Golden Light Sunset of "
+							   , eroscity, " (longitude: ", eroslongitude, ", latitude: ", eroslatitude, ", height: "
+							   , eroshgt, " m, shaving: ", erosaprn, " km)" );
+					  sprintf( buff3, "%s%5.1lf%s%10.5lf%s%10.5lf%s%6.1lf%s%5.1lf%s", "Last Golden light will be seen at azimuth:"  
+							   , Gold.vert[0], " degrees, longitude: ", -Gold.vert[2], ", latitude: ", Gold.vert[3], ", height: "
+							   , Gold.vert[5], " m, ", Gold.vert[4], " km from the observer." );
 					  sprintf( buff, "%s", "Terrain model: 30m DTM" );
                      break;
 				}
@@ -7443,6 +7907,45 @@ short CreateHeaders( short types )
 			  sprintf( &storheader[1][4][0], "%s", l_buffcopy );
 			  sprintf( &storheader[1][5][0], "%s", l_buffwarning );
 			  sprintf( &storheader[1][6][0], "%s", l_buffazimuth );
+              break;
+			case 12:
+			  //nsetflag = 7; //visible sunrise/ mishor sunrise and /visible sunset/ mishor sunset
+			  sprintf( &storheader[0][0][0], "%s%s%s%s%4d", title, " of the Golden Light Sunrise for the Region of ", engcityname, " for the Year ", g_yrheb );
+			  sprintf( &storheader[0][1][0], "%s", buff2 );
+			  sprintf( &storheader[0][8][0], "%s", buff3 );
+			  sprintf( &storheader[0][2][0], "%s", buff );
+			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[1][0] );
+			  sprintf( &storheader[0][4][0], "%s", l_buffcopy );
+			  sprintf( &storheader[0][5][0], "%s", l_buffwarning );
+			  sprintf( &storheader[0][6][0], "%s", l_buffazimuth );
+			  sprintf( &storheader[1][0][0], "%s%s%s%s%4d", title, " of the Golden Light Sunrise for the Region of ", engcityname, " for the Year ", g_yrheb );
+			  sprintf( &storheader[1][1][0], "%s", buff2 );
+			  sprintf( &storheader[1][2][0], "%s", buff );
+			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[1][0] );
+			  sprintf( &storheader[1][4][0], "%s", l_buffcopy );
+			  sprintf( &storheader[1][5][0], "%s", l_buffwarning );
+			  sprintf( &storheader[1][6][0], "%s", l_buffazimuth );
+			  sprintf( &storheader[0][7][0], "%s", i_buffergolden );
+
+              break;
+			case 13:
+			  //nsetflag = 7; //visible sunrise/ mishor sunrise and /visible sunset/ mishor sunset
+			  sprintf( &storheader[0][0][0], "%s%s%s%s%4d", title, " of the Golden Light Sunrise for the Region of ", engcityname, " for the Year ", g_yrheb );
+			  sprintf( &storheader[0][1][0], "%s", buff2 );
+			  sprintf( &storheader[0][2][0], "%s", buff );
+			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[1][0] );
+			  sprintf( &storheader[0][4][0], "%s", l_buffcopy );
+			  sprintf( &storheader[0][5][0], "%s", l_buffwarning );
+			  sprintf( &storheader[0][6][0], "%s", l_buffazimuth );
+			  sprintf( &storheader[1][0][0], "%s%s%s%s%4d", title, " of the Golden Light Sunset for the Region of ", engcityname, " for the Year ", g_yrheb );
+			  sprintf( &storheader[1][1][0], "%s", buff2 );
+			  sprintf( &storheader[1][8][0], "%s", buff3 );
+			  sprintf( &storheader[1][2][0], "%s", buff );
+			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[1][0] );
+			  sprintf( &storheader[1][4][0], "%s", l_buffcopy );
+			  sprintf( &storheader[1][5][0], "%s", l_buffwarning );
+			  sprintf( &storheader[1][6][0], "%s", l_buffazimuth );
+			  sprintf( &storheader[1][7][0], "%s", i_buffergolden );
               break;
 			}
 		}
@@ -7735,7 +8238,7 @@ void HebCal(short yrheb)
 	yrstep = yrheb - sthebyr;
 
 	//add synodic periods from the reference year in order to
-	//determine moladim of desired Hebrew Year
+	//deter__min moladim of desired Hebrew Year
 	nyear = 0;
 	flag = 0;
 	for (kyr = 1; kyr <= yrstep; kyr++)
@@ -7746,7 +8249,7 @@ void HebCal(short yrheb)
 		g_n1rhooo = g_n1rho;
 	}
 	//now calculate molad of Tishri 1 of year after the desired Hebrew Year in order to
-	//determine if the desired year is choser,kesidrah, or sholem
+	//deter__min if the desired year is choser,kesidrah, or sholem
 	g_leapyr2 = g_leapyear;
 	nyear = nyear + 1;
 	flag = 1;
@@ -8049,7 +8552,7 @@ void newdate(short &nyear, short nnew, short flag, short kyr, short yrstep)
 	g_n3rh = g_n33;
 	g_n1rho = g_n1rh;
 
-	//now use dechiyos to determine which day of week Rosh Hashanoh falls on
+	//now use dechiyos to deter__min which day of week Rosh Hashanoh falls on
 	//////////////////////dechiyos//////////////////////////////////////////
 	switch (nyear)
 	{
@@ -9280,6 +9783,9 @@ short LoadConstants( short zmanyes, short typezman, char filzman[] )
 
 				//////////////platform////////////////////
 				fgets_CR( doclin, 255, stream);
+				if (InStr(doclin, "Windows")) {
+					Windows = true;
+				}
 				ipath = 0;
 				break;
 
@@ -9721,9 +10227,11 @@ char *IsoToUnicode( char *str )
 
 
 /////////////////////netzski6////////////////////////////////////////
-short netzski6(char *fileon, double lg, double lt, double hgt, double aprn
-			              , float geotd, short nsetflag, short nfil,
-						  short mint[], short avgt[], short maxt[], short ExtTemp[] )
+short netzski6(char *fileon, double lg, double lt, double hgt, double aprn,
+			               float geotd, short nsetflag, short nfil,
+						   short *nweather, double *meantemp, double *p,
+     		               short *ns1, short *ns2, short *ns3, short *ns4, double *WinTemp,
+						   short mint[], short avgt[], short maxt[], short ExtTemp[] )
 //////////////////////////////////////////////////////////////////////
 /* netzski7.f -- translated by f2c (version 20021022).
    You must link the resulting object file with the libraries:
@@ -9742,8 +10250,9 @@ short netzski6(char *fileon, double lg, double lt, double hgt, double aprn
 /************* Local variables ******************/
 
     bool adhocset;
-    short nweather;
-    double elevintx, elevinty, d__, p, t, z__;
+    //short nweather;
+    double elevintx, elevinty, d__, t, z__;
+	//double p;
     short nplaceflg;
     bool adhocrise;
     double a1, t3, t6;
@@ -9753,7 +10262,7 @@ short netzski6(char *fileon, double lg, double lt, double hgt, double aprn
     double td, tf, es, lr, dy, ms;
     short nn;
     double pt, al1, dy1; 
-    short ns1, ns2, ns3, ns4;
+    //short ns1, ns2, ns3, ns4;
     double sr1;
     short nac;
     double aas;
@@ -9786,11 +10295,11 @@ short netzski6(char *fileon, double lg, double lt, double hgt, double aprn
 	short ier = 0;
 	double maxdecl;
 
-    short itk;
-    double meantemp;
+    //short itk;
+    //double meantemp;
 
 	//other parameters new for Version 19
-	double WinTemp = 0;
+	//double WinTemp = 0;
 	short DayCount = 0;
 	double DayLength = 0.0;
 	bool FindWinter = true; //version 18 way of determining the winter months
@@ -9805,7 +10314,7 @@ short netzski6(char *fileon, double lg, double lt, double hgt, double aprn
 	double trbasis, d__3;
 	double hgtdifx = 0., hgtdif = 0., pathlength = 0., exponent = 0., dist = 0., distx = 0.;
 
-	short PartOfDay = 0; //where is zman in the diurnal cycle flag -- determines what temperature is used to calculate the refraction for nweather = 5
+	short PartOfDay = 0; //where is zman in the diurnal cycle flag -- deter__mins what temperature is used to calculate the refraction for nweather = 5
 						   //= 1 for using minimum @orldClim temperatures
 						   //  2 for using average WorldClim temperatures
 						   //  3 for using maximum WorldClim temperatures
@@ -9864,7 +10373,7 @@ alem */
 /*                                   = 6 for visible sunrise calculating profile using 30m DTM */
 /*                                   = 7 for mishor sunset calculating profile using 30m DTM */
 //
-    nweather = 3;
+//    nweather = 3;
 /*                                  '=0 for summer refraction */
 /*                                  '=1 for winter refraction */
 /*                                  '=2 for ASTRONOMICAL ALMANAC's refraction */
@@ -9877,7 +10386,7 @@ alem */
     niter = 1;
 /*                                  '=0 doesn't iterate the sunrise times */
 /*                                  '=1 iterates the sunrise times */
-    p = Pressure0; //1013.25f;
+//    p = Pressure0; //1013.25f;
 /*                                  'mean atmospheric pressure (mb) */
     t = 27.;
 /*                                  'mean atmospheric temperature (degrees Celsius) */
@@ -9897,19 +10406,19 @@ alem */
 /*       as a function of azimuth for the particular observation */
 /*       point at kmxo,kmyo,hgt */
 
+	/*
 	//----Old Method: ad hoc summer and winter ranges for different latitudes----- 
 	//----- VDW_REF = true, read WorldClim temperatures and stuff into min,avg, max temperature arrays
 	//as well as calculationg the WinTemp used for finding probable inversion layer season within winter months
 	//also calculate the longitude and latitude if not inputed
 
+	InitWeatherRegions( &lt, &lg, &nweather,
+     		            &ns1, &ns2, &ns3, &ns4, &WinTemp,
+						mint, avgt, maxt, ExtTemp);
 
-	InitWeatherRegions( &geo, &lt, &lg, &nweather,
-     		                &ns1, &ns2, &ns3, &ns4, WinTemp,
-							mint, avgt, maxt, ExtTemp);
-
-	//for new calcualtion method, determine the ground temperatures, minimum, average, and yearly mean
+	//for new calcualtion method, deter__min the ground temperatures, minimum, average, and yearly mean
 	if (VDW_REF) {
-		//read WorldClim bil files to determine the minimum and average temperatures of the year
+		//read WorldClim bil files to deter__min the minimum and average temperatures of the year
 
 		if (nsetflag == 0) {
 			//sunrise 
@@ -9929,17 +10438,21 @@ alem */
 		    meantemp = meantemp / 12.f + 273.15f;
 		}
 	}
+	*/
 
     astro = false;
 
-	if (nsetflag != 2 && nsetflag != 3 && nsetflag != 6 && nsetflag != 7 && SRTMflag != 10 && SRTMflag != 11) //read horizon profile file
+	if (nsetflag != 2 && nsetflag != 3 && nsetflag != 6 && nsetflag != 7 && SRTMflag < 10) //read horizon profile file
 	{
-		if (ReadProfile( fileon, &hgt, &p, &maxang, &meantemp ) ) return -2; //(-2 = file doesn't exist, or can't be read)
+		if (ReadProfile( fileon, &hgt, p, &maxang, meantemp ) ) return -2; //(-2 = file doesn't exist, or can't be read)
 
 	}
-	else if ( SRTMflag == 10 || SRTMflag == 11) //visible sunrise/sunset based on 30m DTM calculations
+	else if ( SRTMflag > 9) //visible sunrise/sunset based on 30m DTM calculations
 	{
-		//determine maximum angular range from latitude
+		//N.b., if this is Golden Hour calculation, then first assume same temperatures as observer, calculate the rpfile
+		//find the coordinates of the first golden light, then go back and use this point to define the ground temperature, etc.
+
+		//deter__min maximum angular range from latitude
 		maxdecl = (66.5 - fabs(lt)) + 23.5; //approximate formula for maximum declination as function of latitude (kmyo)
 		//source: chart of declination range vs latitude from http://en.wikipedia.org/wiki/Declination
 		maxang = (int)(fabs(asin(cos(maxdecl * cd)))/cd); //approximate formula for half maximum angle range as function of declination
@@ -9957,11 +10470,13 @@ alem */
 		if (maxang < 30) maxang = 30.; //set minimum maxang
 
 		//maxang = MAX_ANGULAR_RANGE;
-        ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, &p, &meantemp, SRTMflag );
+        ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, p, meantemp, SRTMflag );
 		if (ier) //error detected
 		{
 			return ier;
 		}
+
+
     }
 	else //astronomical/mishor times
 	{
@@ -10061,7 +10576,7 @@ alem */
 			}
 
 			///////////Astronomical total refraction/////////////////////////////////////////////////////////
-			AstronRefract( &hgt, &lt, &nweather, &PartOfDay, &dy, &ns1, &ns2, &air,
+			AstronRefract( &hgt, &lt, nweather, &PartOfDay, &dy, ns1, ns2, &air,
 				&a1, mint, avgt, maxt, &vdwsf, &vdwrefr, &vbweps, &nyr);
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -10070,7 +10585,7 @@ alem */
 			{
 				//assuming that the terrestrial refraction scales like the atmospheric refraction
 				//i.e., with the VDW scaling factor vdwsf, this is unproven but should be at least a close approx.
-				trbasis = vdwsf * p * 8.15f * 1e3f * .0277f / (288.15 * 288.15 * 3600);
+				trbasis = vdwsf * *p * 8.15f * 1e3f * .0277f / (288.15 * 288.15 * 3600);
 			}
 			//////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -10081,9 +10596,9 @@ alem */
 				//Nsetflag = 1 or Nsetflag = 3 OR Nsetflag = 5 */
 				///////////Astronomical/Mishor sunset///////////////////////////////////////////////////////////
             AstronSunset(&ndirec, &dy, &lr, &lt, &t6, &mp, &mc, &ap, &ac, &ms, &aas, &es,
-						&ob, &d__, &air, &sr1, &nweather, &ns3, &ns4, &adhocset, &t3,
+						&ob, &d__, &air, &sr1, nweather, ns3, ns4, &adhocset, &t3,
 						&astro, &azi1, &jdn, &mday, &mon, &nyear, &nyl, &td,
-						mint, &WinTemp, &FindWinter, &EnableSunsetInv);
+						mint, WinTemp, &FindWinter, &EnableSunsetInv);
 				///////////////////////////////////////////////////////////////////////////////////////////////
 
 		//write astronomical sunset times to file and loop in days
@@ -10173,9 +10688,9 @@ alem */
 //    calculate astron./mishor sunrise
 		///////////Astronomical/Mishor sunrise///////////////////////////////////////////////////////////
       AstronSunrise(&ndirec, &dy, &lr, &lt, &t6, &mp, &mc, &ap, &ac, &ms, &aas,
-						&es, &ob, &d__, &air, &sr1, &nweather, &ns3, &ns4, &adhocrise,
+						&es, &ob, &d__, &air, &sr1, nweather, ns3, ns4, &adhocrise,
 						&t3, &astro, &azi1, &jdn, &mday, &mon, &nyear, &nyl, &td,
-						mint, &WinTemp, &FindWinter, &EnableSunriseInv);
+						mint, WinTemp, &FindWinter, &EnableSunriseInv);
 		///////////////////////////////////////////////////////////////////////////////////////////////
 
 		//write astronomical sunrise time to file and loop in days
@@ -10341,9 +10856,9 @@ L692:
 					//first guess for apparent top of sun
 					pt = 1.; //fudge factor -- default is 1.0 for no fudge
 
-					//determine refraction for this solar altitude
+					//deter__min refraction for this solar altitude
 					if (!VDW_REF) {
-						refract_(&al1, &p, &t, &hgt, &nweather, &dy, &refrac1, &ns1, &ns2);
+						refract_(&al1, p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
 					} else {
 						refvdw_(&hgt, &al1, &refrac1);
 					}
@@ -10357,7 +10872,7 @@ L692:
 						{
 							al1o = al1;
 							if (!VDW_REF) {
-								refract_(&al1, &p, &t, &hgt, &nweather, &dy, &refrac1, &ns1, &ns2);
+								refract_(&al1, p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
 							} else {
 								refvdw_(&hgt, &al1, &refrac1);
 							}
@@ -10467,9 +10982,9 @@ L692:
 				//first guess for apparent top of sun
 				pt = 1.;  //fudge factor -- default as 1.0, i.e., no fudge
 
-				//determine refraction for this solar altitude
+				//deter__min refraction for this solar altitude
 				if (!VDW_REF) {
-					refract_(&al1, &p, &t, &hgt, &nweather, &dy, &refrac1, &ns1, &ns2);
+					refract_(&al1, p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
 				} else {
 					refvdw_(&hgt, &al1, &refrac1);
 				}
@@ -10483,7 +10998,7 @@ L692:
 					{
 						al1o = al1;
 						if (!VDW_REF) {
-							refract_(&al1, &p, &t, &hgt, &nweather, &dy, &refrac1, &ns1, &ns2);
+							refract_(&al1, p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
 						} else {
 							refvdw_(&hgt, &al1, &refrac1);
 						}
@@ -11439,11 +11954,11 @@ short WriteHtmlHeader()
 
 	if (! optionheb)
 	{
-		if (SRTMflag != 10 && SRTMflag != 11) //html4
+		if (SRTMflag < 10) //html4
 		{
 			fprintf(stdout, "%s\n", "<!doctype html public \"-//w3c//dtd html 4.0 Transitional//en\">");
 		}
-		else if (SRTMflag == 10 || SRTMflag == 11) //html5
+		else if (SRTMflag > 9) //html5
 		{
 			fprintf( stdout, "%s\n", "<!DOCTYPE html>"); //html 5 (needed for progress bar)
 			fprintf( stdout, "%s\n", "<html lang=\"en\">"); //<html>"); (html4)
@@ -11451,12 +11966,12 @@ short WriteHtmlHeader()
 	}
 	else
 	{
-		if (SRTMflag != 10 && SRTMflag != 11 ) //html4
+		if (SRTMflag < 10 ) //html4
 		{
 			fprintf(stdout, "%s\n", "<!doctype html public \"-//w3c//dtd html 4.0 Transitional//en\">");
 			sprintf( buff1, "%s%s%s%s%s", "<html dir = ", "\"", "rtl", "\"", ">");
 		}
-		else if ((SRTMflag == 10 || SRTMflag == 11) && !wroteheader)  //html5
+		else if ((SRTMflag > 9) && !wroteheader)  //html5
 		{
 			fprintf( stdout, "%s\n", "<!DOCTYPE html>"); //html 5 (needed for progress bar)
 			sprintf( buff1, "%s", "<html dir=\"rtl\" lang=\"he\">"); //html5
@@ -11834,7 +12349,7 @@ short WriteHtmlClosing()
 
 	fprintf(stdout,"%s\n", "<p>");
 
-	if ((SRTMflag == 10 || SRTMflag == 11) && optionheb) fprintf( stdout, "%s\n", "</bdo>");
+	if ((SRTMflag > 9) && optionheb) fprintf( stdout, "%s\n", "</bdo>");
 	fprintf(stdout, "%s\n", "</body>");
 	fprintf(stdout, "%s\n", "</html>");
 
@@ -12006,7 +12521,7 @@ double tk, d__2, refrac1;
 	if (VDW_REF) 
 	{
 		//using van der Werf raytracing and standard atmosphere
-		//first determine the temperature scaling factor for this day
+		//first deter__min the temperature scaling factor for this day
 		short nyl = DaysInYear(nyr);
 		m = MonthFromDay(&nyl, dy);
 
@@ -12116,12 +12631,13 @@ L590:
 }
 
 ////////////////////InitWeatherRegions/////////////////////////////////////
-void InitWeatherRegions( bool *geo, double *lg, double *lt,
+void InitWeatherRegions( double *lg, double *lt,
 						 short *nweather, short *ns1, short *ns2,
-						 short *ns3, short *ns4, double WinTemp,
+						 short *ns3, short *ns4, double *WinTemp,
 						 short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[])
 //////////////////////////////////////////////////////////////////////
 //initializes weather regions and calculates longitude and latitude
+//N.b., geo is a global variable, and is no longer passed to this routine as of 091120
 ///////////////////////////////////////////////////////////////////////
 {
 
@@ -12132,7 +12648,7 @@ void InitWeatherRegions( bool *geo, double *lg, double *lt,
 	short itk = 0;
 
 
-    if (*geo) //rest of the world uses geographic coordinates of longitude and latitude
+    if (geo) //rest of the world uses geographic coordinates of longitude and latitude
 	{
 		//effect of global warming on weather zones from carbon soot
 		//assume that global warming will take over the effect within the next 50 years
@@ -12238,8 +12754,8 @@ void InitWeatherRegions( bool *geo, double *lg, double *lt,
 				if (MaxMinTemp < MinTemp[iTemp] ) MaxMinTemp = MinTemp[iTemp];
 			}
 
-			//WinTemp determines range of witner daynumbers that are likely to have inversion layers
-			WinTemp = WinterPercent * MaxMinTemp; //winter is defined as months whose mean min temperature less than WinterPercent of maximium min temp of the year
+			//WinTemp deter__mins range of witner daynumbers that are likely to have inversion layers
+			*WinTemp = WinterPercent * MaxMinTemp; //winter is defined as months whose mean min temperature less than WinterPercent of maximium min temp of the year
 
 		}
 	}
@@ -12269,8 +12785,8 @@ void InitWeatherRegions( bool *geo, double *lg, double *lt,
 				if (MaxMinTemp < MinTemp[iTemp] ) MaxMinTemp = MinTemp[iTemp];
 			}
 
-			//WinTemp determines range of winter daynumbers that are likely to have inversion layers
-			WinTemp = WinterPercent * MaxMinTemp; //winter is defined as months whose mean min temperature less than WinterPercent of maximium min temp of the year
+			//WinTemp deter__mins range of winter daynumbers that are likely to have inversion layers
+			*WinTemp = WinterPercent * MaxMinTemp; //winter is defined as months whose mean min temperature less than WinterPercent of maximium min temp of the year
 
 		}
 	}
@@ -12626,7 +13142,7 @@ short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *
 									 //used for calculating the terrestrial refraction
 
 	if (VDW_REF) {
-		//determine version of profile file in order to remove the terrestrial refraction
+		//deter__min version of profile file in order to remove the terrestrial refraction
 		if (InStr(doclin, "APPRNR")) {
 			if (InStr(doclin, ",0")) {
 				//new format w/o TR calculated, no need to renormalize the view angles
@@ -12651,7 +13167,7 @@ short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *
 	fgets_CR( doclin, 255, stream ); //read second line containing details of scan as one line of text
 
 
-	fgets_CR( doclin, 255, stream ); //read first line of data to determine angle range
+	fgets_CR( doclin, 255, stream ); //read first line of data to deter__min angle range
 	short doclen = strlen(doclin);
 	//doclin[doclen - 1] = 0; //remove carriage return
 
@@ -12927,7 +13443,7 @@ void AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6,
 			nacurr = nacurrFix; //15;
 		}
 	} else {
-		//new of version 18 -- determine portion of year prone to inversion layers using daylength
+		//new of version 18 -- deter__min portion of year prone to inversion layers using daylength
 		nacurr = 0; //add the adhoc fix in the calling module if not calculating the visible sunset
 		if (*adhocset) {
 			if (*FindWinter) {
@@ -13043,7 +13559,7 @@ void AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6
 			nacurr = nacurrFix; //15;
 		}
 	} else {
-		//new of version 18 -- determine portion of year prone to inversion layers using daylength
+		//new of version 18 -- deter__min portion of year prone to inversion layers using daylength
 		nacurr = 0;  //only add fix in calling module if not calculating the visible sunset
 		if (*adhocrise) {
 			if (*FindWinter) {
@@ -13404,13 +13920,13 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 		//initialize weather constants and coordinates
 		if (!Israel_neigh) //invert coordinate due to nonstandard convention
 		{
-			InitWeatherRegions( &geo, avekmxzman, avekmyzman, nweather,
-								ns1, ns2, ns3, ns4, WinTemp, mint, avgt, maxt, ExtTemp ); //<<<<<<<<<<check this for coordinates
+			InitWeatherRegions( avekmxzman, avekmyzman, nweather,
+								ns1, ns2, ns3, ns4, &WinTemp, mint, avgt, maxt, ExtTemp ); //<<<<<<<<<<check this for coordinates
 		}
 		else
 		{
-			InitWeatherRegions( &geo, avekmyzman, avekmxzman, nweather,
-								ns1, ns2, ns3, ns4, WinTemp, mint, avgt, maxt, ExtTemp ); //<<<<<<<<<<check this for coordinates
+			InitWeatherRegions( avekmyzman, avekmxzman, nweather,
+								ns1, ns2, ns3, ns4, &WinTemp, mint, avgt, maxt, ExtTemp ); //<<<<<<<<<<check this for coordinates
 		}
 
 		//---------------------------------------
@@ -14961,12 +15477,21 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
     short oldpercent = 0;
 	short oldpercent2 = 0;
 
+	short ier = 0;
+
 	///////////used for printing/////////////
 	//short alreadyprinted = 0;
 	double vang_max = -9999;
 	double vang_min = 9999;
 	bool NearObstructions = false;
     //////////////////////////////////////////////////////////////
+
+	/////////////GoldenLight variables//////////////
+	int nk_max = 0;
+	double dist_max = 0.;
+	double hgt_max = -9999.;
+	short ier_max = 0;
+	//////////////////////////////////////////////
 
     //bool manytiles, record,
     bool poles;
@@ -15115,6 +15640,7 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
    switch (nsetflag)
    {
        case 10: //sunrise (eastern) horizon profile
+	   case 12:
             mode = nsetflag;
             beglat = lat0 - erosdiflat; // * 0.5f; 'not twice width as in Maps&More
             endlat = beglat + 2.0 * erosdiflat;
@@ -15122,6 +15648,7 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
             endlog = beglog + erosdiflog; // * 0.5f;
             break;
        case 11: //sunset (western) horizon profile
+	   case 13:
             mode = -nsetflag;
             beglat = lat0 - erosdiflat; // * 0.5f;
             endlat = beglat + 2.0 * erosdiflat;
@@ -15136,7 +15663,7 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
 	xdim = xdim/30.0; // 30m DTM
 	ydim = ydim/30.0;
 
-	//determine number of columns of rows to be extracted
+	//deter__min number of columns of rows to be extracted
 	numstepkmy = Nint(fabs(beglat - endlat) / ydim) + 1;
 	numstepkmx = Nint(fabs(endlog - beglog) / xdim) + 1;
 	//will need to allocate maxrange = numstepkmx * numstepkmy * 4 byte integer memory
@@ -15168,21 +15695,25 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
 	}
 	//deallocate memory for tile boundaries and names
 	//and then allocate the required amount
-	try
-	{
-		delete [] lg1chk;
-		delete [] lt1chk;
-		delete [] kmxb1;
-		delete [] kmxb2;
-		delete [] kmyb1;
-		delete [] kmyb2;
-		delete [] numstepkmyt;
-		delete [] numstepkmxt;
-		delete [] filt1;
-	}
-	catch (short ier)
-	{
-		ier = 0;
+	if (GoldenLight < 2) {
+
+		try
+		{
+			delete [] lg1chk;
+			delete [] lt1chk;
+			delete [] kmxb1;
+			delete [] kmxb2;
+			delete [] kmyb1;
+			delete [] kmyb2;
+			delete [] numstepkmyt;
+			delete [] numstepkmxt;
+			delete [] filt1;
+		}
+		catch (short ier)
+		{
+			ier = 0;
+		}
+
 	}
 
 	//allocate memory as required for totnumtiles of tiles
@@ -15218,7 +15749,7 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
 
     //*********************************************************************************//
 
-		// determine if need to read multiple tiles
+		// deter__min if need to read multiple tiles
 		gototag = 1;
 		goto findtile;
 
@@ -15235,7 +15766,7 @@ ret2:	;
 
 	//allocate memory for main data array (add a little more just to be safe)
 	//union unich *uni5;
-	free( uni5 ); //free the memory allocated before for uni1, and reallocate
+	if (GoldenLight < 2) free( uni5 ); //free the memory allocated before for uni1, and reallocate
     uni5 = (struct unich *) malloc(maxrange * sizeof(struct unich));
 
 	if (uni5 == NULL) return -5; //memmory wasn't allocated, return error code
@@ -15371,7 +15902,7 @@ ret4:		;	//manytiles = TRUE;
     				numrec = (ikmy - 1) * ncols + ikmx - 1;
     				//position DEM file at starting coordinate for reading
     				pos = fseek( stream, numrec * 2L, SEEK_SET );
-    				//determine beginning record number of BIN file to write to
+    				//deter__min beginning record number of BIN file to write to
     				iikmx = Nint((kmx - beglog)/xdim) + 1;
     				iikmy = Nint((endlat - kmy)/ydim) + 1;
     				numrc = (iikmy - 1) * numstepkmx + iikmx - 1;
@@ -15496,9 +16027,8 @@ endProfiles:
 		{
 			ier = 0;
 		}
-		return 0;
 
-return 0; //end of readDTM
+return ier_max; //end of readDTM
 
 /**************findtile*****************/
 findtile:
@@ -15618,7 +16148,7 @@ if (DTMflag == 0) //GTOPO30 DTM
 			ncols = 4800;
 			whichCDs[itnum] = worldCD[ny * 9 + (int)ntmp + 1];
 
-			//determine kmx,kmy boundaries of analysis within this tile
+			//deter__min kmx,kmy boundaries of analysis within this tile
 			kmxb1[itnum] = __max(lg1, beglog);
 			kmxb2[itnum] = __min(lg1 + 40, endlog);
 			kmyb1[itnum] = __min(lt1 ,endlat);
@@ -15700,7 +16230,7 @@ if (DTMflag == 0) //GTOPO30 DTM
 			ncols = 7200;
 			whichCDs[itnum] = 5;
 
-			//determine kmx,kmy boundaries of analysis within this tile
+			//deter__min kmx,kmy boundaries of analysis within this tile
 			kmxb1[itnum] = __max(lg1, beglog);
 			kmxb2[itnum] = __min(lg1 + 60, endlog);
 			kmyb1[itnum] = __min(lt1 ,endlat);
@@ -15711,7 +16241,7 @@ if (DTMflag == 0) //GTOPO30 DTM
 		lt1chk[itnum] = lt1;
 		lg1chk[itnum] = lg1;
 
-        //determine number of steps in this tile
+        //deter__min number of steps in this tile
 		numstepkmyt[itnum] = Nint((fabs(kmyb1[itnum] - kmyb2[itnum])) / ydim) + 1;
 		numstepkmxt[itnum] = Nint((fabs(kmxb1[itnum] - kmxb2[itnum])) / xdim) + 1;
 
@@ -15763,10 +16293,10 @@ if (DTMflag == 0) //GTOPO30 DTM
 
 }
 
-else if (DTMflag > 0) //SRTM data, determine number of tiles
+else if (DTMflag > 0) //SRTM data, deter__min number of tiles
 
 {
-	  //now determine the tile names
+	  //now deter__min the tile names
 	  itnum = 0;
 	  for ( itnum1 = 0; itnum1 <= abs(lg2SRTM - lg1SRTM); itnum1++ )
 	  {
@@ -15875,7 +16405,7 @@ else if (DTMflag > 0) //SRTM data, determine number of tiles
 
             lg1chk[itnum] = lg1;
 
-			//determine kmx,kmy boundaries of analysis within this tile
+			//deter__min kmx,kmy boundaries of analysis within this tile
 			//and the number of steps in xdim,ydim within this tile
 			kmxb1[itnum] = __max(lg1, beglog);
 			kmxb2[itnum] = __min(lg1 + 1, endlog);
@@ -16210,7 +16740,7 @@ Profiles:
 
 
 	if (VDW_REF) {
-		//determine the mean ground temperature to be used for calculating the terrestrial refraction
+		//deter__min the mean ground temperature to be used for calculating the terrestrial refraction
 
 		//calculate conserved portion of terrain refraction based on Wikipedia's expression
 		//lapse rate is set at -0.0065 K/m, Ground Pressure = *p = 1013.25 mb
@@ -16271,7 +16801,7 @@ Profiles:
 		if (ikmx == 0) {
 			goto L550;
 		}
-/*      now determine optimized kmy angular range */
+/*      now deter__min optimized kmy angular range */
 /*      first convert longitude range into kilometers */
 		range = fabs(kmx - kmxo) * cd * rekm * cos(kmyo * cd);
 		if (nnetz == 1 || SRTMflag == 11) {
@@ -16387,7 +16917,7 @@ Profiles:
 
 
 			//further optimization: use crude approximation of azimuth to
-			//determine if data will lie within the required azimuth range
+			//deter__min if data will lie within the required azimuth range
 			if (kmx != lg)
 			{
 				testazi = (kmy - lt)/(kmx - lg);
@@ -16643,7 +17173,7 @@ L550:
 
 
     //no file output for this version of the program
-	if (!CGI)
+	if (!CGI || Windows)
 	{
 		if ( f =fopen("C:/JK_C/EROS.TMP", "w" ) )
 		{
@@ -16703,7 +17233,7 @@ L550:
 		dist = sqrt(d__1 * d__1 + d__2 * d__2 + d__3 * d__3);
 		dist *= re;
 
-		if (!CGI) //print out output
+		if (!CGI || Windows) //print out output
 		{
 			fprintf( f, "%lg,%lg,%lg,%lg,%lg,%lg\n", xentry, prof[nk].ver[0], prof[nk].ver[1], prof[nk].ver[2], dist, hgt2);
 		}
@@ -16764,17 +17294,59 @@ L550:
 //			{
 				vang_max = __max(vang_max, prof[nk].ver[0] );
 				vang_min = __min(vang_min, prof[nk].ver[0] );
+
+				if (GoldenLight == 1) {
+					//record nk position of largest view angle
+					//also record the distance to the horizon at this anlge
+					hgt_max = __max(hgt_max, elev[nk - 1].vert[3] );
+					
+					//if (hgt_max == elev[nk - 1].vert[3]) {
+					if (vang_max == prof[nk].ver[0]) {
+						nk_max = nk; //record where the maximum occurs
+						hgt_max = elev[nk - 1].vert[3];
+						dist_max = elev[nk - 1].vert[2];
+					}
+				}
 //			}
 		}
 
 /* L300: */
     }
 
-	if (!CGI)
+	if (GoldenLight == 1) {
+		//not clear what portion of the hozion will be lit up first, ifit is neaest highest point
+		//or the highest point in the horizon no matter how far away.  Since the latter might be too far
+		//away to actually see very soon, the first criteria is used.
+		//However, if the near point is extremely close, i.e., < 1 km, then an error message is returned
+
+		//dist_max = elev[nk_max - 1].vert[2];
+
+		if (dist_max < MinGoldenDist || vang_max > MaxGoldenViewAng) {
+			if (SRTMflag == 10) {
+				//Eastern horizon too close to accuratly deter__min Golden Light horizon for sunsets
+				ier_max = -10;
+			}
+			else if (SRTMflag == 11) {
+				//Western horizon too close to accurately deter__min Golden Light horizon for sunrises
+				ier_max = -11;
+			}
+		}
+
+		//record coordinates of highest point in profile to be used for calculating Golden Light table
+		Gold.nkk = nk_max;
+		Gold.vert[0] = elev[nk_max - 1].vert[0]; //azimuth of above point
+		Gold.vert[1] = elev[nk_max - 1].vert[1]; //viewangle of above point
+		Gold.vert[2] = prof[nk_max].ver[1]; //longitude of above point
+		Gold.vert[3] = prof[nk_max].ver[2]; //latitude of above point
+		Gold.vert[4] = elev[nk_max - 1].vert[2]; //distance to above point
+		Gold.vert[5] = elev[nk_max - 1].vert[3]; //height of above point
+	}
+
+	if (!CGI || Windows)
 	{
 		fclose( f );
 	}
-	else //draw graph on canvas
+	//else //draw graph on canvas
 	{
 		PlotGraphHTML5( nomentr, vang_max, vang_min, NearObstructions, optang);
 	}
@@ -16820,43 +17392,128 @@ void PlotGraphHTML5(short nomentr, double vang_max, double vang_min, bool NearOb
 	//sprintf( buff1, "%s", "<div style=\"position: absolute; top:210px; width:300px; left:50px; height:25px\" background-color: white>Profile calculation...please wait</div>" );
 	//fprintf( stdout, "%s\n", buff1);
 
-	if (optionheb)
+	if (!optionheb)
 	{
 		fprintf( stdout, "%s\n", "<bdo dir=\"ltr\">" ); //graph is in english!
+	}
+	else
+	{
+		fprintf( stdout, "%s\n", "<bdo dir=\"rtl\">" ); //headers of graph in Hebrew!
 	}
 
 	fprintf(stdout, "%s\n", "<div align = \"center\" >" );
 
 	//Graph header
 	fprintf(stdout, "%s\n", "<table align = \"center\" >" );
-	//create space between header
-	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
-	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
-	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
-	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+	/*
+	if (GoldenLight == 0) {
+		//create space between header
+		fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+		fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+		fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+		fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+	}
+	*/
+
 	if (SRTMflag == 10)
 	{
-		fprintf(stdout, "%s\n", "<tr><td align = \"center\" ><b>Eastern Horizon looking due East</b></td></tr>");
+		if (!optionheb)
+		{
+			fprintf(stdout, "%s\n", "<tr><td align = \"center\" ><b>Eastern Horizon looking due East</b></td></tr>");
+		}
+		else
+		{
+			fprintf(stdout, "%s%s%s\n", "<tr><td align = \"center\" ><b>", &heb9[1][0], "</b></td></tr>");
+		}
 	}
 	else if (SRTMflag == 11)
 	{
-		fprintf(stdout, "%s\n", "<tr><td align = \"center\" ><b>Western Horizon looking due West</b></td></tr>");
+		if (!optionheb)
+		{
+			fprintf(stdout, "%s\n", "<tr><td align = \"center\" ><b>Western Horizon looking due West</b></td></tr>");
+		}
+		else
+		{
+			fprintf(stdout, "%s%s%s\n", "<tr><td align = \"center\" ><b>", &heb9[2][0], "</b></td></tr>");
+		}
 	}
-	fprintf(stdout, "%s\n", "<tr><td align = \"center\" >X Axis: azimuth (deg.); Y Axis: view angle (deg.)</td></tr>" );
+	if (!optionheb) 
+	{
+		fprintf(stdout, "%s\n", "<tr><td align = \"center\" >X Axis: azimuth (deg.); Y Axis: view angle (deg.)</td></tr>" );
+	}
+	else
+	{
+		fprintf(stdout, "%s%s%s\n", "<tr><td align = \"center\" >", &heb9[3][0], "</td></tr>" );
+	}
 	//fprintf(stdout, "%s%5.1lf%s%5.1lf%s%2.1lf%s%2.1lf%s\n", "<tr><td>Azimuth range: -45 to 45 degrees, View Angle range: ", vang_min, " to ", vang_max, ", lat hw: ", erosdiflat, " deg., lon hw: ", erosdiflog, " deg.</td></tr>" );
-	fprintf(stdout, "%s%2.1lf%s%2.1lf%s\n", "<tr><td align = \"center\" >latitude scan half width: ", erosdiflat, " deg., longitude scan width: ", erosdiflog, " deg.</td></tr>" );
+	
+	if (!optionheb)
+	{
+		fprintf(stdout, "%s%2.1lf%s%2.1lf%s\n", "<tr><td align = \"center\" >latitude scan half width: ", erosdiflat, " deg., longitude scan width: ", erosdiflog, " deg.</td></tr>" );
+	}
+	else
+	{
+		fprintf(stdout, "%s%s %2.1lf %s %2.1lf %s%s\n", "<tr><td align = \"center\" >", &heb9[4][0], erosdiflat, &heb9[5][0], erosdiflog, &heb9[14][0], "</td></tr>" );
+	}
+	
+	
 	if (NearObstructions)
 	{
-		fprintf(stdout, "%s%3.1f%s\n", "<tr><td align = \"center\" ><font color = \"#009900\" >(When the horizon is closer than ", distlim, " km, it is drawn in green.)</font></td></tr>");
+		if (!optionheb)
+		{
+			fprintf(stdout, "%s%3.1f%s\n", "<tr><td align = \"center\" ><font color = \"#009900\" >(When the horizon is closer than ", distlim, " km, it is drawn in green.)</font></td></tr>");
+
+		}
+		else
+		{
+			fprintf(stdout, "%s%s %3.1f %s%s\n", "<tr><td align = \"center\" ><font color = \"#009900\" >,(",&heb9[8][0], distlim, &heb9[7][0],")</font></td></tr>");
+		}
 	}
-	fprintf(stdout, "%s\n", "</table>");
+	if (GoldenLight == 1)
+	{
+		if (SRTMflag == 10)
+		{
+			if (optionheb)
+			{
+				fprintf(stdout, "%s%s%s\n", "<tr><td align = \"center\" ><font color = \"#DF7401\" >", &heb9[10][0], "</font></td></tr>");
+			}
+			else
+			{
+				fprintf(stdout, "%s\n", "<tr><td align = \"center\" ><font color = \"#DF7401\" >Marked azimuth in this color is predicted position of last golden light.</font></td></tr>");
+			}
+		}
+		else if (SRTMflag == 11)
+		{
+			if (optionheb)
+			{
+				fprintf(stdout, "%s%s%s\n", "<tr><td align = \"center\" ><font color = \"#DF7401\" >", &heb9[9][0], "</font></td></tr>");
+			}
+			else
+			{
+				fprintf(stdout, "%s\n", "<tr><td align = \"center\" ><font color = \"#DF7401\" >Marked azimuth in this color is predicted position of first golden light.</font></td></tr>");
+			}
+		}
+	}		
 
-	fprintf(stdout, "%s\n", "<canvas id=\"plot\" width=\"668\" height=\"334\" >" );
-	fprintf(stdout, "%s\n", "<p>Graph can't be displayed since your browser doesn't support canvas.</p>" );
-	fprintf(stdout, "%s\n", "</canvas>" );
+	if (GoldenLight <= 1 ) {
 
-	fprintf(stdout, "%s\n", "<script language=\"JavaScript\"/>" );
-	fprintf(stdout, "%s\n", "var canvas = document.getElementById('plot');" );
+		fprintf(stdout, "%s\n", "<canvas id=\"plot\" width=\"668\" height=\"334\" >" );
+		fprintf(stdout, "%s\n", "<p>Graph can't be displayed since your browser doesn't support canvas.</p>" );
+		fprintf(stdout, "%s\n", "</canvas>" );
+
+		fprintf(stdout, "%s\n", "<script language=\"JavaScript\"/>" );
+		fprintf(stdout, "%s\n", "var canvas = document.getElementById('plot');" );
+
+	} else if (GoldenLight == 2) {
+
+		fprintf(stdout, "%s\n", "<canvas id=\"plot2\" width=\"668\" height=\"334\" >" );
+		fprintf(stdout, "%s\n", "<p>Graph can't be displayed since your browser doesn't support canvas.</p>" );
+		fprintf(stdout, "%s\n", "</canvas>" );
+
+		fprintf(stdout, "%s\n", "<script language=\"JavaScript\"/>" );
+		fprintf(stdout, "%s\n", "var canvas = document.getElementById('plot2');" );
+	}
+
 	fprintf(stdout, "%s\n", "var ctx = canvas.getContext('2d');" );
 	fprintf(stdout, "%s\n", "ctx.clearRect(0, 0, 668, 334);" );
 
@@ -16868,9 +17525,29 @@ void PlotGraphHTML5(short nomentr, double vang_max, double vang_min, bool NearOb
 	fprintf(stdout, "%s\n", "ctx.font = 'bold 10px sans-serif';" );
 	fprintf(stdout, "%s\n", "ctx.textBaseline = 'top';" );
 	fprintf(stdout, "%s\n", "ctx.fillStyle = \"#00568E\";" );
-	fprintf(stdout, "%s\n", "ctx.fillText('view angle (deg.)', 344, 10);" );
-	fprintf(stdout, "%s%5.1lf%s\n", "ctx.fillText('", vang_max,"', 300, 10);" );
-	fprintf(stdout, "%s%5.1lf%s\n", "ctx.fillText('", vang_min,"', 300, 310);" );
+
+	if (!optionheb) 
+	{
+		fprintf(stdout, "%s\n", "ctx.fillText('view angle (deg.)', 344, 10);" );
+	}
+	else
+	{
+		fprintf(stdout, "%s", "ctx.fillText('" );
+		fprintf(stdout, "%s",heb9[15] );
+		fprintf(stdout, "%s\n", "', 320, 10);" );
+	}
+
+	if (!optionheb)
+	{
+		fprintf(stdout, "%s%5.1lf%s\n", "ctx.fillText('", vang_max,"', 300, 10);" );
+		fprintf(stdout, "%s%5.1lf%s\n", "ctx.fillText('", vang_min,"', 300, 310);" );
+	}
+	else
+	{
+		fprintf(stdout, "%s%5.1lf%s\n", "ctx.fillText('", vang_max,"', 370, 10);" );
+		fprintf(stdout, "%s%5.1lf%s\n", "ctx.fillText('", vang_min,"', 370, 310);" );
+	}
+
 	fprintf(stdout, "%s%d%s\n", "ctx.fillText('0', 319,", ycoord - 15, ");" );
 
 	if (SRTMflag == 10)
@@ -16878,16 +17555,48 @@ void PlotGraphHTML5(short nomentr, double vang_max, double vang_min, bool NearOb
 		//fprintf(stdout, "%s%d%s\n", "ctx.fillText('Due East', 472,", Nint(vang_max/(vang_max - vang_min) * 540) + 15, ");" );
 		if (NearObstructions) //print near obstructions warning
 		{
-			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
-			fprintf(stdout, "%s\n", "ctx.fillText('Eastern horizon looking due east', 488, 295);" );
-			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#009900\";" );
-			fprintf(stdout, "%s%3.1f%s\n", "ctx.fillText('(Obstructions closer than ", distlim, " km drawn in green)', 410, 310);" );
-			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+			if (!optionheb)
+			{
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+				fprintf(stdout, "%s\n", "ctx.fillText('Eastern horizon looking due east', 488, 295);" );
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#009900\";" );
+				fprintf(stdout, "%s%3.1f%s\n", "ctx.fillText('(Obstructions closer than ", distlim, " km drawn in green)', 410, 310);" );
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+			}
+			else
+			{
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+				fprintf(stdout, "%s", "ctx.fillText('");
+				fprintf(stdout, "%s", &heb9[1][0] );
+				fprintf(stdout, "%s\n", "', 288, 295);" );
+
+				//fprintf(stdout, "%s%s%s\n", "ctx.fillText('", &heb9[1][0], "', 488, 295);" );
+
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#009900\";" );
+
+				fprintf(stdout, "%s", "ctx.fillText('(" );
+				fprintf(stdout, "%s %3.1f %s", &heb9[11][0], distlim, &heb9[7][0] );
+				fprintf(stdout, "%s\n", ")', 310, 310);" );
+
+
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+			}
 		}
 		else
 		{
-			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
-			fprintf(stdout, "%s\n", "ctx.fillText('Eastern horizon looking due east', 488, 295);" );
+			if (!optionheb)
+			{
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+				fprintf(stdout, "%s\n", "ctx.fillText('Eastern horizon looking due east', 488, 295);" );
+			}
+			else
+			{
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+				fprintf(stdout, "%s", "ctx.fillText('" );
+				fprintf(stdout, "%s", &heb9[1][0] );
+				fprintf(stdout, "%s\n","', 200, 295);" );
+
+			}
 		}
 	}
 	else if (SRTMflag == 11)
@@ -16895,16 +17604,45 @@ void PlotGraphHTML5(short nomentr, double vang_max, double vang_min, bool NearOb
 		//fprintf(stdout, "%s%d%s\n", "ctx.fillText('Due West', 472,", Nint(vang_max/(vang_max - vang_min) * 540) + 15, ");" );
 		if (NearObstructions) //print near obstructions warning
 		{
-			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
-			fprintf(stdout, "%s\n", "ctx.fillText('Western horizon looking due west', 488, 295);" );
-			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#009900\";" );
-			fprintf(stdout, "%s%3.1f%s\n", "ctx.fillText('(Obstructions closer than ", distlim, " km drawn in green)', 410, 310);" );
-			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+			if (!optionheb)
+			{
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+				fprintf(stdout, "%s\n", "ctx.fillText('Western horizon looking due west', 488, 295);" );
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#009900\";" );
+				fprintf(stdout, "%s%3.1f%s\n", "ctx.fillText('(Obstructions closer than ", distlim, " km drawn in green)', 410, 310);" );
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+			}
+			else
+			{
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+
+				fprintf(stdout, "%s", "ctx.fillText('" );
+				fprintf(stdout, "%s", &heb9[2][0] );
+				fprintf(stdout, "%s\n", "', 288, 295);" );
+
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#009900\";" );
+
+				fprintf(stdout, "%s", "ctx.fillText('(" );
+				fprintf(stdout, "%s %3.1f %s",&heb9[11][0], distlim, &heb9[7][0] );
+				fprintf(stdout, "%s\n", ")', 310, 310);" );
+
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+			}
 		}
 		else
 		{
-			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
-			fprintf(stdout, "%s\n", "ctx.fillText('Western horizon looking due west', 488, 295);" );
+			if (!optionheb) 
+			{
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+				fprintf(stdout, "%s\n", "ctx.fillText('Western horizon looking due west', 488, 295);" );
+			}
+			else
+			{
+				fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+				fprintf(stdout, "%s", "ctx.fillText('");
+				fprintf(stdout, "%s",heb9[2] );
+				fprintf(stdout, "%s\n", "', 288, 295);" );
+			}
 		}
 	}
 
@@ -16919,19 +17657,51 @@ void PlotGraphHTML5(short nomentr, double vang_max, double vang_min, bool NearOb
 		fprintf(stdout, "%s%d%s\n", "ctx.fillText('azimuth (deg.)', 55,", ycoord - 15, ");" );
 		*/
 
-		fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2) * -1, "', 15,", 334 - 15 , ");" );
-		fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2), "', 640,", 334 - 15 , ");" );
-		fprintf(stdout, "%s\n", "ctx.fillStyle = \"#00568E\";" );
-		fprintf(stdout, "%s%d%s\n", "ctx.fillText('azimuth (deg.)', 55,", 334 - 15, ");" );
-		fprintf(stdout, "%s%d%s\n", "ctx.fillText('mishor horizon', 15,", ycoord + 5, ");" );
+		if (!optionheb)
+		{
+			fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2) * -1, "', 15,", 334 - 15 , ");" );
+			fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2), "', 640,", 334 - 15 , ");" );
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#00568E\";" );
+			fprintf(stdout, "%s%d%s\n", "ctx.fillText('azimuth (deg.)', 55,", 334 - 15, ");" );
+			fprintf(stdout, "%s%d%s\n", "ctx.fillText('mishor horizon', 15,", ycoord + 5, ");" );
+		}
+		else
+		{
+			fprintf(stdout, "%s%d%s\n", "ctx.fillText('", (optang - 2) * -1, "', 35, 319 );" );
+			fprintf(stdout, "%s%d%s\n", "ctx.fillText('", (optang - 2), "', 640, 319 );" );
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#00568E\";" );
 
+			fprintf(stdout, "%s", "ctx.fillText('" );
+			fprintf(stdout, "%s",heb9[12] );
+			fprintf(stdout, "%s\n", "', 555, 319 );" );
+
+
+			fprintf(stdout, "%s", "ctx.fillText('" );
+			fprintf(stdout, "%s",heb9[13] );
+			fprintf(stdout, "%s%d%s\n", "', 555,", ycoord + 5, ");" );
+
+		}
 	}
 	else
 	{
-		fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2) * -1, "', 15,", 334 - 15 , ");" );
-		fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2), "', 640,", 334 - 15 , ");" );
-		fprintf(stdout, "%s\n", "ctx.fillStyle = \"#00568E\";" );
-		fprintf(stdout, "%s%d%s\n", "ctx.fillText('azimuth (deg.)', 55,", 334 - 15, ");" );
+		if (!optionheb)
+		{
+			fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2) * -1, "', 15,", 334 - 15 , ");" );
+			fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2), "', 640,", 334 - 15 , ");" );
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#00568E\";" );
+			fprintf(stdout, "%s%d%s\n", "ctx.fillText('azimuth (deg.)', 55,", 334 - 15, ");" );
+		}
+		else
+		{
+			fprintf(stdout, "%s%d%s\n", "ctx.fillText('", (optang - 2) * -1, "', 35, 319);" );
+			fprintf(stdout, "%s%d%s\n", "ctx.fillText('", (optang - 2), "', 640, 319);" );
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#00568E\";" );
+
+			fprintf(stdout, "%s", "ctx.fillText('" );
+			fprintf(stdout, "%s", heb9[12] );
+			fprintf(stdout, "%s\n", "', 555, 319 );" );
+
+		}
 	}
 
 	if (ycoord > 0 && ycoord < 334)
@@ -16970,7 +17740,7 @@ void PlotGraphHTML5(short nomentr, double vang_max, double vang_min, bool NearOb
 		vang = elev[nk - 1].vert[1]; //view angle
 		dist = elev[nk - 1].vert[2]; //distance to obstruction
 
-		x = 334 * azi / ((double)optang - 2.) ;
+		x = 334 * azi / ((double)optang - 2.);
 		y = 334 * (vang - vang_min)/(vang_max - vang_min) - 167;
 
 		if (nk == 1)
@@ -16998,6 +17768,181 @@ void PlotGraphHTML5(short nomentr, double vang_max, double vang_min, bool NearOb
 
 		fprintf(stdout, "%s\n", "ctx.stroke();" );
 
+		if (GoldenLight == 1) {
+
+			if (nk == Gold.nkk) {
+				//reached azimuth of the Golden light defining point in the opposing horizon
+			fprintf(stdout, "%s\n", "ctx.beginPath();" );
+			fprintf(stdout, "%s\n", "ctx.strokeStyle = \"#DF7401\";" ); //black for "far" mountains
+
+			fprintf(stdout, "%s%g%s\n", "ctx.moveTo(", xo, ",10);" );
+			fprintf(stdout, "%s%g%s%g%s\n", "ctx.lineTo(", x, ",", yo, ");" );
+			fprintf(stdout, "%s\n", "ctx.stroke();");
+
+			}
+
+		}
+
+	}
+
+	/*} else if (GoldenLight > 1) {
+
+		short yshift = 400;
+
+
+	fprintf(stdout, "%s\n", "<canvas id=\"plot\" width=\"668\" height=\"334\" >" );
+	fprintf(stdout, "%s\n", "<p>Graph can't be displayed since your browser doesn't support canvas.</p>" );
+	fprintf(stdout, "%s\n", "</canvas>" );
+
+	fprintf(stdout, "%s\n", "<script language=\"JavaScript\"/>" );
+	fprintf(stdout, "%s\n", "var canvas = document.getElementById('plot');" );
+	fprintf(stdout, "%s\n", "var ctx = canvas.getContext('2d');" );
+	fprintf(stdout, "%s%d%s\n", "ctx.clearRect(0, 0, 668,", 334 + yshift, ");" );
+
+	fprintf(stdout, "%s\n", "ctx.strokeStyle = \"#000000\";" );
+	fprintf(stdout, "%s\n", "ctx.lineWidth = 3;" );
+	fprintf(stdout, "%s%d%s\n", "ctx.strokeRect(0, 0, 668,", 334 + yshift, ");" );
+
+	//add axis labels
+	fprintf(stdout, "%s\n", "ctx.font = 'bold 10px sans-serif';" );
+	fprintf(stdout, "%s\n", "ctx.textBaseline = 'top';" );
+	fprintf(stdout, "%s\n", "ctx.fillStyle = \"#00568E\";" );
+	fprintf(stdout, "%s%d%s\n", "ctx.fillText('view angle (deg.)', 344,", 10 + yshift, ");" );
+	fprintf(stdout, "%s%5.1lf%s%d%s\n", "ctx.fillText('", vang_max,"', 300, ", 10 + yshift, ");" );
+	fprintf(stdout, "%s%5.1lf%s%d%s\n", "ctx.fillText('", vang_min,"', 300, ", 310 + yshift, ");" );
+	fprintf(stdout, "%s%d%s\n", "ctx.fillText('0', 319,", ycoord - 15 + yshift, ");" );
+
+	if (SRTMflag == 10)
+	{
+		//fprintf(stdout, "%s%d%s\n", "ctx.fillText('Due East', 472,", Nint(vang_max/(vang_max - vang_min) * 540) + 15, ");" );
+		if (NearObstructions) //print near obstructions warning
+		{
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+			fprintf(stdout, "%s\n", "ctx.fillText('Eastern horizon looking due east', 488, ", 295 + yshift, ");" );
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#009900\";" );
+			fprintf(stdout, "%s%3.1f%s%d%s\n", "ctx.fillText('(Obstructions closer than ", distlim, " km drawn in green)', 410, ", 310 + yshift, ");" );
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+		}
+		else
+		{
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+			fprintf(stdout, "%s%d%s\n", "ctx.fillText('Eastern horizon looking due east', 488, ", 295 + yshift, ");" );
+		}
+	}
+	else if (SRTMflag == 11)
+	{
+		//fprintf(stdout, "%s%d%s\n", "ctx.fillText('Due West', 472,", Nint(vang_max/(vang_max - vang_min) * 540) + 15, ");" );
+		if (NearObstructions) //print near obstructions warning
+		{
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+			fprintf(stdout, "%s\n", "ctx.fillText('Western horizon looking due west', 488, ", 295 + yshift, ");" );
+			fprintf(stdout, "%s%d%s\n", "ctx.fillStyle = \"#009900\";" );
+			fprintf(stdout, "%s%3.1f%s%d%s\n", "ctx.fillText('(Obstructions closer than ", distlim, " km drawn in green)', 410, ", 310 + yshift, ");" );
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+		}
+		else
+		{
+			fprintf(stdout, "%s\n", "ctx.fillStyle = \"#000000\";" );
+			fprintf(stdout, "%s%d%s\n", "ctx.fillText('Western horizon looking due west', 488, ", 295 + yshift, ");" );
+		}
+	}
+
+	if (ycoord > 0 && ycoord < 334)
+	{
+
+		fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2) * -1, "', 15,", 334 - 15 + yshift , ");" );
+		fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2), "', 640,", 334 - 15 + yshift , ");" );
+		fprintf(stdout, "%s\n", "ctx.fillStyle = \"#00568E\";" );
+		fprintf(stdout, "%s%d%s\n", "ctx.fillText('azimuth (deg.)', 55,", 334 - 15 + yshift, ");" );
+		fprintf(stdout, "%s%d%s\n", "ctx.fillText('mishor horizon', 15,", ycoord + 5 + yshift, ");" );
+
+	}
+	else
+	{
+		fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2) * -1, "', 15,", 334 - 15 + yshift , ");" );
+		fprintf(stdout, "%s%d%s%d%s\n", "ctx.fillText('", (optang - 2), "', 640,", 334 - 15 + yshift , ");" );
+		fprintf(stdout, "%s\n", "ctx.fillStyle = \"#00568E\";" );
+		fprintf(stdout, "%s%d%s\n", "ctx.fillText('azimuth (deg.)', 55,", 334 - 15 + yshift, ");" );
+	}
+
+	if (ycoord > 0 && ycoord < 334)
+	{
+		// draw x, y axes
+		fprintf(stdout, "%s\n", "ctx.beginPath();" );
+		fprintf(stdout, "%s\n", "ctx.lineWidth = 1;" );
+		fprintf(stdout, "%s\n", "ctx.strokeStyle = \"#00568E\";" );
+		fprintf(stdout, "%s\n", "ctx.moveTo(334, ", 10 + yshift, ");" );
+		fprintf(stdout, "%s\n", "ctx.lineTo(334, ", 319 + yshift, ");" );
+		fprintf(stdout, "%s%d%s\n", "ctx.moveTo(10,", ycoord + yshift, ");" );
+		fprintf(stdout, "%s%d%s\n", "ctx.lineTo(652,", ycoord + yshift, ");" );
+		fprintf(stdout, "%s\n", "ctx.stroke();" );
+	}
+	else
+	{
+		fprintf(stdout, "%s\n", "ctx.beginPath();" );
+		fprintf(stdout, "%s\n", "ctx.lineWidth = 1;" );
+		fprintf(stdout, "%s\n", "ctx.strokeStyle = \"#00568E\";" );
+		fprintf(stdout, "%s%d%s\n", "ctx.moveTo(334, ", 10 + yshift, ");" );
+		fprintf(stdout, "%s%d%s\n", "ctx.lineTo(334, ", 319 + yshift, ");" );
+		fprintf(stdout, "%s\n", "ctx.stroke();" );
+	}
+
+	// draw points
+	fprintf(stdout, "%s\n", "ctx.save();" );
+	fprintf(stdout, "%s%d%s\n", "ctx.translate(334 ,", 167 + yshift, ");" );
+	fprintf(stdout, "%s\n", "ctx.scale(0.9, -0.9);" ); //invert y scale to make larger y's to the top of the screen
+	//fprintf(stdout, "%s%g%s%g%s\n", "ctx.scale(", vang_max, ",", vang_min, ");" ); //invert y scale to make larger y's to the top of the screen
+	//fprintf(stdout, "%s\n", "ctx.strokeStyle = \"#000000\";" );
+	fprintf(stdout, "%s\n", "ctx.lineWidth = 3;" );
+
+    for (nk = 1; nk < nomentr; nk++) //<<<<<<<<<<<<<<<<<<<< should be nk <= nomentr >>>>>>>>>>>>>>>> ????
+	{
+		azi = elev[nk - 1].vert[0]; //azimuth
+		vang = elev[nk - 1].vert[1]; //view angle
+		dist = elev[nk - 1].vert[2]; //distance to obstruction
+
+		x = 334 * azi / ((double)optang - 2.);
+		y = 334 * (vang - vang_min)/(vang_max - vang_min) - 167;
+
+		if (nk == 1)
+		{
+			xo = x;
+			yo = y;
+		}
+		else
+		{
+			fprintf(stdout, "%s\n", "ctx.beginPath();" );
+			if (dist >= distlim )
+			{
+				fprintf(stdout, "%s\n", "ctx.strokeStyle = \"#000000\";" ); //black for "far" mountains
+			}
+			else
+			{
+				fprintf(stdout, "%s\n", "ctx.strokeStyle = \"#33cc66\";" ); //green for near mountains
+			}
+			fprintf(stdout, "%s%g%s%g%s\n", "ctx.moveTo(", xo, ",", yo + yshift, ");" );
+			fprintf(stdout, "%s%g%s%g%s\n", "ctx.lineTo(", x, ",", y + yshift, ");" );
+
+			xo = x;
+			yo = y;
+		}
+
+		fprintf(stdout, "%s\n", "ctx.stroke();" );
+
+		if (GoldenLight == 1) {
+
+			if (nk == Gold.nkk) {
+				//reached azimuth of the Golden light defining point in the opposing horizon
+
+			fprintf(stdout, "%s\n", "ctx.beginPath();" );
+			fprintf(stdout, "%s\n", "ctx.strokeStyle = \"#DF7401\";" ); //black for "far" mountains
+
+			fprintf(stdout, "%s%g%s%d%s\n", "ctx.moveTo(", xo, ", ", 10 + yshift, ");" );
+			fprintf(stdout, "%s%g%s%g%s\n", "ctx.lineTo(", x, ",", yo + yshift, ");" );
+
+			}
+
+		}
 	}
 
 	/*
@@ -17032,14 +17977,21 @@ void PlotGraphHTML5(short nomentr, double vang_max, double vang_min, bool NearOb
 		}
 	}
 	*/
+	/*
 
 	//finish graph tags
+
+	}
+	*/
+
 	fprintf(stdout, "%s\n", "</script>" );
 
 	if (optionheb)
 	{
 		fprintf( stdout, "%s\n", "</bdo>");
 	}
+
+	if (GoldenLight == 0) {
 
 	//paginate by using a table
 	fprintf(stdout, "%s\n", "<table align = \"center\" >" );
@@ -17060,7 +18012,31 @@ void PlotGraphHTML5(short nomentr, double vang_max, double vang_min, bool NearOb
 	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
 	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
 	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+	
+		fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+		fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+		fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+		fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+	
 	fprintf(stdout, "%s\n", "</table>" );
+
+	}
+	else if (GoldenLight == 1)
+	{
+	fprintf(stdout, "%s\n", "<table align = \"center\" >" );
+	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+	fprintf(stdout, "%s\n", "</table>" );
+	}
+	else if (GoldenLight == 2)
+	{
+	fprintf(stdout, "%s\n", "<table align = \"center\" >" );
+	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+	fprintf(stdout, "%s\n", "<tr><td>&nbsp;</td></tr>" );
+	fprintf(stdout, "%s\n", "</table>" );
+	}
 
 	fprintf(stdout, "%s\n", "</div>" );
 
@@ -17246,7 +18222,7 @@ double Decl3(double *jdn, double *hrs, double *dy, double *td, short *mday, shor
 
 	if (mode == 0) //calculate the month and day
 	{
-		//determine if leap year
+		//deter__min if leap year
 		*yl = 365;
 		if (*year % 4 == 0) {
 		*yl = 366;
@@ -17293,7 +18269,7 @@ double Decl3(double *jdn, double *hrs, double *dy, double *td, short *mday, shor
 			m += 12;
 		}
 
-		/* Determine whether date is in Julian or Gregorian calendar based on
+		/* Deter__min whether date is in Julian or Gregorian calendar based on
 		   canonical date of calendar reform. */
 
 		if ((*year < 1582) || ((*year == 1582) && ((*mon < 9) || (*mon == 9 && *mday < 5)))) {
@@ -17378,7 +18354,7 @@ double Decl3(double *jdn, double *hrs, double *dy, double *td, short *mday, shor
     //*slong = theta; //this routine doesn't need to return the solar longitude
     *rv = (1.0000002 * (1 - e * e)) / (1 + e * cos(dtr(v)));
 
-    /* Determine solar co-ordinates in radians. */
+    /* Deter__min solar co-ordinates in radians. */
 
     *ra =
 	fixangr(atan2(cos(dtr(eps)) * sin(dtr(theta)), cos(dtr(theta)))); //in radians
@@ -17541,13 +18517,13 @@ T50:
 	return 0;
 }
 
-//////////////lenMonth(x) determines number of days in month x, 1<=x<=12////////////////////
+//////////////lenMonth(x) deter__mins number of days in month x, 1<=x<=12////////////////////
 //source: https://cmcenroe.me/2014/12/05/days-in-month-formula.html
 short lenMonth( short x) {
 	return 28 + (short)(x + floor(x/8)) % 2 + 2 % x + 2 * floor(1/x);
 }
 
-///////////////DaysInYear determines the number of days in the year///////////////
+///////////////DaysInYear deter__mins the number of days in the year///////////////
 short DaysInYear(short *nyr)
 //////////////////////////////////////////////////////////////////////////////////
 {
