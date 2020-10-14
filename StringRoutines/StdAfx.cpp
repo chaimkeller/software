@@ -469,6 +469,12 @@ typedef struct _strucGold
 } structGold;
 structGold Gold; 
 
+///////////////////////////////////////////added 101420//////////////////////////////////////////
+bool FixZmanHgts = false; //set to true to open each profile file to find the height instead ofusing
+						   //the height recorded in the bat file, which may be in error by 1.8 meters
+						   //This is typically uncessary if the zemanim are rounded to minutes
+						   //The netz/skiya tables already querry the hgt recorded in the profile file
+						   //independent of this flag
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////Hebrew Year/////////////////////
@@ -798,7 +804,7 @@ bool Windows = false; //debugging flag, if Windows always write out output file 
 /////////////////////////////////////////////////////////////////////
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 4.0f;
+float vernum = 5.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -974,10 +980,10 @@ __asm{
 		CGI = 1;
 
    }
-/*<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
+/*//<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
 	else if (argc == 1) //not using console
 	{
-		strcpy( TableType, "BY"); //"Astr"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		yesmetro = 0;
 		strcpy( MetroArea, "jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
@@ -1014,8 +1020,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -6069,6 +6075,9 @@ short netzskiy( char *bat, char *sun )
 
 	double kmx, kmy, hgt;
 	short pos = 0, pos1 = 0, found, addpos;
+	short const MAXARRSIZE = 6; //number of data in line = array size of strarr
+	char strarr[MAXARRSIZE][MAXDBLSIZE]; //array to contain the data elements
+
 
 	if (!strcmp(bat, "")) //check for nonexisting bat file
 	{
@@ -6092,7 +6101,7 @@ short netzskiy( char *bat, char *sun )
 		avehgt[1] = 0.0;
 	}
 
-	FILE *stream;
+	FILE *stream, *stream2;
 
 	if (!( stream = fopen( bat, "r" )) )
 	{
@@ -6141,6 +6150,50 @@ short netzskiy( char *bat, char *sun )
 
 		hgt = atof( Mid(doclin, pos + 1, strlen(doclin) - pos, buff ));
 
+		///////////////////////////////////////added 101420//////////////////////////////////////////////
+		//N.b., hgt read from the bat file may be typically be in error by 1.8 m (the ypical observer height added in)
+		//so for more accurate accounting for this for calculating z'manei hayom, then set FixZmanHgts to true
+
+		if (FixZmanHgts) {
+
+			//read the height, hgt from the profile file which is always reliable
+
+			//try opening file with the name as listed in the "bat" file as well
+			//as well as all uppercases and all lowercaes
+			short fillen = strlen(myfile);
+    		if ( !(stream2 = fopen( myfile, "r" )) )
+    		{
+			 strlwr(myfile + fillen - 12); //try with all lowercases
+    			 if ( !(stream2 = fopen( myfile, "r" )) )
+    			 {
+    				 strupr(myfile + fillen - 12); //try with all uppercase
+    				 if ( !(stream2 = fopen( myfile, "r" )) )
+    				 {
+    	         		goto ny500; //can't open profile file for some reason, ignore error and skip try to find profile's hgt value
+    				 }
+    			 }
+    		}
+
+			doclin[0] = 0; //clear the buffer
+			fgets_CR( doclin, 255, stream2 ); //read first header line of text mostly containly text, but sometimes the mean temperataure
+			doclin[0] = 0; //clear the buffer
+			fgets_CR( doclin, 255, stream2 ); //read second line containing details of scan as one line of text
+			fclose(stream2);
+
+			//parse it to obtain height recorded in profile file which is more reliable than the bat file
+			if (!ParseString( doclin, ",", strarr, MAXARRSIZE ) )
+			{
+				hgt = atof( &strarr[2][0] ); //hgt is the third data ןאקצ in this doc line separated by commas
+			}
+			else
+			{
+				; //can't read data for some reason, ignore the error and just use the bat file's height
+			}
+
+		}
+
+ny500:
+		////////////////////////////////end addition 10/14/20////////////////////////////////////
 
 		//add this vantage point to the time calculation place buffer
 		if (InStr( sun, "netz" ))
@@ -13138,6 +13191,7 @@ short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *
     	     }
     	}
 
+	doclin[0] = 0; //clear the buffer
 	fgets_CR( doclin, 255, stream ); //read first header line of text mostly containly text, but sometimes the mean temperataure
 									 //used for calculating the terrestrial refraction
 
@@ -13164,7 +13218,17 @@ short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *
 		}
 	}
 
+	doclin[0] = 0; //clear the buffer
 	fgets_CR( doclin, 255, stream ); //read second line containing details of scan as one line of text
+	//parse it to obtain height recorded in profile file which is more reliable than the bat file
+	if (!ParseString( doclin, ",", strarr, MAXARRSIZE ) )
+	{
+		*hgt = atof( &strarr[2][0] ); //hgt is the third data ןאקצ in this doc line separated by commas
+	}
+	else
+	{
+		return -1; //can't read data
+	}
 
 
 	fgets_CR( doclin, 255, stream ); //read first line of data to deter__min angle range

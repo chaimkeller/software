@@ -40,6 +40,8 @@ short lenMonth( short x);
 ////////////functions that emulate MS VB 6.0 functions//////////
 int InStr( short nstart, char * str, char * str2 );
 
+short ParseString( char *doclin, char *sep, char arr[][100] );
+char strarr[4][100];
 
 /* Main program */ int MAIN__(void)
 {
@@ -1013,6 +1015,17 @@ ns) */
 	    s_rsfe(&io___98);
 	    do_fio(&c__1, chd62, (ftnlen)62);
 	    e_rsfe();
+
+		//read more accurate record of the height from this doc line in the profile
+		if ( ParseString( chd62, ",", strarr, 4 ) )
+		{
+			return -1;
+		}
+		else //extract text
+		{
+			hgt = atof( &strarr[2][0] );
+		}
+
 	    nazn = 0;
 L40:
 	    ++nazn;
@@ -3232,4 +3245,37 @@ int InStr( short nstart, char * str, char * str2 )
 		return 0; //return 0 for not being found
 	}
 }
+
+
+//////////////////////////ParseString///////////////////////////
+short ParseString( char *doclin, char *sep, char arr[][100] )
+///////////////////////////////////////////////////////////////////////////////////////////
+//Parses a line of text which is composed of tokens separated by "sep" (e.g., ",", " ", etc)
+//stuffs the extracted strings into the array, arr
+//number of tokens entries to extract = NUMENTRIES
+//each token can be a maximum MAXDBLSIZE characters long
+//maximum number of data entries that can be extracted is defined by the array size = MAXARRSIZE
+//////////////////////////////////////////////////////////////////
+{
+
+	char *token;
+	short numtoken = 0;
+
+	//get first token
+	token = strtok( doclin, sep );
+	strcpy( &arr[0][0], token );
+
+	//get other tokens
+    while( token != NULL )
+    {
+       if (numtoken + 1 >= 4) break;
+	   token = strtok( NULL, sep );
+	   numtoken++;
+	   strcpy( &arr[numtoken][0], token );
+    }
+
+	return 0;
+}
+
+
 
