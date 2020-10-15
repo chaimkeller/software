@@ -43,6 +43,10 @@ int InStr( short nstart, char * str, char * str2 );
 short ParseString( char *doclin, char *sep, char arr[][100] );
 char strarr[4][100];
 
+logical FixProfHgtBug = TRUE_; //added 101520 to fix the bug in newreadDTM that recorded the 
+						   //ground height and not the calculation height with the added observer height
+
+
 /* Main program */ int MAIN__(void)
 {
     /* Format strings */
@@ -207,6 +211,8 @@ char strarr[4][100];
     static char coments[12*2*2*366], drivlet[1];
     static doublereal trbasis, elevint;
     static integer nleapyr, nzskflg;
+	static doublereal hgt0;
+	static doublereal hgtobs = 1.8; //maximum height of the observer
 
 	double MaxMinTemp = -999999;
 	short WinTemp = 0;
@@ -1023,7 +1029,18 @@ ns) */
 		}
 		else //extract text
 		{
+			hgt0 = hgt;
 			hgt = atof( &strarr[2][0] );
+
+			if (FixProfHgtBug) 
+			{
+				//bat and profile heights are identical
+				//usually means that newreadDTM recorded the ground height
+				//instead of the calculation height after adding the observer height
+				//this was bug that was fixed on 101520
+				//so fix it here
+				if (hgt0 == hgt) hgt += hgtobs;
+			}
 		}
 
 	    nazn = 0;

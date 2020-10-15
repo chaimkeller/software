@@ -2481,7 +2481,12 @@ L550:
 			fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0" );
 		}
 		//fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR" );
-		fprintf( f, "%f,%f,%lg,%lg,%lg,%lg,%lg,%lg\n", lat0, -lon0, hgt0, -startkmx, -sofkmx, dstpointx, dstpointy, apprnr);
+
+		////////////////////////////edit 101520/////////////////////////////////////////////////
+		//record the height used for the calculation = hgt, and not the original ground height hgt0
+		////////////////////////////////////////////////////////////////////////////////////////////
+		fprintf( f, "%f,%f,%lg,%lg,%lg,%lg,%lg,%lg\n", lat0, -lon0, hgt, -startkmx, -sofkmx, dstpointx, dstpointy, apprnr);
+		///////////////////////////////////end edit//////////////////////////////////////////////////////
 	}
 	else
 	{
