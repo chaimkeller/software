@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form calnode 
    Caption         =   "Country and citys' list (calculate visible sunrise times using the GTOPO10 DTM)"
    ClientHeight    =   3900
@@ -40,7 +40,7 @@ Begin VB.Form calnode
          EndProperty
       EndProperty
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-         Name            =   "MS Serif"
+         Name            =   "Arial"
          Size            =   9.75
          Charset         =   0
          Weight          =   400
@@ -65,7 +65,7 @@ Begin VB.Form calnode
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
-         Charset         =   0
+         Charset         =   177
          Weight          =   400
          Underline       =   0   'False
          Italic          =   0   'False
@@ -719,7 +719,7 @@ If Node.Text = "***User Inputed Coordinates***" Then
        calcoordfm.Visible = True
        If eroscity$ = sEmpty Then eroscity$ = sEmpty 'Node.Text
        ret = SetWindowPos(calcoordfm.hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-       erosareabat = eroscityarea(Node.Index)
+       erosareabat = eroscityarea(Node.Index - 1)
        userinput = True
        Exit Sub
        End If

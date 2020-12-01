@@ -23,7 +23,7 @@ Begin VB.Form calcoordfm
       Begin VB.TextBox Text1 
          Alignment       =   2  'Center
          BeginProperty Font 
-            Name            =   "MS Serif"
+            Name            =   "Arial"
             Size            =   12
             Charset         =   0
             Weight          =   700
@@ -42,7 +42,7 @@ Begin VB.Form calcoordfm
       Begin VB.TextBox Text6 
          Alignment       =   2  'Center
          BeginProperty Font 
-            Name            =   "MS Serif"
+            Name            =   "Arial"
             Size            =   12
             Charset         =   0
             Weight          =   700
@@ -62,7 +62,7 @@ Begin VB.Form calcoordfm
       Begin VB.TextBox Text5 
          Alignment       =   2  'Center
          BeginProperty Font 
-            Name            =   "MS Serif"
+            Name            =   "Arial"
             Size            =   12
             Charset         =   0
             Weight          =   700
@@ -82,7 +82,7 @@ Begin VB.Form calcoordfm
       Begin VB.TextBox Text4 
          Alignment       =   2  'Center
          BeginProperty Font 
-            Name            =   "MS Serif"
+            Name            =   "Arial"
             Size            =   12
             Charset         =   0
             Weight          =   700
@@ -103,7 +103,7 @@ Begin VB.Form calcoordfm
          Alignment       =   2  'Center
          Caption         =   "Name:"
          BeginProperty Font 
-            Name            =   "MS Serif"
+            Name            =   "Arial"
             Size            =   9.75
             Charset         =   0
             Weight          =   700
@@ -121,7 +121,7 @@ Begin VB.Form calcoordfm
          Alignment       =   2  'Center
          Caption         =   "height:"
          BeginProperty Font 
-            Name            =   "MS Serif"
+            Name            =   "Arial"
             Size            =   9.75
             Charset         =   0
             Weight          =   700
@@ -139,7 +139,7 @@ Begin VB.Form calcoordfm
          Alignment       =   2  'Center
          Caption         =   "latitude:"
          BeginProperty Font 
-            Name            =   "MS Serif"
+            Name            =   "Arial"
             Size            =   9.75
             Charset         =   0
             Weight          =   700
@@ -157,7 +157,7 @@ Begin VB.Form calcoordfm
          Alignment       =   2  'Center
          Caption         =   "longitude:"
          BeginProperty Font 
-            Name            =   "MS Serif"
+            Name            =   "Arial"
             Size            =   9.75
             Charset         =   0
             Weight          =   700
@@ -204,7 +204,7 @@ Private Sub Command1_Click()
     erosareabat = eroscityarea(citynodenum%)
     eroslongitude = eroscitylong(citynodenum%)
     eroslatitude = eroscitylat(citynodenum%)
-    eroscountry$ = eroscountries(citynodenum%)
+    eroscountry$ = eroscountries(citynodenum% - 1)
     calnode.StatusBar1.Panels(2) = "User Input" & ". lon: " & eroscitylong(citynodenum%) & ", lat: " & eroscitylat(citynodenum%) & ", hgt: " & eroscityhgt(citynodenum%) & " in city area: " & eroscityarea(citynodenum% - 1)
     Call Form_QueryUnload(i%, j%)
     calnearsearchfm.Visible = True
