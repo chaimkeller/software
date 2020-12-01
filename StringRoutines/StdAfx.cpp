@@ -7530,8 +7530,8 @@ short CreateHeaders( short types )
 				if ( !ast ) // mishor
 			   {
 
-					sprintf( l_buff4, "%s%s%s%s%s%s", title, &heb1[34][0], hebcityname, &heb2[1][0], " ", g_yrcal );
-					sprintf( l_buff5, "%s%s%s%s%s%s", title, &heb1[37][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					sprintf( l_buff4, "%s %s%s %s%s%s", title, &heb1[34][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					sprintf( l_buff5, "%s %s%s %s%s%s", title, &heb1[37][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 
         		   if (astronplace) //mishor calculation for a certain coordinate
 					{
@@ -7563,8 +7563,8 @@ short CreateHeaders( short types )
 				}
 				else if (ast) // astronomical
 		        {
-					sprintf( l_buff4, "%s%s%s%s%s%s", title, &heb1[25][0], hebcityname, &heb2[1][0], " ", g_yrcal ); //sunrise
-					sprintf( l_buff5, "%s%s%s%s%s%s", title, &heb1[31][0], hebcityname, &heb2[1][0], " ", g_yrcal ); //sunset
+					sprintf( l_buff4, "%s %s%s %s%s%s", title, &heb1[25][0], hebcityname, &heb2[1][0], " ", g_yrcal ); //sunrise
+					sprintf( l_buff5, "%s %s%s %s%s%s", title, &heb1[31][0], hebcityname, &heb2[1][0], " ", g_yrcal ); //sunset
 
 					if (astronplace) //astronomical calculation for a certain coordinate
 				   {
@@ -7605,7 +7605,7 @@ short CreateHeaders( short types )
 			case 0:
 			  //nsetflag = 0; //visible sunrise/astr. sunrise/chazos
 			   //visible times header
-			  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s%s %s %s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7615,7 +7615,7 @@ short CreateHeaders( short types )
 			  break;
 			case 1:
 			  //nsetflag = 1; //visible sunset/astr. sunset/chazos
-			  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s%s %s %s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7645,7 +7645,7 @@ short CreateHeaders( short types )
 			  break;
 			case 4:
 			  //nsetflag = 4; //vis sunrise/ mishor sunrise/ chazos
-			  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s%s %s %s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7655,7 +7655,7 @@ short CreateHeaders( short types )
 			  break;
 			case 5:
 			  //nsetflag = 5; //visible sunset/ mishor sunset/ chazos
-			  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s%s %s %s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7665,14 +7665,14 @@ short CreateHeaders( short types )
 			  break;
 			case 6:
 			  //nsetflag = 6; //visible sunrise and visible sunset/ astr sunrise/astr sunset/ chazos
-			  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s%s %s %s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
 			  sprintf( &storheader[0][4][0], "%s", l_buffcopy );
 			  sprintf( &storheader[0][5][0], "%s", l_buffwarning );
 			  sprintf( &storheader[0][6][0], "%s", l_buffazimuth );
-			  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s%s %s %s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7682,14 +7682,14 @@ short CreateHeaders( short types )
 			  break;
 			case 7:
 			  //nsetflag = 7; //visible sunrise/ mishor sunrise and /visible sunset/ mishor sunset
-			  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s%s %s% s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
 			  sprintf( &storheader[0][4][0], "%s", l_buffcopy );
 			  sprintf( &storheader[0][5][0], "%s", l_buffwarning );
 			  sprintf( &storheader[0][6][0], "%s", l_buffazimuth );
-			  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s%s %s% s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
