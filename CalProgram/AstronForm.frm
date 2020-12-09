@@ -421,34 +421,42 @@ Private Sub Closebut_Click()
    Close #filnum%
    'now make dummy profile files to place in c:\cities\ast netz and skiy subdirectories
    Open drivcities$ + "ast\netz\astronom.pr1" For Output As #filnum%
-   Write #filnum%, "FILENAME, KMX, KMY, HGT: ", "c:\prof\astronom.fnz", Val(Text1.Text), Val(Text2.Text), Val(Text3.Text) + obshgt
-   Print #filnum%, "  AZI  VIEWANG+REFRACT   FLGSUM   FLGWIN"
+   'Write #filnum%, "FILENAME, KMX, KMY, HGT: ", "c:\prof\astronom.fnz", Val(Text1.Text), Val(Text2.Text), Val(Text3.Text) + obshgt
+   Write #filnum%, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR"
+   Write #filnum%, Val(Text1.Text), Val(Text2.Text), Val(Text3.Text) + obshgt, 0, 0, 0, 0, 0
+
+   'Print #filnum%, "  AZI  VIEWANG+REFRACT   FLGSUM   FLGWIN"
    For i% = 1 To 601
       xentry = -30 + (i% - 1) * 0.1
-      If xentry <= -10 Then
-         Print #filnum%, Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
-      ElseIf xentry > -10 And xentry < 0 Then
-         Print #filnum%, " "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
-      ElseIf xentry >= 0 And xentry < 10 Then
-         Print #filnum%, "  "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
-      ElseIf xentry >= 10 Then
-         Print #filnum%, " "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
-         End If
+      Write #filnum%, CInt(xentry * 10) * 0.1, 0, 0, 0, 0, 0
+'      If xentry <= -10 Then
+'         Print #filnum%, Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
+'      ElseIf xentry > -10 And xentry < 0 Then
+'         Print #filnum%, " "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
+'      ElseIf xentry >= 0 And xentry < 10 Then
+'         Print #filnum%, "  "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
+'      ElseIf xentry >= 10 Then
+'         Print #filnum%, " "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
+'         End If
    Next i%
    Close #filnum%
    Open drivcities$ + "ast\skiy\astronom.pr1" For Output As #filnum%
-   Write #filnum%, "FILENAME, KMX, KMY, HGT: ", "c:\prof\astronom.fsk", Val(Text1.Text), Val(Text2.Text), Val(Text3.Text) + obshgt
-   Print #filnum%, "  AZI  VIEWANG+REFRACT   FLGSUM   FLGWIN"
+   'Write #filnum%, "FILENAME, KMX, KMY, HGT: ", "c:\prof\astronom.fsk", Val(Text1.Text), Val(Text2.Text), Val(Text3.Text) + obshgt
+   'Print #filnum%, "  AZI  VIEWANG+REFRACT   FLGSUM   FLGWIN"
+   Write #filnum%, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR"
+   Write #filnum%, Val(Text1.Text), Val(Text2.Text), Val(Text3.Text) + obshgt, 0, 0, 0, 0, 0
+   
    For i% = 1 To 601
-      If xentry <= -10 Then
-         Print #filnum%, Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
-      ElseIf xentry > -10 And xentry < 0 Then
-         Print #filnum%, " "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
-      ElseIf xentry >= 0 And xentry < 10 Then
-         Print #filnum%, "  "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
-      ElseIf xentry >= 10 Then
-         Print #filnum%, " "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
-         End If
+       Write #filnum%, CInt(xentry * 10) * 0.1, 0, 0, 0, 0, 0
+'      If xentry <= -10 Then
+'         Print #filnum%, Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
+'      ElseIf xentry > -10 And xentry < 0 Then
+'         Print #filnum%, " "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
+'      ElseIf xentry >= 0 And xentry < 10 Then
+'         Print #filnum%, "  "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
+'      ElseIf xentry >= 10 Then
+'         Print #filnum%, " "; Format(xentry, "#0.0#"); "     "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000"); "    "; Format(0#, "#0.0000")
+'         End If
    Next i%
    Close #filnum%
       

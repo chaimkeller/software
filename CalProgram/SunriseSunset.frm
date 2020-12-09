@@ -25,6 +25,26 @@ Begin VB.Form SunriseSunset
    MinButton       =   0   'False
    ScaleHeight     =   7425
    ScaleWidth      =   4815
+   Begin VB.CheckBox chkOldCalcMethod 
+      BackColor       =   &H00C0FFFF&
+      Caption         =   "Old"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   177
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H00FF8080&
+      Height          =   300
+      Left            =   360
+      TabIndex        =   28
+      ToolTipText     =   "use oold (netzski6.exe) calculation method"
+      Top             =   4800
+      Width           =   855
+   End
    Begin VB.Frame Frame2 
       BackColor       =   &H00C0FFFF&
       BorderStyle     =   0  'None
@@ -2394,7 +2414,7 @@ i500:
          Print #filnez3%, netzski$(0, i%) 'filename of profile file
          Print #filnez3%, netzski$(1, i%) 'coordinates,hgt,year, etc
          'determine minimum and average temperatures for these coordinates
-         GoSub AddTemps
+         If chkOldCalcMethod.Value = vbUnchecked Then GoSub AddTemps
          End If
    Next i%
    Close #filnez3%
@@ -2481,17 +2501,29 @@ i500:
       
    Screen.MousePointer = vbDefault
    If Katz = True Then
-      RetVal = Shell(drivjk$ & ProgExec$ & ".exe", 6) ' Run netzski3 as DOS shell
+      If chkOldCalcMethod.Value = vbChecked Then
+        RetVal = Shell(drivjk$ & ProgExec$ & "_XP" & ".exe", 6) ' Run netzski3 as DOS shell
+      Else
+        RetVal = Shell(drivjk$ & ProgExec$ & ".exe", 6) ' Run netzski3 as DOS shell
+        End If
    Else
       If internet = False Then
-         RetVal = Shell(drivjk$ + ProgExec$ & ".exe", 6) ' Run netzski3 as DOS shell
+         If chkOldCalcMethod.Value = vbChecked Then
+            RetVal = Shell(drivjk$ + ProgExec$ & "_XP" & ".exe", 6) ' Run netzski3 as DOS shell
+         Else
+            RetVal = Shell(drivjk$ + ProgExec$ & ".exe", 6) ' Run netzski3 as DOS shell
+            End If
       Else
          lognum% = FreeFile
          Open drivjk$ + "calprog.log" For Append As #lognum%
          Print #lognum%, "Step #10: Executing Netzski4/5/6.exe as DOS shell"
          Close #lognum%
 
-         RetVal = Shell(drivjk$ + ProgExec$ & ".exe", 6) ' Run netzski3 as DOS shell
+         If chkOldCalcMethod.Value = vbChecked Then
+            RetVal = Shell(drivjk$ + ProgExec$ & "_XP" & ".exe", 6) ' Run netzski3 as DOS shell
+         Else
+            RetVal = Shell(drivjk$ + ProgExec$ & ".exe", 6) ' Run netzski3 as DOS shell
+            End If
          End If
       
       Do Until RetVal <> 0
@@ -3190,7 +3222,7 @@ AddTemps:
            Call casgeo(kmxAT, kmyAT, lgAT, ltAT)
            lgAT = -lgAT 'this is convention for WorldClim
            End If
-        If eros And eroscountry$ <> "Israel" Then
+        If (eros And eroscountry$ <> "Israel") Or geo Then
             Call Temperatures(lgAT, -ltAT, MinTK, AvgTK, MaxTK, ier)
        Else
             Call Temperatures(ltAT, lgAT, MinTK, AvgTK, MaxTK, ier)
