@@ -8,7 +8,7 @@ Begin VB.Form frmSetCond
    Caption         =   "Entries"
    ClientHeight    =   8580
    ClientLeft      =   45
-   ClientTop       =   975
+   ClientTop       =   1335
    ClientWidth     =   2940
    Icon            =   "frmSetCond.frx":0000
    LinkTopic       =   "Form1"
@@ -33,7 +33,6 @@ Begin VB.Form frmSetCond
          BeginProperty Panel1 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
             AutoSize        =   1
             Object.Width           =   5133
-            TextSave        =   ""
             Key             =   ""
             Object.Tag             =   ""
          EndProperty
@@ -123,6 +122,15 @@ Begin VB.Form frmSetCond
       TabIndex        =   12
       Top             =   4020
       Width           =   2775
+      Begin VB.CommandButton cmdFull 
+         Caption         =   "Full"
+         Height          =   495
+         Left            =   2280
+         TabIndex        =   42
+         ToolTipText     =   "Restore Full Range"
+         Top             =   960
+         Width           =   375
+      End
       Begin VB.PictureBox PicStatus 
          AutoRedraw      =   -1  'True
          BackColor       =   &H00FFFFC0&
@@ -147,7 +155,7 @@ Begin VB.Form frmSetCond
          Value           =   10
          AutoBuddy       =   -1  'True
          BuddyControl    =   "txtAxisLabelSize"
-         BuddyDispid     =   196616
+         BuddyDispid     =   196617
          OrigLeft        =   2400
          OrigTop         =   480
          OrigRight       =   2655
@@ -181,7 +189,7 @@ Begin VB.Form frmSetCond
          Value           =   14
          AutoBuddy       =   -1  'True
          BuddyControl    =   "txtTitlefont"
-         BuddyDispid     =   196617
+         BuddyDispid     =   196618
          OrigLeft        =   2400
          OrigTop         =   3720
          OrigRight       =   2655
@@ -215,7 +223,7 @@ Begin VB.Form frmSetCond
          Value           =   17
          AutoBuddy       =   -1  'True
          BuddyControl    =   "txtTitleYfont"
-         BuddyDispid     =   196618
+         BuddyDispid     =   196619
          OrigLeft        =   2520
          OrigTop         =   3360
          OrigRight       =   2775
@@ -249,7 +257,7 @@ Begin VB.Form frmSetCond
          Value           =   17
          AutoBuddy       =   -1  'True
          BuddyControl    =   "txtTitleXfont"
-         BuddyDispid     =   196619
+         BuddyDispid     =   196620
          OrigLeft        =   2400
          OrigTop         =   3000
          OrigRight       =   2655
@@ -544,10 +552,13 @@ Begin VB.Form frmSetCond
       End
    End
    Begin VB.Menu mnuFormat 
-      Caption         =   "&Format"
+      Caption         =   "F&ormat"
    End
    Begin VB.Menu mnuSpline 
       Caption         =   "F&itting"
+   End
+   Begin VB.Menu mnuStatistics 
+      Caption         =   "&Statistics"
    End
    Begin VB.Menu mnuHelp 
       Caption         =   "&Help"
@@ -692,6 +703,15 @@ Private Sub cmdClear_Click()
    txtValueX0 = sEmpty
    txtValueX1 = sEmpty
   
+End Sub
+
+Private Sub cmdFull_Click()
+   frmSetCond.txtValueY0 = YMin0
+   frmSetCond.txtValueY1 = YRange0
+   frmSetCond.txtValueX0 = XMin0
+   frmSetCond.txtValueX1 = XRange0
+   DblClickForm
+   dragbegin = False
 End Sub
 
 Private Sub cmdOK_Click()
@@ -1749,6 +1769,7 @@ End Sub
 '
 Private Sub mnuRestore_Click()
     'restore plot info from previously saved file list
+    Dim NewDoclin$
        
    On Error GoTo mnuRestore_Click_Error
 
@@ -1772,9 +1793,42 @@ Private Sub mnuRestore_Click()
     numfiles% = 0
     Open App.Path & "\PlotFiles.txt" For Input As #filplt%
     Input #filplt%, doclin$
-    Input #filplt%, XTitle$
-    Input #filplt%, YTitle$
-    Input #filplt%, Title$
+    Line Input #filplt%, NewDoclin$
+    If InStr(NewDoclin$, ",") = 0 Then
+       'old format without format size recorded
+       XTitle$ = NewDoclin$
+       Input #filplt%, YTitle$
+       Input #filplt%, Title$
+    Else
+       Dim TitlesInput() As String
+       TitlesInput = Split(NewDoclin$, ",")
+       XTitle$ = Mid$(TitlesInput(0), 2, Len(TitlesInput(0)) - 2) 'remove enclosing quotation marks
+       txtTitleXfont.Text = TitlesInput(1)
+       Line Input #filplt%, NewDoclin$
+       TitlesInput = Split(NewDoclin$, ",")
+       YTitle$ = Mid$(TitlesInput(0), 2, Len(TitlesInput(0)) - 2)
+       txtTitleYfont.Text = TitlesInput(1)
+       Line Input #filplt%, NewDoclin$
+       TitlesInput = Split(NewDoclin$, ",")
+       Title$ = Mid$(TitlesInput(0), 2, Len(TitlesInput(0)) - 2)
+       txtTitlefont.Text = TitlesInput(1)
+       txtTitlefont.Text = TitlesInput(1)
+       
+       Line Input #filplt%, NewDoclin$
+       txtX0.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       Line Input #filplt%, NewDoclin$
+       txtX1.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       Line Input #filplt%, NewDoclin$
+       txtValueY0.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       Line Input #filplt%, NewDoclin$
+       txtValueY1.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       Line Input #filplt%, NewDoclin$
+       txtValueX0.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       Line Input #filplt%, NewDoclin$
+       txtValueX1.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       End If
+
+        
     Do Until EOF(filplt%)
        numfiles% = numfiles% + 1
        ReDim Preserve PlotInfo(9, numfiles%)
@@ -1893,7 +1947,7 @@ Private Sub mnuRestoreOther_Click()
 
    On Error GoTo mnuRestoreOther_Click_Error
    
-   Dim FileInPlotFiles$
+   Dim FileInPlotFiles$, NewDoclin$
    
    'pick other restore file
    CommonDialog1.CancelError = True
@@ -1923,9 +1977,41 @@ Private Sub mnuRestoreOther_Click()
     numfiles% = 0
     Open FileInPlotFiles$ For Input As #filplt%
     Input #filplt%, doclin$
-    Input #filplt%, XTitle$
-    Input #filplt%, YTitle$
-    Input #filplt%, Title$
+    'see if new format with value of font size
+    Line Input #filplt%, NewDoclin$
+    If InStr(NewDoclin$, ",") = 0 Then
+       'old format without format size recorded
+       XTitle$ = NewDoclin$
+       Input #filplt%, YTitle$
+       Input #filplt%, Title$
+    Else
+       Dim TitlesInput() As String
+       TitlesInput = Split(NewDoclin$, ",")
+       XTitle$ = Mid$(TitlesInput(0), 2, Len(TitlesInput(0)) - 2) 'remove enclosing quotation marks
+       txtTitleXfont.Text = TitlesInput(1)
+       Line Input #filplt%, NewDoclin$
+       TitlesInput = Split(NewDoclin$, ",")
+       YTitle$ = Mid$(TitlesInput(0), 2, Len(TitlesInput(0)) - 2)
+       txtTitleYfont.Text = TitlesInput(1)
+       Line Input #filplt%, NewDoclin$
+       TitlesInput = Split(NewDoclin$, ",")
+       Title$ = Mid$(TitlesInput(0), 2, Len(TitlesInput(0)) - 2)
+       txtTitlefont.Text = TitlesInput(1)
+       
+       Line Input #filplt%, NewDoclin$
+       txtX0.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       Line Input #filplt%, NewDoclin$
+       txtX1.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       Line Input #filplt%, NewDoclin$
+       txtValueY0.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       Line Input #filplt%, NewDoclin$
+       txtValueY1.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       Line Input #filplt%, NewDoclin$
+       txtValueX0.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       Line Input #filplt%, NewDoclin$
+       txtValueX1.Text = Mid$(Trim$(NewDoclin$), 2, Len(Trim$(NewDoclin$)) - 2)
+       End If
+
     Do Until EOF(filplt%)
        numfiles% = numfiles% + 1
        ReDim Preserve PlotInfo(9, numfiles%)
@@ -2044,16 +2130,27 @@ Private Sub mnuSave_Click()
    
    filplt% = FreeFile
    Open App.Path & "\PlotFiles.txt" For Output As #filplt%
-   Write #filplt%, "This file is used by Plot. Don't erase it!"
-   Write #filplt%, XTitle$
-   Write #filplt%, YTitle$
-   Write #filplt%, Title$
+   Print #filplt%, "This file is used by Plot. Don't erase it!"
+   Write #filplt%, XTitle$, Val(txtTitleXfont.Text)
+   Write #filplt%, YTitle$, Val(txtTitleYfont.Text)
+   Write #filplt%, Title$, Val(txtTitlefont.Text)
+   
+   'now store xmin,xmax,ymin,ymax,etc.
+   Write #filplt%, txtX0.Text
+   Write #filplt%, txtX1.Text
+   Write #filplt%, txtValueY0.Text
+   Write #filplt%, txtValueY1.Text
+   Write #filplt%, txtValueX0.Text
+   Write #filplt%, txtValueX1.Text
+   
+   'now store file names and plot info for the plot buffer
    For I% = 0 To numfiles% - 1
       Write #filplt%, PlotInfo(0, I%), PlotInfo(1, I%), _
                      PlotInfo(2, I%), PlotInfo(3, I%), _
                      PlotInfo(4, I%), PlotInfo(5, I%), _
                      PlotInfo(6, I%), Files(I%), PlotInfo(8, I%), PlotInfo(9, I%)
    Next I%
+   
    Close #filplt%
    
    mnuRestore.Enabled = True
@@ -2063,4 +2160,8 @@ End Sub
 
 Private Sub mnuSpline_Click()
    frmSpline.Visible = True
+End Sub
+
+Private Sub mnuStatistics_Click()
+    frmStat.Visible = True
 End Sub

@@ -178,10 +178,10 @@ If Button = 1 And Shift <> vbShiftMask And (Abs(drag1x - drag2x) > 50 And Abs(dr
    frmSetCond.txtValueX1 = Coord2.X
    Call Form_DblClick
    dragbegin = False
-   frmSetCond.txtValueY0 = YMin0
-   frmSetCond.txtValueY1 = YRange0
-   frmSetCond.txtValueX0 = XMin0
-   frmSetCond.txtValueX1 = XRange0
+'   frmSetCond.txtValueY0 = YMin0 '<<<<<<<<<<<<<<<<<<<<<changes 123120>>>>>>>>>>>>>>>>>>>>>>>>>
+'   frmSetCond.txtValueY1 = YRange0
+'   frmSetCond.txtValueX0 = XMin0
+'   frmSetCond.txtValueX1 = XRange0
 ElseIf Button = 1 And Shift <> vbShiftMask And (Abs(drag1x - drag2x) <= 50 Or Abs(drag1y - drag2y) <= 50) Then
   'erase box
    frmDraw.Line (drag1x, drag1y)-(drag2x, drag2y), QBColor(15), B

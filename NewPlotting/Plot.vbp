@@ -21,6 +21,7 @@ Object={825967DA-1756-11D3-B695-ED78B587442C}#30.0#0; FlexListBox.ocx
 Form=frmSpline.frm
 Module=modPolyFit; modPolyFit.bas
 Module=modSplines; Splines.bas
+Form=frmStat.frm
 IconForm="frmDraw"
 Startup="frmSetCond"
 HelpFile=""

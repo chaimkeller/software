@@ -11,3 +11,7 @@ modScreenPrint = 156, 162, 1157, 844,
 modPrintPreview = 182, 189, 1183, 871, 
 PrintPreview = 0, 0, 0, 0, C, 312, 312, 1287, 988, C
 frmAbout = 0, 0, 0, 0, C, 338, 338, 1313, 1014, C
+frmSpline = 182, 189, 1183, 864, , 0, 0, 975, 676, C
+modPolyFit = 286, 297, 1287, 979, 
+modSplines = 234, 243, 1235, 925, 
+frmStat = 286, 297, 1137, 979, Z, 260, 270, 1111, 952, C
