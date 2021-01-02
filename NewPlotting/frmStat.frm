@@ -11,27 +11,69 @@ Begin VB.Form frmStat
    ScaleHeight     =   9240
    ScaleWidth      =   6810
    StartUpPosition =   3  'Windows Default
+   Begin VB.Frame frmBoundary 
+      Caption         =   "Boundaries"
+      Height          =   975
+      Left            =   120
+      TabIndex        =   15
+      Top             =   6360
+      Width           =   2175
+      Begin VB.TextBox txtXmax 
+         Alignment       =   2  'Center
+         Height          =   285
+         Left            =   600
+         TabIndex        =   19
+         Text            =   "txtXmax"
+         Top             =   560
+         Width           =   1455
+      End
+      Begin VB.TextBox txtXmin 
+         Alignment       =   2  'Center
+         Height          =   285
+         Left            =   600
+         TabIndex        =   17
+         Text            =   "txtXmin"
+         Top             =   200
+         Width           =   1455
+      End
+      Begin VB.Label lblXmax 
+         Caption         =   "Xmax"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   18
+         Top             =   600
+         Width           =   495
+      End
+      Begin VB.Label lblXmin 
+         Caption         =   "Xmin"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   16
+         Top             =   240
+         Width           =   495
+      End
+   End
    Begin VB.Frame frmAdj 
       Caption         =   "Units for variation"
-      Height          =   855
-      Left            =   120
+      Height          =   975
+      Left            =   2400
       TabIndex        =   9
-      Top             =   6960
-      Width           =   6615
+      Top             =   6360
+      Width           =   4335
       Begin VB.TextBox txtUnits 
          Alignment       =   2  'Center
          Height          =   285
-         Left            =   4320
+         Left            =   2640
          TabIndex        =   13
          Text            =   "Seconds"
          ToolTipText     =   "String value: units of variance"
          Top             =   360
-         Width           =   1935
+         Width           =   1455
       End
       Begin VB.TextBox txtMult 
          Alignment       =   2  'Center
          Height          =   285
-         Left            =   1560
+         Left            =   1200
          TabIndex        =   11
          Text            =   "60.0"
          ToolTipText     =   "Multiply variance by"
@@ -50,10 +92,10 @@ Begin VB.Form frmStat
             Strikethrough   =   0   'False
          EndProperty
          Height          =   255
-         Left            =   3480
+         Left            =   2160
          TabIndex        =   12
          Top             =   360
-         Width           =   615
+         Width           =   495
       End
       Begin VB.Label lblMult 
          Caption         =   "Multiply by:"
@@ -67,7 +109,7 @@ Begin VB.Form frmStat
             Strikethrough   =   0   'False
          EndProperty
          Height          =   255
-         Left            =   360
+         Left            =   120
          TabIndex        =   10
          Top             =   360
          Width           =   1095
@@ -112,11 +154,11 @@ Begin VB.Form frmStat
       Height          =   495
       Left            =   240
       TabIndex        =   6
-      Top             =   6360
+      Top             =   7400
       Width           =   6495
    End
    Begin VB.Frame frmStats 
-      Caption         =   "Statistics"
+      Caption         =   "Statistical Analysis"
       Height          =   1215
       Left            =   120
       TabIndex        =   4
@@ -334,6 +376,7 @@ Private Sub cmdStat_Click()
        numRowsData% = numRowsData% + 1
        DataValues.X = dPlot(SelectedData, 0, numRowsData% - 1)
        DataValues.Y = dPlot(SelectedData, 1, numRowsData% - 1)
+       If DataValues.X < Val(txtXmin.Text) Or DataValues.X > Val(txtXmax.Text) Then GoTo lp500
        Seek (freefitfil%), 1 'set at beginning of fit file
        numRowsFit% = 0
        Do Until EOF(freefitfil%)
@@ -364,6 +407,7 @@ Private Sub cmdStat_Click()
              Exit Do
              End If
        Loop
+lp500:
     Loop
     
     Close #freedatafil%
@@ -410,6 +454,11 @@ Private Sub Form_Load()
      Next I
 
      End If
+     
+  'set boundaries for analysis
+  txtXmin = frmSetCond.txtValueX0.Text
+  txtXmax = frmSetCond.txtValueX1.Text
+  
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
