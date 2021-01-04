@@ -1,0 +1,26 @@
+Line 155: Class FlexList.FlexListBox of control FlexListBox2 was not a loaded control class.
+Line 175: Class FlexList.FlexListBox of control FlexListBox1 was not a loaded control class.
+Line 209: Class MSComctlLib.ImageList of control ImageList1 was not a loaded control class.
+Line 161: The property name _ExtentX in FlexListBox2 is invalid.
+Line 162: The property name _ExtentY in FlexListBox2 is invalid.
+Line 171: The property name FontSelected in FlexListBox2 is invalid.
+Line 172: The property name ListStyle in FlexListBox2 is invalid.
+Line 173: The property name Locked in FlexListBox2 is invalid.
+Line 181: The property name _ExtentX in FlexListBox1 is invalid.
+Line 182: The property name _ExtentY in FlexListBox1 is invalid.
+Line 183: The property name ForeColorUnselected in FlexListBox1 is invalid.
+Line 184: The property name BackColorUnselected in FlexListBox1 is invalid.
+Line 185: The property name ForeColorSelected in FlexListBox1 is invalid.
+Line 186: The property name BackColorSelected in FlexListBox1 is invalid.
+Line 195: The property name FontSelected in FlexListBox1 is invalid.
+Line 196: The property name MultiSelect in FlexListBox1 is invalid.
+Line 197: The property name Columns in FlexListBox1 is invalid.
+Line 198: The property name ListStyle in FlexListBox1 is invalid.
+Line 199: The property name SelectOnMatch in FlexListBox1 is invalid.
+Line 212: The property name _ExtentX in ImageList1 is invalid.
+Line 213: The property name _ExtentY in ImageList1 is invalid.
+Line 215: The property name ImageWidth in ImageList1 is invalid.
+Line 216: The property name ImageHeight in ImageList1 is invalid.
+Line 217: The property name MaskColor in ImageList1 is invalid.
+Line 218: The property name _Version in ImageList1 is invalid.
+Line 305: The property name Images in ImageList1 is invalid.
