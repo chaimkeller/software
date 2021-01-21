@@ -102,6 +102,8 @@ Dim coef_j_i As Double
 Dim d As Integer
 Dim solution() As Double
 
+   On Error GoTo GaussianElimination_Error
+
     max_equation = UBound(coeffs, 1)
     max_coeff = UBound(coeffs, 2)
     For I = 0 To max_equation
@@ -162,6 +164,13 @@ Dim solution() As Double
 
     ' Return the solution values.
     GaussianElimination = solution
+
+   On Error GoTo 0
+   Exit Function
+
+GaussianElimination_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure GaussianElimination of Module modPolyFit"
 End Function
 
 

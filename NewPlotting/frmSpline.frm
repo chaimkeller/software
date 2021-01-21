@@ -570,7 +570,7 @@ Private Sub cmdFit_Click()
   Dim numlist%, pos1%, MultiSelectPath As Boolean, sPath0 As String
   Dim sDriveLetter As String, MaxDirLen As Integer, PlotFileName$
   
-  On Error GoTo cmdFit_Click_Error
+'  On Error GoTo cmdFit_Click_Error
 
   numlist% = 0
   MaxDirLen = Int(flxlstFiles.Width / 70) - 30
@@ -1082,8 +1082,10 @@ WizardSection:
      
   flxlstFiles.MultiSelect = True
   
-  maxFilesToPlot% = MaxNumOverplotFiles
-  numFilesToPlot% = 0
+  FitWizard = True
+  
+'  maxFilesToPlot% = MaxNumOverplotFiles
+'  numFilesToPlot% = 0
   
   If flxlstFiles.list.Count > 15 Then
     'scroll the flex list box to the beginning
@@ -1100,6 +1102,37 @@ WizardSection:
            
   numSelected% = -1
   For I = 0 To flxlstFiles.list.Count - 1
+  
+        '==============do cleanup of file list============================
+        If InStr(frmSetCond.flxlstFiles.list.item(numfiles%).Text, "tmp-fit.txt") Then
+            
+            If FitFileName <> "" And Dir(FitFileName) <> sEmpty Then
+               Kill FitFileName
+               End If
+               
+            numfiles% = numfiles% - 1
+            ReDim Preserve Files(numfiles%)
+               
+            ReDim Preserve PlotInfo(9, numfiles%)
+            
+            notAlreadyFitted = True
+    
+            End If
+            
+        frmSetCond.flxlstFiles.Clear
+        
+        'restore list
+        For J = 0 To UBound(flxFileBuffer)
+            frmSetCond.flxlstFiles.AddItem flxFileBuffer(J)
+        Next J
+        
+        frmSetCond.flxlstFiles.Refresh
+        DoEvents
+                
+        'restore plot buffer number
+        numFilesToPlot% = OriginalNumPlotFiles
+        '====================================================================
+    
         'scroll down one
         flxlstFiles.SetFocus
         waitime = Timer
@@ -1121,13 +1154,13 @@ WizardSection:
             Call keybd_event(VK_DOWN, 0, 0, 0)
             Call keybd_event(VK_DOWN, 0, KEYEVENTF_KEYUP, 0)
             
-           numSelected% = I
-           numFilesToPlot% = numFilesToPlot% + 1
-           If I > maxFilesToPlot% Then
-              MsgBox "You are allowed to overplot a maximum of " & _
-              Str(maxFilesToPlot%) & "files!", vbExclamation + vbOKOnly, "Plot"
-              Exit For
-              End If
+'           numSelected% = I
+'           numFilesToPlot% = 2 'numFilesToPlot% + 1 'so far software can only overplot the fitting and fit files
+'           If I > maxFilesToPlot% Then
+'              MsgBox "You are allowed to overplot a maximum of " & _
+'              Str(maxFilesToPlot%) & "files!", vbExclamation + vbOKOnly, "Plot"
+'              Exit For
+'              End If
            tmpBackColor& = flxlstFiles.list.item(I + 1).ItemBackColor
            tmpForeColor& = flxlstFiles.list.item(I + 1).ItemForeColor
            Call keybd_event(VK_DOWN, 0, 0, 0)
@@ -1185,7 +1218,7 @@ WizardSection:
                 found1% = 0
                 For J = 0 To frmSpline.flxlstFiles.list.Count - 1
                     If frmSpline.flxlstFiles.list.item(J + 1).Selected Then
-                       If FileRoot(PlotInfo(7, J)) = PlotFileName$ Then
+                       If FileRoot(PlotInfo(7, J)) = PlotFileName$ And found1% = 0 Then
                           frmSetCond.flxlstFiles.list.item(J + 1).Selected = True
                           found1% = 1
                           CurrentFitFileIndex = J + 1
@@ -1216,7 +1249,7 @@ WizardSection:
                 Fitting = True
                   
                 freefil% = FreeFile
-                Open PlotFileName$ For Input As #freefil%
+                Open PlotInfo(7, CurrentFitFileIndex - 1) For Input As #freefil%
                 'skip the header lines
                 For idoc = 1 To FilForm(0, PlotInfo(0, I))
                    Line Input #freefil%, doclin$
@@ -1238,12 +1271,19 @@ WizardSection:
                 
                 Text1 = MinX
                 Text2 = MaxX
-                If Trim(txtNumFitPnts.Text) = sEmpty Then txtNumFitPnts.Text = numRows%
+'                If Trim(txtNumFitPnts.Text) = sEmpty Then txtNumFitPnts.Text = numRows%
+                txtNumFitPnts.Text = numRows%
                 
                 Close #freefil%
                
                  ' Find a good fit.
-                degree = cmbDeg.ListIndex + 1
+                If IsNumeric(cmbDeg.Text) Then
+                    degree = Val(cmbDeg.Text) 'cmbDeg.ListIndex + 1
+                Else
+                    cmbDeg.Text = "1"
+                    degree = 1
+                    End If
+                    
                 If degree = 0 Then degree = 1
                 PolyDeg = degree
                 Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree)
@@ -1355,8 +1395,8 @@ WizardSection:
                   PlotInfo(1, numfiles% - 1) = cmbPlotType.ListIndex - 1 'Str$(chkPlotType%)
                   PlotInfo(2, numfiles% - 1) = cmbPlotColor.ListIndex - 1 'Str$(chkColor%)
                   
-                  numFilesToPlot% = 2
-                  numSelected% = 2
+'                  numFilesToPlot% = 2
+'                  numSelected% = 2
                  
                   End If
                 
@@ -1596,8 +1636,8 @@ WizardSection:
                   PlotInfo(1, numfiles% - 1) = cmbPlotType.ListIndex - 1 'Str$(chkPlotType%)
                   PlotInfo(2, numfiles% - 1) = cmbPlotColor.ListIndex - 1 'Str$(chkColor%)
                   
-                  numFilesToPlot% = 2
-                  numSelected% = 2
+'                  numFilesToPlot% = 2
+'                  numSelected% = 2
                  
                   End If
                 
@@ -1634,10 +1674,11 @@ WizardSection:
             DoEvents
            
         End If
-        
+9999:
    Next I
    
    Fitting = False
+   FitWizard = False
    
    If flxlstFiles.MultiSelect Then Exit Sub
   
@@ -1663,6 +1704,14 @@ End Sub
 
 Private Sub cmdRecord_Click()
 
+   On Error GoTo cmdRecord_Click_Error
+   
+   If CurrentFitFileIndex = 0 Then
+      Call MsgBox("No fit has been done yet.", vbExclamation, "Fit error")
+      Exit Sub
+                                  
+      End If
+
    fileoutcoef% = FreeFile
    Open App.Path & "\Fit-coefficients.txt" For Append As #fileoutcoef%
    Print #fileoutcoef%, String(40, "=") 'demarcation
@@ -1675,6 +1724,13 @@ Private Sub cmdRecord_Click()
     Next J
     
     Close #fileoutcoef%
+
+   On Error GoTo 0
+   Exit Sub
+
+cmdRecord_Click_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdRecord_Click of Form frmSpline"
     
 End Sub
 
@@ -2108,6 +2164,8 @@ Private Sub Form_Unload(Cancel As Integer)
     
     Dim FileSave$, sPath As String, sTemp As String, MaxDirLen As Integer, sShortPath As String
     
+   On Error GoTo Form_Unload_Error
+
     MaxDirLen = Int(flxlstFiles.Width / 70) - 30
        
     If InStr(frmSetCond.flxlstFiles.list.item(numfiles%).Text, "tmp-fit.txt") Then
@@ -2209,6 +2267,13 @@ Private Sub Form_Unload(Cancel As Integer)
     
    Unload Me
    Set frmSpline = Nothing
+
+   On Error GoTo 0
+   Exit Sub
+
+Form_Unload_Error:
+
+    
 End Sub
 
 Private Sub optPoly_Click()

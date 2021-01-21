@@ -9,7 +9,7 @@ Public Declare Function DeleteObject Lib "gdi32" (ByVal hObject As Long) As Long
 Public Declare Function CreateFontIndirect Lib "gdi32" Alias "CreateFontIndirectA" (lpLogFont As LOGFONT) As Long
 Declare Function BringWindowToTop Lib "User32" (ByVal hWnd As Long) As Long
 Declare Sub keybd_event Lib "User32" (ByVal bVk As Byte, ByVal bScan As Byte, ByVal dwFlags As Long, ByVal dwExtraInfo As Long)
-Public LineWidth As Integer, Fitting As Boolean
+Public LineWidth As Integer, Fitting As Boolean, SaveFormat As Boolean, LastSelected%, FitWizard As Boolean
 
 Public Const VK_DOWN = &H28
 Public Const VK_UP = &H26
@@ -352,7 +352,7 @@ Public udtMyGraphLayout As GRAPHIC_LAYOUT
 'public constants used in dragging and plotting
 Public drag1x As Single, drag1y As Single, EndPlot As Boolean
 Public drag2x As Single, drag2y As Single, dragbegin As Boolean
-Public xo As Single, yo As Single, PlotInfoCancel As Boolean
+Public Xo As Single, Yo As Single, PlotInfoCancel As Boolean
 Public XMin As Single, YMin As Single, XMax As Single, YMax As Single
 Public drm%, drs%, drw%, PlotForm() As Integer, PlotAll As Boolean
 Public YMin0 As Double, YRange0 As Double, XMin0 As Double, XRange0 As Double
@@ -377,9 +377,9 @@ Public Type GRAPHIC_LAYOUT
   asY() As Variant 'Y-traces to plot
   DrawTrace() As DRAWN_AS
   X0 As Double 'minimum value of domain X-values to draw
-  x1 As Double 'maximum value of domain X-values to draw
+  X1 As Double 'maximum value of domain X-values to draw
   Y0 As Double 'minimum value of domain Y-values to draw
-  y1 As Double 'maximum value of domain Y-values to draw
+  Y1 As Double 'maximum value of domain Y-values to draw
 End Type
 
 Public Enum DRAWN_AS
@@ -589,7 +589,7 @@ If val_XMin < 0 Then
 End If
 
 'Xmax
-val_XMax = udtLayoutSpec.x1
+val_XMax = udtLayoutSpec.X1
 If val_XMax < 0 And udtLayoutSpec.blnOrigin = True Then
   val_XMax = 0
   If XRange0 < 0 Then
@@ -620,7 +620,7 @@ If val_YMin > 0 And udtLayoutSpec.blnOrigin = True Then
 End If
 
 'Ymax
-val_YMax = udtLayoutSpec.y1
+val_YMax = udtLayoutSpec.Y1
 If val_YMax < 0 And udtLayoutSpec.blnOrigin = True Then
   val_YMax = 0
   If YRange0 < 0 Then
@@ -1527,6 +1527,7 @@ MsgBox "Error: " & Err.Number & vbLf & _
        Err.Description, vbExclamation + vbOKOnly, "Plot"
 
 
+
 End Sub
 
 Public Sub SetZoomValues(twp_StartXMD As Single, twp_StartYMD As Single, _
@@ -1555,9 +1556,9 @@ val_ZoomYStart = val_YMin + val_YRange * (twp_YRange - (twp_StartYMD + twp_Heigh
 
 With udtMyGraphLayout
   .X0 = val_ZoomXStart
-  .x1 = val_ZoomXEnd
+  .X1 = val_ZoomXEnd
   .Y0 = val_ZoomYStart
-  .y1 = val_ZoomYEnd
+  .Y1 = val_ZoomYEnd
 End With
   
 

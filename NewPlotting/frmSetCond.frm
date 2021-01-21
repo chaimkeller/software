@@ -33,7 +33,6 @@ Begin VB.Form frmSetCond
          BeginProperty Panel1 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
             AutoSize        =   1
             Object.Width           =   5133
-            Key             =   ""
             Object.Tag             =   ""
          EndProperty
       EndProperty
@@ -155,7 +154,7 @@ Begin VB.Form frmSetCond
          Value           =   10
          AutoBuddy       =   -1  'True
          BuddyControl    =   "txtAxisLabelSize"
-         BuddyDispid     =   196617
+         BuddyDispid     =   196618
          OrigLeft        =   2400
          OrigTop         =   480
          OrigRight       =   2655
@@ -189,7 +188,7 @@ Begin VB.Form frmSetCond
          Value           =   14
          AutoBuddy       =   -1  'True
          BuddyControl    =   "txtTitlefont"
-         BuddyDispid     =   196618
+         BuddyDispid     =   196619
          OrigLeft        =   2400
          OrigTop         =   3720
          OrigRight       =   2655
@@ -223,7 +222,7 @@ Begin VB.Form frmSetCond
          Value           =   17
          AutoBuddy       =   -1  'True
          BuddyControl    =   "txtTitleYfont"
-         BuddyDispid     =   196619
+         BuddyDispid     =   196620
          OrigLeft        =   2520
          OrigTop         =   3360
          OrigRight       =   2775
@@ -257,7 +256,7 @@ Begin VB.Form frmSetCond
          Value           =   17
          AutoBuddy       =   -1  'True
          BuddyControl    =   "txtTitleXfont"
-         BuddyDispid     =   196620
+         BuddyDispid     =   196621
          OrigLeft        =   2400
          OrigTop         =   3000
          OrigRight       =   2655
@@ -604,24 +603,24 @@ Public dXmax As Double
 Private Sub cmdAll_Click()
   Dim response As String
   
-10
-  response = InputBox("Note: files must all have the same format." & vbLf & _
-                    "Input the format number of these files (1-11).", _
-                    "Files' format number", Str(DefaultFileType%))
-  Select Case Trim$(response)
-     Case sEmpty
-        'cancel or escape so exit sub
-        Exit Sub
-     Case "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"
-        DefaultFileType% = Val(response)
-     Case Else
-        response = MsgBox("The range of valid inputs is 1-11.", vbOKCancel + vbExclamation, "Plot error")
-        If response = vbOK Then
-           GoTo 10
-        Else
-           Exit Sub
-           End If
-  End Select
+'10
+'  response = InputBox("Note: files must all have the same format." & vbLf & _
+'                    "Input the format number of these files (1-11).", _
+'                    "Files' format number", Str(DefaultFileType%))
+'  Select Case Trim$(response)
+'     Case sEmpty
+'        'cancel or escape so exit sub
+'        Exit Sub
+'     Case "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"
+'        DefaultFileType% = Val(response)
+'     Case Else
+'        response = MsgBox("The range of valid inputs is 1-11.", vbOKCancel + vbExclamation, "Plot error")
+'        If response = vbOK Then
+'           GoTo 10
+'        Else
+'           Exit Sub
+'           End If
+'  End Select
      
   PlotAll = True
   Dim I%
@@ -682,6 +681,9 @@ Private Sub cmdClear_Click()
    txtXTitle.Enabled = False
    txtYTitle.Enabled = False
    txtTitle.Enabled = False
+   txtXTitle.Text = sEmpty
+   txtYTitle.Text = sEmpty
+   txtTitle.Text = sEmpty
    txtValueX0.Enabled = False
    txtValueX1.Enabled = False
    fraLayout.Enabled = False
@@ -878,6 +880,7 @@ Private Sub cmdWizard_Click()
            Do Until PlotInfofrmVis = False
               DoEvents
               If PlotAll Then
+                 If Not PlotInfofrmVis Then Exit Do
                  If DefaultFileType% <> 0 Then 'click on file type of all the files
                     Select Case DefaultFileType%
                        Case 1
@@ -904,11 +907,15 @@ Private Sub cmdWizard_Click()
                           PlotInfofrm.optFF11.Value = True
                     End Select
                     End If
-                 PlotInfofrm.cmdAccept.Value = True
+                 PlotInfofrm.chkSave.Value = vbChecked
+                 'give some time to fill in other options
+                 If I > 0 Then 'wait for accept on first file
+                    PlotInfofrm.cmdAccept.Value = True
+                    End If
                  End If
               flxlstFiles.list.item(I + 1).ItemBackColor = tmpBackColor&
               flxlstFiles.list.item(I + 1).ItemForeColor = tmpForeColor&
-           
+              If Not PlotInfofrmVis Then Exit Do
            Loop
            If Not PlotInfoCancel Then
               'user canceled, so leave the wizard
@@ -1294,19 +1301,19 @@ With udtMyGraphLayout
   If Abs((Val(txtValueX1.Text) - Val(txtValueX0.Text))) >= 0 And txtValueX1.Text <> "" _
   And txtValueX0.Text <> "" Then
     .X0 = Val(txtValueX0.Text)
-    .x1 = Val(txtValueX1.Text)
+    .X1 = Val(txtValueX1.Text)
     Else
     .X0 = dXmin
-    .x1 = dXmax
+    .X1 = dXmax
   End If
   'Y-range
   If Abs((Val(txtValueY1.Text) - Val(txtValueY0.Text))) >= 0 And txtValueY1.Text <> "" _
   And txtValueY0.Text <> "" Then
     .Y0 = Val(txtValueY0.Text)
-    .y1 = Val(txtValueY1.Text)
+    .Y1 = Val(txtValueY1.Text)
     Else
     .Y0 = dYmin 'dPlot(LBound(dPlot, 1), 2)
-    .y1 = dYmax  'dPlot(UBound(dPlot, 1), 2)
+    .Y1 = dYmax  'dPlot(UBound(dPlot, 1), 2)
   End If
   'index start-X1
   If Val(txtX0.Text) >= LBound(dPlot, 3) And Val(txtX0.Text) <= UBound(dPlot, 3) _
@@ -1368,7 +1375,7 @@ End With
    Exit Sub
 
 DefineLayout_Error:
-
+    If Err.Number = 9 Then Resume Next
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure DefineLayout of Form frmSetCond"
 
 End Sub
@@ -1383,7 +1390,19 @@ Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
    Set frmShowValues = Nothing
    Unload JKHplot
    Set JKHplot = Nothing
+   Unload frmSpline
+   Set frmSpline = Nothing
+   Unload frmStat
+   Set frmStat = Nothing
    End
+   
+   'unload all the opened forms
+'   Dim I%
+'   For I% = 0 To Forms.Count - 1
+'      Unload Forms(I%)
+'   Next I%
+'   End
+   
 End Sub
 
 

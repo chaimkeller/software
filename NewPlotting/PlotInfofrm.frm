@@ -14,6 +14,15 @@ Begin VB.Form PlotInfofrm
    MinButton       =   0   'False
    ScaleHeight     =   4410
    ScaleWidth      =   6300
+   Begin VB.CheckBox chkSave 
+      Caption         =   "Save"
+      Height          =   255
+      Left            =   5400
+      TabIndex        =   56
+      ToolTipText     =   "Save the format pattern for the next file in the list"
+      Top             =   4080
+      Width           =   735
+   End
    Begin MSComCtl2.UpDown updwnLineWidth 
       Height          =   285
       Left            =   720
@@ -26,7 +35,7 @@ Begin VB.Form PlotInfofrm
       Value           =   1
       AutoBuddy       =   -1  'True
       BuddyControl    =   "txtLineWidth"
-      BuddyDispid     =   196609
+      BuddyDispid     =   196610
       OrigLeft        =   960
       OrigTop         =   4080
       OrigRight       =   1215
@@ -581,6 +590,15 @@ Private Sub chkJKH_Click()
    JKHplot.cmdConvert.Caption = JKHplot.cmdConvert.Caption & " " & PlotInfofrm.lblFileName.Caption
 End Sub
 
+Private Sub chkSave_Click()
+  If chkSave.Value = vbChecked And Not SaveFormat Then
+    SaveFormat = True
+    LastSelected% = numSelected%
+  ElseIf chkSave.Value = vbUnchecked Then
+    SaveFormat = False
+    End If
+End Sub
+
 Private Sub cmdAccept_Click()
    Dim FileLines() As String, FileReverseLines() As String
    Dim numLines As Long, doclin$
@@ -708,7 +726,7 @@ End Sub
 
 Private Sub Form_Load()
 
-   Dim FuncX As String, FuncY As String
+   Dim FuncX As String, FuncY As String, numNewSelected%
    
    Me.Left = Screen.Width * 0.5
    Me.Top = Screen.Height * 0.5
@@ -716,8 +734,18 @@ Private Sub Form_Load()
    PlotInfoCancel = False 'flag that form is loading
                           'and no entries have been accepted
    'load up old information if it exists
+   
+   'if save format, then use it
+   If SaveFormat Then
+      chkSave.Value = vbChecked
+      numNewSelected% = LastSelected%
+      txtLineWidth.Text = PlotInfo(9, numNewSelected%)
+   Else
+      numNewSelected% = numSelected%
+      End If
+      
    PlotInfofrmVis = True
-   chkFF% = Val(PlotInfo(0, numSelected%))
+   chkFF% = Val(PlotInfo(0, numNewSelected%))
    Select Case chkFF%
       Case 0
          optFF1.Value = True
@@ -742,7 +770,7 @@ Private Sub Form_Load()
       Case 10
          optFF11.Value = True
    End Select
-   chkPlotType% = Val(PlotInfo(1, numSelected%))
+   chkPlotType% = Val(PlotInfo(1, numNewSelected%))
    Select Case chkPlotType%
       Case 1
          optPoint.Value = True
@@ -763,7 +791,7 @@ Private Sub Form_Load()
       Case 8
          optFilledCircle.Value = True
    End Select
-   chkColor% = Val(PlotInfo(2, numSelected%))
+   chkColor% = Val(PlotInfo(2, numNewSelected%))
    Select Case chkColor%
       Case 0
         optAutomatic.Value = True
@@ -786,31 +814,31 @@ Private Sub Form_Load()
       Case 9
         Option9.Value = True
    End Select
-   If Val(PlotInfo(3, numSelected%)) <> 0 Then
-      txtXA = PlotInfo(3, numSelected%)
+   If Val(PlotInfo(3, numNewSelected%)) <> 0 Then
+      txtXA = PlotInfo(3, numNewSelected%)
    Else
       txtXA = 1#
       End If
-   If Val(PlotInfo(4, numSelected%)) <> 0 Then
-      txtXB = PlotInfo(4, numSelected%)
+   If Val(PlotInfo(4, numNewSelected%)) <> 0 Then
+      txtXB = PlotInfo(4, numNewSelected%)
    Else
       txtXB = 0#
       End If
-   If Val(PlotInfo(5, numSelected%)) <> 0 Then
-      txtYA = PlotInfo(5, numSelected%)
+   If Val(PlotInfo(5, numNewSelected%)) <> 0 Then
+      txtYA = PlotInfo(5, numNewSelected%)
    Else
       txtYA = 1#
       End If
-   If Val(PlotInfo(6, numSelected%)) <> 0 Then
-      txtYB = PlotInfo(6, numSelected%)
+   If Val(PlotInfo(6, numNewSelected%)) <> 0 Then
+      txtYB = PlotInfo(6, numNewSelected%)
    Else
       txtYB = 0#
       End If
    If PlotInfo(7, numSelected%) <> "" Then
       PlotInfofrm.lblFileName = PlotInfo(7, numSelected%)
       End If
-   If PlotInfo(9, numSelected%) <> "" Then
-      txtLineWidth.Text = PlotInfo(9, numSelected%)
+   If PlotInfo(9, numNewSelected%) <> "" Then
+      txtLineWidth.Text = PlotInfo(9, numNewSelected%)
       End If
       
    
@@ -834,11 +862,11 @@ Private Sub Form_Load()
      .ListIndex = 0
    End With
       
-   If PlotInfo(8, numSelected%) <> "" Then
-      pos% = InStr(PlotInfo(8, numSelected%), ":")
+   If PlotInfo(8, numNewSelected%) <> "" Then
+      pos% = InStr(PlotInfo(8, numNewSelected%), ":")
       If pos% > 0 Then
-         FuncX = Mid$(PlotInfo(8, numSelected%), 1, pos% - 1)
-         FuncY = Mid$(PlotInfo(8, numSelected%), pos% + 1, Len(PlotInfo(8, numSelected%)) - pos%)
+         FuncX = Mid$(PlotInfo(8, numNewSelected%), 1, pos% - 1)
+         FuncY = Mid$(PlotInfo(8, numNewSelected%), pos% + 1, Len(PlotInfo(8, numNewSelected%)) - pos%)
          Select Case FuncX
             Case "none"
                 cmbfuncX.ListIndex = 0
