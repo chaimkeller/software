@@ -64,7 +64,10 @@ Sub OpenRead(numfil%, nFile As Integer)
              pos2% = 1
              foundX% = 0
              foundY% = 0
+10:
              Line Input #freefil%, doclin$
+             'skip blank lines
+             If Trim$(doclin$) = sEmpty Then GoTo 10
              For J% = 1 To FilForm(2, Val(PlotInfo(0, numfil%))) - 1
                 pos1% = InStr(pos2%, doclin$, ",")
                 sData$ = Mid$(doclin$, pos2%, pos1% - pos2%)
