@@ -2,13 +2,22 @@
    You must link the resulting object file with the libraries:
 	-lf2c -lm   (in that order)
 */
+//////////////////////////////////////////////////////////////////
+//			Version 20 02/15/2021
+///////////////////////////////////////////////////////////////////
+//added: ability to read external temperature, pressure file
+//then to sutiably modify the refraction based on those values
+//the refraction scaling rules are now a function of height and view angle
+///////////////////////////////////////////////////////////////
 
 //uncomment header files for getch debugging
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 //#include <conio.h> //uncomment for getch() debugging
 #include "f2c.h"
+#include <conio.h>
 
 /* Common Block Declarations */
 
@@ -17,6 +26,7 @@ struct {
 } t3s_;
 
 #define t3s_1 t3s_
+#define MAXDBLSIZE 100 //maximum character size of data elements to be read using ParseString
 
 /* Table of constant values */
 
@@ -26,7 +36,8 @@ static integer c__5 = 5;
 static integer c__0 = 0;
 static integer c__9 = 9;
 static integer c__4 = 4;
-static doublereal c_b175 = 1.687; //1.7081; //1.686701538132792; //1.7081; //<-------
+static doublereal ErrorFudge = 0.59;
+static doublereal c_b175 = 2.2727; //1.68271708343173; //1.687; //1.7081; //1.686701538132792; //1.7081; //<-------
 static doublereal c_b176 = .69;
 static doublereal c_b177 = 73.;
 static doublereal c_b178 = 9.56267125268496f; //9.572702286470884f; //9.56267125268496f; <------
@@ -34,14 +45,19 @@ static doublereal c_b179 = 2.18; //exponent for ref  (need expln why it turned o
 								 //but makes dif for Jerusalem astronomical is no more than 2 seconds.
 static doublereal c_b180 = 0.5; //reduced vdw exponent for astronomical altitudes
 static doublereal c_b181 = -0.2; //exponent for eps <----
+static doublereal c_press = 1.0856; //vdw pressure exponent for view angle = 0 degrees
 
 short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] );
 short lenMonth( short x);
+
 ////////////functions that emulate MS VB 6.0 functions//////////
 int InStr( short nstart, char * str, char * str2 );
+int InStr( char * str, char * str2 );
 
 short ParseString( char *doclin, char *sep, char arr[][100] );
+char *fgets_CR( char *str, short strsize, FILE *stream );
 char strarr[4][100];
+double cd, pi;
 
 logical FixProfHgtBug = TRUE_; //added 101520 to fix the bug in newreadDTM that recorded the 
 						   //ground height and not the calculation height with the added observer height
@@ -104,9 +120,9 @@ logical FixProfHgtBug = TRUE_; //added 101520 to fix the bug in newreadDTM that 
     static integer i1, i2;
     static doublereal t3, t6;
     static integer nopendruk;
-    static doublereal ac, cd, ec, df, ch, mc, ap, ob, lg, ra;
+    static doublereal ac, ec, df, ch, mc, ap, ob, lg, ra;
     static integer avgt[12], ne;
-    static doublereal td, pi, hr, tf, es, mp, lr, dy, lt;
+    static doublereal td, hr, tf, es, mp, lr, dy, lt;
     static integer mint[12], maxt[12];
     static doublereal tk, tkmin, tkmax, tkavg, ms, et, sr;
     static integer nn;
@@ -189,7 +205,7 @@ logical FixProfHgtBug = TRUE_; //added 101520 to fix the bug in newreadDTM that 
     static char filtmp[18], tmpfil[18];
     static doublereal vdwref[6];
     extern /* Subroutine */ int refvdw_(doublereal *, doublereal *, 
-	    doublereal *);
+	    doublereal *, const short *, const double *);
     static integer nendyr;
 	static doublereal nacurr;
     static char filout[27];
@@ -220,6 +236,9 @@ logical FixProfHgtBug = TRUE_; //added 101520 to fix the bug in newreadDTM that 
 	short iTemp,kTemp,mTemp = 0;
 	double DayLength = 0.0;
 	double MaxWinLen = 11.1;
+	char fnam[255] = "";
+	short nweatherflag = 0;
+	short adhocflag = 0;
 	logical FindWinter = TRUE_; //version 18 way of determining the winter months
 	logical EnableSunriseInv = FALSE_; //flag to subtract time for suspected inversion at this day
 	logical EnableSunsetInv = FALSE_; //flag to subtract time for suspected inversion at this day
@@ -231,9 +250,30 @@ logical FixProfHgtBug = TRUE_; //added 101520 to fix the bug in newreadDTM that 
 	doublereal ViewAdd = 0.0;
 	doublereal HorizonInv = 0.01;
 	doublereal WinterPercent = 1.0;
+	static doublereal altmin;
+	static doublereal vbwexp;
+	static char fndynum[255] = "";
+	static char doclin[255] = "";
+	static logical flagdynum = FALSE_;	//used for special case of Edmonton observations
+	static logical showCalc = FALSE_;  //diagnostic variable to show details of refraction iterations
+	static short yrtst;
+	static short dynum; //used for Edmonton observations
+	static double Tobs; //uwed for Edmonton observations, but can be extended to user inputed ground temperature
+	static double Pobs; //used for Edmonton observations, but can be extended to user inputed pressure
+	//more variables to compare details of refraction iterations
+	static doublereal vdwsf_2;
+	static doublereal al1_2;
+	static doublereal refrac1_2;
+	static doublereal al1o_2;
+	static doublereal alt1_2;
+	static integer nloops_2;
+	static logical Diagnostics = FALSE_;
+
 	//doublereal Min_Temp_adjust = 0.9;//range (1 - 0) adjust minimum temperature to be average minimum temperature
 	//for the total atmospheric refraction, use pt
 	short ier = 0;
+
+	FILE *stream;
 
     /* Fortran I/O blocks */
     static cilist io___18 = { 0, 1, 0, "(I1)", 0 };
@@ -471,6 +511,48 @@ L7:
 	cl__1.csta = 0;
 	f_clos(&cl__1);
     }
+
+	//now look for refraction flag file used for comparing 
+	//ray tracing refraction values to standard refraction values 
+	//appearing in the ESAA 9.331
+	sprintf(fnam,"%s%s", drivlet, ":/jk/refflag.tmp");
+	if (stream = fopen( fnam, "r"))
+	{
+		fscanf(stream,"%d\n", &nweatherflag);
+		fclose (stream);
+	}
+
+	//check for file containg name of daynumber, temperatures, pressures
+	sprintf(fnam,"%s%s", drivlet, ":\\jk\\daynumflag.tmp");
+	if (stream = fopen( fnam, "r"))
+	{
+		fgets_CR(doclin, 255, stream); //read in line of text containing the file name of the daynumber file
+		strcpy( fndynum, doclin );
+		flagdynum = TRUE_;
+		fclose (stream);
+	}
+
+	//adhoc flags: subtracts 15 seconds under special conditions for sunrises
+	// adds 15 seconds under special conditions for sunsets
+
+	adhocrise = TRUE_;
+	adhocset = FALSE_;
+	//read file that determines the sunrise adhoc fix value
+	sprintf(fnam,"%s%s", drivlet, ":/jk/adhocflag.tmp");
+	if (stream = fopen( fnam, "r"))
+	{
+		fscanf(stream,"%d\n", &adhocflag);
+		if (adhocflag == 1)
+		{
+			adhocrise = TRUE_;
+		}
+		else
+		{
+			adhocrise = FALSE_;
+		}
+		fclose (stream);
+	}
+
 /* 'summer and winter refraction values for heights 1 m to 999 m */
 /* 'as calculated by MENAT.FOR */
 /*       opening file netzskiy.tm3 */
@@ -775,8 +857,8 @@ ns) */
 /*       '(Astronomical Almanac, 1996, p. C-24) */
 /*       Addhoc fixes: (15 second fixes based on netz observations at Neveh Yaakov) */
 /* 		As of Version 16, ADHOCRISE = .FALSE. */
-	adhocrise = TRUE_;//FALSE_; //TRUE_;
-	adhocset = FALSE_;
+//	adhocrise = TRUE_; //TRUE_;
+//	adhocset = FALSE_;
 /* -------------------------------------------------------------------------------------- */
 	if (nsetflag == 0) {
 	    nloop = 72;
@@ -1460,28 +1542,85 @@ L670:
 		}
 		*/
 
+		if (flagdynum) //use the actual ground temperatures and pressures instead
+		{
+			if (stream = fopen( fndynum, "r"))
+			{
+				char astarr[4][100];
+
+				while ( !feof(stream) )
+				{
+					tk = -9999;
+					p = 1013.25;
+					showCalc = FALSE_;
+
+					//read in line of data, if year and daynumber match, use the temperature and pressure
+					fgets_CR( doclin, 255, stream );
+
+					if ( ParseString( doclin, ",", astarr, 4 ) )
+					{
+						//blank line, or something else wrong, so close file
+						fclose (stream);
+						Tobs = -9999;
+						break;
+					}
+					else //extract text
+					{
+						yrtst = atoi( &astarr[0][0] );
+						dynum = atoi( &astarr[1][0] );
+						Tobs = atof( &astarr[2][0] );
+						Pobs = atof( &astarr[3][0] );
+
+						if (yrtst == nyear && dynum == dy)
+						{
+							tk = Tobs;
+							tkmin = mint[(integer) m - 1] + 273.15f;
+							p = Pobs;
+							if (Diagnostics) 
+							{
+								printf("found temperature dy, yr, Tobs, p, tmin = %f, %d, %f, %f, %f\n", dy, nyear, tk, p, tkmin);
+								getch();
+							    showCalc = TRUE_; //flag to show the details of the calculation and compare for using just tk
+								nloops_2 = 0;
+							}
+							break;
+						}
+
+					}					
+				}
+				fclose (stream);
+				if (tk != -9999) goto L500; //skip temperature definition via WorldClim temperatures
+			}
+		}
+
 		AddTemp = 0; //30; //for now don'tuse different temperatures than the WorldClim ones
 /* 			convert minimum and average temperatures to Kelvin scale */
 		//if (nsetflag == 0) {
 /* 				sunrise, model temp. as minimum diurnal temperatures */
-		    tkmin = mint[(integer) m - 1] + 273.15f + AddTemp;
+			tkmin = mint[(integer) m - 1] + 273.15f + AddTemp;
 			//tk = Min_Temp_adjust * tk + (1 - Min_Temp_adjust) * (at[(integer) m - 1] + 273.15f);
 /* 				now find average minimum temperature to use in removing profile's TR */
 		//} else if (nsetflag == 1) {
 /* 				sunset, model temp. as average diurnal temperature */
-		    tkavg = avgt[(integer) m - 1] + 273.15f + AddTemp;
-		    tkmax = maxt[(integer) m - 1] + 273.15f + AddTemp;
+			tkavg = avgt[(integer) m - 1] + 273.15f + AddTemp;
+			tkmax = maxt[(integer) m - 1] + 273.15f + AddTemp;
 		//}
 		if (nsetflag == 0) {
 			//approximate average minimum temperature for sunrise
-			tk = tkmin; //tkmax; //0.8 * tkm + 0.2 * tka;
+			tk = tkmin; //tkmax; //0.8 * tkmin + 0.2 * tkavg;
 		} else {
 			//use average temperature for sunset
 			tk = tkavg; //tkmin; //tkmax;
 		}
+			
+
+L500:
 /* 			calculate van der Werf temperature scaling factor for refraction */
 		d__2 = 288.15f / tk;
 		vdwsf = pow_dd(&d__2, &c_b175); //<-------
+		d__2 = p/1013.25;
+		vdwsf *= pow_dd(&d__2, &c_press); //pressure scalintg law VDW graph 5a
+
 /* 			calculate van der Werf scaling factor for view angles */
 		d__2 = 288.15f / tk;
 		vdwalt = pow_dd(&d__2, &c_b176);
@@ -1636,14 +1775,30 @@ L687:
 		eps = exp(vdweps[0] + vdweps[1] * lnhgt + vdweps[2] * lnhgt * 
 			lnhgt + vdweps[3] * lnhgt * lnhgt * lnhgt + vdweps[4] 
 			* lnhgt * lnhgt * lnhgt * lnhgt);
+
+		if (nweatherflag == 1) //using standard refraction ESAA 9.331
+		{
+			ref = sqrt(hgt) * 1.75/60.0;  //standard refraction from observer to horizon
+			eps = sqrt(hgt) * 0.37/60.0; //geometrical dip angle from observer to horizon
+			refrac1 = 34.0/60.0;   //standard refraction from horizon to inifinity	
+			//air = (90 + eps + ref) * cd; //air in radians
+			vdwsf = p  / tk; //pressure and temeprature dependence of ESAA 3.283 
+			vdwrefr = 1.0;
+			vbweps = 1.0;
+			adhocrise = FALSE_;
+			a1 = (288.15/tk) * (ref + refrac1) * cd; //a1 in radians
+			air = (90 + eps) * cd + a1; //air in radians
+			trbasis = (288.15/tk) * p * 8.15f * 1e3f * .0277f / (288.15 * 288.15 * 3600);
+			goto L700;
+		}
 /* 	       now add the all the contributions together due to the observer's height */
 /* 		   along with the value of atm. ref. from hgt<=0, where view angle, a1 = 0 */
 /* 		   for this calculation, leave the refraction in units of mrad */
 L690:
 		a1 = 0.;
 		refrac1 = c_b178; //vdW 288.15 degress K total atmospheric refraction from zero to infinity (mrad)
-		air = cd * 90. + (vbweps * eps + vdwrefr * ref + vdwsf * refrac1) / 1e3;
-		//air = cd * 90. + (eps + vdwsf * (ref + refrac1)) / 1e3;
+		//air = cd * 90. + (vbweps * eps + vdwrefr * ref + vdwsf * refrac1) / 1e3;
+		air = cd * 90. + (eps + vdwsf * (ref + refrac1)) / 1e3;
 		//air = cd * 90. + (eps + ref + refrac1) / 1e3;
 		//proper temperature dependence is to use the scaling law for solar altitudes
 		//all refraction terms are in units of mrad so convert them to radians by multiplying by 1e-3
@@ -1654,8 +1809,9 @@ L690:
 		//a1 = (vdwrefr * ref + vdwsf * refrac1) / 1e3; //redundant
 		//a1 = (ref + refrac1) / 1e3;  //radians
 		//a1 = vdwsf * (ref + refrac1) * 1e-3;  //convert to radians from mrad
-		a1 = (ref + refrac1) * 1e-3;  //convert to radians from mrad
 
+		a1 = (ref + refrac1) * 1e-3;  //convert to radians from mrad
+L700:
 /* 		   leave a1 in radians */
 		//a1 = atan(tan(a1) * vdwalt);  //scale for temperature //wrong - <-redundant
 		if (nsetflag == 1) {
@@ -1947,26 +2103,68 @@ L692:
 			al1 = alt1 / cd;
 /*              first guess for apparent top of sun */
 			pt = 1.0; //1.06; //1.0;
-			refvdw_(&hgt, &al1, &refrac1);
+			if (!nweatherflag) {
+				//recalculate the temperature scaling factor, vdwsf, for the observer height and view angle
+				//as preliminary test, use the fit to the exponent at height = 750 meters
+				altmin = al1 * 60.0;//convert degrees to arcminutes
+				vbwexp = 1.68271708343173 -1.04055307822257E-04 * hgt 
+					   - 4.65108719859762E-03 * altmin
+					   + 1.47797248203399E-05 * altmin * altmin
+					   - 2.37213585737878E-08 * altmin * altmin * altmin
+                       + 1.48109107804038E-11 * altmin * altmin * altmin * altmin;
+				vbwexp += ErrorFudge;
+				//vdwsf = 1.60518041607982 -4.24521138064861E-03 * altmin; //use linear approximation to first order
+					        //+  1.28352879338537E-05 * altmin * altmin
+					        //-1.93196363948442E-08 * altmin * altmin * altmin
+							//+ 1.13058575397583E-11 * altmin * altmin * altmin * altmin;
+				d__2 = 288.15f / tk;
+				vdwsf = pow_dd(&d__2, &vbwexp); 
+				d__2 = p/1013.25;
+				vdwsf *= pow_dd(&d__2, &c_press); //pressure scalintg law VDW graph 5a
+
+			}
+			refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
 /*              first iteration to find position of upper limb of sun */
 			//al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
-			al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+			//al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+			if (nweatherflag) 
+			{
+				al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+			}
+			else
+			{
+				al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
+			}
 			//scale by vdw temperature scaling
 			//al1 = atan(tan(al1 * cd) * vdwalt) / cd;
 /*              top of sun with refraction */
 			if (niter == 1) {
 			    for (nac = 1; nac <= 10; ++nac) {
 				al1o = al1;
-				refvdw_(&hgt, &al1, &refrac1);
+				refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
 /*                    subsequent iterations */
 				//al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
-				al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+				if (nweatherflag) 
+				{
+					al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+				}
+				else
+				{
+					al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
+				}
 				//scale by vdw temperature scaling
 				//al1 = atan(tan(al1 * cd) * vdwalt) / cd;
 /*                    top of sun with refraction */
 				if ((d__2 = al1 - al1o, abs(d__2)) < .004f) {
 					//scale with vdw scaling temperature relationship
-					al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
+					if (nweatherflag) 
+					{
+						al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+					}
+					else
+					{
+						al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
+					}
 				    goto L695;
 				}
 /* L693: */
@@ -2117,28 +2315,104 @@ L695:
 			al1 = alt1 / cd;
 /*                 first guess for apparent top of sun */
 			pt = 1.0; //1.06; //1.0;
-			refvdw_(&hgt, &al1, &refrac1);
+
+			if (!nweatherflag) {
+				//recalculate the temperature scaling factor, vdwsf, for the observer height and view angle
+				//as preliminary test, use the fit to the exponent at height = 750 meters
+				altmin = al1 * 60.0;//convert degrees to arcminutes
+				vbwexp = 1.68271708343173 -1.04055307822257E-04 * hgt 
+					   - 4.65108719859762E-03 * altmin
+					   + 1.47797248203399E-05 * altmin * altmin
+					   - 2.37213585737878E-08 * altmin * altmin * altmin
+                       + 1.48109107804038E-11 * altmin * altmin * altmin * altmin;
+				vbwexp += ErrorFudge;
+				//vdwsf = 1.60518041607982 -4.24521138064861E-03 * altmin; //use linear approximation to first order
+					        //+  1.28352879338537E-05 * altmin * altmin
+					        //-1.93196363948442E-08 * altmin * altmin * altmin
+							//+ 1.13058575397583E-11 * altmin * altmin * altmin * altmin;
+				d__2 = 288.15f / tk;
+				vdwsf = pow_dd(&d__2, &vbwexp);
+				d__2 = p/1013.25;
+				vdwsf *= pow_dd(&d__2, &c_press); //pressure scalintg law VDW graph 5a
+				if (showCalc) //diagnostics
+				{
+					d__2 = 288.15f / tkmin;
+					vdwsf_2 = pow_dd(&d__2, &vbwexp);
+				}
+				//now multiply by pressure scaling law
+			}
+			refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
+			if (showCalc) //diagnostics
+			{
+				refvdw_(&hgt, &al1_2, &refrac1_2, &nweatherflag, &vdwsf_2);
+			}
 /*                 first iteration to find top of sun */
 			//al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * 
 			//	dcmrad; //redundant
-			al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+			//al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
 			//sale solar altitude with vdw temp scaling relationship
 			//al1 = atan(tan(al1 * cd) * vdwalt) / cd;
 /*                 top of sun with refraction */
+			if (nweatherflag) 
+			{
+				al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+			}
+			else
+			{
+				al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
+				if (showCalc) //diagnostics
+				{
+					al1_2 = alt1 / cd + .2666f + pt * vdwsf_2 * refrac1_2 * dcmrad;
+				}
+			}
 			if (niter == 1) {
 			    for (nac = 1; nac <= 10; ++nac) {
 				al1o = al1;
-				refvdw_(&hgt, &al1, &refrac1);
+				refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
+				if (showCalc) //diagnostics
+				{
+					al1o_2 = al1_2;
+					refvdw_(&hgt, &al1_2, &refrac1_2, &nweatherflag, &vdwsf_2);
+				}
 /*                       subsequent iterations */
 				//al1 = alt1 / cd + .2666f + pt * vdwsf * 
 				//	refrac1 * dcmrad; //redundant
-				al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+				//al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
+				if (nweatherflag) 
+				{
+					al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+				}
+				else
+				{
+					al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
+					if (showCalc) //diagnostics
+					{
+						al1_2 = alt1 / cd + .2666f + pt * vdwsf_2 * refrac1_2 * dcmrad;
+					}
+				}
 				//scale solar altitude with vdw temp scaling law to add temp dependence
 				//al1 = atan(tan(al1 * cd) * vdwalt) / cd;
 /*                       top of sun with refraction */
 				if ((d__2 = al1 - al1o, abs(d__2)) < .004f) {
 					//apply vdw scaling relationshiop to temperature
-					al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
+					if (nweatherflag)
+					{
+						al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+					}
+					else
+					{
+						al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
+						if (showCalc)
+						{
+							al1_2 = alt1 / cd + .2666f + pt * vdwsf_2 * refrac1_2 * dcmrad;
+							//show details
+							/*
+							printf("Num iteration, vbwsf, refrac1, difference = %d, %f, %f, %f\n", nac, vdwsf, refrac1, abs(d__2));
+							printf("Num iter orig, vbswf_2, refrac1_2, difference = %d, %f, %f, %f\n", nac, vdwsf_2, refrac1_2, fabs(al1_2 - al1o_2));
+							getch();
+							*/
+						}
+					}
 					//al1 = alt1 / cd + .2666f + atan(tan(pt * refrac1 * 1e-3) * vdwalt) / cd;
 					//al1 = atan(tan(alt1  + .2666f * cd + pt * refrac1 * 1e-3) * vdwalt) / cd;
 				    goto L760;
@@ -2148,6 +2422,10 @@ L695:
 			}
 L760:
 			alt1 = al1;
+			if (showCalc) 
+			{
+				alt1_2 = al1_2;
+			}
 /*              now search digital elevation data */
 			ne = (integer) ((azi1 + maxang) * 10) + 1;
 			elevinty = elev[(ne + 1 << 2) - 3] - elev[(ne << 2) - 
@@ -2187,6 +2465,16 @@ L760:
 			//ViewAdd = TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
 			elevint += TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
 /* //////////////////////////////////////////////////////////////////////////////////////// */
+			if (elevint <= alt1_2 && elevint > alt1 && showCalc)
+			{
+				if (nloops_2 == 0)
+				{
+					nloops_2 = nloops;
+					printf("Sunrise shows up first with observed temperatures\n");
+					printf("solar altitude is at: %f degrees\n", alt1_2);
+					printf("nloops seconds = %d\n", nloops_2);
+				}
+			}
 			if (elevint <= alt1) {
 			    if (nn > 1) {
 				nfound = 1;
@@ -2213,6 +2501,11 @@ L760:
 				    - 4]) + elev[(ne << 2) - 2];
 /*                 sunrise */
 
+				if (elevint > alt1_2 && showCalc)
+				{
+					printf("Sunrise didn't yet occur with observed temperature\n");
+				}
+
 				nacurr = 0;
 				if (EnableSunriseInv && elevint <= HorizonInv) {
 					//add adhoc inversion fix to mishor/ast sunrise for view angles <= 0
@@ -2228,6 +2521,16 @@ L760:
 					8);
 /*                    astronomical time */
 				t3sub = (stepsec * nloops + nacurr) / 3600.; //difference in time without the inversion fix
+				if (showCalc)
+				{
+					if (nloops_2 < nloops && nloops_2 != 0)
+					{
+						printf("nloops = %d\n",nloops);
+						printf("difference in time is: %d seconds\n", nloops - nloops_2);
+						getch();
+					}
+				}
+
 				if (nloops < 0) {
 				    t3sub = 0.;
 				}
@@ -2264,6 +2567,7 @@ L760:
 /*                    convert dy to calendar date */
 				t1750_(&dy, &nyl, &nyr);
 				s_wsfe(&io___228);
+				//display the results on the console and write to the time difference and pl place file for this particular place
 				do_fio(&c__1, t3s_1.caldayc, (ftnlen)11);
 				do_fio(&c__1, tssc, (ftnlen)8);
 				do_fio(&c__1, ts1c, (ftnlen)8);
@@ -2271,6 +2575,7 @@ L760:
 				do_fio(&c__1, (char *)&nac, (ftnlen)sizeof(
 					integer));
 				e_wsfe();
+				//write to pl and 
 				s_wsfe(&io___229);
 				do_fio(&c__1, t3s_1.caldayc, (ftnlen)11);
 				do_fio(&c__1, tssc, (ftnlen)8);
@@ -2924,9 +3229,54 @@ L9999:
     return 0;
 } /* t1750_ */
 
-/* Subroutine */ int refvdw_(doublereal *hgt, doublereal *x, doublereal *fref)
+/* Subroutine */ int refvdw_(doublereal *hgt, doublereal *x, doublereal *fref, const short *nweatherflag, const double *vdwsf)
 {
-    static doublereal ca[11], coef[55]	/* was [5][11] */;
+
+    static doublereal ca[11], coef[55];	/* was [5][11] */
+
+
+	//(1.0e3 * cd) * converts to mrad
+	if (*nweatherflag == 1) //use ESAA 3.283-1/-2 (low precision refraction as test of need for VDW refraction)
+	{
+		//*fref =  *vdwsf * (0.004676 * 1.0e3 * cd)  / tan(cd * (*x + 7.32 / (*x + 4.32)));
+		
+		if (*x >= 15.0)
+		{
+			//*fref =  *vdwsf * (0.004676 * 1.0e3 * cd)  / tan(cd * (*x + 7.31 / (*x + 4.4))); 
+			*fref =  *vdwsf * (0.004676 * 1.0e3 * cd)  / tan(cd * (*x + 7.32 / (*x + 4.32)));
+		}
+		else
+		{
+			//this is G.G. Bennett formula
+			//Bennett, G.G.
+			//The calculation of astronomical refraction in marine navigation,
+			//Journal of Inst. navigation, No. 35, page 255-259, 1982  p. 257
+			*fref =  *vdwsf * (1.0e3 * cd) * (0.1594 + 0.0196 * *x + 0.00002 * *x * *x) / (1 + 0.505 * *x + 0.0845 * *x * *x);
+		}
+		
+		return 0;
+	}
+
+	//else -- use VDW refraction
+	/*
+	else
+	{
+		double am;
+		am = *x * 60.0; //convert degrees to arcminues
+		*fref = 8.98755719362534
+			    - 5.58561739295863E-02 * am
+				+ 2.66134862130963E-04 * am * am
+				- 1.06415699029082E-06 * am * am * am
+				+ 3.64369315470219E-09 * am * am * am * am
+				- 1.02333444831416E-11 * am * am * am * am * am
+				+ 2.19141928981676E-14 * am * am * am * am * am * am
+				- 3.32469432541882E-17 * am * am * am * am * am * am * am
+				+ 3.3052943791392E-20 * am * am * am * am * am * am * am * am
+				- 1.91266829900908E-23 * am * am * am * am * am * am * am * am * am
+				+ 4.85844438121201E-27 * am * am * am * am * am * am * am * am * am * am;
+		return 0;
+	}
+	*/
 
 /* 		use the polynomial fit coefficients of the vdw refraction */
 /* 		as a function of observer's height, hgt in meters, and the apparent */
@@ -3314,4 +3664,48 @@ short ParseString( char *doclin, char *sep, char arr[][100] )
 }
 
 
+///////////////RemoveCRLF/////////////////
+char *RemoveCRLF( char *str )
+///////////////////////////////////////
+//remove the carriage return and line feed that typically end DOS files
+///////////////////////////////////////////////
+{
+	/*
+	//everything commented out is deprecated
+	short pos = 0;
+
+	pos = InStr( str, "\r" );
+	if (pos)
+	{
+	     str[pos - 1] = 0; //terminate the string at "\r"
+	}
+
+	pos = InStr( str, "\n" );
+	if (pos)
+	{
+	     str[pos - 1] = 0; //terminate the string at "\r"
+	}
+	*/
+
+	//now check last character
+	if (!isalnum(str[strlen(str)-1]))
+	{
+		str[strlen(str)-1] = 0; //terminate the string
+	}
+
+	return str;
+}
+
+//////////////fgets_CR////////////////////////
+char *fgets_CR( char *str, short strsize, FILE *stream )
+///////////////////////////////////////////////
+//fgets_CR for reading MS text lines (removes the CR)
+///////////////////////////////////////////
+{
+	fgets(str, strsize, stream); //read in line of text
+	RemoveCRLF( str );
+	//Replace( str, '\r', '\0' ); //replace the CR with a character termination
+	//RemoveCRLF( str ); //remove CR and LF at end of MS line
+	return str;
+}
 
