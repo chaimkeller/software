@@ -158,6 +158,8 @@ Public Const VK_UP = &H26
 'Public Const VOS__BASE = &H0&
 Public Const sEmpty = ""
 
+Public Const hgtobs As Double = 1.8
+
 '*********************program constants and parameters*************
 Public Const cd As Double = 1.74532927777778E-02 'conv deg to rad
 Public Const pi As Double = 3.14159265358979
@@ -180,7 +182,7 @@ Public X50c As Single, Y50c As Single, kmx50c, kmy50c, hgt50c, TdxhWnd As Long
 Public X400c As Single, Y400c As Single, kmx400c, kmy400c, hgt400c, bn%(4)
 Public kmxorigin, kmyorigin, picold$(9), bufx(2, 4), bufy(2, 4), bufwi(2, 4), bufhi(2, 4)
 Public maphi, mapwi, maphi2, mapwi2, nhwnd As Long, tblbuttons%(30), FileEdit As Boolean
-Public gotojump As Boolean, coordmode2%, mapxdif, mapydif, kmxcd, kmycd
+Public gotojump As Boolean, coordmode2%, mapxdif, mapydif, kmxcd, kmycd, newRootNum As Integer
 Public scrolling2 As Boolean, noheights As Boolean, dragbox As Boolean
 Public drag1x As Single, drag1y As Single, drag2x As Single, drag2y As Single
 Public drag3x As Single, drag3y As Single, magx As Single, magy As Single, mag As Single
@@ -210,7 +212,7 @@ Public worlddtm As String * 1, worlddtmcd As Boolean, ExplorerDir As String, plo
 Public worlddtmf As String * 1, worlddtmcdf As Boolean, searchhgt As Single
 Public srtmdtm As String * 1, srtmdtmcd As Boolean, srtmdtmf As String * 1, srtmdtmcdf As Boolean
 Public ramdrive As String * 1, ramdrivef As String * 1, viewsearch As Boolean
-Public terradir$, terradirf$, impcenter As Boolean, resetorigin As Boolean
+Public terradir$, terradirf$, impcenter As Boolean, resetorigin As Boolean, ObstructionCheck As Boolean
 Public mapimport As Boolean, mapfile$, deglat As Double, deglog As Double, AutoVer As Boolean
 Public blank$, woxorigin As Double, woyorigin As Double, fudx, fudy, AutoProf As Boolean
 Public adx1, bdy1, adx1f, bdy1f, drivjk$, drivjk_c$, drivfordtm$, drivprom$, drivprof$, drivcities$, drivdtm$
@@ -3839,6 +3841,7 @@ Public Sub sunrisesunset(Mode%)
     Dim filn33$, L2ch As Double, L1ch As Double, hgtch As Double, angch As Double, apch As Double, modch%
     Dim beglogch As Double, endlogch As Double, beglatch As Double, endlatch As Double
     Dim nstat%, maxstat%, manytiles As Boolean, tnn11 As Double, endfil%, endflag%
+    Dim AddWait As Integer, treehgt As Double, treehgtch As Double
 '    Dim A$, A1$, A2$
 '    Dim integ&, intege%, T1#, E1#, D1#
 
@@ -3861,14 +3864,21 @@ Public Sub sunrisesunset(Mode%)
          modevalss = modeval
          End If
       
-      If WinVer <> 5 And WinVer <> 261 And Not AutoProf Then 'delete everything in the ramdrive
-        myfile = Dir(ramdrive + ":\*.*")
-        On Error GoTo out50
-        Do Until Not AutoProf And myfile = sEmpty
-           Kill ramdrive + ":\" + myfile
-           myfile = Dir(ramdrive + ":\*.*")
-        Loop
-        End If
+'      If WinVer <> 5 And WinVer <> 261 And Not AutoProf Then 'delete everything in the ramdrive
+'        myfile = Dir(ramdrive + ":\*.*")
+'        On Error GoTo out50
+'        Do Until Not AutoProf And myfile = sEmpty
+'           Kill ramdrive + ":\" + myfile
+'           myfile = Dir(ramdrive + ":\*.*")
+'        Loop
+'        End If
+     myfile = Dir(ramdrive + ":\*.bin")
+     If myfile <> sEmpty Then Kill ramdrive + ":\" + myfile
+     myfile = Dir(ramdrive + ":\*.bi1")
+     If myfile <> sEmpty Then Kill ramdrive + ":\" + myfile
+
+     myfile = Dir(drivjk_c$ + "newreaddtm.end") 'delete old end flag file if exists
+     If myfile <> sEmpty Then Kill drivjk_c$ + "newreaddtm.end"
       
 out50: Err.Clear
 
@@ -3992,6 +4002,10 @@ out50: Err.Clear
             End If
          End If
  
+     'query user for treehgt
+     treehgtStr$ = InputBox("Enter tree height" & vbCrLf & "(leave zero if nothing to add)", "Add ''tree'' height to all DTM heights", 0)
+     treehgt = Val(treehgtStr$)
+     
 50   'build data and header files of USGS EROS tile
      manytiles = False
      GoSub findtile 'determine if need to read multiple tiles, or CD's
@@ -4065,6 +4079,8 @@ skipcheck:
        Input #filtmp%, TemperatureModelch
        tmflag% = 2
        Input #filtmp%, MeanTempch
+       tmpflag% = 3
+       Input #filtmp%, treehgtch
        tmflag% = 0
        Close #filtmp%
        myfile2 = Dir(filn33$)
@@ -4078,7 +4094,8 @@ skipcheck:
           Abs(hgtch - hgtworld) < 0.1)) And _
           (Abs(beglatch - beglat) < 0.05 And Abs(endlatch - endlat) < 0.05) And _
           noVoidflagch = noVoidflag And CalculateProfilech = CalculateProfile And AziStepch = AziStepf% * 0.01 And _
-          IgnoreTilesch = IgnoreTiles% And TemperatureModelch = TemperatureModel% And MeanTempch = MeanTemp Then
+          IgnoreTilesch = IgnoreTiles% And TemperatureModelch = TemperatureModel% And MeanTempch = MeanTemp And _
+          treehgtch = treehgt Then
           mapprogressfm.Visible = True
           mapEROSDTMwarn.Visible = False
           beglog = beglogch
@@ -4098,6 +4115,7 @@ skipcheck:
           Write #filtmp%, IgnoreTiles%
           Write #filtmp%, TemperatureModel%
           Write #filtmp%, MeanTemp
+          Write #filtmp%, treehgt
           Close #filtmp%
           'write eros.tm5 file detailing if this is sunrise,sunset, or both views
           Open ramdrive + ":\eros.tm5" For Output As #filtmp%
@@ -4124,6 +4142,8 @@ skipcheck:
          Input #filtmp%, TemperatureModel%
          tmpflag% = 2
          Input #filtmp%, MeanTemp
+         tmpflag% = 3
+         Input #filtmp%, treehgt
          tmpflag% = 0
          Close #filtmp%
          'L2ch - L2 < 0.08 And L1ch - L1 < 0.08 And
@@ -4153,6 +4173,7 @@ skipcheck:
             Write #filtmp%, IgnoreTiles%
             Write #filtmp%, TemperatureModel%
             Write #filtmp%, MeanTemp
+            Write #filtmp%, treehgt
             Close #filtmp%
             Open ramdrive + ":\eros.tm5" For Output As #filtmp%
             Write #filtmp%, sunmode%, modeval
@@ -4193,6 +4214,7 @@ skipcheck:
      Write #filtmp%, IgnoreTiles%
      Write #filtmp%, TemperatureModel%
      Write #filtmp%, MeanTemp
+     Write #filtmp%, treehgt
      Close #filtmp%
      Open ramdrive + ":\eros.tm5" For Output As #filtmp%
      If DTMflag <= 0 Then
@@ -4294,6 +4316,7 @@ skipcheck:
 '       Close #filnum2%
 '       Close #vbreadfil% '<----------------
 '     '*******************************************************
+       '>>>>>>>>>>>>>>>>>>>>>>>>>>>auto section<<<<<<<<<<<<<<<<<<<<<<<<<<
 
        'now save .BI1 file in the dtm directory as a temporary file
 tst2:  myfile = Dir(ramdrive + ":\*.BI1")
@@ -4332,6 +4355,7 @@ tst2:  myfile = Dir(ramdrive + ":\*.BI1")
        End With
        If skip = True Then mapprogressfm.Text2 = apch
        ret = SetWindowPos(mapprogressfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+       '>>>>>>>>>>>>>>>>>>>>>>>>>>>auto section<<<<<<<<<<<<<<<<<<<<<<<<<<
        
        Screen.MousePointer = vbDefault
        IntOld% = 0
@@ -4339,12 +4363,18 @@ tst2:  myfile = Dir(ramdrive + ":\*.BI1")
        Do Until mapprogressfm.Visible = False
           DoEvents
           If AutoProf Then
-             If Timer > waitime + 10 Then
+             If Delay% <> 0 Then
+                AddWait = Delay%
+             Else
+                AddWait = 10
+                End If
+             If Timer > waitime + AddWait Then
                 'push the button automatically after a minute
                 mapprogressfm.Acceptbut.value = True
              Else
                 If Int(10 - Timer + waitime) <> IntOld% Then
-                   mapprogressfm.StatusBar1.Panels(1).Text = "Auto Mode...Calc. starting in" & Str$(Int(10 - Timer + waitime)) & " sec."
+                   mapprogressfm.StatusBar1.Panels(1).Text = "Auto Mode...Calc. starting in" & Str$(Int(AddWait - Timer + waitime)) & " sec."
+                   'mapprogressfm.StatusBar1.Panels(1).Text = "Auto Mode...Calc. starting in" & Str$(Int(10 - Timer + waitime)) & " sec."
                    mapprogressfm.StatusBar1.Refresh
                    IntOld% = Int(10 - Timer + waitime)
                    End If
@@ -4406,6 +4436,7 @@ at100: If viewer3D = True Then
        Write #filtmp%, IgnoreTiles%
        Write #filtmp%, TemperatureModel%
        Write #filtmp%, MeanTemp
+       Write #filtmp%, treehgt
        Close filtm3num%
        'define default drives to write to
        ChDrive "c"
@@ -4655,14 +4686,47 @@ ms700:
 
 mm500: mapgraphfm.Visible = True
        ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-       
+       '>>>>>>>>>>>>>>>>>>>>>>>>>>>auto section<<<<<<<<<<<<<<<<<<<<<<<<<<
        waitime = Timer
        firstime% = 1
        IntOld% = 0
+       
+        With mapgraphfm
+        .Picture1.Refresh
+        .UpDown2.SetFocus
+        .Line1.Refresh
+        .Line2.Refresh
+        .Line3.Refresh
+        .Line4.Refresh
+        .Label1.Refresh
+        .Label2.Refresh
+        .Label3.Refresh
+        .Label4.Refresh
+        .Label5.Refresh
+        .Label6.Refresh
+        .Label7.Refresh
+        .Label8.Refresh
+        .Label9.Refresh
+        .MSFlexGrid1.Refresh
+        .Command1.Refresh
+        .Command2.Refresh
+        .Command3.Refresh
+        .frmObstructions.Refresh
+        .TimeZonebut.Refresh
+        .Text3.Refresh
+        .restorelimitsbut.Refresh
+        .Command3.value = True 'show the obstructions
+        End With
+        
+            
        Do While killpicture = False
           DoEvents
           
-          If firstime% = 1 Then waiting% = 15
+          If Delay% >= 15 Then
+            If firstime% = 1 Then waiting% = 15
+          ElseIf Delay% < 15 Then
+            If firstime% = 1 Then waiting% = Delay% + 5 'add five seconds to see the profile and give time to skip it
+            End If
           Delay% = Val(mapgraphfm.txtDelay)
           If firstime% = 0 Then waiting% = Delay% ' 45
           
