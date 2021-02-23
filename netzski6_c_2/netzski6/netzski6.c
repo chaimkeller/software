@@ -1132,7 +1132,7 @@ ns) */
 			hgt0 = hgt;
 			hgt = atof( &strarr[2][0] );
 
-			if (FixProfHgtBug) 
+			if (FixProfHgtBug && ntrcalc != 0) //some new format files have added heights already, so skip
 			{
 				//bat and profile heights are identical
 				//usually means that newreadDTM recorded the ground height
