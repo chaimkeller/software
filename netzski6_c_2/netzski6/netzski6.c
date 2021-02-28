@@ -36,7 +36,7 @@ static integer c__5 = 5;
 static integer c__0 = 0;
 static integer c__9 = 9;
 static integer c__4 = 4;
-static doublereal ErrorFudge = 0.59;
+static doublereal ErrorFudge = 0; //0.59;
 static doublereal c_b175 = 2.2727; //1.68271708343173; //1.687; //1.7081; //1.686701538132792; //1.7081; //<-------
 static doublereal c_b176 = .69;
 static doublereal c_b177 = 73.;
@@ -1630,6 +1630,12 @@ L500:
 		//scaling for astronomical times
 		d__2 = 288.15f / tk;
 		vbwast = pow_dd(&d__2, &c_b180);
+
+		/////////////022321 edit - add pressure scaling law to vbwsf////////////////////
+		d__2 = p/1013.25;
+		vdwsf *= pow_dd(&d__2, &c_press); //pressure scalintg law VDW graph 5a
+		//////////////////////////////////////////////////////////////////////////
+
 		//scaling for local ray altitude (compliment of zenith angle)
 		d__2 = 288.15f / tk;
 		vbweps = pow_dd(&d__2, &c_b181); //<-----
@@ -2105,7 +2111,7 @@ L692:
 			pt = 1.0; //1.06; //1.0;
 			if (!nweatherflag) {
 				//recalculate the temperature scaling factor, vdwsf, for the observer height and view angle
-				//as preliminary test, use the fit to the exponent at height = 750 meters
+				//to decent approximation, only adjust once and not for each iteration
 				altmin = al1 * 60.0;//convert degrees to arcminutes
 				vbwexp = 1.68271708343173 -1.04055307822257E-04 * hgt 
 					   - 4.65108719859762E-03 * altmin
@@ -2113,15 +2119,13 @@ L692:
 					   - 2.37213585737878E-08 * altmin * altmin * altmin
                        + 1.48109107804038E-11 * altmin * altmin * altmin * altmin;
 				vbwexp += ErrorFudge;
+				//value for hgt = 750 meters
 				//vdwsf = 1.60518041607982 -4.24521138064861E-03 * altmin; //use linear approximation to first order
 					        //+  1.28352879338537E-05 * altmin * altmin
 					        //-1.93196363948442E-08 * altmin * altmin * altmin
 							//+ 1.13058575397583E-11 * altmin * altmin * altmin * altmin;
 				d__2 = 288.15f / tk;
 				vdwsf = pow_dd(&d__2, &vbwexp); 
-				d__2 = p/1013.25;
-				vdwsf *= pow_dd(&d__2, &c_press); //pressure scalintg law VDW graph 5a
-
 			}
 			refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
 /*              first iteration to find position of upper limb of sun */
@@ -2332,8 +2336,7 @@ L695:
 							//+ 1.13058575397583E-11 * altmin * altmin * altmin * altmin;
 				d__2 = 288.15f / tk;
 				vdwsf = pow_dd(&d__2, &vbwexp);
-				d__2 = p/1013.25;
-				vdwsf *= pow_dd(&d__2, &c_press); //pressure scalintg law VDW graph 5a
+
 				if (showCalc) //diagnostics
 				{
 					d__2 = 288.15f / tkmin;
