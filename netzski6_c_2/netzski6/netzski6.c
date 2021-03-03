@@ -2144,23 +2144,11 @@ L692:
 /*              top of sun with refraction */
 			if (niter == 1) {
 			    for (nac = 1; nac <= 10; ++nac) {
-				al1o = al1;
-				refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
-/*                    subsequent iterations */
-				//al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
-				if (nweatherflag) 
-				{
-					al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
-				}
-				else
-				{
-					al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
-				}
-				//scale by vdw temperature scaling
-				//al1 = atan(tan(al1 * cd) * vdwalt) / cd;
-/*                    top of sun with refraction */
-				if ((d__2 = al1 - al1o, abs(d__2)) < .004f) {
-					//scale with vdw scaling temperature relationship
+
+					al1o = al1;
+					refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
+	/*                    subsequent iterations */
+					//al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
 					if (nweatherflag) 
 					{
 						al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
@@ -2169,8 +2157,12 @@ L692:
 					{
 						al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
 					}
-				    goto L695;
-				}
+
+					if ((d__2 = al1 - al1o, abs(d__2)) < .004f) {
+						//this is visible sunset
+						goto L695;
+					}
+
 /* L693: */
 			    }
 			}
@@ -2397,27 +2389,18 @@ L695:
 				//al1 = atan(tan(al1 * cd) * vdwalt) / cd;
 /*                       top of sun with refraction */
 				if ((d__2 = al1 - al1o, abs(d__2)) < .004f) {
-					//apply vdw scaling relationshiop to temperature
-					if (nweatherflag)
+					//this is sunset
+
+					/*
+					if (!weatherflag && showCalc)
 					{
-						al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
+						//show details
+						
+						printf("Num iteration, vbwsf, refrac1, difference = %d, %f, %f, %f\n", nac, vdwsf, refrac1, abs(d__2));
+						printf("Num iter orig, vbswf_2, refrac1_2, difference = %d, %f, %f, %f\n", nac, vdwsf_2, refrac1_2, fabs(al1_2 - al1o_2));
+						getch();
 					}
-					else
-					{
-						al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
-						if (showCalc)
-						{
-							al1_2 = alt1 / cd + .2666f + pt * vdwsf_2 * refrac1_2 * dcmrad;
-							//show details
-							/*
-							printf("Num iteration, vbwsf, refrac1, difference = %d, %f, %f, %f\n", nac, vdwsf, refrac1, abs(d__2));
-							printf("Num iter orig, vbswf_2, refrac1_2, difference = %d, %f, %f, %f\n", nac, vdwsf_2, refrac1_2, fabs(al1_2 - al1o_2));
-							getch();
-							*/
-						}
-					}
-					//al1 = alt1 / cd + .2666f + atan(tan(pt * refrac1 * 1e-3) * vdwalt) / cd;
-					//al1 = atan(tan(alt1  + .2666f * cd + pt * refrac1 * 1e-3) * vdwalt) / cd;
+					*/
 				    goto L760;
 				}
 /* L750: */
