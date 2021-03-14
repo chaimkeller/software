@@ -14,6 +14,9 @@
 #include "dirent.h"
 #include <ctype.h>
 #include <errno.h>
+#include <assert.h>
+#include <malloc.h>
+
 
 /////////////////define macros, source: homeplanet///////////////////////
 #define PI 3.14159265358979323846
@@ -30,7 +33,7 @@
 
 //////////////////////global array bounds///////////////////////////////////////
 #define MAXANGRANGE 80 //maximum degrees assuming 0.1 degrees steps
-#define MAXCGIVARS 30 //maximum number of cgi variables
+#define MAXCGIVARS 35 //maximum number of cgi variables
 #define MAXDBLSIZE 100 //maximum character size of data elements to be read using ParseString
 #define WIDTHFIELD 0 //0 for false - use predeter__mind html cell widths, = 1 for letting program deter__min it
 #define INPUT_TYPE 1 //0 for post, 1 for get
@@ -63,7 +66,9 @@ double Sgn(double a);
 char *itoa ( int value, char *str, int base );
 char *strlwr(char *str);
 char *strupr(char *str);
-
+void FilterString(char s[]);
+char *ReplaceChar(const char *s);
+int replaceSpaces(char str[], const short MaxLength);
 
 ///////////other functions/////////////////////
 void hebnum(short k, char *hebnumch );
@@ -137,19 +142,22 @@ void InitAstConst(short *nyr, short *nyd, double *ac, double *mc,
 							   double *ob, short *nyf, double *td);
 void AstronRefract( double *hgt, double *lt, short *nweather, short *PartOfDay,
 				    double *dy, short *ns1, short *ns2,
-					double *air, double *a1, short mint[], short avgt[], short maxt[],
-					double *vdwsf, double *vdwrefr, double *vbweps, short *nyr);
+					double *air, double *a1,
+					short mint[], short avgt[], short maxt[], 
+					double *t, double *p, 
+					double *vdwsf, double *vdwrefr, double *vbweps, short *nyr,
+					const bool *SingleDayModel);
 void InitWeatherRegions( double *lt, double *lg, 
 						 short *nweather, short *ns1, short *ns2,
 						 short *ns3, short *ns4, double *WinTemp,
 						 short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 
-short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *meantemp );
+short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp );
 
 ////////////////////////netzski6///////////////////////////////////////
 short netzski6(char *fileon, double lg, double lt, double hgt, double aprn,
 			               float geotd, short nsetflag, short nfil,
-						   short *nweather, double *meantemp, double *p,
+						   short *nweather, double *meantemp, 
      		               short *ns1, short *ns2, short *ns3, short *ns4, double *WinTemp,
 						   short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 
@@ -266,12 +274,12 @@ double winref[8];
 double rearth = 6356.766f;
 double vdweps[5];
 double vdwref[6];
-double vdwconst[4];
+double vdwconst[5];
 //short mint[12],avgt[12],maxt[12];
 
 ///////////////////////////////temperature model for vdw refraction///////////////////
 //for VDW_REF = true, set the flag for which ground temperature is used for vdw refraction
-short TempModel;  ; //1 -- minimum 30 arcsec WorldClim ground temperatures
+short TempModel;    //1 -- minimum 30 arcsec WorldClim ground temperatures
 					// 2 -- average 30 arcsec WorldClim ground temperatures
 					// 3 -- maximum 30 arcsec WorldClim ground temperatures
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -284,8 +292,6 @@ double WinterPercent; //filter out inversion layers during months that have a mi
 double HorizonInv;  //only add inversion adhoc correction if calculated view angle of sunrise/sunset is <= then HorizonInv 
 
 bool VDW_REF = true;  //flag to use vand der Werf refraction instead of Menat atmospheres
-
-double Pressure0;	//ground pressure
 
 /////////astronomical constansts/////////////////
 double ac0, mc0, ec0, e2c0, ob10, ap0, mp0, ob0;
@@ -470,7 +476,7 @@ typedef struct _strucGold
 structGold Gold; 
 
 ///////////////////////////////////////////added 101420//////////////////////////////////////////
-bool FixProfHgtBug = true; //fix the newreadDTM bug that recorded ground heights in the profile
+bool FixProfHgtBug = false; //fix the newreadDTM bug that recorded ground heights in the profile
 						   //instead of the calculation height = ground height + observer height
 double hgtobs = 1.8f;	   //maximum height of the observer, added for profile calculations
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -529,6 +535,14 @@ short g_leapyr = 0;
 char g_hdryr[] = "-2007";
 short g_styr = 0;
 short g_yrr = 0;
+
+//////////variables for single days////////////////added 030420////////////////////////////
+double g_Pressure = -9999;	//ground pressure (used for entering single day weather)
+double g_Tground = -9999;		//ground temperature (used for entereing single day weather)
+bool SingleDay = false;
+short SingleDayNum;
+short SingleYr;
+////////////////////////////////////////////////////////////////////////////////////////
 
 /************************Conversions from ITM to WGS84, etc*********************/
 //*****************************************************************************************************
@@ -718,7 +732,7 @@ void wgs842itm(double lat,double lon,int& N,int& E);
 void ics2wgs84(int N,int E,double *lat, double *lon);
 void wgs842ics(double lat,double lon,int& N,int& E);
 short readDTM( double *kmxo, double *kmyo, double *khgt, short *kmaxang,
-			   double *kaprn, double *p, double *meantemp, short nsetflag );
+			   double *kaprn, double *meantemp, short nsetflag );
 /************************End Conversions section********************************/
 
 /************************global variables used by Profile routine readDTM*************/
@@ -873,7 +887,7 @@ The values set for debugging the program are simply the cgi arguments that are p
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 5.0f;
+float vernum = 6.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -1046,13 +1060,32 @@ __asm{
 		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_Language")), "Hebrew") )
            HebrewInterface = true; //Hebrew Interface flagged
 
+		///////////////added 030921///calculate the netz/skiya table for a single day flags and info/////////////////////////////
+		SingleDay = true;
+		if (strstr(Trim(getpair(&NumCgiInputs, "cgi_SingleDay") ), "Not found") || strstr(Trim(getpair(&NumCgiInputs, "cgi_cgi_SingleDay")), "OFF" ) )
+		{
+						//= false, use averaged data points' coordinates
+						//= true - use the eroslatitude, eroslongitude, eroshgt
+			SingleDay = false;
+		}
+
+		if (SingleDay) //read in other needed arguments, i.e., year, and daynumber
+		{
+			g_Tground = atof(getpair(&NumCgiInputs, "cgi_Tground"));
+			g_Pressure = atof(getpair(&NumCgiInputs, "cgi_Pressure"));
+			SingleYr = atoi(getpair(&NumCgiInputs, "cgi_SingleYr"));
+			SingleDayNum = atoi(getpair(&NumCgiInputs, "cgi_SingleDayNum"));
+		}
+		////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 		CGI = 1;
 
    }
 /*//<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
 	else if (argc == 1) //not using console
 	{
-		strcpy( TableType, "Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
 		strcpy( MetroArea, "jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
@@ -1089,8 +1122,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -1102,6 +1135,16 @@ __asm{
 									  // = false to return error message if tile is missing
 
 		HebrewInterface = false;// true;//false; //=true for Hebrew webpages
+
+		//////////////////added 030921 /////////////diagnostics for single day/////////////////////////////////////////
+		SingleDay = false; //true;
+		SingleYr = 2021;
+		SingleDayNum = 162;
+		g_Tground = 288.15;
+		g_Pressure = 1013.25;
+		////////////////////////////////////////////////////////////////////////////////////////////////
+
+		
 	}
 //*/
    else if ( argc == 27 ) //console
@@ -1336,7 +1379,7 @@ __asm{
 	}
 	else //can't find version file, use default
 	{
-		datavernum = 15;
+		datavernum = 16;
 	}
 
 ///////////////////////////////end of input parameters/////////////////////////
@@ -1926,6 +1969,7 @@ __asm{
 		if (SunriseSunset(types, ExtTemp)) return -1;
 	}
 
+
 	if (zmanyes) //print zemanim tables
 	{
 		if (PrintMultiColTable(filzman, ExtTemp)) return -1;
@@ -2025,6 +2069,7 @@ short RdHebStrings()
 	short flgheb = 0;
 	short iheb = 0;
 	FILE *stream;
+	short newlen = 0;
 
 	if (optionheb) //read in hebrew strings from calhebrew.txt
 	{
@@ -2093,29 +2138,41 @@ short RdHebStrings()
 					{
 						case 0:
 							strcpy( &heb1[iheb][0], doclin );
+							newlen = replaceSpaces(&heb1[iheb][0], 255);
 							break;
 						case 1:
 							strcpy( &heb2[iheb][0], doclin );
+							newlen = replaceSpaces(&heb2[iheb][0], 255);
 							break;
 						case 2:
 							strcpy( &heb3[iheb][0], doclin );
+							newlen = replaceSpaces(&heb3[iheb][0], 255);
 							break;
 						case 3:
 							strcpy( &heb4[iheb][0], doclin );
+							newlen = replaceSpaces(&heb4[iheb][0], 255);
 							break;
 						case 4:
 							strcpy( &heb5[iheb][0], doclin );
+							newlen = replaceSpaces(&heb5[iheb][0], 255);
 							break;
 						case 5:
 							strcpy( &heb6[iheb][0], doclin );
+							newlen = replaceSpaces(&heb6[iheb][0], 255);
 							break;
 						case 6: //leave heb7[0] as NULL
-							if (iheb != 0) strcpy( &heb7[iheb][0],  doclin );
+							if (iheb != 0) {
+								strcpy( &heb7[iheb][0],  doclin );
+								newlen = replaceSpaces(&heb7[iheb][0], 255);
+							}
 							break;
 						case 7:
 							strcpy( &heb9[iheb][0], doclin );
+							//newlen = replaceSpaces(&heb9[iheb][0], 255);
 							break;
 					}
+
+					//now filter the strings from nonprintable characters
 
 					iheb++;
 				}
@@ -2184,7 +2241,7 @@ short RdHebErrorMessages()
 //read Hebrew Error messages, and store themAstroNoon(
 ////////////////////////////////////////////////////////////////////
 {
-	short iheb = 0;
+	short iheb = 0, newlen = 0;
 	FILE *stream;
 
 	sprintf( myfile, "%s%s", drivjk, "HebErrors.txt" );
@@ -2202,6 +2259,7 @@ short RdHebErrorMessages()
 			fgets_CR(doclin, 255, stream); //read in line of text
 
 			strcpy( &heb8[iheb][0], doclin );
+			newlen = replaceSpaces(&heb8[iheb][0], 255);
 
 			iheb++;
 		}
@@ -3241,23 +3299,27 @@ char *hebyear(char *yrcal, short yr)
 
 	if (ones != 0 ) //à,á,â,ã,ä,å,æ,ç,è
 	{
-		sprintf( yrcal, "%s%s%s%s%s%s", &heb7[hunds[1]][0], &heb7[hunds[2]][0], &heb7[hunds[3]][0], &heb7[tenss][0], "\"", &heb7[ones][0] );
+		//sprintf( yrcal, "%s%s%s%s%s%s", &heb7[hunds[1]][0], &heb7[hunds[2]][0], &heb7[hunds[3]][0], &heb7[tenss][0], "\"", &heb7[ones][0] );
+		sprintf( yrcal, "%s%s%s%s%s%s", &heb7[hunds[1]][0], &heb7[hunds[2]][0], &heb7[hunds[3]][0], &heb7[tenss][0], "&quot;", &heb7[ones][0] );
 	}
 	else if (ones == 0)
 	{
 		if ( tenss != 0 )
 		{
-			sprintf( yrcal, "%s%s%s%s%s", &heb7[hunds[1]][0], &heb7[hunds[2]][0], &heb7[hunds[3]][0], "\"", &heb7[tenss][0]  );
+			//sprintf( yrcal, "%s%s%s%s%s", &heb7[hunds[1]][0], &heb7[hunds[2]][0], &heb7[hunds[3]][0], "\"", &heb7[tenss][0]  );
+			sprintf( yrcal, "%s%s%s%s%s", &heb7[hunds[1]][0], &heb7[hunds[2]][0], &heb7[hunds[3]][0], "&quot;", &heb7[tenss][0]  );
 		}
 		else if (tenss == 0 )
 		{
 			if (hunds[0] == 3 )
 			{
-			sprintf( yrcal, "%s%s%s%s", &heb7[hunds[1]][0], &heb7[hunds[2]][0], "\"", &heb7[hunds[3]][0]  );
+			//sprintf( yrcal, "%s%s%s%s", &heb7[hunds[1]][0], &heb7[hunds[2]][0], "\"", &heb7[hunds[3]][0]  );
+			sprintf( yrcal, "%s%s%s%s", &heb7[hunds[1]][0], &heb7[hunds[2]][0], "&quot;", &heb7[hunds[3]][0]  );
 			}
 			else if (hunds[0] == 2 )
 			{
-			sprintf( yrcal, "%s%s%s", &heb7[hunds[1]][0], "\"", &heb7[hunds[2]][0]);
+			//sprintf( yrcal, "%s%s%s", &heb7[hunds[1]][0], "\"", &heb7[hunds[2]][0]);
+			sprintf( yrcal, "%s%s%s", &heb7[hunds[1]][0], "&quot;", &heb7[hunds[2]][0]);
 			}
 			else if (hunds[0] == 1 )
 			{
@@ -3338,7 +3400,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 	//////////////variables from newzemanim/cal//////////
 	double jdn;
 	int nyl;
-	short mday, mon;
+	short mday, mon, newlen;
 
 
 	nshabos = 0;
@@ -3385,18 +3447,18 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 		if ( strlen(Trim(&eroscity[0])) <= 1)
 		{
 			//sprintf( buff1, "%s%s%s%s%s%s", "<h2><center>", &heb3[1][0], hebcityname, &heb3[2][0], g_yrcal, "</h2>");
-			sprintf( buff1, "%s%s%s%s%s%s%s %s %s%s", "<h2><center>", &heb1[1][0], " \"", TitleLine, "\" ", &heb7[12][0], hebcityname, &heb3[2][0], g_yrcal, "</h2>");
+			sprintf( buff1, "%s%s%s%s%s%s%s %s %s%s", "<h2><center>", &heb1[1][0], "&nbsp;&quot;", TitleLine, "&quot;&nbsp;", &heb7[12][0], hebcityname, &heb3[2][0], g_yrcal, "</h2>");
 		}
 		else
 		{
 			//sprintf( buff1, "%s%s%s%s%s%s%s%s%s%s", "<h2><center>", &heb3[12][0], " ", hebcityname, " (", eroscity, ") ", &heb3[2][0], g_yrcal, "</center></h2>");
             if (strstr(eroscountry, "Israel")) //use Hebrew neighborhood name
             {
-                sprintf( buff1, "%s%s%s%s%s%s%s%s%s%s%s %s %s%s", "<h2><center>", &heb1[1][0], " \"", TitleLine, "\" ", &heb3[29][0], " ", hebcityname, " (", EYhebNeigh, ") ", &heb3[2][0], g_yrcal, "</center></h2>");
+                sprintf( buff1, "%s%s%s%s%s%s%s%s%s%s%s %s %s%s", "<h2><center>", &heb1[1][0], "&nbsp;&quot;", TitleLine, "&quot;&nbsp;", &heb3[29][0], "&nbsp;", hebcityname, " (", EYhebNeigh, ") ", &heb3[2][0], g_yrcal, "</center></h2>");
             }
             else
             {
-                sprintf( buff1, "%s%s%s%s%s%s%s%s%s%s%s %s %s%s", "<h2><center>", &heb1[1][0], " \"", TitleLine, "\" ", &heb3[29][0], " ", hebcityname, " (", eroscity, ") ", &heb3[2][0], g_yrcal, "</center></h2>");
+                 sprintf( buff1, "%s%s%s%s%s%s%s%s%s%s%s %s %s%s", "<h2><center>", &heb1[1][0], "&nbsp;&quot;", TitleLine, "&quot;&nbsp;", &heb3[29][0], "&nbsp;", hebcityname, " (", eroscity, ") ", &heb3[2][0], g_yrcal, "</center></h2>");
             }
 		}
 	}
@@ -3438,6 +3500,8 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 	}
 
 	//generate table column legend
+	//after 75 characters
+	short MaxHdrLen = 100, numLines = 0;
 
 	doclin[0] = '\0'; //initialize doclin
 	nn = -1;
@@ -3449,14 +3513,33 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 		{
 			hebnum(m + 4, ch);
 			strcpy( buff1, doclin );
-			sprintf( doclin, "%s%s%s%s%s", ch, " = ", &zmantitles[m][0], " | ", buff1 );
-		}
+			//sprintf( doclin, "%s%s%s%s%s", ch, " = ", &zmantitles[m][0], " | ", buff1 );
+			if (strlen(doclin) - numLines > MaxHdrLen)
+			{
+				sprintf( doclin, "%s%s%s%s%s%s", ch, " = ", &zmantitles[m][0], " | ", "<br>", buff1 );
+				numLines = strlen(doclin);
+			}
+			else
+			{
+				sprintf( doclin, "%s%s%s%s%s", ch, " = ", &zmantitles[m][0], " | ", buff1 );
+			}
+
+		}		
 		else
 		{
 			nn++;
 			itoa(nn + 4, ch, 10);
 			strcpy( buff1, doclin );
-			sprintf( doclin, "%s%s%s%s%s", buff1, " | ", ch, " = ", &zmantitles[nn][0] );
+			//sprintf( doclin, "%s%s%s%s%s", buff1, " | ", ch, " = ", &zmantitles[nn][0] );
+			if (strlen(doclin) - numLines > MaxHdrLen)
+			{
+				sprintf( doclin, "%s%s%s%s%s%s", buff1, " | ", ch, " = ", &zmantitles[nn][0], "<br>" );
+				numLines = strlen(doclin);
+			}
+			else
+			{
+				sprintf( doclin, "%s%s%s%s%s", buff1, " | ", ch, " = ", &zmantitles[nn][0] );
+			}
 		}
 	}
 
@@ -3469,6 +3552,9 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 		strcpy( buff1, doclin );
 		sprintf( doclin, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s", " | ", ch1, " = ", &heb3[11][0], " | ",
 			     ch2, " = ", &heb3[10][0], " | ", ch3, " = ", &heb3[9][0], " | ", buff1 );
+
+		//now filter the file for nonprinting characters
+		newlen = replaceSpaces(doclin, 1600);
 	}
 	else
 	{
@@ -3560,6 +3646,8 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 				//increment line number
 				linnum++;
 
+				if (SingleDay && (SingleYr != myear || SingleDayNum != j )) continue;  //single day mode daynum check
+
 				//add new line tag for each new line
 				fprintf( stdout, "%s\n", "    <tr>");
 
@@ -3617,6 +3705,9 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 				//increment line number
 				linnum++;
 
+				if (SingleDay && (SingleYr != myear || SingleDayNum != j )) continue;  //single day mode daynum check
+
+
 				//add new line tag for each new line
 				fprintf( stdout, "%s\n", "    <tr>");
 
@@ -3665,15 +3756,16 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 
 			for (j = 1; j <= g_mmdate[1][i - 1]; j++)
 			{
+				numday++;
 				k++;
 
 				//increment line number
 				linnum++;
 
+				if (SingleDay && (SingleYr != myear || SingleDayNum != j )) continue;  //single day mode daynum check
+
 				//add new line tag for each new line
 				fprintf( stdout, "%s\n", "    <tr>");
-
-				numday++;
 
 				InsertHolidays(caldayHeb, caldayEng, calday, calhebweek,
 					&i, &j, &k, &yrn, yl, &ntotshabos, &dayweek,
@@ -5389,7 +5481,7 @@ void ErrorHandler( short mode, short ier )
 					fprintf(stdout,"\t\t%s%s%s\n", "<td><font size=\"4\" color=\"red\"><strong>", &heb8[10][0], "</font></td>");
 					fprintf(stdout,"\t%s\n", "</tr>");
 					fprintf(stdout,"\t%s\n", "<tr>");
-					fprintf(stdout,"\t\t%s%s%s%s%s%s%s%s\n", "<td><font size=\"4\" color=\"red\"><strong>", &heb8[21][0], " ","<a href=\"http://", "162.253.153.219","/chai_dtm_heb-BING.php\">", &heb8[22][0], "</a></font></td>");
+					fprintf(stdout,"\t\t%s%s%s%s%s%s%s%s\n", "<td><font size=\"4\" color=\"red\"><strong>", &heb8[21][0], "&nbsp;","<a href=\"http://", "162.253.153.219","/chai_dtm_heb-BING.php\">", &heb8[22][0], "</a></font></td>");
 				}
 
 				fprintf(stdout,"\t%s\n", "</tr>");
@@ -5664,7 +5756,7 @@ void ErrorHandler( short mode, short ier )
 		else
 		{
 			fprintf(stdout,"\t%s\n", "<tr>");
-			sprintf( buff, "%s%s%s%d%s", "<td><font size=\"4\" color=\"red\"><strong>", &heb8[11][0], " ", errornum, "</strong></font></td>" );
+			sprintf( buff, "%s%s%s%d%s", "<td><font size=\"4\" color=\"red\"><strong>", &heb8[11][0], "&nbsp;", errornum, "</strong></font></td>" );
 			fprintf(stdout,"\t\t%s\n", buff );
 			fprintf(stdout,"\t%s\n", "</tr>");
 			fprintf(stdout,"\t%s\n", "<tr>");
@@ -5868,7 +5960,6 @@ short calnearsearch( char *bat, char *sun )
 //enters vantage places to memory buffer
 ///////////////////////////////////////////////////////////////////////////
 {
-
 	double ydegkm;
 	double xdegkm;
 	static char citnam[255] = "";
@@ -6072,7 +6163,7 @@ short calnearsearch( char *bat, char *sun )
 
 			if (FixProfHgtBug) {
 
-				//read the height, hgt from the profile file which is always reliable
+				//read the height, hgt from the profile file which is always reliable  <----NOT TRUE 030321 --- setting this fix flag to flase
 
 				//try opening file with the name as listed in the "bat" file as well
 				//as well as all uppercases and all lowercaes
@@ -6404,11 +6495,9 @@ short SunriseSunset( short types, short ExtTemp[] )
 	double maxdecl;
 	short maxang;
 	double meantemp;
-	double p;
 	short itk;
 
     short nweather = 3;
-	p = Pressure0; //1013.25f;
 
 /*                                  '=0 for summer refraction */
 /*                                  '=1 for winter refraction */
@@ -6434,7 +6523,8 @@ short SunriseSunset( short types, short ExtTemp[] )
     /*
 	if (CreateHeaders(types)) return -1; //create headers for all the different table types
          //return -1 if error detected
-    */     
+    */  
+	
 
 	////////////Printing Single Tables of Sunrise or Sunset////////////////////
 	if (SRTMflag < 12) {
@@ -6540,7 +6630,7 @@ short SunriseSunset( short types, short ExtTemp[] )
 		}
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
-					    &nweather, &meantemp, &p, &ns1, &ns2, &ns3, &ns4, &WinTemp,
+					    &nweather, &meantemp, &ns1, &ns2, &ns3, &ns4, &WinTemp,
 						MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 		if (ier) //error detected
@@ -6731,7 +6821,7 @@ short SunriseSunset( short types, short ExtTemp[] )
 		}
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
-					    &nweather, &meantemp, &p, &ns1, &ns2, &ns3, &ns4, &WinTemp,
+					    &nweather, &meantemp, &ns1, &ns2, &ns3, &ns4, &WinTemp,
 						MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 		if (ier) //error detected
@@ -6900,11 +6990,11 @@ short SunriseSunset( short types, short ExtTemp[] )
 
 		if (SRTMflag == 12) {
 			SRTMflag = 11; //calculate profile of western horizon (where golden light will first appear)
-			ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, &p, &meantemp, SRTMflag );
+			ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, &meantemp, SRTMflag );
 			SRTMflag = 12; //restore the SRTMflag value
 		} else if (SRTMflag == 13) {
 			SRTMflag = 10; //calculate profile of eastern horizon (where golden light will last appear)
-			ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, &p, &meantemp, SRTMflag );
+			ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, &meantemp, SRTMflag );
 			SRTMflag = 13; //restore the SRTMflag value
 		}
 
@@ -6968,7 +7058,7 @@ short SunriseSunset( short types, short ExtTemp[] )
 		}
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
-					    &nweather, &meantemp, &p, &ns1, &ns2, &ns3, &ns4, &WinTemp,
+					    &nweather, &meantemp, &ns1, &ns2, &ns3, &ns4, &WinTemp,
 						MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 		if (ier) //error detected
@@ -7058,13 +7148,14 @@ short CreateHeaders( short types )
 			sprintf( title, "%s%s%s%s", &heb1[1][0], "\"", TitleLine, "\"" );
 		}
 */
-		sprintf( title, "%s %s%s%s", &heb1[1][0], "\"", TitleLine, "\"" );
+		//sprintf( title, "%s %s%s%s", &heb1[1][0], "\"", TitleLine, "\"" );
+		sprintf( title, "%s %s%s%s", &heb1[1][0], "&quot;", TitleLine, "&quot;" );
 
 	  	//copyright and warning lines
 		if (SRTMflag > 9)
 		{
 			//sprintf( l_buffcopy, "%s%s%s%s", &heb2[17][0], ". ", &heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
-			sprintf( l_buffcopy, "%s%s%s%s%4.1f%s%s%s", &heb2[17][0], ". ", &heb2[23][0], " ", vernum, ", ",&heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
+			sprintf( l_buffcopy, "%s%s%s%s%4.1f%s%s%s", &heb2[17][0], ". ", &heb2[23][0], "&nbsp;", vernum, ", ",&heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
 	        sprintf( l_buffwarning, "%s %3.1f %s", &heb2[15][0], distlim, &heb1[72][0] );
 	        sprintf( l_buffazimuth, "%s", &heb2[24][0] );
 			if (GoldenLight && sqrt(pow(Gold.vert[4],2.0) + pow((Gold.vert[5] - eroshgt) * 0.001,2.0)) > 1.5) 
@@ -7074,10 +7165,14 @@ short CreateHeaders( short types )
 		}
 		else
 		{
-		  	sprintf( l_buffcopy, "%s%s%s%s%s%s%s%d%s%d", &heb1[24][0], " ", &heb2[2][0], "\""
-			                    , &heb2[3][0], " ", &heb2[4][0], datavernum, ".", progvernum);
+		  	//sprintf( l_buffcopy, "%s%s%s%s%s%s%s%d%s%d", &heb1[24][0], "&nbsp;", &heb2[2][0], "\""
+			//                    , &heb2[3][0], "&nbsp;", &heb2[4][0], datavernum, ".", progvernum);
+		  	sprintf( l_buffcopy, "%s%s%s%s%s%s%s%d%s%d", &heb1[24][0], "&nbsp;", &heb2[2][0], "&quot;"
+			                    , &heb2[3][0], "&nbsp;", &heb2[4][0], datavernum, ".", progvernum);
+	        //sprintf( l_buffwarning, "%s%s%3.1f%s%s%s", &heb2[5][0], &heb2[6][0], distlim
+			//                                       , &heb2[7][0], "\"", &heb2[8][0] );
 	        sprintf( l_buffwarning, "%s%s%3.1f%s%s%s", &heb2[5][0], &heb2[6][0], distlim
-			                                       , &heb2[7][0], "\"", &heb2[8][0] );
+			                                       , &heb2[7][0], "&quot;", &heb2[8][0] );
 	        sprintf( l_buffazimuth, "%s", &heb2[24][0] );
 		}
 	}
@@ -7129,7 +7224,8 @@ short CreateHeaders( short types )
 		{
 			Mid(astname, 1, strlen(astname) - 4, buff1); //remove USA in Hebrew and rewrite it
 			hebcityname[0] = '\0'; //clear buffer
-			sprintf( hebcityname, "%s%s%s%s", buff1, &heb1[6][0], "\"", heb1[7][0] );
+			//sprintf( hebcityname, "%s%s%s%s", buff1, &heb1[6][0], "\"", heb1[7][0] );
+			sprintf( hebcityname, "%s%s%s%s", buff1, &heb1[6][0], "&quot;", heb1[7][0] );
 		}
 	}
 
@@ -7163,13 +7259,13 @@ short CreateHeaders( short types )
 					//nsetflag = 0; //visible sunrise/astr. sunrise/chazos
 					if ( InStr( &storheader[0][0][0], "NA") || strlen(Trim(&storheader[0][0][0])) <= 2 ) //use defaults
 					{
-						sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+						sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 						sprintf( &storheader[0][1][0], "%s", &heb1[16][0] );
 						sprintf( &storheader[0][2][0], "%s", &heb1[21][0] );
 					}
 					else //use headers saved in the _port.sav file
 					{
-						sprintf( buff1, "%s%s%s%s%s", &storheader[0][0][0], " ", &heb2[1][0], " ", g_yrcal );
+						sprintf( buff1, "%s%s%s%s%s", &storheader[0][0][0], "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 						strcpy( &storheader[0][0][0], buff1 );
 					}
 					sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7181,13 +7277,13 @@ short CreateHeaders( short types )
 					//nsetflag = 1; //visible sunset/astr. sunset/chazos
 					if ( InStr( &storheader[1][0][0], "NA") || strlen(Trim(&storheader[1][0][0])) <= 2 )// use defulats
 					{
-						sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+						sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 						sprintf( &storheader[1][1][0], "%s", &heb1[13][0] );
 						sprintf( &storheader[1][2][0], "%s", &heb1[21][0] );
 					}
 					else //use headers stored in the _port.sav file
 					{
-						sprintf( buff1, "%s%s%s%s%s", &storheader[1][0][0], " ", &heb2[1][0], " ", g_yrcal );
+						sprintf( buff1, "%s%s%s%s%s", &storheader[1][0][0], "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 						strcpy( &storheader[1][0][0], buff1 );
 					}
 					sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7197,7 +7293,7 @@ short CreateHeaders( short types )
 					break;
 				case 2:
 					//nsetflag = 2; //astronomical sunrise for hgt != 0, otherwise mishor sunrise/chazos
-					sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[ii][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+					sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[ii][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 					sprintf( &storheader[0][1][0], "%s", &heb1[iv][0] );
 					sprintf( &storheader[0][2][0], "%s", &heb1[27][0] );
 					sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7207,7 +7303,7 @@ short CreateHeaders( short types )
 					break;
 				case 3:
 					//nsetflag = 3; //astronomical sunset for hgt != 0, otherwise mishor sunset/chazos
-					sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[iii][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+					sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[iii][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 					sprintf( &storheader[1][1][0], "%s", &heb1[iiv][0] );
 					sprintf( &storheader[1][2][0], "%s", &heb1[27][0] );
 					sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7219,7 +7315,7 @@ short CreateHeaders( short types )
 				  //nsetflag = 4; //vis sunrise/ mishor sunrise/ chazos
 				  if ( InStr( &storheader[0][0][0], "NA") || strlen(Trim(&storheader[0][0][0])) <= 2 )//use defulats
 					  {
-					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 					  sprintf( &storheader[0][1][0], "%s", &heb1[16][0] );
 					  sprintf( &storheader[0][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7232,7 +7328,7 @@ short CreateHeaders( short types )
 				  //nsetflag = 5; //visible sunset/ mishor sunset/ chazos
 				  if ( InStr( &storheader[1][0][0], "NA") || strlen(Trim(&storheader[1][0][0])) <= 2 ) //use defulats
 					  {
-					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 					  sprintf( &storheader[1][1][0], "%s", &heb1[13][0] );
 					  sprintf( &storheader[1][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7245,7 +7341,7 @@ short CreateHeaders( short types )
 				  //nsetflag = 6; //visible sunrise and visible sunset/ astr sunrise/astr sunset/ chazos
 				  if ( InStr( &storheader[0][0][0], "NA") || strlen(Trim(&storheader[0][0][0])) <= 2 ) //use defulats
 					  {
-					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 					  sprintf( &storheader[0][1][0], "%s", &heb1[16][0] );
 					  sprintf( &storheader[0][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7255,7 +7351,7 @@ short CreateHeaders( short types )
 					  }
 				  if ( InStr( &storheader[1][0][0], "NA") || strlen(Trim(&storheader[1][0][0])) <= 2 ) //use defulats
 					  {
-					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 					  sprintf( &storheader[1][1][0], "%s", &heb1[13][0] );
 					  sprintf( &storheader[1][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7268,7 +7364,7 @@ short CreateHeaders( short types )
 				  //nsetflag = 7; //visible sunrise/ mishor sunrise and /visible sunset/ mishor sunset
 				  if ( InStr( &storheader[0][0][0], "NA") || strlen(Trim(&storheader[0][0][0])) <= 2 ) //use defulats
 					  {
-					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 					  sprintf( &storheader[0][1][0], "%s", &heb1[16][0] );
 					  sprintf( &storheader[0][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7278,7 +7374,7 @@ short CreateHeaders( short types )
 					  }
 				  if ( InStr( &storheader[1][0][0], "NA") || strlen(Trim(&storheader[1][0][0])) <= 2 ) //use defulats
 					  {
-					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+					  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 					  sprintf( &storheader[1][1][0], "%s", &heb1[13][0] );
 					  sprintf( &storheader[1][2][0], "%s", &heb1[21][0] );
 					  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7289,14 +7385,14 @@ short CreateHeaders( short types )
 				  break;
 				case 8:
 				  //nsetflag = 8; //astronomical sunrise and sunset/ mishor sunrise and sunset if hgt = 0
-				  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[ii][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+				  sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[ii][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 				  sprintf( &storheader[0][1][0], "%s", &heb1[iv][0] );
 				  sprintf( &storheader[0][2][0], "%s", &heb1[27][0] );
 				  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
 				  sprintf( &storheader[0][4][0], "%s", l_buffcopy );
 				  sprintf( &storheader[0][5][0], "%s", "\0" );
 				  sprintf( &storheader[0][6][0], "%s", "\0" );
-				  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[iii][0], hebcityname, " ", &heb2[1][0], " ", g_yrcal );
+				  sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[iii][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 				  sprintf( &storheader[1][1][0], "%s", &heb1[iiv][0] );
 				  sprintf( &storheader[1][2][0], "%s", &heb1[27][0] );
 				  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7461,53 +7557,53 @@ short CreateHeaders( short types )
 				switch( SRTMflag )
 				{
 				case 0:
-					sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[49][0], " ", searchradius, " ", &heb1[61][0], " ", eroscity, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
+					sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[49][0], "&nbsp;", searchradius, "&nbsp;", &heb1[61][0], "&nbsp;", eroscity, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
 
-					sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[50][0], " ", searchradius, " ", &heb1[61][0], " ", eroscity, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
+					sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[50][0], "&nbsp;", searchradius, "&nbsp;", &heb1[61][0], "&nbsp;", eroscity, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
 
 					sprintf(buff, "%s", &heb1[55][0] );
 					break;
 
 				case 1:
-				  sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[51][0], " ", searchradius, " ", &heb1[61][0], " ", eroscity, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
+				  sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[51][0], "&nbsp;", searchradius, "&nbsp;", &heb1[61][0], "&nbsp;", eroscity, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
 
-				  sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[52][0], " ", searchradius, " ", &heb1[61][0], " ", eroscity, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
+				  sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[52][0], "&nbsp;", searchradius, "&nbsp;", &heb1[61][0], "&nbsp;", eroscity, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
 
 				  sprintf(buff, "%s", &heb1[56][0] );
 				  break;
 
 				case 2:
-				  sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[53][0], " ", searchradius, " ", &heb1[61][0], " ", eroscity, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
+				  sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[53][0], "&nbsp;", searchradius, "&nbsp;", &heb1[61][0], "&nbsp;", eroscity, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
 
-				  sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[54][0], " ", searchradius, " ", &heb1[61][0], " ", eroscity, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
+				  sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[54][0], "&nbsp;", searchradius, "&nbsp;", &heb1[61][0], "&nbsp;", eroscity, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
 
 				  sprintf(buff, "%s", &heb1[55][0] );
 				  break;
 
 				case 9: //EY neighborhoods
-				  sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[58][0], " ", searchradius, " ", &heb1[61][0], " ", EYhebNeigh, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
+				  sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[58][0], "&nbsp;", searchradius, "&nbsp;", &heb1[61][0], "&nbsp;", EYhebNeigh, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
 
-				  sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[59][0], " ", searchradius, " ", &heb1[61][0], " ", EYhebNeigh, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
+				  sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[59][0], "&nbsp;", searchradius, "&nbsp;", &heb1[61][0], "&nbsp;", EYhebNeigh, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
 
 				  sprintf(buff, "%s", &heb1[21][0] );
 				  break;
 
 				case 10: //30 m DTM sunrise  ***************TO DO -- add hebrew for this option --
-				  //sprintf( buff2, "%s%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%s%s%s%3.1lf%s%s", &heb1[69][0], eroscity, " ", &heb2[1][0], " ", g_yrcal, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunrise
-				  sprintf( buff2, "%s%s%s%s%10.5lf%s%10.5lf%s %6.1lf %s%s%s%s %3.1lf %s%s", &heb1[69][0], eroscity, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunrise
+				  //sprintf( buff2, "%s%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%s%s%s%3.1lf%s%s", &heb1[69][0], eroscity, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, "&nbsp;", &heb1[68][0], &heb1[71], "&nbsp;", erosaprn, &heb1[72][0], " ) "  ); //sunrise
+				  sprintf( buff2, "%s%s%s%s%10.5lf%s%10.5lf%s %6.1lf %s%s%s%s %3.1lf %s%s", &heb1[69][0], eroscity, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, "&nbsp;", &heb1[68][0], &heb1[71], "&nbsp;", erosaprn, &heb1[72][0], " ) "  ); //sunrise
 
 				  sprintf(buff, "%s", &heb1[55][0] );
                   break;
                 case 11: //30 m DTM sunset ****************TO DO -- add hebrew for this option --
 
-				  //sprintf( buff3, "%s%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%s%s%s%3.1lf%s%s", &heb1[70][0], eroscity, " ", &heb2[1][0], " ", g_yrcal, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunset
-				  sprintf( buff3, "%s%s%s%s%10.5lf%s%10.5lf%s %6.1lf %s%s%s%s %3.1lf %s%s", &heb1[70][0], eroscity, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunset
+				  //sprintf( buff3, "%s%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%s%s%s%3.1lf%s%s", &heb1[70][0], eroscity, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, "&nbsp;", &heb1[68][0], &heb1[71], "&nbsp;", erosaprn, &heb1[72][0], " ) "  ); //sunset
+				  sprintf( buff3, "%s%s%s%s%10.5lf%s%10.5lf%s %6.1lf %s%s%s%s %3.1lf %s%s", &heb1[70][0], eroscity, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, "&nbsp;", &heb1[68][0], &heb1[71], "&nbsp;", erosaprn, &heb1[72][0], " ) "  ); //sunset
 
 				  sprintf(buff, "%s", &heb1[56][0] );
 				  break;
 				case 12: //30 m DTM sunrise  ***************TO DO -- add hebrew for this option --
-				  //sprintf( buff2, "%s%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%s%s%s%3.1lf%s%s", &heb1[69][0], eroscity, " ", &heb2[1][0], " ", g_yrcal, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunrise
-				  sprintf( buff2, "%s%s%s%s %10.5lf %s %10.5lf %s %6.1lf %s%s%s%s %3.1lf %s%s", &heb1[74][0], eroscity, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunrise
+				  //sprintf( buff2, "%s%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%s%s%s%3.1lf%s%s", &heb1[69][0], eroscity, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, "&nbsp;", &heb1[68][0], &heb1[71], "&nbsp;", erosaprn, &heb1[72][0], " ) "  ); //sunrise
+				  sprintf( buff2, "%s%s%s%s %10.5lf %s %10.5lf %s %6.1lf %s%s%s%s %3.1lf %s%s", &heb1[74][0], eroscity, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, "&nbsp;", &heb1[68][0], &heb1[71], "&nbsp;", erosaprn, &heb1[72][0], " ) "  ); //sunrise
 				  sprintf( buff3, "%s %5.1lf %s%s %10.5lf %s %10.5lf %s %6.1lf %s, %5.1lf %s", &heb1[76][0]  
 							   , Gold.vert[0], &heb9[14][0], &heb1[18][0], -Gold.vert[2], &heb1[17][0], Gold.vert[3], &heb1[67][0]
 							   , Gold.vert[5], &heb1[68][0], Gold.vert[4], &heb9[16][0] );
@@ -7515,8 +7611,8 @@ short CreateHeaders( short types )
                   break;
                 case 13: //30 m DTM sunset ****************TO DO -- add hebrew for this option --
 
-				  //sprintf( buff3, "%s%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%s%s%s%3.1lf%s%s", &heb1[70][0], eroscity, " ", &heb2[1][0], " ", g_yrcal, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunset
-				  sprintf( buff2, "%s%s%s%s %10.5lf %s %10.5lf %s %6.1lf %s%s%s%s %3.1lf %s%s", &heb1[75][0], eroscity, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, " ", &heb1[68][0], &heb1[71], " ", erosaprn, &heb1[72][0], " ) "  ); //sunset
+				  //sprintf( buff3, "%s%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s%6.1lf%s%s%s%s%3.1lf%s%s", &heb1[70][0], eroscity, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, "&nbsp;", &heb1[68][0], &heb1[71], "&nbsp;", erosaprn, &heb1[72][0], " ) "  ); //sunset
+				  sprintf( buff2, "%s%s%s%s %10.5lf %s %10.5lf %s %6.1lf %s%s%s%s %3.1lf %s%s", &heb1[75][0], eroscity, " (", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, &heb1[67][0], eroshgt, "&nbsp;", &heb1[68][0], &heb1[71], "&nbsp;", erosaprn, &heb1[72][0], " ) "  ); //sunset
 				  sprintf( buff3, "%s %5.1lf %s%s %10.5lf %s %10.5lf %s %6.1lf %s, %5.1lf %s", &heb1[77][0]  
 							   , Gold.vert[0], &heb9[14][0], &heb1[18][0], -Gold.vert[2], &heb1[17][0], Gold.vert[3], &heb1[67][0]
 							   , Gold.vert[5], &heb1[68][0], Gold.vert[4], &heb9[16][0] );
@@ -7530,8 +7626,8 @@ short CreateHeaders( short types )
 				if ( !ast ) // mishor
 			   {
 
-					sprintf( l_buff4, "%s %s%s %s%s%s", title, &heb1[34][0], hebcityname, &heb2[1][0], " ", g_yrcal );
-					sprintf( l_buff5, "%s %s%s %s%s%s", title, &heb1[37][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+					sprintf( l_buff4, "%s %s%s %s%s%s", title, &heb1[34][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
+					sprintf( l_buff5, "%s %s%s %s%s%s", title, &heb1[37][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 
         		   if (astronplace) //mishor calculation for a certain coordinate
 					{
@@ -7545,17 +7641,17 @@ short CreateHeaders( short types )
 					   if (SRTMflag != 9)
 					   {
 							//sunrise
-							sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[35][0], " ", searchradius, " ", &heb1[66][0], " ", eroscity, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  );
+							sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[35][0], "&nbsp;", searchradius, "&nbsp;", &heb1[66][0], "&nbsp;", eroscity, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  );
 
 							//sunset
-							sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[39][0], " ", searchradius, " ", &heb1[66][0], " ", eroscity, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  );
+							sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[39][0], "&nbsp;", searchradius, "&nbsp;", &heb1[66][0], "&nbsp;", eroscity, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  );
 					   }
 					   else if (SRTMflag == 9) //EY neighborhoods
 					   {
 
-						  sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[35][0], " ", searchradius, " ", &heb1[66][0], " ", EYhebNeigh, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
+						  sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[35][0], "&nbsp;", searchradius, "&nbsp;", &heb1[66][0], "&nbsp;", EYhebNeigh, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
 
-						  sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[39][0], " ", searchradius, " ", &heb1[66][0], " ", EYhebNeigh, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
+						  sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[39][0], "&nbsp;", searchradius, "&nbsp;", &heb1[66][0], "&nbsp;", EYhebNeigh, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
 
 					   }
 				   }
@@ -7563,8 +7659,8 @@ short CreateHeaders( short types )
 				}
 				else if (ast) // astronomical
 		        {
-					sprintf( l_buff4, "%s %s%s %s%s%s", title, &heb1[25][0], hebcityname, &heb2[1][0], " ", g_yrcal ); //sunrise
-					sprintf( l_buff5, "%s %s%s %s%s%s", title, &heb1[31][0], hebcityname, &heb2[1][0], " ", g_yrcal ); //sunset
+					sprintf( l_buff4, "%s %s%s %s%s%s", title, &heb1[25][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal ); //sunrise
+					sprintf( l_buff5, "%s %s%s %s%s%s", title, &heb1[31][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal ); //sunset
 
 					if (astronplace) //astronomical calculation for a certain coordinate
 				   {
@@ -7578,19 +7674,19 @@ short CreateHeaders( short types )
 					   if (SRTMflag !=9 )
 					   {
 
-							sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[28][0], " ", searchradius, " ", &heb1[66][0], " ", eroscity, " ", "(", &heb1[17][0], eroslatitude
+							sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[28][0], "&nbsp;", searchradius, "&nbsp;", &heb1[66][0], "&nbsp;", eroscity, "&nbsp;", "(", &heb1[17][0], eroslatitude
 								, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
 
-							sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[32][0], " ", searchradius, " ", &heb1[66][0], " ", eroscity, " ", "(", &heb1[17][0], eroslatitude
+							sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[32][0], "&nbsp;", searchradius, "&nbsp;", &heb1[66][0], "&nbsp;", eroscity, "&nbsp;", "(", &heb1[17][0], eroslatitude
 								, &heb1[18][0], eroslongitude, " ) "  ); //sunset
 
 					   }
 					   else if (SRTMflag == 9) //EY neighborhoods
 					   {
 
-						  sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[28][0], " ", searchradius, " ", &heb1[66][0], " ", EYhebNeigh, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
+						  sprintf( buff2, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[28][0], "&nbsp;", searchradius, "&nbsp;", &heb1[66][0], "&nbsp;", EYhebNeigh, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunrise
 
-						  sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[32][0], " ", searchradius, " ", &heb1[66][0], " ", EYhebNeigh, " ", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
+						  sprintf( buff3, "%s%s%3.1f%s%s%s%s%s%s%s%10.5lf%s%10.5lf%s", &heb1[32][0], "&nbsp;", searchradius, "&nbsp;", &heb1[66][0], "&nbsp;", EYhebNeigh, "&nbsp;", "(", &heb1[17][0], eroslatitude, &heb1[18][0], eroslongitude, " ) "  ); //sunset
 
 					   }
 				   }
@@ -7605,7 +7701,7 @@ short CreateHeaders( short types )
 			case 0:
 			  //nsetflag = 0; //visible sunrise/astr. sunrise/chazos
 			   //visible times header
-			  sprintf( &storheader[0][0][0], "%s %s%s %s %s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s%s %s %s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7615,7 +7711,7 @@ short CreateHeaders( short types )
 			  break;
 			case 1:
 			  //nsetflag = 1; //visible sunset/astr. sunset/chazos
-			  sprintf( &storheader[1][0][0], "%s %s%s %s %s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s%s %s %s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7645,7 +7741,7 @@ short CreateHeaders( short types )
 			  break;
 			case 4:
 			  //nsetflag = 4; //vis sunrise/ mishor sunrise/ chazos
-			  sprintf( &storheader[0][0][0], "%s %s%s %s %s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s%s %s %s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7655,7 +7751,7 @@ short CreateHeaders( short types )
 			  break;
 			case 5:
 			  //nsetflag = 5; //visible sunset/ mishor sunset/ chazos
-			  sprintf( &storheader[1][0][0], "%s %s%s %s %s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s%s %s %s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7665,14 +7761,14 @@ short CreateHeaders( short types )
 			  break;
 			case 6:
 			  //nsetflag = 6; //visible sunrise and visible sunset/ astr sunrise/astr sunset/ chazos
-			  sprintf( &storheader[0][0][0], "%s %s%s %s %s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s%s %s %s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
 			  sprintf( &storheader[0][4][0], "%s", l_buffcopy );
 			  sprintf( &storheader[0][5][0], "%s", l_buffwarning );
 			  sprintf( &storheader[0][6][0], "%s", l_buffazimuth );
-			  sprintf( &storheader[1][0][0], "%s %s%s %s %s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s%s %s %s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7682,14 +7778,14 @@ short CreateHeaders( short types )
 			  break;
 			case 7:
 			  //nsetflag = 7; //visible sunrise/ mishor sunrise and /visible sunset/ mishor sunset
-			  sprintf( &storheader[0][0][0], "%s %s%s %s% s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s%s %s% s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
 			  sprintf( &storheader[0][4][0], "%s", l_buffcopy );
 			  sprintf( &storheader[0][5][0], "%s", l_buffwarning );
 			  sprintf( &storheader[0][6][0], "%s", l_buffazimuth );
-			  sprintf( &storheader[1][0][0], "%s %s%s %s% s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s%s %s% s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7716,7 +7812,7 @@ short CreateHeaders( short types )
 			  break;
 			case 10:
 			  //nsetflag = 11; //visible sunrise for 30 m DTM
-			  sprintf( &storheader[0][0][0], "%s %s %s %s%s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s %s %s%s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -7726,7 +7822,7 @@ short CreateHeaders( short types )
 			  break;
             case 11:
 			  //nsetflag = 11; //visible sunset for 30 m DTM
-			  sprintf( &storheader[1][0][0], "%s %s %s %s%s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s %s %s%s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -7736,7 +7832,7 @@ short CreateHeaders( short types )
 			  break;
 			case 12:
 			  //nsetflag = 11; //visible sunrise for 30 m DTM
-			  sprintf( &storheader[0][0][0], "%s %s %s %s%s%s", title, &heb1[74][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s %s %s%s%s", title, &heb1[74][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][8][0], "%s", buff3 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
@@ -7748,7 +7844,7 @@ short CreateHeaders( short types )
 			  break;
             case 13:
 			  //nsetflag = 11; //visible sunset for 30 m DTM
-			  sprintf( &storheader[1][0][0], "%s %s %s %s%s%s", title, &heb1[75][0], hebcityname, &heb2[1][0], " ", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s %s %s%s%s", title, &heb1[75][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff2 );
 			  sprintf( &storheader[1][8][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
@@ -9534,7 +9630,7 @@ char *Replace( char *str, char Old, char New)
 //Example: remove "_" from string "random_place"
 //
 //strcpy( filroot, "random_place" );
-//Replace( filroot, '_', ' '); <--need to use ' ', and not " "
+//Replace( filroot, '_', ' '); <--need to use ' ', and not "&nbsp;"
 //now use Trim(filroot)
 //returns "random place"
 ///////////////////////////////////////////////////////////////////////////
@@ -9685,7 +9781,7 @@ char *itoa ( int value, char *str, int base )
 		return str;
 	}
 
-	return " ";
+	return "&nbsp;";
 
 }
 
@@ -9797,14 +9893,16 @@ short LoadTitlesSponsors()
 				strncpy(buff, &heb3[1][0], 1);
 				buff[1] = 0;
 
-				sprintf( &heb1[3][0],"%s%s%s%s%s%s",&heb1[1][0],"\"",TitleLine,"\""," ",buff);
+				//sprintf( &heb1[3][0],"%s%s%s%s%s%s",&heb1[1][0],"\"",TitleLine,"\"","&nbsp;",buff);
+				sprintf( &heb1[3][0],"%s%s%s%s%s%s",&heb1[1][0],"&quot;",TitleLine,"&quot;","&nbsp;",buff);
 
 				strncpy( &heb1[4][0], TitleLine, strlen(TitleLine) );
 
 				strncpy(buff, &heb3[12][9], 16);
 				buff[16] = 0;
 
-				sprintf( &heb3[12][0],"%s%s%s%s%s%s",&heb1[1][0],"\"",TitleLine,"\""," ",buff);
+				//sprintf( &heb3[12][0],"%s%s%s%s%s%s",&heb1[1][0],"\"",TitleLine,"\"","&nbsp;",buff);
+				sprintf( &heb3[12][0],"%s%s%s%s%s%s",&heb1[1][0],"&quot;",TitleLine,"$quot;","&nbsp;",buff);
 
 			}
 
@@ -10134,6 +10232,7 @@ short LoadConstants( short zmanyes, short typezman, char filzman[] )
 				fscanf( stream, "%lg\n", &vdwconst[1] );
 				fscanf( stream, "%lg\n", &vdwconst[2] );
 				fscanf( stream, "%lg\n", &vdwconst[3] );
+				fscanf( stream, "%lg\n", &vdwconst[4] );
 				//temperature model based on minimum/average/maximum ground temperaters
 				fscanf( stream, "%d\n", &TempModel );
 				//maximum length of day to look for winter inversion layers
@@ -10143,8 +10242,6 @@ short LoadConstants( short zmanyes, short typezman, char filzman[] )
 				fscanf( stream, "%lg\n", &WinterPercent );
 				//maximum view angle  for adding adhoc inversion corrections
 				fscanf( stream, "%lg\n", &HorizonInv );
-				//ground pressure 
-				fscanf( stream, "%lg\n", &Pressure0 );
 				//global warming flag
 				fscanf( stream, "%d\n", &GlobalWarmingCorrection );
 				ipath = 0;
@@ -10310,12 +10407,12 @@ short LoadConstants( short zmanyes, short typezman, char filzman[] )
 		vdwconst[1] = 1.687; //temperature scaling constant for the terrestrial refraction and for vbwconst[0]
 		vdwconst[2] = 2.18; //temperataure scaling constant for the refraction component ref, i.e., from the observer to the horizon
 		vdwconst[3] = -0.2; //approx. temperature scanling of the vdw eps
+		vdwconst[4] = 1.0856; //vdw pressure exponent for view angle = 0 degrees
 		///////////////////TempModel//////////////////////////////////////////////////
 		TempModel = 1; //use 30 arcsec WorldClim 2 minimum ground temperatures model (1=minimum ground temps, 2 = average, 3 = maximum)
 		MaxWinLen = 11.1; //maximum length of day to look for winter inversion layers
 		WinterPercent = 1.0; //default is set to not use this filtering option, i.e.,accept 100 percent
 		HorizonInv = 0.01; //only add adhoc inversion fix if calculated view angle is less than HorizonInv
-		Pressure0 = 1013.25; //default ground pressure used for calculations
 		GlobalWarmingCorrection = 1; //default - use latitude shift model for global warming
 
 		//////////////////astronomical constants///////////////////
@@ -10410,9 +10507,9 @@ char *IsoToUnicode( char *str )
 
 
 /////////////////////netzski6////////////////////////////////////////
-short netzski6(char *fileon, double lg, double lt, double hgt, double aprn,
+ short netzski6(char *fileon, double lg, double lt, double hgt, double aprn,
 			               float geotd, short nsetflag, short nfil,
-						   short *nweather, double *meantemp, double *p,
+						   short *nweather, double *meantemp, 
      		               short *ns1, short *ns2, short *ns3, short *ns4, double *WinTemp,
 						   short mint[], short avgt[], short maxt[], short ExtTemp[] )
 //////////////////////////////////////////////////////////////////////
@@ -10434,7 +10531,7 @@ short netzski6(char *fileon, double lg, double lt, double hgt, double aprn,
 
     bool adhocset;
     //short nweather;
-    double elevintx, elevinty, d__, t, z__;
+    double elevintx, elevinty, d__, z__;
 	//double p;
     short nplaceflg;
     bool adhocrise;
@@ -10442,7 +10539,7 @@ short netzski6(char *fileon, double lg, double lt, double hgt, double aprn,
     double ac, mc, ec, e2c, ap, mp, ob;
 
     short ne;
-    double td, tf, es, lr, dy, ms;
+    double td, tf, es, lr, dy, ms, t, p;
     short nn;
     double pt, al1, dy1; 
     //short ns1, ns2, ns3, ns4;
@@ -10501,6 +10598,9 @@ short netzski6(char *fileon, double lg, double lt, double hgt, double aprn,
 						   //= 1 for using minimum @orldClim temperatures
 						   //  2 for using average WorldClim temperatures
 						   //  3 for using maximum WorldClim temperatures
+	double altmin = 0.0;
+	double vbwexp;
+	bool SingleDayModel = SingleDay;
 
 /**************************************************************/
 
@@ -10571,7 +10671,7 @@ alem */
 /*                                  '=1 iterates the sunrise times */
 //    p = Pressure0; //1013.25f;
 /*                                  'mean atmospheric pressure (mb) */
-    t = 27.;
+/*    t = 27.;
 /*                                  'mean atmospheric temperature (degrees Celsius) */
     stepsec = 2.5f;
 /*                                  'step size in seconds */
@@ -10627,7 +10727,7 @@ alem */
 
 	if (nsetflag != 2 && nsetflag != 3 && nsetflag != 6 && nsetflag != 7 && SRTMflag < 10) //read horizon profile file
 	{
-		if (ReadProfile( fileon, &hgt, p, &maxang, meantemp ) ) return -2; //(-2 = file doesn't exist, or can't be read)
+		if (ReadProfile( fileon, &hgt, &maxang, meantemp ) ) return -2; //(-2 = file doesn't exist, or can't be read)
 
 	}
 	else if ( SRTMflag > 9) //visible sunrise/sunset based on 30m DTM calculations
@@ -10652,8 +10752,9 @@ alem */
 
 		if (maxang < 30) maxang = 30.; //set minimum maxang
 
+
 		//maxang = MAX_ANGULAR_RANGE;
-        ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, p, meantemp, SRTMflag );
+        ier = readDTM( &lg, &lt, &hgt, &maxang, &aprn, meantemp, SRTMflag );
 		if (ier) //error detected
 		{
 			return ier;
@@ -10722,6 +10823,11 @@ alem */
 		//-----------------------------------------------------
 		for ( dy = (double) yrstrt[nyear - FirstSecularYr]; dy <= d__1; dy++)
 		{
+			////////////////////////////////added 030921/////////////////////////////////////////////////////////////////////////
+			//if singleday calculation flagged, only calculate the netz/skiya for this day alone
+			if ( SingleDay && (nyear != SingleYr || dy != SingleDayNum) ) continue; //only run calculation for this single day
+			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 			//day iteration
 			ndystp = (int)dy;
 			dy1 = dy;
@@ -10760,7 +10866,7 @@ alem */
 
 			///////////Astronomical total refraction/////////////////////////////////////////////////////////
 			AstronRefract( &hgt, &lt, nweather, &PartOfDay, &dy, ns1, ns2, &air,
-				&a1, mint, avgt, maxt, &vdwsf, &vdwrefr, &vbweps, &nyr);
+				&a1, mint, avgt, maxt, &t, &p, &vdwsf, &vdwrefr, &vbweps, &nyr, &SingleDayModel);
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
 			//////////////////////////conserved portion of atmospheric refraction//////////////////////////
@@ -10768,7 +10874,7 @@ alem */
 			{
 				//assuming that the terrestrial refraction scales like the atmospheric refraction
 				//i.e., with the VDW scaling factor vdwsf, this is unproven but should be at least a close approx.
-				trbasis = vdwsf * *p * 8.15f * 1e3f * .0277f / (288.15 * 288.15 * 3600);
+				trbasis = vdwsf * 1013.25 * 8.15f * 1e3f * .0277f / (288.15 * 288.15 * 3600);
 			}
 			//////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -11039,39 +11145,45 @@ L692:
 					//first guess for apparent top of sun
 					pt = 1.; //fudge factor -- default is 1.0 for no fudge
 
+					//to decent approximation, only adjust once and not for each iteration
+					altmin = al1 * 60.0;//convert degrees to arcminutes
+					vbwexp = 1.68271708343173 -1.04055307822257E-04 * hgt 
+						   - 4.65108719859762E-03 * altmin
+						   + 1.47797248203399E-05 * altmin * altmin
+						   - 2.37213585737878E-08 * altmin * altmin * altmin
+						   + 1.48109107804038E-11 * altmin * altmin * altmin * altmin;
+					vdwsf = pow(288.15f / t, vbwexp);
+					vdwsf *= pow( p / 1013.25, vdwconst[4]); //pressure scalintg law VDW graph 5a
+
+
 					//deter__min refraction for this solar altitude
+					//first iteration to find top of sun with refraction
 					if (!VDW_REF) {
-						refract_(&al1, p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
+						refract_(&al1, &p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
+					    al1 = alt1 / cd + .2666f + pt * refrac1;
 					} else {
 						refvdw_(&hgt, &al1, &refrac1);
+						al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1;
 					}
 
-					//first iteration to find position of upper limb of sun
-					al1 = alt1 / cd + .2666f + pt * refrac1;
-					//top of sun with refraction
+					//iterate in solar altitude until converges according to convergence criteria
 					if (niter == 1)
 					{
 						for (nac = 1; nac <= 10; ++nac)
 						{
 							al1o = al1;
+							//subsequent iterations
 							if (!VDW_REF) {
-								refract_(&al1, p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
+								refract_(&al1, &p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
+								al1 = alt1 / cd + .2666f + pt * refrac1;
 							} else {
 								refvdw_(&hgt, &al1, &refrac1);
+								al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1;
 							}
 
-							//subsequent iterations
-							al1 = alt1 / cd + .2666f + pt * refrac1;
 							//top of sun with refraction
 							if (fabs(al1 - al1o) < .004f) {
-								if (!VDW_REF) {
-									break;
-								} else {
-									//scale refraction for the ground temperature at this date
-									//using vdw temperature scaling
-									al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1;
-									break;
-								}
+								break;
 							}
 	// L693:
 						}
@@ -11165,39 +11277,42 @@ L692:
 				//first guess for apparent top of sun
 				pt = 1.;  //fudge factor -- default as 1.0, i.e., no fudge
 
+				//to decent approximation, only adjust once and not for each iteration
+				altmin = al1 * 60.0;//convert degrees to arcminutes
+				vbwexp = 1.68271708343173 -1.04055307822257E-04 * hgt 
+					   - 4.65108719859762E-03 * altmin
+					   + 1.47797248203399E-05 * altmin * altmin
+					   - 2.37213585737878E-08 * altmin * altmin * altmin
+					   + 1.48109107804038E-11 * altmin * altmin * altmin * altmin;
+				vdwsf = pow(288.15f / t, vbwexp);
+				vdwsf *= pow( p / 1013.25, vdwconst[4]); //pressure scalintg law VDW graph 5a
+
 				//deter__min refraction for this solar altitude
+				//also first iteration to find top of sun with refraction
 				if (!VDW_REF) {
-					refract_(&al1, p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
+					refract_(&al1, &p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
+					al1 = alt1 / cd + .2666f + pt * refrac1;
 				} else {
 					refvdw_(&hgt, &al1, &refrac1);
+					al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1;
 				}
 
-				//first iteration to find top of sun
-				al1 = alt1 / cd + .2666f + pt * refrac1;
-				//top of sun with refraction
+				//iterate in solar altitude until converges according to convergence criteria
 				if (niter == 1)
 				{
 					for (nac = 1; nac <= 10; ++nac)
 					{
 						al1o = al1;
 						if (!VDW_REF) {
-							refract_(&al1, p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
+							refract_(&al1, &p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
+							al1 = alt1 / cd + .2666f + pt * refrac1;
 						} else {
 							refvdw_(&hgt, &al1, &refrac1);
+							al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1;
 						}
 						
-						//subsequent iterations
-						al1 = alt1 / cd + .2666f + pt * refrac1;
-						//top of sun with refraction
 						if (fabs(al1 - al1o) < .004f) {
-							if (!VDW_REF) {
-								break;
-							} else {
-								//scale refraction for the ground temperature at this date
-								//using vdw temperature scaling
-								al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1;
-								break;
-							}
+							break;
 						}
 // L750:
 					}
@@ -12152,7 +12267,8 @@ short WriteHtmlHeader()
 		if (SRTMflag < 10 ) //html4
 		{
 			fprintf(stdout, "%s\n", "<!doctype html public \"-//w3c//dtd html 4.0 Transitional//en\">");
-			sprintf( buff1, "%s%s%s%s%s", "<html dir = ", "\"", "rtl", "\"", ">");
+			//sprintf( buff1, "%s%s%s%s%s", "<html dir = ", "\"", "rtl", "\"", ">");
+			sprintf( buff1, "%s%s%s%s%s", "<html dir = ", "&quot;", "rtl", "&quot;", ">");
 		}
 		else if ((SRTMflag > 9) && !wroteheader)  //html5
 		{
@@ -12667,8 +12783,9 @@ void InitAstConst(short *nyr, short *nyd, double *ac, double *mc,
 ////////////////////////////AstronRefract////////////////////////
 void AstronRefract( double *hgt, double *lt, short *nweather, short *PartOfDay,
 				    double *dy, short *ns1, short *ns2,	double *air, double *a1,
-					short mint[], short avgt[], short maxt[], 
-					double *vdwsf, double *vdwrefr, double *vbweps, short *nyr)
+					short mint[], short avgt[], short maxt[], double *t, double *p,
+					double *vdwsf, double *vdwrefr, double *vbweps, short *nyr,
+					const bool *SingleDayModel)
 //////////////////////////////////////////////////////////////////////////////////
 //calculates astronomical refraction for a user's height, hgt
 ////explanation of refraction terms//////////
@@ -12733,10 +12850,44 @@ double tk, d__2, refrac1;
 			tk = maxt[(int) m - 1] + 273.15f;
 			break;
 		}
+
+		//////////////////////added 030921 -- for single day calculation, use its inputted Tground and Pressure, if any///
+		if (*SingleDayModel) //using the single day ground and temperature and pressure (if inputed)
+		{
+			if (g_Tground == -9999)
+			{
+				*t = 288.15;
+			}
+			else
+			{
+				*t = g_Tground;
+			}
+
+			if (g_Pressure == -9999)
+			{
+				*p = 1013.25;
+			}
+			else
+			{
+				*p = g_Pressure;
+			}
+		}
+		else  //using the World Clim model
+		{
+			*t = tk;
+			*p = 1013.25;
+		}
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 		//calculate van der Werf temperature scaling factors for refraction/
-		d__2 = 288.15f / tk;
+		d__2 = 288.15f / *t;
 		*vdwsf = pow(d__2, vdwconst[1]); //scaling for zero to infinity refraction, as for terrestrial refraction
+
+		/////////////022321 edit - add pressure scaling law to vbwsf////////////////////
+		d__2 = *p/1013.25;
+		*vdwsf *= pow(d__2, vdwconst[4]); //pressure scalintg law VDW graph 5a
+		//////////////////////////////////////////////////////////////////////////
+
 		*vdwrefr = pow(d__2, vdwconst[2]);//scaling for hgt to zero refraction, i.e., ref
 		*vbweps = pow(d__2, vdwconst[3]); //scaling for geometric angle contribution to refraction, i.e., eps
 
@@ -12764,7 +12915,12 @@ double tk, d__2, refrac1;
 L590:
 		*a1 = 0.;
 		refrac1 = vdwconst[0]; //vdW 288.15 degress K total atmospheric refraction from zero to infinity (mrad)
-		*air = cd * 90. + (*vbweps * eps + *vdwrefr * ref + *vdwsf * refrac1) / 1e3;
+
+		//make consistent with netzski6 - modification 022321/////////////////////////////
+		//*air = cd * 90. + (*vbweps * eps + *vdwrefr * ref + *vdwsf * refrac1) / 1e3;
+		*air = cd * 90. + (eps + *vdwsf * (ref + refrac1)) / 1e3;
+		///////////////////////////////////////////////////////////////////////////////////
+
 		*a1 = (ref + refrac1) * 1e-3;  //convert to radians from mrad
 
 	}
@@ -12808,6 +12964,9 @@ L590:
 	L691:	*air = cd * 90. + (eps + ref + sumrefo) / 1e3; //depression angle of sun at sunrise/sunset as seen from height = hgt
 			*a1 = (ref + sumrefo) / (cd * 1e3); //total atmospheric refraction for observer at height = hgt (degrees)
 		}
+
+		*t = 27;
+		*p = 1013;
 
 	}
 
@@ -13285,7 +13444,7 @@ L_692:
 
 
 /////////////////////ReadProfile//////////////////////////
-short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *meantemp )
+short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 
 ////////////////////////////////////////////////////////////
 //reads the contents of a profile file and stores the values
@@ -13299,6 +13458,7 @@ short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *
 	double exponent,pathlength;
 	char Tgroundch[7] = "";
 	double Tground = 288.15;
+	double p = 1013.25;
 
 	short const MAXARRSIZE = 6; //number of data in line = array size of strarr
 	char strarr[MAXARRSIZE][MAXDBLSIZE]; //array to contain the data elements
@@ -13421,7 +13581,7 @@ short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *
 				Tground = *meantemp;
 			} //else for ntrcalc == 3, Tground was extracted above from the header string
 
-			trrbasis = *p * 8.15f * 1e3f * .0277f / (Tground * Tground * 3600);
+			trrbasis = 1013.12 * 8.15f * 1e3f * .0277f / (Tground * Tground * 3600);
 			//in the winter, dt/dh will be positive for inversion layer and refraction is increased
 			//now calculate pathlength of curved ray using Lehn's parabolic approximation 
 			d__1 = distd;
@@ -13503,7 +13663,7 @@ short ReadProfile( char *fileon, double *hgt, double *p, short *maxang, double *
 							Tground = *meantemp;
 						} //else for ntrcalc == 3, Tground was extracted above from the header string
 
-						trrbasis = *p * 8.15f * 1e3f * .0277f / (Tground * Tground * 3600);
+						trrbasis = 1013.12 * 8.15f * 1e3f * .0277f / (Tground * Tground * 3600);
 
 						//in the winter, dt/dh will be positive for inversion layer and refraction is increased
 						//now calculate pathlength of curved ray using Lehn's parabolic approximation 
@@ -14065,10 +14225,15 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 	} 
 	else 
 	{
-
 		lt = avekmyzman;
 		lg = avekmxzman;
 	}
+
+
+	//////////////////added 030921////Single Day's temp, press don't apply to zemanim//////////
+	if (SingleDay) SingleDay = false; //don't limit temperatures for zemanim phase of calculations
+	////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	short ier = Temperatures(lt, -lg, MinTemp, AvgTemp, MaxTemp);
 
@@ -14110,6 +14275,8 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 	double hrs;
 	double WinTemp = 0.0;
 	double vdwsf = 1.0, vdwrefr = 1.0, vbweps = 1.0;
+	double t, p;
+	bool SingleDayModel = false; //use the WorldClim model for zemanim
 
 	if (*yr != *yro) //initialize
 	{
@@ -14165,7 +14332,7 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 
 		///////////Astronomical total refraction//////////////////////////////////
 		AstronRefract( avehgtzman, avekmyzman, nweather, PartOfDay, dy, ns1, ns2,
-			air, &a1, mint, avgt, maxt, &vdwsf, &vdwrefr, &vbweps, &nyr);
+			air, &a1, mint, avgt, maxt, &t, &p, &vdwsf, &vdwrefr, &vbweps, &nyr, &SingleDayModel);
         ///////////////////////////////////////////////////////////////////
 
 		//change from noon of previous day to noon of today
@@ -15657,7 +15824,7 @@ void Molodensky(double ilat,double ilon,double& olat,double& olon,eDatum from,eD
 
 /////////////////////////readDTM/////////////////////////////
 short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang, 
-			   double *kaprn, double *p, double *meantemp, short nsetflag )
+			   double *kaprn, double *meantemp, short nsetflag )
 /////////////////////////////////////////////////////////////
 //calculates horizon profiles from 30m DTM
 /////////////////////////////////////////////////////////////
@@ -15778,6 +15945,8 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
 	//char lpszText[256];
     short worldCD[29];
     unsigned int bytesread;
+
+	double p = 1013.25; //used for default terrestrial refraction factor
 
 	//delcare and allocate a minimum memory for other arrays
 	/*
@@ -15942,7 +16111,7 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
 	else
     {
          //to do
-         //sprintf( buff1, "%s%s%s%s%s%s%s%s%s%s", "<h2><center>", &heb1[1][0], " \"", TitleLine, "\" ", &heb7[12][0], hebcityname, &heb3[2][0], g_yrcal, "</h2>");
+         //sprintf( buff1, "%s%s%s%s%s%s%s%s%s%s", "<h2><center>", &heb1[1][0], "&nbsp;&quot;", TitleLine, "&quot;&nbsp;, &heb7[12][0], hebcityname, &heb3[2][0], g_yrcal, "</h2>");
     }
 	*/
 
@@ -15980,7 +16149,7 @@ ret2:	;
 	else
     {
          //to do
-         //sprintf( buff1, "%s%s%s%s%s%s%s%s%s%s", "<h2><center>", &heb1[1][0], " \"", TitleLine, "\" ", &heb7[12][0], hebcityname, &heb3[2][0], g_yrcal, "</h2>");
+         //sprintf( buff1, "%s%s%s%s%s%s%s%s%s%s", "<h2><center>", &heb1[1][0], "&nbsp;&quot;", TitleLine, "&quot;&nbsp;, &heb7[12][0], hebcityname, &heb3[2][0], g_yrcal, "</h2>");
     }
 	*/
 
@@ -16943,7 +17112,7 @@ Profiles:
 
 		//calculate conserved portion of terrain refraction based on Wikipedia's expression
 		//lapse rate is set at -0.0065 K/m, Ground Pressure = *p = 1013.25 mb
-		TRpart = 8.15 * *p * 1000.0 * (0.0342 - 0.0065)/(*meantemp * *meantemp * 3600); //units of deg/km
+		TRpart = 8.15 * p * 1000.0 * (0.0342 - 0.0065)/(*meantemp * *meantemp * 3600); //units of deg/km
 
 	}
     
@@ -17466,7 +17635,7 @@ L550:
 				//calculate conserved portion of Wikipedia's terrestrial refraction expression 
 				//Lapse Rate, dt/dh, is set at -0.0065 degress K/m, i.e., the standard atmosphere
 				//so have p * 8.15 * 1000 * (0.0343 - 0.0065)/(T * T * 3600) degrees
-				trrbasis = *p * 8.15f * 1e3f * .0277f / (*meantemp * *meantemp * 3600);
+				trrbasis = p * 8.15f * 1e3f * .0277f / (*meantemp * *meantemp * 3600);
 				//in the winter, dt/dh will be positive for inversion layer and refraction is increased
 				//now calculate pathlength of curved ray using Lehn's parabolic approximation 
 				d__1 = distd;
@@ -18749,6 +18918,147 @@ double MonthFromDay(short *nyl, double *dy)
 
 	return (double) ((int) ((k + *dy) * 9 / 275 + .98f));
 
+}
+
+////////////////FilterString//////////////////////////
+//function that replaces all spaces within strings with HTML equivalent
+//source: https://stackoverflow.com/questions/33194040/c-raw-print-all-non-printable-characters-in-a-string-with-printf
+void FilterString(char s[])
+{
+    char *p = s;
+    char sub = ' ';
+
+    /* without including <ctype.h> */
+    for (; *p; p++)
+        if (*p < ' ' || *p > '~')
+            *p = sub;
+
+    p = s;
+    /* including <ctype.h> */
+    for (; *p; p++)
+        if (isprint(*p) == 0)
+            *p = sub;
+
+}
+///////////////////////////////////////////////////
+
+/////////////////replace spaces, etc., with equivalent HTML code /////////////////////
+//source ??
+char *ReplaceChar(const char *s)
+{
+    size_t i, j;
+    size_t len, extra;
+    char *r = NULL;
+
+    len = strlen(s);
+    extra = 0;
+
+    /* First we count how much extra space we need */
+    for (i = 0; i < len; ++i) {
+        if (s[i] == '&')
+            extra += strlen("&amp;") - 1;
+        else if (s[i] == '<')
+            extra += strlen("&lt;") - 1;
+        else if (s[i] == '>')
+            extra += strlen("&gt;") - 1;
+    }
+
+    /* Allocate a new string with the extra space */
+    r = (char *) malloc(len + extra + 1);
+    assert(r != NULL);
+
+    /* Put in the extra characters */
+    j = 0;
+    for (i = 0; i < len; ++i) {
+        if (s[i] == '&') {
+            r[j++] = '&';
+            r[j++] = 'a';
+            r[j++] = 'm';
+            r[j++] = 'p';
+            r[j++] = ';';
+        } else if (s[i] == '<') {
+            r[j++] = '&';
+            r[j++] = 'l';
+            r[j++] = 't';
+            r[j++] = ';';
+        } else if (s[i] == '>') {
+            r[j++] = '&';
+            r[j++] = 'g';
+            r[j++] = 't';
+            r[j++] = ';';
+        } else {
+            r[j++] = s[i];
+        }
+    }
+
+    /* Mark the end of the new string */
+    r[j] = '\0';
+
+    /* Just to make sure nothing fishy happened */
+    assert(strlen(r) == len + extra);
+
+    return r;
+}
+
+////////////////////////////replaceSpaces/////////////////////////////
+//source: https://www.geeksforgeeks.org/urlify-given-string-replace-spaces/
+// Maximum length of string after modifications.
+//const short MaxLength
+ 
+// Replaces spaces with &nbsp; in-place and returns
+// new length of modified string. It returns -1
+// if modified string cannot be stored in str[]
+int replaceSpaces(char str[], const short MaxLength)
+{
+    // count spaces and find current length
+    int space_count = 0, i;
+    for (i = 0; str[i]; i++)
+        if (str[i] == ' ')
+            space_count++;
+ 
+    // Remove trailing spaces
+    while (str[i-1] == ' ')
+    {
+       space_count--;
+       i--;
+    }
+ 
+    // Find new length.
+    int new_length = i + space_count * 5 + 1;
+ 
+    // New length must be smaller than length
+    // of string provided.
+    if (new_length > MaxLength)
+        return -1;
+ 
+    // Start filling character from end
+    int index = new_length - 1;
+ 
+    // Fill string termination.
+    str[index--] = '\0';
+ 
+    // Fill rest of the string from end
+    for (int j=i-1; j>=0; j--)
+    {
+        // inserts %20 in place of space
+        if (str[j] == ' ')
+        {
+            str[index] = ';';
+            str[index - 1] = 'p';
+            str[index - 2] = 's';
+            str[index - 3] = 'b';
+            str[index - 4] = 'n';
+			str[index - 5] = '&';
+           index = index - 6;
+        }
+        else
+        {
+            str[index] = str[j];
+            index--;
+        }
+    }
+ 
+    return new_length;
 }
 
 
