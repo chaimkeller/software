@@ -115,7 +115,7 @@ char *IsoToUnicode( char *str );
 short LoadConstants(short zmanyes, short typezman, char filzman[] );
 short LoadTitlesSponsors();
 short PrintMultiColTable(char filzman[], short ExtTemp[] );
-char *round( double tim, short stepps, short accurr, short sp, char t3subb[] );
+char *round( double tim, short stepps, short accurr, short sp, char t3subb[], const short mode );
 char *EngCalDate(short ndy, short EngYear, short yl, char *caldate );
 void PST_iterate( short *k, short *j, short *i, short *ntotshabos, short *dayweek
 				 , short *yrn, short *fshabos, short *nshabos, short *addmon
@@ -479,7 +479,9 @@ structGold Gold;
 bool FixProfHgtBug = false; //fix the newreadDTM bug that recorded ground heights in the profile
 						   //instead of the calculation height = ground height + observer height
 double hgtobs = 1.8f;	   //maximum height of the observer, added for profile calculations
-/////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////added 031921/////////////////////////////////////////////
+bool checkForSpaces = false; //set to true to convert spaces in Hebrew strings to the HTML equivalent, &nbsp;
+/////////////////////////////////////////////////////////////////////////////////////////// 
 
 /////////////Hebrew Year/////////////////////
 short g_yrheb = 0; //Hebrew Year in numbers
@@ -1137,9 +1139,9 @@ __asm{
 		HebrewInterface = false;// true;//false; //=true for Hebrew webpages
 
 		//////////////////added 030921 /////////////diagnostics for single day/////////////////////////////////////////
-		SingleDay = false; //true;
+		SingleDay = true; //true;
 		SingleYr = 2021;
-		SingleDayNum = 162;
+		SingleDayNum = 300; //162;
 		g_Tground = 288.15;
 		g_Pressure = 1013.25;
 		////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2138,32 +2140,32 @@ short RdHebStrings()
 					{
 						case 0:
 							strcpy( &heb1[iheb][0], doclin );
-							newlen = replaceSpaces(&heb1[iheb][0], 255);
+							if (checkForSpaces) newlen = replaceSpaces(&heb1[iheb][0], 255);
 							break;
 						case 1:
 							strcpy( &heb2[iheb][0], doclin );
-							newlen = replaceSpaces(&heb2[iheb][0], 255);
+							if (checkForSpaces) newlen = replaceSpaces(&heb2[iheb][0], 255);
 							break;
 						case 2:
 							strcpy( &heb3[iheb][0], doclin );
-							newlen = replaceSpaces(&heb3[iheb][0], 255);
+							if (checkForSpaces) newlen = replaceSpaces(&heb3[iheb][0], 255);
 							break;
 						case 3:
 							strcpy( &heb4[iheb][0], doclin );
-							newlen = replaceSpaces(&heb4[iheb][0], 255);
+							if (checkForSpaces) newlen = replaceSpaces(&heb4[iheb][0], 255);
 							break;
 						case 4:
 							strcpy( &heb5[iheb][0], doclin );
-							newlen = replaceSpaces(&heb5[iheb][0], 255);
+							if (checkForSpaces) newlen = replaceSpaces(&heb5[iheb][0], 255);
 							break;
 						case 5:
 							strcpy( &heb6[iheb][0], doclin );
-							newlen = replaceSpaces(&heb6[iheb][0], 255);
+							if (checkForSpaces) newlen = replaceSpaces(&heb6[iheb][0], 255);
 							break;
 						case 6: //leave heb7[0] as NULL
 							if (iheb != 0) {
 								strcpy( &heb7[iheb][0],  doclin );
-								newlen = replaceSpaces(&heb7[iheb][0], 255);
+								if (checkForSpaces) newlen = replaceSpaces(&heb7[iheb][0], 255);
 							}
 							break;
 						case 7:
@@ -2259,7 +2261,7 @@ short RdHebErrorMessages()
 			fgets_CR(doclin, 255, stream); //read in line of text
 
 			strcpy( &heb8[iheb][0], doclin );
-			newlen = replaceSpaces(&heb8[iheb][0], 255);
+			if (checkForSpaces) newlen = replaceSpaces(&heb8[iheb][0], 255);
 
 			iheb++;
 		}
@@ -3554,7 +3556,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 			     ch2, " = ", &heb3[10][0], " | ", ch3, " = ", &heb3[9][0], " | ", buff1 );
 
 		//now filter the file for nonprinting characters
-		newlen = replaceSpaces(doclin, 1600);
+		if (checkForSpaces) newlen = replaceSpaces(doclin, 1600);
 	}
 	else
 	{
@@ -3646,49 +3648,49 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 				//increment line number
 				linnum++;
 
-				if (SingleDay && (SingleYr != myear || SingleDayNum != j )) continue;  //single day mode daynum check
-
-				//add new line tag for each new line
-				fprintf( stdout, "%s\n", "    <tr>");
-
 				InsertHolidays(caldayHeb, caldayEng, calday, calhebweek,
 					&i, &j, &k, &yrn, yl, &ntotshabos, &dayweek,
 					&fshabos, &nshabos, &addmon, iheb );
 
-				sprintf( doclin, "%s%s", caldayHeb, "\0" );
-		        parseit( doclin, &closerow, linnum, 1);
-				sprintf( doclin, "%s%s", calday, "\0");
-		        parseit( doclin, &closerow, linnum, 2);
-				sprintf( doclin, "%s%s", caldayEng, "\0" );
- 		        parseit( doclin, &closerow, linnum, 3);
-
 				nyr = atoi( Mid(caldayEng, 8, 4, buff) );
 				dy = (double)j;
 
-				if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
-					&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
-					&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
-					&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
-					&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+				if (!SingleDay || (SingleDay && SingleYr == nyr && SingleDayNum == j ))
 				{
-					//exectued without error, all the zemanim strings are in array c_zmantimes
-					//add them to table using parseit
-					for (m = 0; m < numsort; m++)
+					//add new line tag for each new line
+					fprintf( stdout, "%s\n", "    <tr>");
+
+					sprintf( doclin, "%s%s", caldayHeb, "\0" );
+					parseit( doclin, &closerow, linnum, 1);
+					sprintf( doclin, "%s%s", calday, "\0");
+					parseit( doclin, &closerow, linnum, 2);
+					sprintf( doclin, "%s%s", caldayEng, "\0" );
+ 					parseit( doclin, &closerow, linnum, 3);
+
+					if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
+						&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
+						&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
+						&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
+						&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
 					{
-						sprintf( doclin, "%s%s", Trim(&c_zmantimes[sortzman[m]][0]), "\0" );
-						if (m == numsort - 1)
+						//exectued without error, all the zemanim strings are in array c_zmantimes
+						//add them to table using parseit
+						for (m = 0; m < numsort; m++)
 						{
-							closerow = true;
+							sprintf( doclin, "%s%s", Trim(&c_zmantimes[sortzman[m]][0]), "\0" );
+							if (m == numsort - 1)
+							{
+								closerow = true;
+							}
+							parseit( doclin, &closerow, linnum, 0);
 						}
-						parseit( doclin, &closerow, linnum, 0);
+
 					}
-
+					else
+					{
+						return -1; //error detected
+					}
 				}
-				else
-				{
-					return -1; //error detected
-				}
-
 
 			}
 		}
@@ -3705,47 +3707,48 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 				//increment line number
 				linnum++;
 
-				if (SingleDay && (SingleYr != myear || SingleDayNum != j )) continue;  //single day mode daynum check
-
-
-				//add new line tag for each new line
-				fprintf( stdout, "%s\n", "    <tr>");
-
 				InsertHolidays(caldayHeb, caldayEng, calday, calhebweek,
 					&i, &j, &k, &yrn, yl, &ntotshabos, &dayweek,
-					&fshabos, &nshabos,	&addmon, iheb );
-				sprintf( doclin, "%s%s", caldayHeb, "\0" );
-		        parseit( doclin, &closerow, linnum, 1);
-				sprintf( doclin, "%s%s", calday, "\0");
-		        parseit( doclin, &closerow, linnum, 2);
-				sprintf( doclin, "%s%s", caldayEng, "\0" );
-		        parseit( doclin, &closerow, linnum, 3);
+					&fshabos, &nshabos, &addmon, iheb );
 
 				nyr = atoi( Mid(caldayEng, 8, 4, buff) );
 				dy = (double)j;
 
-				if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
-					&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
-					&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
-					&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
-					&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+				if (!SingleDay || (SingleDay && SingleYr == nyr && SingleDayNum == j ))
 				{
-					//exectued without error, all the zemanim strings are in array c_zmantimes
-					//add them to table using parseit
-					for (m = 0; m < numsort; m++)
-					{
-						sprintf( doclin, "%s%s", Trim(&c_zmantimes[sortzman[m]][0]), "\0" );
-						if (m == numsort - 1)
-						{
-							closerow = true;
-						}
-						parseit( doclin, &closerow, linnum, 0);
-					}
+					//add new line tag for each new line
+					fprintf( stdout, "%s\n", "    <tr>");
 
-				}
-				else
-				{
-					return -1; //error detected
+					sprintf( doclin, "%s%s", caldayHeb, "\0" );
+					parseit( doclin, &closerow, linnum, 1);
+					sprintf( doclin, "%s%s", calday, "\0");
+					parseit( doclin, &closerow, linnum, 2);
+					sprintf( doclin, "%s%s", caldayEng, "\0" );
+ 					parseit( doclin, &closerow, linnum, 3);
+
+					if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
+						&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
+						&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
+						&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
+						&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+					{
+						//exectued without error, all the zemanim strings are in array c_zmantimes
+						//add them to table using parseit
+						for (m = 0; m < numsort; m++)
+						{
+							sprintf( doclin, "%s%s", Trim(&c_zmantimes[sortzman[m]][0]), "\0" );
+							if (m == numsort - 1)
+							{
+								closerow = true;
+							}
+							parseit( doclin, &closerow, linnum, 0);
+						}
+
+					}
+					else
+					{
+						return -1; //error detected
+					}
 				}
 
 			}
@@ -3762,46 +3765,48 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 				//increment line number
 				linnum++;
 
-				if (SingleDay && (SingleYr != myear || SingleDayNum != j )) continue;  //single day mode daynum check
-
-				//add new line tag for each new line
-				fprintf( stdout, "%s\n", "    <tr>");
-
 				InsertHolidays(caldayHeb, caldayEng, calday, calhebweek,
 					&i, &j, &k, &yrn, yl, &ntotshabos, &dayweek,
-					&fshabos, &nshabos,	&addmon, iheb );
-				sprintf( doclin, "%s%s", caldayHeb, "\0" );
-				parseit( doclin, &closerow, linnum, 1);
-				sprintf( doclin, "%s%s", calday, "\0");
-				parseit( doclin, &closerow, linnum, 2);
-				sprintf( doclin, "%s%s", caldayEng, "\0" );
-				parseit( doclin, &closerow, linnum, 3);
+					&fshabos, &nshabos, &addmon, iheb );
 
-				nyr = atoi( Mid(caldayEng, 8, 4, buff));
+				nyr = atoi( Mid(caldayEng, 8, 4, buff) );
 				dy = (double)j;
 
-				if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
-					&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
-					&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
-					&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
-					&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+				if (!SingleDay || (SingleDay && SingleYr == nyr && SingleDayNum == j ))
 				{
-					//exectued without error, all the zemanim strings are in array c_zmantimes
-					//add them to table using parseit
-					for (m = 0; m < numsort; m++)
-					{
-						sprintf( doclin, "%s%s", Trim(&c_zmantimes[sortzman[m]][0]), "\0" );
-						if (m == numsort - 1)
-						{
-							closerow = true;
-						}
-						parseit( doclin, &closerow, linnum, 0);
-					}
+					//add new line tag for each new line
+					fprintf( stdout, "%s\n", "    <tr>");
 
-				}
-				else
-				{
-					return -1; //error detected
+					sprintf( doclin, "%s%s", caldayHeb, "\0" );
+					parseit( doclin, &closerow, linnum, 1);
+					sprintf( doclin, "%s%s", calday, "\0");
+					parseit( doclin, &closerow, linnum, 2);
+					sprintf( doclin, "%s%s", caldayEng, "\0" );
+ 					parseit( doclin, &closerow, linnum, 3);
+
+					if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
+						&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
+						&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
+						&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
+						&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+					{
+						//exectued without error, all the zemanim strings are in array c_zmantimes
+						//add them to table using parseit
+						for (m = 0; m < numsort; m++)
+						{
+							sprintf( doclin, "%s%s", Trim(&c_zmantimes[sortzman[m]][0]), "\0" );
+							if (m == numsort - 1)
+							{
+								closerow = true;
+							}
+							parseit( doclin, &closerow, linnum, 0);
+						}
+
+					}
+					else
+					{
+						return -1; //error detected
+					}
 				}
 
 			}
@@ -4448,7 +4453,7 @@ void timestring( short ii, short k, short iii )
 	positnear = InStr( ntim, "*" );
 	if (positnear != 0) Mid( ntim, 1, positnear - 1 ); //remove the "*"
 
-	if (positunder != 0)
+	if (positunder != 0 && ntim != " ") //don't underline skipped Shabbosim
 	{
 		sprintf( buff1, "%s%s%s", "<u>", ntim, "</u>" );
 		strcpy( ntim, buff1 );
@@ -4460,7 +4465,14 @@ void timestring( short ii, short k, short iii )
 		strcpy( ntim, buff1 );
 	}
 
-	sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font SIZE=\"1\" STYLE=\"font-size: 8pt\">", ntim, "</font></p>" );
+	if (! SingleDay)
+	{
+		sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font SIZE=\"1\" STYLE=\"font-size: 8pt\">", ntim, "</font></p>" );
+	}
+	else if (SingleDay && ntim != " ")
+	{
+		sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font SIZE=\"1\" STYLE=\"font-size: 8pt\"><b>", ntim, "</b></font></p>" );
+	}
 	fprintf(stdout, "%s\n", buff1 );
 	fprintf(stdout, "%s\n", "        </td>");
 
@@ -5738,6 +5750,33 @@ void ErrorHandler( short mode, short ier )
 				sprintf(errorstr, "%s%d%s","Function Temperatures returned ier = ",ier,"can't open bil file min,(1-12), avg (13-24), max(25-36)");
 			}
 			break;
+		case 18: //PrintSingleTable error
+			if (ier == -1 ) //civil date is not within the Hebrew year
+			{
+				if (!HebrewInterface)
+				{
+					fprintf(stdout,"\t%s\n", "<tr>");
+					fprintf(stdout,"\t\t%s\n", "<td><font size=\"4\" color=\"red\"><strong>The civil calendar day you chose doesn't fall within the chosen Hebrew Year!</strong></font></td>");
+					fprintf(stdout,"\t%s\n", "</tr>");
+					fprintf(stdout,"%s\n", "</table>");
+					fprintf(stdout,"%s\n", "<hr/>");
+					fprintf(stdout,"%s\n", "<p>" );
+					fprintf(stdout,"%s\n", "<font size=\"4\" color=\"black\">(To try again, use the return button of your browser)</font>" );
+					fprintf(stdout,"%s\n", "</p>" );
+				}
+				else //Hebrew Interface
+				{
+					fprintf(stdout,"\t%s\n", "<tr>");
+					fprintf(stdout,"\t\t%s%s%s\n", "<td><font size=\"4\" color=\"red\" dir=\"rtl\"><strong>", &heb8[18][0], "</strong></font></td>");
+					fprintf(stdout,"\t%s\n", "</tr>");
+					fprintf(stdout,"%s\n", "</table>");
+					fprintf(stdout,"%s\n", "<hr/>");
+					fprintf(stdout,"%s\n", "<p>" );
+					fprintf(stdout,"%s%s%s\n", "<font size=\"4\" color=\"black\" dir=\"rtl\">", &heb8[1][0], "</font>" );
+					fprintf(stdout,"%s\n", "</p>" );
+				}
+			}
+			break;
 		default:
 			break;
 	}
@@ -6668,7 +6707,13 @@ short SunriseSunset( short types, short ExtTemp[] )
 		}
 
 		tabletyp = 0; //visible sunrise index of tims
-		PrintSingleTable( 0, tabletyp ); //converts "tims" array in fractional hours to
+		ier = PrintSingleTable( 0, tabletyp ); //converts "tims" array in fractional hours to
+		if (ier) //error detected
+		{
+			ErrorHandler(18, ier); //-5 = Single Day can't be reached
+			return -1;
+		}
+
 		//time strings and prints out table to output
 		break;
 	case 6:
@@ -6677,7 +6722,12 @@ short SunriseSunset( short types, short ExtTemp[] )
 		{
 			//print the sunrise and sunsets as separate tables
 			tabletyp = 0; //visible sunrise index of tims
-			PrintSingleTable( 0, tabletyp ); //converts "tims" array in fractional hours to
+			ier = PrintSingleTable( 0, tabletyp ); //converts "tims" array in fractional hours to
+			if (ier) //error detected
+			{
+				ErrorHandler(18, ier); //-5 = Single Day can't be reached
+				return -1;
+		}
 		}
 		break;
 	case 2: //astronomical/mishor sunrise
@@ -6694,7 +6744,13 @@ short SunriseSunset( short types, short ExtTemp[] )
 			tabletyp = 4; //mishor sunrise index of tims
 		}
 
-		PrintSingleTable( 0, tabletyp ); //converts "tims" array in fractional hours to
+		ier = PrintSingleTable( 0, tabletyp ); //converts "tims" array in fractional hours to
+		if (ier) //error detected
+		{
+			ErrorHandler(18, ier); //-5 = Single Day can't be reached
+			return -1;
+		}
+		
 		//time strings and prints out table to output
 		break;
 	case 8:
@@ -6713,8 +6769,14 @@ short SunriseSunset( short types, short ExtTemp[] )
 				tabletyp = 4; //mishor sunrise index of tims
 			}
 
-			PrintSingleTable( 0, tabletyp ); //converts "tims" array in fractional hours to
+			ier = PrintSingleTable( 0, tabletyp ); //converts "tims" array in fractional hours to
 						//time strings and prints out table to output
+			if (ier) //error detected
+			{
+				ErrorHandler(18, ier); //-5 = Single Day can't be reached
+				return -1;
+			}
+		
 		}
 		break;
 	}
@@ -6857,7 +6919,13 @@ short SunriseSunset( short types, short ExtTemp[] )
 			}
 
 			tabletyp = 1; //visible sunset index of tims
-			PrintSingleTable( 1, tabletyp ); //converts "tims" array in fractional hours to
+			ier = PrintSingleTable( 1, tabletyp ); //converts "tims" array in fractional hours to
+			if (ier) //error detected
+			{
+				ErrorHandler(18, ier); //-5 = Single Day can't be reached
+				return -1;
+			}
+		
 			//time strings and prints out table to output
 		break;
 	case 6:
@@ -6866,8 +6934,14 @@ short SunriseSunset( short types, short ExtTemp[] )
 		{
 			//print the sunrise and sunsets as separate tables
 		  tabletyp = 1; //visible sunrise index of tims
-		  PrintSingleTable( 1, tabletyp ); //converts "tims" array in fractional hours to
+		  ier = PrintSingleTable( 1, tabletyp ); //converts "tims" array in fractional hours to
 							  //time strings and prints out table to output
+		  if (ier) //error detected
+		  {
+		      ErrorHandler(18, ier); //-5 = Single Day can't be reached
+			  return -1;
+		  }
+		
 		}
 		break;
 	case 3: //astronomical/mishor sunset
@@ -6884,7 +6958,13 @@ short SunriseSunset( short types, short ExtTemp[] )
 			tabletyp = 5; //mishor sunset index of tims
 		}
 
-		PrintSingleTable( 1, tabletyp ); //converts "tims" array in fractional hours to
+		ier = PrintSingleTable( 1, tabletyp ); //converts "tims" array in fractional hours to
+		if (ier) //error detected
+		{
+			ErrorHandler(18, ier); //-5 = Single Day can't be reached
+			return -1;
+		}
+
 		//time strings and prints out table to output
 		break;
 	case 8:
@@ -6903,8 +6983,14 @@ short SunriseSunset( short types, short ExtTemp[] )
 			  tabletyp = 5; //mishor sunset index of tims
 		  }
 
-		  PrintSingleTable( 1, tabletyp ); //converts "tims" array in fractional hours to
+		  ier = PrintSingleTable( 1, tabletyp ); //converts "tims" array in fractional hours to
 						//time strings and prints out table to output
+		  if (ier) //error detected
+		  {
+			  ErrorHandler(18, ier); //-5 = Single Day can't be reached
+			  return -1;
+		  }
+		
 		}
 	  break;
 	}
@@ -7096,9 +7182,15 @@ short SunriseSunset( short types, short ExtTemp[] )
 				accur[1] = -cushion[3];
 			}
 
-		PrintSingleTable( nsetflag, tabletyp ); //converts "tims" array in fractional hours to
+		ier = PrintSingleTable( nsetflag, tabletyp ); //converts "tims" array in fractional hours to
 				//time strings and prints out table to output
 
+		if (ier) //error detected
+		{
+			ErrorHandler(18, ier); //-5 = Single Day can't be reached
+			return -1;
+		}
+		
 		////////////////printing sunrises and sunsets together, printing zemanim///////////
 
 		}
@@ -9081,6 +9173,9 @@ short PrintSingleTable(short setflag, short tbltypes)
 	short myear = 0;
 	short fshabos = 0;
 	short iheb = 0;
+	short ynum = 0;
+	bool foundday = false;
+
 
 	NearWarning[0] = false;
 	NearWarning[1] = false;
@@ -9098,6 +9193,18 @@ short PrintSingleTable(short setflag, short tbltypes)
    	myear = g_yrheb - 3761;
 
 	yl = YearLength( myear );
+
+	if (SingleDay)
+	{
+		if (SingleYr == myear) 
+		{
+			ynum = 1; //first civil year within the Hebrew year chosen for calculation
+		}
+		else
+		{
+			ynum = 2; //second civil year within the Hebrew year chosen for calculation
+		}
+	}
 
 	sp = 1; //round up
 	if (setflag == 1) sp = 2; //round down
@@ -9121,6 +9228,8 @@ short PrintSingleTable(short setflag, short tbltypes)
 			for (j = g_mmdate[0][i - 1]; j <= g_mmdate[1][i - 1]; j++)
 			{
 
+			    if (SingleDay && (ynum == yrn && SingleDayNum == j )) foundday = true;  //single day mode daynum check
+
 				PST_iterate( &k, &j, &i, &ntotshabos, &dayweek, &yrn, &fshabos,
 					         &nshabos, &addmon, setflag, sp, tbltypes, yl, iheb );
 			}
@@ -9136,6 +9245,8 @@ short PrintSingleTable(short setflag, short tbltypes)
 			for (j = g_mmdate[0][i - 1]; j <= yrend[0]; j++)
 			{
 
+			    if (SingleDay && (ynum == yrn && SingleDayNum == j )) foundday = true;  //single day mode daynum check
+
 				PST_iterate( &k, &j, &i, &ntotshabos, &dayweek, &yrn, &fshabos,
 					         &nshabos, &addmon, setflag, sp, tbltypes, yl, iheb );
 			}
@@ -9146,12 +9257,20 @@ short PrintSingleTable(short setflag, short tbltypes)
 			for (j = 1; j <= g_mmdate[1][i - 1]; j++)
 			{
 
+			    if (SingleDay && (ynum == yrn && SingleDayNum == j )) foundday = true;  //single day mode daynum check
+
 				PST_iterate( &k, &j, &i, &ntotshabos, &dayweek, &yrn, &fshabos,
 					         &nshabos, &addmon, setflag, sp, tbltypes, yl, iheb );
 			}
 
 
 		}
+	}
+
+	if (SingleDay && !foundday)
+	{
+		//chosen civil day doesn't fall into the Hebrew year
+		return -1;
 	}
 
 	//print out single tables to stdout or to html
@@ -9263,7 +9382,8 @@ void PST_iterate( short *k, short *j, short *i, short *ntotshabos, short *daywee
 
 	*k += 1;
 
-	round( tims[*yrn - 1][tbltypes][*j - 1], steps[setflag], accur[setflag], sp, t3subb );
+		
+	round( tims[*yrn - 1][tbltypes][*j - 1], steps[setflag], accur[setflag], sp, t3subb, 0 );
 
 	if (tbltypes == 0 || tbltypes == 1) //check for near obstructions
 	{
@@ -9276,8 +9396,8 @@ void PST_iterate( short *k, short *j, short *i, short *ntotshabos, short *daywee
 		//check for insufficient azimuth range
 		if (InStr(t3subb, "?"))
 		{
-            InsufficientAzimuth[setflag] = true;                
-        }
+			InsufficientAzimuth[setflag] = true;                
+		}
 	}
 
 	if (*fshabos + *nshabos * 7 == *j) //this is shabbos
@@ -9296,6 +9416,8 @@ void PST_iterate( short *k, short *j, short *i, short *ntotshabos, short *daywee
 		}
 	}
 
+	
+
 	//now actually store the time string
 	strcpy( &stortim[setflag][*i - 1][*k - 1][0], t3subb );
 
@@ -9304,7 +9426,7 @@ void PST_iterate( short *k, short *j, short *i, short *ntotshabos, short *daywee
 
 
 ///////////////////////function round///////////////////////////
-char *round( double tim, short stepps, short accurr, short sp, char t3subb[] )
+char *round( double tim, short stepps, short accurr, short sp, char t3subb[], const short mode )
 ////////////////////////////////////////////////////////////////
 //converts fractional hour into time string
 //rounds to requested step size and adds cushions
@@ -9314,7 +9436,10 @@ char *round( double tim, short stepps, short accurr, short sp, char t3subb[] )
 /////////////////////////////////////////////////////////////
 //sp = 1 forces rounding up
 //sp = 2 or -1 forces rounding down
-////////////////////////////////////////////////////////////////
+//////////////////////////////////added 031721////////////////////////////
+//mode = 0 for netz, sky tables (used for not underlinning, or lining out skipped days)
+//mode = 1 for zemanim
+/////////////////////////////////////////////////////////////////////
 //usage:
 /*
 	double tim;
@@ -9343,8 +9468,16 @@ char *round( double tim, short stepps, short accurr, short sp, char t3subb[] )
     }
 	else if ( tim == 0.0 )
 	{
-		sprintf( t3subb, "%s", "-----" ); //candle lighting not applicable
-		return t3subb;
+		if (mode == 1)
+		{
+			sprintf( t3subb, "%s", "-----" ); //candle lighting not applicable
+			return t3subb;
+		}
+		else if (mode == 0) //skipped day since SingleDay mode is activated
+		{
+			sprintf( t3subb, "%s", " " ); //return blank;
+			return t3subb;
+		}
 	}
 
 
@@ -14230,11 +14363,6 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 	}
 
 
-	//////////////////added 030921////Single Day's temp, press don't apply to zemanim//////////
-	if (SingleDay) SingleDay = false; //don't limit temperatures for zemanim phase of calculations
-	////////////////////////////////////////////////////////////////////////////////////////////
-
-
 	short ier = Temperatures(lt, -lg, MinTemp, AvgTemp, MaxTemp);
 
 	if (ier) //error detected
@@ -15049,7 +15177,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 		 }
 
 		 zmantimes[n] = t3sub;
-		 round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb );
+		 round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb, 1 );
 		 sprintf( &c_zmantimes[n][0], "%s", t3subb );
 		 //sprintf( &zmantitles[num][0], "%s", &zmannames[n][0][0] );
 
@@ -15062,7 +15190,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 		   if ( *dayweek == 6 ) //Then Erev Shabbos
 		   {
 			  t3sub = zmantimes[n];
-			  round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb );
+			  round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb, 1 );
 			  sprintf( &c_zmantimes[n][0], "%s", t3subb );
 
 		   }
@@ -15089,21 +15217,21 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 					if ( *dayweek == 7 || *dayweek == 0 ) // Then Shabbos
 					{
 						//this is erev yom-tov that falls on shabbos (NO CANDLE LIGHTING!)
-						round( 0.0, 0, 0, 0, t3subb ); //outputs "-----"
+						round( 0.0, 0, 0, 0, t3subb, 1 ); //outputs "-----"
 						sprintf( &c_zmantimes[n][0], "%s", t3subb );
 						sprintf( &zmantitles[n][0], "%s", &zmannames[n][0][0] );
 					}
 					else
 					{
 					t3sub = zmantimes[n];
-					round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb );
+					round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb, 1 );
 					sprintf( &c_zmantimes[n][0], t3subb );
 					}
 
 				}
 				else
 				{
-				round( 0.0, 0, 0, 0, t3subb ); //outputs "-----"
+				round( 0.0, 0, 0, 0, t3subb, 1 ); //outputs "-----"
 				sprintf( &c_zmantimes[n][0], "%s", t3subb );
 				}
 		   }
@@ -15111,7 +15239,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 	   else
 	   {
 		  t3sub = zmantimes[n];
-		  round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb );
+		  round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb, 1 );
 		  sprintf( &c_zmantimes[n][0], "%s", t3subb );
 	   }
 
