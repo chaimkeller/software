@@ -5767,7 +5767,7 @@ void ErrorHandler( short mode, short ier )
 				else //Hebrew Interface
 				{
 					fprintf(stdout,"\t%s\n", "<tr>");
-					fprintf(stdout,"\t\t%s%s%s\n", "<td><font size=\"4\" color=\"red\" dir=\"rtl\"><strong>", &heb8[18][0], "</strong></font></td>");
+					fprintf(stdout,"\t\t%s%s%s\n", "<td><font size=\"4\" color=\"red\" dir=\"rtl\"><strong>", &heb8[23][0], "</strong></font></td>");
 					fprintf(stdout,"\t%s\n", "</tr>");
 					fprintf(stdout,"%s\n", "</table>");
 					fprintf(stdout,"%s\n", "<hr/>");
