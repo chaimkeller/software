@@ -141,12 +141,10 @@ void InitAstConst(short *nyr, short *nyd, double *ac, double *mc,
 							   double *ec, double *e2c, double *ap, double *mp,
 							   double *ob, short *nyf, double *td);
 void AstronRefract( double *hgt, double *lt, short *nweather, short *PartOfDay,
-				    double *dy, short *ns1, short *ns2,
-					double *air, double *a1,
-					short mint[], short avgt[], short maxt[], 
-					double *t, double *p, 
-					double *vdwsf, double *vdwrefr, double *vbweps, short *nyr,
-					const bool *SingleDayModel);
+				    const double *dy, short *ns1, short *ns2,
+					double *air, double *a1,short mint[], short avgt[], short maxt[], 
+					double *t, double *p,double *vdwsf, double *vdwrefr, double *vbweps,
+					const short *nyr, const bool *SingleDayModel);
 void InitWeatherRegions( double *lt, double *lg, 
 						 short *nweather, short *ns1, short *ns2,
 						 short *ns3, short *ns4, double *WinTemp,
@@ -217,8 +215,8 @@ double Decl3(double *, double *, double *, double *, short *, short *,
 ////////////////WorldClim temperature files///////////////////////////////
 short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] );
 
-short DaysInYear(short *nyr);
-double MonthFromDay(short *nyl, double *dy);
+short DaysInYear(const short *nyr);
+double MonthFromDay(const short *nyl, const double *dy);
 
 double obliqeq(double *jd);
 
@@ -1080,22 +1078,21 @@ __asm{
 		}
 		////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 		CGI = 1;
 
    }
 /*//<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
 	else if (argc == 1) //not using console
 	{
-		strcpy( TableType, "Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( MetroArea, "chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
 		g_yrheb = 5781; //5779;//5776; //5775;
-		zmanyes = 1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
+		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
 		typezman = 8; // acc. to which opinion
-		optionheb = true;//false;
+		optionheb = false; //true;//false;
 		RoundSecondsin = 1;//5;
 
 		///unique to Chai tables
@@ -1124,8 +1121,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -1141,10 +1138,17 @@ __asm{
 		//////////////////added 030921 /////////////diagnostics for single day/////////////////////////////////////////
 		SingleDay = true; //true;
 		SingleYr = 2021;
-		SingleDayNum = 300; //162;
-		g_Tground = 288.15;
-		g_Pressure = 1013.25;
+		SingleDayNum = 83; //300; //162;
+		g_Tground = -9999; //288.15;
+		g_Pressure = -9999; //1013.25;
 		////////////////////////////////////////////////////////////////////////////////////////////////
+
+		/////////////////diagnostics  032421 /////////////////
+		//http://localhost/cgi-bin/ChaiTables.cgi/?cgi_TableType=BY&cgi_country=Eretz_Yisroel&cgi_USAcities1=1&cgi_USAcities2=0
+		//&cgi_searchradius=&cgi_Placename=?&cgi_eroslatitude=0.0&cgi_eroslongitude=0.0&cgi_eroshgt=0.0&cgi_geotz=2&cgi_exactcoord=OFF
+		//&cgi_MetroArea=chazon&cgi_types=0&cgi_RoundSecond=1&cgi_24hr=&cgi_typezman=-1&cgi_yrheb=5781&cgi_optionheb=1&cgi_UserNumber=62800
+		//&cgi_Language=English&cgi_AllowShaving=ON&cgi_SingleDay=ON&cgi_Tground=-9999&cgi_Pressure=-9999&cgi_SingleYr=2021&cgi_SingleDayNum=83
+		/////////////////////////////////////////////////////////////////////////////
 
 		
 	}
@@ -3569,15 +3573,15 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 
 	if (optionheb)
 	{
-		fprintf( stdout, "%s%s%s\n", "<font size = '3' dir='rtl'>", doclin, "</font>"); //print the legend for the csv, htm, and zip files
+		fprintf( stdout, "%s%s%s\n", "<p style=\"text-align:center\"><font size = '3' dir='rtl'>", doclin, "</font></p>"); //print the legend for the csv, htm, and zip files
 	}
 	else
 	{
-		fprintf( stdout, "%s%s%s\n", "<font size = '3'>", doclin, "</font>"); //print the legend for the csv, htm, and zip files
+		fprintf( stdout, "%s%s%s\n", "<p style=\"text-align:center\"><font size = '3'>", doclin, "</font></p>"); //print the legend for the csv, htm, and zip files
 	}
 
-	fprintf( stdout, "%s\n", "<br/>"); //spacers between columnheaders and time
-	fprintf( stdout, "%s\n", "<br/>");
+	//fprintf( stdout, "%s\n", "<br/>"); //spacers between columnheaders and time
+	//fprintf( stdout, "%s\n", "<br/>");
 
 	if (optionheb)
 	{
@@ -10956,10 +10960,6 @@ alem */
 		//-----------------------------------------------------
 		for ( dy = (double) yrstrt[nyear - FirstSecularYr]; dy <= d__1; dy++)
 		{
-			////////////////////////////////added 030921/////////////////////////////////////////////////////////////////////////
-			//if singleday calculation flagged, only calculate the netz/skiya for this day alone
-			if ( SingleDay && (nyear != SingleYr || dy != SingleDayNum) ) continue; //only run calculation for this single day
-			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			//day iteration
 			ndystp = (int)dy;
@@ -10968,6 +10968,12 @@ alem */
 			AstroNoon( &jdn, &td, &dy1, &mp, &mc, &ap, &ac, &ms, &aas, &es, &ob, &d__,
 				       &tf, &nyear, &mday, &mon, &nyl, &t6);
 			////////////////////////////////////////////////////////////////////////////
+
+			////////////////////////////////added 030921/////////////////////////////////////////////////////////////////////////
+			//if singleday calculation flagged, only calculate the netz/skiya for this day alone
+			if ( SingleDay && (nyear != SingleYr || dy != SingleDayNum) ) continue; //only run calculation for this single day
+			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 			if (nfil == 0)
 			{
@@ -12915,10 +12921,10 @@ void InitAstConst(short *nyr, short *nyd, double *ac, double *mc,
 
 ////////////////////////////AstronRefract////////////////////////
 void AstronRefract( double *hgt, double *lt, short *nweather, short *PartOfDay,
-				    double *dy, short *ns1, short *ns2,	double *air, double *a1,
-					short mint[], short avgt[], short maxt[], double *t, double *p,
-					double *vdwsf, double *vdwrefr, double *vbweps, short *nyr,
-					const bool *SingleDayModel)
+				    const double *dy, short *ns1, short *ns2,	
+					double *air, double *a1, short mint[], short avgt[], short maxt[],
+					double *t, double *p, double *vdwsf, double *vdwrefr, double *vbweps,
+					const short *nyr,	const bool *SingleDayModel)
 //////////////////////////////////////////////////////////////////////////////////
 //calculates astronomical refraction for a user's height, hgt
 ////explanation of refraction terms//////////
@@ -12985,11 +12991,11 @@ double tk, d__2, refrac1;
 		}
 
 		//////////////////////added 030921 -- for single day calculation, use its inputted Tground and Pressure, if any///
-		if (*SingleDayModel) //using the single day ground and temperature and pressure (if inputed)
+		if (*SingleDayModel && SingleDayNum == *dy && SingleYr == *nyr) //using the single day ground and temperature and pressure (if inputed)
 		{
 			if (g_Tground == -9999)
 			{
-				*t = 288.15;
+				*t = tk;
 			}
 			else
 			{
@@ -19021,7 +19027,7 @@ short lenMonth( short x) {
 }
 
 ///////////////DaysInYear deter__mins the number of days in the year///////////////
-short DaysInYear(short *nyr)
+short DaysInYear(const short *nyr)
 //////////////////////////////////////////////////////////////////////////////////
 {
 	short nyl = 365;
@@ -19036,7 +19042,7 @@ short DaysInYear(short *nyr)
 
 ////////////////MonthFromDay////////////////////////////////
 //find the month of the year given the day and the length of the year
-double MonthFromDay(short *nyl, double *dy)
+double MonthFromDay(const short *nyl, const double *dy)
 {
 	short k = 2;
 
