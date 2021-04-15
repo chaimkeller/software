@@ -17,6 +17,55 @@ Begin VB.Form mapgraphfm
    ScaleHeight     =   6750
    ScaleWidth      =   8130
    Visible         =   0   'False
+   Begin VB.Frame frmObstructions 
+      Caption         =   "obstructions"
+      Height          =   615
+      Left            =   6250
+      TabIndex        =   38
+      Top             =   5550
+      Width           =   1560
+      Begin VB.CheckBox chkObstruction 
+         Caption         =   "Activate"
+         Height          =   195
+         Left            =   1200
+         TabIndex        =   41
+         ToolTipText     =   "Check to activate skipping when obstructions are numerous"
+         Top             =   280
+         Width           =   255
+      End
+      Begin MSComCtl2.UpDown UpDownObst 
+         Height          =   285
+         Left            =   720
+         TabIndex        =   40
+         Top             =   240
+         Width           =   255
+         _ExtentX        =   450
+         _ExtentY        =   503
+         _Version        =   393216
+         AutoBuddy       =   -1  'True
+         BuddyControl    =   "txtObstructions"
+         BuddyDispid     =   196611
+         OrigLeft        =   840
+         OrigTop         =   240
+         OrigRight       =   1095
+         OrigBottom      =   495
+         Max             =   100
+         SyncBuddy       =   -1  'True
+         Wrap            =   -1  'True
+         BuddyProperty   =   0
+         Enabled         =   -1  'True
+      End
+      Begin VB.TextBox txtObstructions 
+         Alignment       =   2  'Center
+         Height          =   285
+         Left            =   240
+         TabIndex        =   39
+         Text            =   "50"
+         ToolTipText     =   "Percent of obstructions to reject"
+         Top             =   240
+         Width           =   480
+      End
+   End
    Begin MSComCtl2.UpDown updnDelay 
       Height          =   285
       Left            =   1560
@@ -30,7 +79,7 @@ Begin VB.Form mapgraphfm
       Value           =   1
       AutoBuddy       =   -1  'True
       BuddyControl    =   "txtDelay"
-      BuddyDispid     =   196609
+      BuddyDispid     =   196612
       OrigLeft        =   1560
       OrigTop         =   5760
       OrigRight       =   1800
@@ -53,11 +102,11 @@ Begin VB.Form mapgraphfm
    Begin VB.CommandButton cmdExit 
       Caption         =   "&Exit"
       Height          =   195
-      Left            =   3600
+      Left            =   7200
       TabIndex        =   34
-      Top             =   6180
+      Top             =   5280
       Visible         =   0   'False
-      Width           =   1635
+      Width           =   675
    End
    Begin MSComCtl2.UpDown UpDown2 
       Height          =   495
@@ -72,7 +121,7 @@ Begin VB.Form mapgraphfm
       Value           =   5
       AutoBuddy       =   -1  'True
       BuddyControl    =   "Text3"
-      BuddyDispid     =   196611
+      BuddyDispid     =   196614
       OrigLeft        =   4380
       OrigTop         =   5640
       OrigRight       =   4620
@@ -133,6 +182,7 @@ Begin VB.Form mapgraphfm
       Width           =   735
    End
    Begin VB.PictureBox Picture2 
+      AutoRedraw      =   -1  'True
       BorderStyle     =   0  'None
       Height          =   4815
       Left            =   60
@@ -205,6 +255,7 @@ Begin VB.Form mapgraphfm
          Width           =   1815
       End
       Begin VB.PictureBox Picture3 
+         AutoRedraw      =   -1  'True
          BorderStyle     =   0  'None
          Height          =   3255
          Left            =   390
@@ -255,7 +306,7 @@ Begin VB.Form mapgraphfm
       _Version        =   393216
       AutoBuddy       =   -1  'True
       BuddyControl    =   "Text1"
-      BuddyDispid     =   196626
+      BuddyDispid     =   196629
       OrigLeft        =   4440
       OrigTop         =   4920
       OrigRight       =   4680
@@ -745,7 +796,9 @@ cb25:        Close #filcit%
 160:
       With mapgraphfm
         .Picture2.Visible = True
+        .Picture2.Refresh
         .Picture3.Visible = True
+        .Picture3.Refresh
         .MSFlexGrid1.Visible = False
         .restorelimitsbut.Enabled = False
         .Text3.Enabled = False
@@ -753,17 +806,26 @@ cb25:        Close #filcit%
         .Command2.Enabled = False
         .Command3.Enabled = False
         .Text1.Visible = True
+        .Text1.Refresh
         .UpDown1.Visible = True
         .Text2.Visible = True
+        .Text2.Refresh
         .Label10.Visible = True
+        .Label10.Refresh
         .Frame1.Visible = True
+        .Frame1.Refresh
         .Label12.Visible = True
+        .Label12.Refresh
         .Calendarbut.Enabled = True
+        .Calendarbut.Refresh
       
         If AutoProf Or AutoScanlist Then
            .shpDelay.Visible = True
+           .shpDelay.Refresh
            .lblDelay.Visible = True
+           .lblDelay.Refresh
            .txtDelay.Visible = True
+           .txtDelay.Refresh
            .updnDelay.Visible = True
            End If
            
@@ -838,6 +900,7 @@ cb25:        Close #filcit%
          TimeZonebut.Enabled = False
          End If
       mapgraphfm.Command3.Enabled = True
+      mapgraphfm.frmObstructions.Enabled = True
       ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
       ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
       'make save files (.pr* files, fnz,fsk files and directories)
@@ -961,10 +1024,13 @@ cb50: If dirsavecheck.value = vbUnchecked Then
          'If world = True Then
          '   fnn$ = Mid$(fileo$, 1, 8)
          'Else
-          fnn$ = OutFile$ 'Mid$(fileo$, 1, 8)
+          'fnn$ = OutFile$ 'Mid$(fileo$, 1, 8)
+          fnn$ = Mid$(OutFile$, 1, 8)
+          iipr$ = Mid$(OutFile$, 9, 4)
          '    End If
          '-----------new procedures and formats----------
-         GoTo ca80
+         'GoTo ca80
+         GoTo ca81
          '-----------------------------------------------
          
          ipr% = 1
@@ -975,24 +1041,40 @@ ca50:    If ipr% < 10 Then
          ElseIf ipr% >= 100 And ipr% < 999 Then
             iipr$ = "." + LTrim(Str$(ipr%))
          ElseIf ipr% > 999 Then
-            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            response = MsgBox("You have exceeded the maximum number of profile files allowed for any unique root name (defined by the first 4 letters of the city directory name)--pick a different name!", vbCritical + vbOKOnly, "Maps & More")
-            ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            Screen.MousePointer = vbDefault
-            GoTo ca999
+            'rename the root
+           newRootNum = -1
+ca60:      newRootNum = newRootNum + 1
+            fnn$ = Mid$(fnn$, 1, 6) + Format(LTrim(Str$(newRootNum)), "00")
+            ipr% = 1
+ca70:      If ipr% < 10 Then
+                iipr$ = ".pr" + LTrim(Str$(ipr%))
+            ElseIf ipr% >= 10 And ipr% < 100 Then
+               iipr$ = ".p" + LTrim(Str$(ipr%))
+            ElseIf ipr% >= 100 And ipr% < 999 Then
+               iipr$ = "." + LTrim(Str$(ipr%))
+            ElseIf ipr% > 999 Then
+               GoTo ca60
+               End If
+               
+            tmpfil$ = dirfile$(Mode%) + fnn$ + iipr$
+            'check if this file already exists
+            myfile = Dir(tmpfil$)
+            If myfile <> sEmpty Then
+               ipr% = ipr% + 1
+               GoTo ca70
+            Else
+               GoTo ca80
+               End If
             End If
-         tmpfil$ = dirfile$(Mode%) + fnn$ + iipr$
+ca75:    tmpfil$ = dirfile$(Mode%) + fnn$ + iipr$
          'check if this file already exists
          myfile = Dir(tmpfil$)
          If myfile <> sEmpty Then
             ipr% = ipr% + 1
             GoTo ca50
             End If
-         FileCopy fileo$, tmpfil$
-            
-ca80:
+ca80:    FileCopy fileo$, tmpfil$
+ca81:
          'look for a preexisting bat file
          cityname$ = LTrim$(RTrim$(Mid$(Combo2.Text, 1, 4)))
          If Dir(dirfile$(Mode%) + "*.bat") = sEmpty Then '<<<
@@ -1260,33 +1342,58 @@ ca80:
          Else
             fnn$ = LTrim$(RTrim$(Combo2.Text)) + String$(8 - lenfil%, "0")
             End If
-ca180:   newfile% = FreeFile
+
+ca82:    newfile% = FreeFile
          If world = False Then fnn$ = Mid$(fileo$, 1, 8)
          ipr% = 1
-ca200:   If ipr% < 10 Then
+ca84:    If ipr% < 10 Then
             iipr$ = ".pr" + LTrim(Str$(ipr%))
          ElseIf ipr% >= 10 And ipr% < 100 Then
             iipr$ = ".p" + LTrim(Str$(ipr%))
          ElseIf ipr% >= 100 And ipr% < 999 Then
             iipr$ = "." + LTrim(Str$(ipr%))
          ElseIf ipr% > 999 Then
-            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            response = MsgBox("You have exceeded the maximum number of profile files allowed for any unique root name (defined by the first 4 letters of the city directory name)--pick a different name!", vbCritical + vbOKOnly, "Maps & More")
-            ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            Screen.MousePointer = vbDefault
-            GoTo ca999
+             'rename the root
+            newRootNum = -1
+ca86:       newRootNum = newRootNum + 1
+            fnn$ = Mid$(fnn$, 1, 6) + Format(LTrim(Str$(newRootNum)), "00")
+            ipr% = 1
+ca88:       If ipr% < 10 Then
+                iipr$ = ".pr" + LTrim(Str$(ipr%))
+            ElseIf ipr% >= 10 And ipr% < 100 Then
+               iipr$ = ".p" + LTrim(Str$(ipr%))
+            ElseIf ipr% >= 100 And ipr% < 999 Then
+               iipr$ = "." + LTrim(Str$(ipr%))
+            ElseIf ipr% > 999 Then
+               GoTo ca86
+               End If
+               
+            tmpfil$ = dirfile$(Mode%) + fnn$ + iipr$
+            'check if this file already exists
+            myfile = Dir(tmpfil$)
+            If myfile <> sEmpty Then
+               ipr% = ipr% + 1
+               GoTo ca88
+            Else
+               GoTo ca90
+               End If
+'            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            response = MsgBox("You have exceeded the maximum number of profile files allowed for any unique root name (defined by the first 4 letters of the city directory name)--pick a different name!", vbCritical + vbOKOnly, "Maps & More")
+'            ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            Screen.MousePointer = vbDefault
+'            GoTo ca999
             End If
          tmpfil$ = dirfile$(Mode%) + fnn$ + iipr$
          'check if this file already exists
          myfile = Dir(tmpfil$)
          If myfile <> sEmpty Then
             ipr% = ipr% + 1
-            GoTo ca200
+            GoTo ca84
             End If
          'Open tmpfil$ For Output As #newfile%
-         FileCopy plotfile$, tmpfil$
+ca90:    FileCopy plotfile$, tmpfil$
          'Write #newfile%, "FILENAME, LAT, LOG, HGT: ", erosfile$(mode%), kmyeros, kmxeros, hgteros
          'Print #newfile%, "  AZI  VIEWANG+REFRACT   FLGSUM   FLGWIN"
          batname$ = dirfile$(Mode%) + cityname$ + ".bat"
@@ -1499,6 +1606,14 @@ Private Sub Check1_Click()
       End If
 End Sub
 
+Private Sub chkObstruction_Click()
+   If chkObstruction.value = vbChecked Then
+      ObstructionCheck = True
+   Else
+      ObstructionCheck = False
+      End If
+End Sub
+
 Private Sub cmdExit_Click()
    Call form_queryunload(0, 0)
 End Sub
@@ -1550,7 +1665,19 @@ Private Sub Command2_Click()
    Call sunrisesunset(10) 'mode=10 = automatic DirectX press mode
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : Command3_Click
+' Author    : chaim
+' Date      : 7/21/2020
+' Purpose   :
+'---------------------------------------------------------------------------------------
+'
 Private Sub Command3_Click()
+
+   Dim percentObstruction As Double
+   
+   On Error GoTo Command3_Click_Error
+
       Screen.MousePointer = vbHourglass
       'erase old center line
       mapgraphfm.Picture1.Line (drag1x, drag1y)-(drag2x, drag2y), QBColor(15), B
@@ -1617,12 +1744,14 @@ Private Sub Command3_Click()
            Seek #filtmp%, 1
            Line Input #filtmp%, doclin$
            Line Input #filtmp%, doclin$
+           percentObstruction = 0
            For i% = 1 To nnpnt%
               Input #filtmp%, azi, va, logi, lati, dista, hgti
               xcord = ((azi - xmin) / (xmax - xmin)) * mapgraphfm.Picture1.Width
               ycord = mapgraphfm.Picture1.Height - ((va - ymin) / (ymax - ymin)) * mapgraphfm.Picture1.Height
               If dista <= Val(Text3.Text) Then
                  linecolor = QBColor(14)
+                 percentObstruction = percentObstruction + 1
               Else
                  linecolor = QBColor(1)
                  End If
@@ -1645,8 +1774,27 @@ Private Sub Command3_Click()
               mapgraphfm.Picture1.Line (xcord1, ycord)-(mapgraphfm.Picture1.Width, ycord), QBColor(0)
               End If
            End If
+           
+           percentObstruction = 100 * percentObstruction / nnpnt%
+           If percentObstruction > Val(txtObstructions.Text) And chkObstruction.value = vbChecked Then
+              'don't record this profile
+              'wait a little bit before skipping
+              waitime = Timer
+              Do Until Timer > waitime + 0.5
+                 DoEvents
+              Loop
+              cmdExit.value = True
+              End If
+           
         Screen.MousePointer = vbDefault
    'reprocess graph with new limits
+
+   On Error GoTo 0
+   Exit Sub
+
+Command3_Click_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Command3_Click of Form mapgraphfm"
 End Sub
 
 Private Sub dirsavecheck_Click()
@@ -1663,6 +1811,13 @@ Private Sub dirsavecheck_Click()
 End Sub
 
 Private Sub form_load()
+
+   If world Then
+      Text3.Text = 6
+      If ObstructionCheck Then
+         chkObstruction.value = vbChecked
+         End If
+      End If
    
    If AutoScanlist Then
       mapgraphfm.txtDelay = Str$(IntOld2%)
@@ -1707,6 +1862,7 @@ Private Sub form_load()
        Command2.Enabled = False
        TimeZonebut.Enabled = False
        Command3.Enabled = False
+       frmObstructions.Enabled = False
        Text3.Enabled = False
        UpDown2.Enabled = False
        restorelimitsbut.Enabled = True
@@ -1851,6 +2007,7 @@ errmk% = 1
          End If
       mapgraphfm.Picture1.Refresh
       mapgraphfm.Refresh
+      DoEvents
       End If
    Screen.MousePointer = vbDefault
    
