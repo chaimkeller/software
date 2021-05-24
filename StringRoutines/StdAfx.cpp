@@ -544,6 +544,10 @@ short SingleDayNum;
 short SingleYr;
 ////////////////////////////////////////////////////////////////////////////////////////
 
+//////////////////cloudy-windy-night/day flag////////////////////////////////////////
+bool CloudWind = false;
+//////////////////////////////////////////////////////////////////////////////////////
+
 /************************Conversions from ITM to WGS84, etc*********************/
 //*****************************************************************************************************
 //*                                                                                                   *
@@ -887,7 +891,7 @@ The values set for debugging the program are simply the cgi arguments that are p
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 6.0f;
+float vernum = 7.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -1062,7 +1066,7 @@ __asm{
 
 		///////////////added 030921///calculate the netz/skiya table for a single day flags and info/////////////////////////////
 		SingleDay = true;
-		if (strstr(Trim(getpair(&NumCgiInputs, "cgi_SingleDay") ), "Not found") || strstr(Trim(getpair(&NumCgiInputs, "cgi_cgi_SingleDay")), "OFF" ) )
+		if (strstr(Trim(getpair(&NumCgiInputs, "cgi_SingleDay") ), "Not found") || strstr(Trim(getpair(&NumCgiInputs, "cgi_SingleDay")), "OFF" ) )
 		{
 						//= false, use averaged data points' coordinates
 						//= true - use the eroslatitude, eroslongitude, eroshgt
@@ -1077,6 +1081,16 @@ __asm{
 			SingleDayNum = atoi(getpair(&NumCgiInputs, "cgi_SingleDayNum"));
 		}
 		////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		///////////////////added 051921 //on cloudy or windy days removes adhoc sunrise fix to make sunrise later, ditto for sunset///////
+		CloudWind = true;
+		if (strstr(Trim(getpair(&NumCgiInputs, "cgi_CloudWind") ), "Not found") || strstr(Trim(getpair(&NumCgiInputs, "cgi_CloudWind")), "OFF" ) )
+		{
+						//= false, use averaged data points' coordinates
+						//= true - use the eroslatitude, eroslongitude, eroshgt
+			CloudWind = false;
+		}
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		CGI = 1;
 
@@ -10666,12 +10680,15 @@ char *IsoToUnicode( char *str )
 
 /************* Local variables ******************/
 
-    bool adhocset;
+    //flags that reduce the sunrise times by 15 seconds or add 15 seconds to the sunset
+	bool adhocrise = true; //default is to use adhoc fix for sunrise
+	if (CloudWind) adhocrise = false;  //on a cloudy or windy night, then don't subtract the adhoc sunrise fix
+    bool adhocset = false;
+
     //short nweather;
     double elevintx, elevinty, d__, z__;
 	//double p;
     short nplaceflg;
-    bool adhocrise;
     double a1, t3, t6;
     double ac, mc, ec, e2c, ap, mp, ob;
 
@@ -10815,8 +10832,6 @@ alem */
 /*       'N.B. astronomical constants are accurate to 10 seconds only to the year 2050 */
 /*       '(Astronomical Almanac, 1996, p. C-24) */
 /*       Addhoc fixes: (15 second fixes sunrise based on netz observations at Neveh Yaakov) */
-    adhocrise = true;
-    adhocset = false;
 /* -------------------------------------------------------------------------------------- */
 
 /*    geo = false;
@@ -12407,7 +12422,7 @@ short WriteHtmlHeader()
 		{
 			fprintf(stdout, "%s\n", "<!doctype html public \"-//w3c//dtd html 4.0 Transitional//en\">");
 			//sprintf( buff1, "%s%s%s%s%s", "<html dir = ", "\"", "rtl", "\"", ">");
-			sprintf( buff1, "%s%s%s%s%s", "<html dir = ", "&quot;", "rtl", "&quot;", ">");
+			sprintf( buff1, "%s", "<html dir=\"rtl\" lang=\"he\">"); //html5
 		}
 		else if ((SRTMflag > 9) && !wroteheader)  //html5
 		{
