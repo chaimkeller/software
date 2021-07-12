@@ -37,7 +37,7 @@ static integer c__0 = 0;
 static integer c__9 = 9;
 static integer c__4 = 4;
 static doublereal ErrorFudge = 0; //0.59;
-static doublereal c_b175 = 1.687; //2.2727; //1.68271708343173; //1.687; //1.7081; //1.686701538132792; //1.7081; //<-------
+static doublereal c_b175 = 2.2727; //1.68271708343173; //1.687; //1.7081; //1.686701538132792; //1.7081; //<-------
 static doublereal c_b176 = .69;
 static doublereal c_b177 = 73.;
 static doublereal c_b178 = 9.56267125268496f; //9.572702286470884f; //9.56267125268496f; <------
@@ -47,7 +47,7 @@ static doublereal c_b180 = 0.5; //reduced vdw exponent for astronomical altitude
 static doublereal c_b181 = -0.2; //exponent for eps <----
 static doublereal c_press = 1.0856; //vdw pressure exponent for view angle = 0 degrees
 
-short Temperatures(double lt, double lg, integer MinTemp[], integer AvgTemp[], integer MaxTemp[] );
+short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] );
 short lenMonth( short x);
 
 ////////////functions that emulate MS VB 6.0 functions//////////
@@ -56,8 +56,6 @@ int InStr( char * str, char * str2 );
 
 short ParseString( char *doclin, char *sep, char arr[][100] );
 char *fgets_CR( char *str, short strsize, FILE *stream );
-short Cint( double x );
-
 char strarr[4][100];
 double cd, pi;
 
@@ -125,9 +123,9 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static doublereal t3, t6;
     static integer nopendruk;
     static doublereal ac, ec, df, ch, mc, ap, ob, lg, ra;
-    static integer ne;
+    static integer avgt[12], ne;
     static doublereal td, hr, tf, es, mp, lr, dy, lt;
-    static integer mint[12], avgt[12], maxt[12];
+    static integer mint[12], maxt[12];
     static doublereal tk, tkmin, tkmax, tkavg, ms, et, sr;
     static integer nn;
     static doublereal pt, yr, e2c;
@@ -150,7 +148,7 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static doublereal eps;
     static integer nyd, nyf, nyl, nyr;
     static doublereal tss, al1o, alt1, azi1, azi2;
-    static char ts1c[8], ts2c[9], ext1[4*2*100], ext3[4*2*100];
+    static char ts1c[8], ts2c[9], ext1[4*2*80], ext3[4*2*80];
     static integer nyr1;
     static doublereal defb;
     static char chd62[62];
@@ -177,7 +175,7 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static char place[8*2];
     static integer negch;
     static doublereal deltd;
-    static char placn[30*2*100];
+    static char placn[30*2*80];
     static integer nplac[2];
     static char fileo[27];
     static doublereal dobsf, geotd, avref;
@@ -565,14 +563,6 @@ L7:
 		fclose (stream);
 	}
 
-	/*
-	sprintf(tmpfil, "%s%s", drivlet, ":/jk/netzskiy.tm3");
-	if (stream = fopen( fnam, "r") )
-	{
-
-	}
-	fclose( stream );
-	*/
 /* 'summer and winter refraction values for heights 1 m to 999 m */
 /* 'as calculated by MENAT.FOR */
 /*       opening file netzskiy.tm3 */
@@ -593,7 +583,7 @@ L7:
     do_lio(&c__3, &c__1, (char *)&nzskflg, (ftnlen)sizeof(integer));
     do_lio(&c__5, &c__1, (char *)&geotd, (ftnlen)sizeof(doublereal));
     e_rsle();
-    if (nzskflg <= -4 || geotd != 2) {
+    if (nzskflg <= -4) {
 	geo = TRUE_;
     } else {
 	geotd = 2.;
@@ -773,19 +763,6 @@ L7:
 		do_lio(&c__3, &c__1, (char *)&maxt[10], (ftnlen)sizeof(integer));
 		do_lio(&c__3, &c__1, (char *)&maxt[11], (ftnlen)sizeof(integer));
 		e_rsle();
-
-		//check for errors in the netzskiy.tm3 file vis a vis the temperatures
-		if (mint[0] == 0 && avgt[0] == 0 && maxt[0] == 0 && mint[11] == 0 && avgt[11] == 0 && maxt[11] == 0) 
-		{
-			if (!geo) {
-				casgeo_(&kmyo, &kmxo, &lt, &lg);
-			}else{
-				lt = kmyo;
-				lg = kmxo;
-			}
-
-			ier = Temperatures(lt,-lg, mint, avgt, maxt);
-		}
 	}
 
 	/////////////////////addded parameters from netzskiy.tm3 ///////070521///////////////////
@@ -809,8 +786,8 @@ L7:
 	    }
 	}
 	if (nsetflag == 0) {
-	    ++nplac[0];                     
-	    if (nplac[0] > 100) {
+	    ++nplac[0];
+	    if (nplac[0] > 80) {
 		if (nointernet && ! nofiles) {
 		    s_wsle(&io___55);
 		    do_lio(&c__9, &c__1, " ERROR--exceeded max. num. of plac"
@@ -855,7 +832,7 @@ L7:
 	    }
 	} else if (nsetflag == 1) {
 	    ++nplac[1];
-	    if (nplac[1] > 100) {
+	    if (nplac[1] > 80) {
 		if (! nofiles && nointernet) {
 		    s_wsle(&io___65);
 		    do_lio(&c__9, &c__1, " ERROR--exceeded max. num. of plac"
@@ -1195,34 +1172,31 @@ ns) */
 	    do_fio(&c__1, chd62, (ftnlen)62);
 	    e_rsfe();
 
-		if (hgt != 0) //if hgt = 0, then this is mishor, so no need to compare heights with the one in the profile
+		//read more accurate record of the height from this doc line in the profile
+		if ( ParseString( chd62, ",", strarr, 4 ) )
 		{
-			//read more accurate record of the height from this doc line in the profile
-			if ( ParseString( chd62, ",", strarr, 4 ) )
-			{
-				//reading more accurate height directly from file failed
-				//must be some old file format, or the astr files generated by that option
-				//so exit out of caution with warning printing on console
-				printf("********ERROR detected********\n");
-				printf("File format error detected in the profile's coordinate line\n");
-				printf("**********ABORTING*******\n");
-				return -1; 
-				;
-			}
-			else //extract text
-			{
-				hgt0 = hgt;
-				hgt = atof( &strarr[2][0] );
+			//reading more accurate height directly from file failed
+			//must be some old file format, or the astr files generated by that option
+			//so exit out of caution with warning printing on console
+			printf("********ERROR detected********\n");
+			printf("File format error detected in the profile's coordinate line\n");
+			printf("**********ABORTING*******\n");
+			return -1; 
+			;
+		}
+		else //extract text
+		{
+			hgt0 = hgt;
+			hgt = atof( &strarr[2][0] );
 
-				if (FixProfHgtBug && ntrcalc != 0) //some new format files have added heights already, so skip
-				{
-					//bat and profile heights are identical
-					//usually means that newreadDTM recorded the ground height
-					//instead of the calculation height after adding the observer height
-					//this was bug that was fixed on 101520
-					//so fix it here
-					if (hgt0 == hgt) hgt += hgtobs;
-				}
+			if (FixProfHgtBug && ntrcalc != 0) //some new format files have added heights already, so skip
+			{
+				//bat and profile heights are identical
+				//usually means that newreadDTM recorded the ground height
+				//instead of the calculation height after adding the observer height
+				//this was bug that was fixed on 101520
+				//so fix it here
+				if (hgt0 == hgt) hgt += hgtobs;
 			}
 		}
 
@@ -1344,7 +1318,8 @@ L40:
 				exponent = .9965f;
 			}
 			//ViewAdd = TRfudge * trrbasis * pow_dd(&pathlength, &exponent);
-			elev[(nazn << 2) - 3] -= TRfudge * trrbasis * pow_dd(&pathlength, &exponent);
+			elev[(nazn << 2) - 3] -= TRfudge * trrbasis * pow_dd(&pathlength, &
+				exponent);
 	    }
 
 	    if (nazn == 1) {
@@ -1576,17 +1551,6 @@ L670:
 /* 		    determine the minimum and average temperature for this day for current place */
 /* 			use Meeus's forumula p. 66 to convert daynumber to month, */
 /* 			no need to interpolate between temepratures -- that is overkill */
-
-			//this is how to debug for a certain year and daynumber
-			//set breakpoint on ccc = 1
-			/*
-			if (nyear == 2022 && dy == 2)
-			{
-				short ccc;
-				ccc = 1;
-			}
-			*/
-
 		k = 2.;
 		if (nyl == 366) {
 		    k = 1.;
@@ -1711,11 +1675,8 @@ L500:
 /* 			calculate van der Werf temperature scaling factor for refraction */
 		d__2 = 288.15f / tk;
 		vdwsf = pow_dd(&d__2, &c_b175); //<-------
-
-		/////////////022321 edit - add pressure scaling law to vbwsf////////////////////
 		d__2 = p/1013.25;
 		vdwsf *= pow_dd(&d__2, &c_press); //pressure scalintg law VDW graph 5a
-		//////////////////////////////////////////////////////////////////////////
 
 /* 			calculate van der Werf scaling factor for view angles */
 		d__2 = 288.15f / tk;
@@ -1726,6 +1687,11 @@ L500:
 		//scaling for astronomical times
 		d__2 = 288.15f / tk;
 		vbwast = pow_dd(&d__2, &c_b180);
+
+		/////////////022321 edit - add pressure scaling law to vbwsf////////////////////
+		d__2 = p/1013.25;
+		vdwsf *= pow_dd(&d__2, &c_press); //pressure scalintg law VDW graph 5a
+		//////////////////////////////////////////////////////////////////////////
 
 		//scaling for local ray altitude (compliment of zenith angle)
 		d__2 = 288.15f / tk;
@@ -1886,7 +1852,6 @@ L687:
 			a1 = (288.15/tk) * (ref + refrac1) * cd; //a1 in radians
 			air = (90 + eps) * cd + a1; //air in radians
 			trbasis = (288.15/tk) * p * 8.15f * 1e3f * .0277f / (288.15 * 288.15 * 3600);
-			a1 = a1 / cd;  //convert a1 back to degrees to be consistent with the nweatherflag == 0 option
 			goto L700;
 		}
 /* 	       now add the all the contributions together due to the observer's height */
@@ -1908,7 +1873,7 @@ L690:
 		//a1 = (ref + refrac1) / 1e3;  //radians
 		//a1 = vdwsf * (ref + refrac1) * 1e-3;  //convert to radians from mrad
 
-		a1 = (ref + refrac1) / (cd * 1e3);  //convert to degrees from mrad
+		a1 = (ref + refrac1) * 1e-3;  //convert to radians from mrad
 L700:
 /* 		   leave a1 in radians */
 		//a1 = atan(tan(a1) * vdwalt);  //scale for temperature //wrong - <-redundant
@@ -1919,7 +1884,7 @@ L700:
 /*              calculate sunset/sunrise */
 		    decl_(&dy1, &mp, &mc, &ap, &ac, &ms, &aas, &es, &ob, &d__)
 			    ;
-		    air += (1 - cos(aas) * .0167) * .2667 * cd;
+		    air += (1 - cos(aas) * .017) * .2667 * cd;
 		    sr1 = acos(-tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
 			    cos(d__))) * ch;
 		    sr = sr1 * hr;
@@ -1930,7 +1895,6 @@ L700:
 /* *************************BEGIN SUNSET WINTER ADHOC FIX************************ */
 			//new of version 18 -- determine portion of year prone to inversion layers using daylength
 			if (adhocset) {
-				EnableSunsetInv = FALSE_;
 				if (FindWinter) {
 					DayLength = 2 * sr1;
 					//make sure that it is cold by checking miniimum temperature for the relevant month
@@ -2029,7 +1993,7 @@ L700:
 		    dy1 = dy + fdy;
 		    decl_(&dy1, &mp, &mc, &ap, &ac, &ms, &aas, &es, &ob, &d__)
 			    ;
-		    air += (1 - cos(aas) * .0167) * .2667 * cd;
+		    air += (1 - cos(aas) * .017) * .2667 * cd;
 /*              calculate sunset */
 		    sr2 = acos(-tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
 			    cos(d__))) * ch;
@@ -2049,7 +2013,6 @@ L700:
 /* *************************BEGIN SUNRISE WINTER ADHOC FIX************************ */
 			//new of version 18 -- determine portion of year prone to inversion layers using daylength
 			if (adhocrise) {
-				EnableSunriseInv = FALSE_;
 				if (FindWinter) {
 					DayLength = 2 * sr1;
 					//make sure that it is cold by checking miniimum temperature for the relevant month
@@ -2199,8 +2162,8 @@ L692:
 /*              to first order, the top and bottom of the sun have the */
 /*              following altitudes near the sunset */
 			//al1 = atan(tan(alt1 + a1) * vdwalt) / cd;  //scale for temperature
-			al1 = alt1 / cd + a1;
-			//al1 = alt1 / cd;
+			//al1 = (alt1 + a1) / cd;
+			al1 = alt1 / cd;
 /*              first guess for apparent top of sun */
 			pt = 1.0; //1.06; //1.0;
 			if (!nweatherflag) {
@@ -2223,15 +2186,15 @@ L692:
 			}
 			refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
 /*              first iteration to find position of upper limb of sun */
-			//al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1 * dcmrad;
-			//al1 = alt1 / cd + .2667f + pt * refrac1 * dcmrad;
+			//al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
+			//al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
 			if (nweatherflag) 
 			{
-				al1 = alt1 / cd + .2667f + pt * refrac1 * dcmrad;
+				al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
 			}
 			else
 			{
-				al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1 * dcmrad;
+				al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
 			}
 			//scale by vdw temperature scaling
 			//al1 = atan(tan(al1 * cd) * vdwalt) / cd;
@@ -2242,14 +2205,14 @@ L692:
 					al1o = al1;
 					refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
 	/*                    subsequent iterations */
-					//al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1 * dcmrad;
+					//al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
 					if (nweatherflag) 
 					{
-						al1 = alt1 / cd + .2667f + pt * refrac1 * dcmrad;
+						al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
 					}
 					else
 					{
-						al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1 * dcmrad;
+						al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
 					}
 
 					if ((d__2 = al1 - al1o, abs(d__2)) < .004f) {
@@ -2354,8 +2317,6 @@ L695:
 			    dobs = dobsy / elevintx * (azi1 - elev[(ne << 2) 
 				    - 4]) + elev[(ne << 2) - 2];
 
-				//////////////option to add cushion for near obstructions/////070521/////////////////
-				AddedTime = 0.0;
 				if (AddCushions)
 				{
 					//check if this is considered near obstruction, if so add time cushion
@@ -2375,7 +2336,6 @@ L695:
 					t3sub = t3sub - AddedTime/3600;
 					
 				}
-				/////////////////////////////////////////////////////////////////////////////////
 
 			    if (nointernet && ! nofiles) {
 				t1500_(&t3sub, &negch);
@@ -2425,18 +2385,8 @@ L695:
 			}
 			/////////////////visible sunrise/////////////////////////////////////////////
 			} else if (nsetflag == 0) { 
-
-				//diagnostics
-				/*
-				if (strstr(comentss, ".p14") && nyear == 2022 && dy == 2)
-				{
-					short aaaa;
-					aaaa = 1;
-				}
-				*/
-
-			al1 = alt1 / cd  + a1;  //convert altitude from radians to degrees
-			//al1 = alt1 / cd;
+			//al1 = (alt1  + a1) / cd;
+			al1 = alt1 / cd;
 /*                 first guess for apparent top of sun */
 			pt = 1.0; //1.06; //1.0;
 
@@ -2470,22 +2420,22 @@ L695:
 				refvdw_(&hgt, &al1_2, &refrac1_2, &nweatherflag, &vdwsf_2);
 			}
 /*                 first iteration to find top of sun */
-			//al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1 * 
+			//al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * 
 			//	dcmrad; //redundant
-			//al1 = alt1 / cd + .2667f + pt * refrac1 * dcmrad;
+			//al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
 			//sale solar altitude with vdw temp scaling relationship
 			//al1 = atan(tan(al1 * cd) * vdwalt) / cd;
 /*                 top of sun with refraction */
 			if (nweatherflag) 
 			{
-				al1 = alt1 / cd + .2667f + pt * refrac1 * dcmrad;
+				al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
 			}
 			else
 			{
-				al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1 * dcmrad;
+				al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
 				if (showCalc) //diagnostics
 				{
-					al1_2 = alt1 / cd + .2667f + pt * vdwsf_2 * refrac1_2 * dcmrad;
+					al1_2 = alt1 / cd + .2666f + pt * vdwsf_2 * refrac1_2 * dcmrad;
 				}
 			}
 			if (niter == 1) {
@@ -2502,21 +2452,21 @@ L695:
 
 					if (nweatherflag) 
 					{
-						al1 = alt1 / cd + .2667f + pt * refrac1 * dcmrad;
+						al1 = alt1 / cd + .2666f + pt * refrac1 * dcmrad;
 					}
 					else
 					{
-						al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1 * dcmrad;
+						al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1 * dcmrad;
 						if (showCalc) //diagnostics
 						{
-							al1_2 = alt1 / cd + .2667f + pt * vdwsf_2 * refrac1_2 * dcmrad;
+							al1_2 = alt1 / cd + .2666f + pt * vdwsf_2 * refrac1_2 * dcmrad;
 						}
 					}
 					//scale solar altitude with vdw temp scaling law to add temp dependence
 					//al1 = atan(tan(al1 * cd) * vdwalt) / cd;
 	/*                       top of sun with refraction */
 					if ((d__2 = al1 - al1o, abs(d__2)) < .004f) {
-						//this is sunrise
+						//this is sunset
 
 						/*
 						if (!weatherflag && showCalc)
@@ -2575,7 +2525,7 @@ L760:
 			} else {
 			    exponent = .9965f;
 			}
-			//ViewAdd = TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent)
+			//ViewAdd = TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
 			elevint += TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
 /* //////////////////////////////////////////////////////////////////////////////////////// */
 			if (elevint <= alt1_2 && elevint > alt1 && showCalc)
@@ -2629,13 +2579,11 @@ L760:
 
 			    if (nointernet && ! nofiles) {
 				t3sub = t3 + nacurr/3600; //astronomical sunrise will also be earlier due to inversion
-
 				t1500_(&t3sub, &negch);
 				s_copy(ts1c, t3s_1.t3subc, (ftnlen)8, (ftnlen)
 					8);
 /*                    astronomical time */
 				t3sub = (stepsec * nloops + nacurr) / 3600.; //difference in time without the inversion fix
-
 				if (showCalc)
 				{
 					if (nloops_2 < nloops && nloops_2 != 0)
@@ -2676,16 +2624,6 @@ L760:
 				t3sub = t3 + nacurr/3600;
 			    }
 
-				//diagnostics
-				/*
-				if (nyear == 2022 && dy == 2) //t3sub < 5.29334 && nyear == 2021 && dy == 250) //5.29134 && nyear == 2021 && dy == 250)
-				{
-					short vvvv;
-					vvvv = 1;
-				}
-				*/
-
-				/////////////////070521 option to add cushion for near obstructions//////////////////
 				AddedTime = 0.0;
 				if (AddCushions)
 				{
@@ -2706,7 +2644,6 @@ L760:
 					t3sub = t3sub + AddedTime/3600;
 					
 				}
-				//////////////////////////////////////////////////////////////////////////////
 
 			    if (nointernet && ! nofiles) {
 				t1500_(&t3sub, &negch);
@@ -2803,16 +2740,6 @@ L900:
 /*        among all the places (this replaces time comparisons of COMPARE) */
 L920:
 		if (nfil == 1) {
-
-			//diagnostics
-			/*
-			if (nyrstp == 2 && ndystp == 2)
-			{
-				short ccc;
-				ccc = 1;
-			}
-			*/
-
 /*           first place, so intialize latest sunset arrays */
 		    tsscs[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
 			    t3sub;
@@ -2829,16 +2756,6 @@ L920:
 /*              sunrise */
 			if (t3sub < tsscs[nsetflag + 1 + (nyrstp + (ndystp << 
 				1) << 1) - 7]) {
-
-				//diagnostics
-				/*
-				if (nyrstp == 2 && ndystp == 2)
-				{
-					short cccc;
-					cccc = 1;
-				}
-				*/
-
 			    tsscs[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1)
 				     - 7] = t3sub;
 			    s_copy(coments + (nsetflag + 1 + (nyrstp + (
@@ -3627,7 +3544,7 @@ L10:
 
 /* Main program alias */ int netzski6_ () { MAIN__ (); return 0; }
 
-short Temperatures(double lt, double lg, integer MinTemp[], integer AvgTemp[], integer MaxTemp[] )
+short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] )
 {
 
 	//extract the WorldClim averaged minimum and average temperature for months 1-12 for this lat,lon
@@ -3735,8 +3652,8 @@ T50:
 			Y = lt;
 			X = lg;
     
-			IKMY = Cint((ULYMAP - Y) / YDIM) + 1;
-			IKMX = Cint((X - ULXMAP) / XDIM) + 1;
+			IKMY = (int)((ULYMAP - Y) / YDIM) + 1;
+			IKMX = (int)((X - ULXMAP) / XDIM) + 1;
 			tncols = NCOLS;
 			numrec = (IKMY - 1) * tncols + IKMX - 1;
 			pos = fseek(stream,numrec * 2L,SEEK_SET);
@@ -3769,26 +3686,6 @@ T50:
 	}
 
 	return 0;
-}
-
-/*************** function Cint ***************
-This emulates the Visual Basic function Cint() which
-converts a decimal number into the nearest integer
-****************************************************/
-short Cint( double x )
-{
-	double top, bottom;
-	top = ceil(x);
-	bottom = floor(x);
-	if (fabs(top - x) < fabs(bottom - x) )
-	{
-		return (short)top;
-	}
-	else
-	{
-		return (short)bottom;
-	}
-
 }
 
 //////////////lenMonth(x) determines number of days in month x, 1<=x<=12////////////////////
