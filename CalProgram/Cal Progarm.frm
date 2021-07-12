@@ -1006,6 +1006,8 @@ End Sub
 
 Private Sub Form_Load()
    'version: 04/08/2003
+   
+   If Not calnodevis Then eros = False
 
     Screen.MousePointer = vbHourglass
     mydate = Date
@@ -1190,10 +1192,10 @@ popmsgbox:
       .optAst.Enabled = False
    End With
    
-   eros = False
+   If Not calnodevis Then eros = False
    If internet = False Then
       nearcolor = False
-      If SunriseSunset.Check3.Value = vbChecked Then
+      If SunriseSunset.Check3.Value = vbChecked And AddObsTime = 0 Then  'if adding additional time for near obstructions, don't print them in green
          nearcolor = True
       Else
          nearski = False

@@ -5,7 +5,7 @@ Begin VB.Form SunriseSunset
    BackColor       =   &H00C0FFFF&
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Sunrise/Sunset"
-   ClientHeight    =   7425
+   ClientHeight    =   7965
    ClientLeft      =   3480
    ClientTop       =   540
    ClientWidth     =   4815
@@ -23,8 +23,28 @@ Begin VB.Form SunriseSunset
    LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   7425
+   ScaleHeight     =   7965
    ScaleWidth      =   4815
+   Begin VB.CheckBox chkObst 
+      BackColor       =   &H00C0FFFF&
+      Caption         =   "Add larger cushion"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   177
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H00C00000&
+      Height          =   300
+      Left            =   480
+      TabIndex        =   29
+      ToolTipText     =   "Add larger cushions depending on how close the obstruction is"
+      Top             =   2740
+      Width           =   1695
+   End
    Begin VB.CheckBox chkOldCalcMethod 
       BackColor       =   &H00C0FFFF&
       Caption         =   "Old"
@@ -42,7 +62,7 @@ Begin VB.Form SunriseSunset
       Left            =   360
       TabIndex        =   28
       ToolTipText     =   "use oold (netzski6.exe) calculation method"
-      Top             =   4800
+      Top             =   5280
       Width           =   855
    End
    Begin VB.Frame Frame2 
@@ -106,7 +126,7 @@ Begin VB.Form SunriseSunset
       Height          =   240
       Left            =   1680
       TabIndex        =   22
-      Top             =   3300
+      Top             =   3480
       Width           =   240
       _ExtentX        =   423
       _ExtentY        =   423
@@ -114,7 +134,7 @@ Begin VB.Form SunriseSunset
       Value           =   5
       AutoBuddy       =   -1  'True
       BuddyControl    =   "Text2"
-      BuddyDispid     =   196612
+      BuddyDispid     =   196614
       OrigLeft        =   1680
       OrigTop         =   3360
       OrigRight       =   1920
@@ -140,14 +160,14 @@ Begin VB.Form SunriseSunset
       Left            =   1380
       TabIndex        =   21
       Text            =   "5"
-      Top             =   3300
+      Top             =   3480
       Width           =   330
    End
    Begin MSComCtl2.UpDown UpDown1 
       Height          =   240
       Left            =   1680
       TabIndex        =   18
-      Top             =   2940
+      Top             =   3120
       Width           =   240
       _ExtentX        =   423
       _ExtentY        =   423
@@ -155,7 +175,7 @@ Begin VB.Form SunriseSunset
       Value           =   5
       AutoBuddy       =   -1  'True
       BuddyControl    =   "Text1"
-      BuddyDispid     =   196613
+      BuddyDispid     =   196615
       OrigLeft        =   1680
       OrigTop         =   3120
       OrigRight       =   1920
@@ -181,7 +201,7 @@ Begin VB.Form SunriseSunset
       Left            =   1380
       TabIndex        =   17
       Text            =   "5"
-      Top             =   2940
+      Top             =   3080
       Width           =   330
    End
    Begin VB.CheckBox Check7 
@@ -198,10 +218,10 @@ Begin VB.Form SunriseSunset
       EndProperty
       ForeColor       =   &H00008000&
       Height          =   300
-      Left            =   2580
+      Left            =   2520
       TabIndex        =   16
       ToolTipText     =   "Ast sunset at hgt = 0"
-      Top             =   4080
+      Top             =   4320
       Width           =   1815
    End
    Begin VB.CheckBox Check6 
@@ -218,10 +238,10 @@ Begin VB.Form SunriseSunset
       EndProperty
       ForeColor       =   &H00008000&
       Height          =   300
-      Left            =   2580
+      Left            =   2520
       TabIndex        =   15
       ToolTipText     =   "Ast. sunrise at hgt = 0"
-      Top             =   3780
+      Top             =   4080
       Width           =   1815
    End
    Begin VB.CheckBox Check5 
@@ -241,7 +261,7 @@ Begin VB.Form SunriseSunset
       Left            =   360
       TabIndex        =   14
       ToolTipText     =   "Ast sunset incl. height"
-      Top             =   4080
+      Top             =   4320
       Width           =   1815
    End
    Begin VB.CheckBox Check4 
@@ -261,7 +281,7 @@ Begin VB.Form SunriseSunset
       Left            =   360
       TabIndex        =   13
       ToolTipText     =   "Ast. sunrise incl. height"
-      Top             =   3780
+      Top             =   4080
       Width           =   1815
    End
    Begin VB.Frame Frame1 
@@ -313,9 +333,9 @@ Begin VB.Form SunriseSunset
    End
    Begin MSComctlLib.ProgressBar ProgressBar1 
       Height          =   375
-      Left            =   480
+      Left            =   540
       TabIndex        =   6
-      Top             =   5400
+      Top             =   5880
       Width           =   3735
       _ExtentX        =   6588
       _ExtentY        =   661
@@ -340,12 +360,12 @@ Begin VB.Form SunriseSunset
       Picture         =   "SunriseSunset.frx":0442
       Style           =   1  'Graphical
       TabIndex        =   9
-      Top             =   6480
+      Top             =   7080
       Width           =   2055
    End
    Begin VB.CheckBox Check3 
       BackColor       =   &H00C0FFFF&
-      Caption         =   "    &Run Check for         Near  Mountains"
+      Caption         =   "Green fro Near Obs."
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -356,17 +376,18 @@ Begin VB.Form SunriseSunset
          Strikethrough   =   0   'False
       EndProperty
       ForeColor       =   &H00C00000&
-      Height          =   375
+      Height          =   255
       Left            =   480
       TabIndex        =   8
-      Top             =   2520
+      ToolTipText     =   "Print times from near obstructions in green"
+      Top             =   2500
       Width           =   1755
    End
    Begin VB.Timer Timer1 
       Enabled         =   0   'False
       Interval        =   300
       Left            =   3960
-      Top             =   4800
+      Top             =   5280
    End
    Begin VB.ComboBox Combo1 
       Height          =   420
@@ -391,11 +412,11 @@ Begin VB.Form SunriseSunset
       EndProperty
       Height          =   735
       Index           =   0
-      Left            =   300
+      Left            =   240
       Picture         =   "SunriseSunset.frx":0888
       Style           =   1  'Graphical
       TabIndex        =   3
-      Top             =   6480
+      Top             =   7080
       Width           =   2055
    End
    Begin VB.CheckBox Check2 
@@ -464,7 +485,7 @@ Begin VB.Form SunriseSunset
       Height          =   255
       Left            =   1980
       TabIndex        =   24
-      Top             =   3360
+      Top             =   3480
       Width           =   135
    End
    Begin VB.Label Label6 
@@ -484,7 +505,7 @@ Begin VB.Form SunriseSunset
       Height          =   375
       Left            =   420
       TabIndex        =   23
-      Top             =   3240
+      Top             =   3400
       Width           =   975
    End
    Begin VB.Label Label5 
@@ -502,9 +523,9 @@ Begin VB.Form SunriseSunset
       EndProperty
       ForeColor       =   &H00C00000&
       Height          =   255
-      Left            =   1980
+      Left            =   2000
       TabIndex        =   20
-      Top             =   3000
+      Top             =   3120
       Width           =   255
    End
    Begin VB.Label Label4 
@@ -524,29 +545,29 @@ Begin VB.Form SunriseSunset
       Height          =   375
       Left            =   420
       TabIndex        =   19
-      Top             =   2880
+      Top             =   3000
       Width           =   915
    End
    Begin VB.Shape Shape4 
       Height          =   675
       Left            =   2400
-      Top             =   3720
+      Top             =   4000
       Width           =   2175
    End
    Begin VB.Shape Shape3 
       Height          =   675
       Left            =   240
-      Top             =   3720
+      Top             =   4000
       Width           =   2055
    End
    Begin VB.Line Line6 
-      X1              =   240
-      X2              =   4560
-      Y1              =   4440
-      Y2              =   4440
+      X1              =   120
+      X2              =   4440
+      Y1              =   4800
+      Y2              =   4800
    End
    Begin VB.Shape Shape2 
-      Height          =   1935
+      Height          =   2175
       Left            =   240
       Top             =   1740
       Width           =   2055
@@ -558,7 +579,7 @@ Begin VB.Form SunriseSunset
       Y2              =   2880
    End
    Begin VB.Shape Shape1 
-      Height          =   1935
+      Height          =   2175
       Left            =   2400
       Top             =   1740
       Width           =   2175
@@ -578,7 +599,7 @@ Begin VB.Form SunriseSunset
       Height          =   255
       Left            =   1920
       TabIndex        =   7
-      Top             =   4920
+      Top             =   5400
       Width           =   735
    End
    Begin VB.Image Image1 
@@ -586,14 +607,14 @@ Begin VB.Form SunriseSunset
       Left            =   240
       Picture         =   "SunriseSunset.frx":0CCA
       Stretch         =   -1  'True
-      Top             =   4600
+      Top             =   5040
       Width           =   4200
    End
    Begin VB.Line Line5 
       X1              =   240
       X2              =   4560
-      Y1              =   6240
-      Y2              =   6240
+      Y1              =   6840
+      Y2              =   6840
    End
    Begin VB.Label Label2 
       Alignment       =   2  'Center
@@ -674,6 +695,7 @@ Private Sub Check1_Click()
       End If
    If Check1.Value = vbUnchecked And Check2.Value = vbUnchecked Then
       Check3.Value = vbUnchecked
+      chkObst.Value = vbUnchecked
       End If
 End Sub
 
@@ -686,10 +708,15 @@ Private Sub Check2_Click()
       End If
    If Check1.Value = vbUnchecked And Check2.Value = vbUnchecked Then
       Check3.Value = vbUnchecked
+      chkObst.Value = vbUnchecked
       End If
 End Sub
 
 Private Sub Check3_Click()
+   If chkObst.Value = vbChecked Then
+      chkObst.Value = vbUnchecked
+      AddObsTime = 0
+      End If
    If Check1.Value = vbUnchecked And Check2.Value = vbUnchecked Then
       Check3.Value = vbUnchecked
       End If
@@ -704,14 +731,47 @@ Private Sub Check3_Click()
       UpDown2.Enabled = True
       If eros = True Then
          If SRTMflag = 0 Then
-            Text1 = 30 'distant horizon = 30 km
+            Text1 = obsdistlim(1) '30 'distant horizon = 30 km
+            distlim = obsdistlim(1)
+            outdistlim = obsdistlim(1)
+            obscushion = cushion(1)
          ElseIf SRTMflag = 1 Then
-            Text1 = 6 'distant horizon = 6 km
+            If InStr(eroscountry$, "USA") Then
+               Text1 = obsdistlim(3) '6 'distant horizon = 6 km'
+               distlim = obsdistlim(3)
+               outdistlim = obsdistlim(3)
+               obscushion = cushion(3)
+               '<<<<<<<<<<<<<needs updating>>>>>>>>>>>>
+               'really should be that for NED, then text1 = 6
+               'and older SRTM files should have text1 = 10
+            ElseIf InStr(eroscountry$, "Israel") Then
+               Text1 = obsdistlim(0)
+               distlim = obsdistlim(0)
+               outdistlim = obsdistlim(0)
+               obscusion = cushion(0)
+            Else
+               Text1 = 10 'SRTM is worst than NED
+               distlim = 10
+               outdistlim = 10
+               obscushion = 30
+               End If
          ElseIf SRTMflag = 2 Then
-            Text1 = 6 '18 'distant horizon = 18 km
+            Text1 = obsdistlim(3) '6 '18 'distant horizon = 18 km
+            distlim = obsdistlim(3)
+            outdistlim = obsdistlim(3)
+            obscushion = cushion(3)
          ElseIf SRTMflag = 9 Then
-            Text1 = 5 'Eretz Yisroel DTM
+            Text1 = obsdistlim(0) '5 'Eretz Yisroel DTM
+            distlim = obsdistlim(0)
+            outdistlim = obsdistlim(0)
+            obscushion = cushion(0)
             End If
+      Else
+         SRTMflag = 9
+         Text1 = obsdistlim(0) '5 'Eretz Yisroel DTM
+         distlim = obsdistlim(0)
+         outdistlim = obsdistlim(0)
+         obscushion = cushion(0)
          End If
     Else
       Label4.Enabled = False
@@ -730,6 +790,7 @@ Private Sub Check4_Click()
       Check1.Value = vbUnchecked
       Check2.Value = vbUnchecked
       Check3.Value = vbUnchecked
+      chkObst.Value = vbUnchecked
       Check6.Value = vbUnchecked
       Check7.Value = vbUnchecked
       Label4.Enabled = False
@@ -748,6 +809,7 @@ Private Sub Check5_Click()
       Check1.Value = vbUnchecked
       Check2.Value = vbUnchecked
       Check3.Value = vbUnchecked
+      chkObst.Value = vbUnchecked
       Check6.Value = vbUnchecked
       Check7.Value = vbUnchecked
       Label4.Enabled = False
@@ -765,6 +827,7 @@ Private Sub Check6_Click()
       Check1.Value = vbUnchecked
       Check2.Value = vbUnchecked
       Check3.Value = vbUnchecked
+      chkObst.Value = vbUnchecked
       Check4.Value = vbUnchecked
       Check5.Value = vbUnchecked
       Label4.Enabled = False
@@ -782,6 +845,7 @@ Private Sub Check7_Click()
       Check1.Value = vbUnchecked
       Check2.Value = vbUnchecked
       Check3.Value = vbUnchecked
+      chkObst.Value = vbUnchecked
       Check4.Value = vbUnchecked
       Check5.Value = vbUnchecked
       Label4.Enabled = False
@@ -793,6 +857,81 @@ Private Sub Check7_Click()
       UpDown1.Enabled = False
       UpDown2.Enabled = False
       End If
+End Sub
+
+Private Sub chkObst_Click()
+   If Check3.Value = vbChecked Then
+      Check3.Value = vbUnchecked
+      End If
+   If Check1.Value = vbUnchecked And Check2.Value = vbUnchecked Then
+      chkObst.Value = vbUnchecked
+      End If
+   If chkObst.Value = vbChecked Then
+      Label4.Enabled = True
+      Label5.Enabled = True
+      Label6.Enabled = True
+      Label7.Enabled = True
+      Text1.Enabled = True
+      Text2.Enabled = True
+      UpDown1.Enabled = True
+      UpDown2.Enabled = True
+      If eros = True Then
+         If SRTMflag = 0 Then
+            Text1 = obsdistlim(1) '30 'distant horizon = 30 km
+            distlim = obsdistlim(1)
+            outdistlim = obsdistlim(1)
+            obscushion = cushion(1)
+         ElseIf SRTMflag = 1 Then
+            If InStr(eroscountry$, "USA") Then
+               Text1 = obsdistlim(3) '6 'distant horizon = 6 km'
+               distlim = obsdistlim(3)
+               outdistlim = obsdistlim(3)
+               obscushion = cushion(3)
+               '<<<<<<<<<<<<<needs updating>>>>>>>>>>>>
+               'really should be that for NED, then text1 = 6
+               'and older SRTM files should have text1 = 10
+            ElseIf InStr(eroscountry$, "Israel") Then
+               Text1 = obsdistlim(0)
+               distlim = obsdistlim(0)
+               outdistlim = obsdistlim(0)
+               obscusion = cushion(0)
+            Else
+               Text1 = 10 'SRTM is worst than NED
+               distlim = 10
+               outdistlim = 10
+               obscushion = 30
+               End If
+         ElseIf SRTMflag = 2 Then
+            Text1 = obsdistlim(3) '6 '18 'distant horizon = 18 km
+            distlim = obsdistlim(3)
+            outdistlim = obsdistlim(3)
+            obscushion = cushion(3)
+         ElseIf SRTMflag = 9 Then
+            Text1 = obsdistlim(0) '5 'Eretz Yisroel DTM
+            distlim = obsdistlim(0)
+            outdistlim = obsdistlim(0)
+            obscushion = cushion(0)
+            End If
+      Else
+         SRTMflag = 9
+         Text1 = obsdistlim(0) '5 'Eretz Yisroel DTM
+         distlim = obsdistlim(0)
+         outdistlim = obsdistlim(0)
+         obscushion = cushion(0)
+         End If
+    Else
+      Label4.Enabled = False
+      Label5.Enabled = False
+      Label6.Enabled = False
+      Label7.Enabled = False
+      Text1.Enabled = False
+      Text2.Enabled = False
+      UpDown1.Enabled = False
+      UpDown2.Enabled = False
+      End If
+      
+   AddObsTime = 1
+      
 End Sub
 
 Private Sub Form_Load()
@@ -825,6 +964,14 @@ Private Sub Form_Load()
          Check7.Value = vbUnchecked
          End If
        End If
+       
+   If AddObsTime = 1 Then
+     chkObst.Value = vbChecked
+     Check3.Value = vbChecked
+   Else
+     Check1.Value = vbChecked
+     chkObst.Value = vbUnchecked
+     End If
     
    'Label3.Visible = False
 
@@ -1340,6 +1487,7 @@ Private Sub OKbut_Click(Index As Integer)
       'If i% = 371 Then
       '   cc = 1
       '   End If
+
       If LCase$(citnam$) = LCase$(citynames$(i%)) Then
          citnamp$ = ""
          nextflg% = 0
@@ -2119,7 +2267,7 @@ i500:
    If eros = True Then Line Input #newfilbat%, doclin$
    Do Until EOF(newfilbat%)
       Line Input #newfilbat%, doclin$
-      If InStr(doclin$, "version") <> 0 Then
+      If LCase$(Mid$(doclin$, 1, 7)) = "version" Then
          Exit Do
          End If
       nfil% = nfil% + 1
@@ -2202,10 +2350,12 @@ i500:
                ElseIf kmyo = 2 Then
                   'SRTM level 2 (90 meter) DTM
                   SRTMflag = 2
-               ElseIf kmyo = 9 Then
-                  'Jerusalem neighborhoods
+               ElseIf kmyo = 9 Or kmyo = 0 Then
+                  'Israel DTM and Jerusalem neighborhoods
                   SRTMflag = 9
                   End If
+            Else
+               SRTMflag = 9 'Israel 25m DTM
                End If
             GoTo 475
             End If
@@ -2415,6 +2565,8 @@ i500:
          Print #filnez3%, netzski$(1, i%) 'coordinates,hgt,year, etc
          'determine minimum and average temperatures for these coordinates
          If chkOldCalcMethod.Value = vbUnchecked Then GoSub AddTemps
+         'now add distlim
+         Write #filnez3%, AddObsTime, CInt(outdistlim), obscushion 'distlim
          End If
    Next i%
    Close #filnez3%
@@ -3222,9 +3374,9 @@ AddTemps:
            Call casgeo(kmxAT, kmyAT, lgAT, ltAT)
            lgAT = -lgAT 'this is convention for WorldClim
            End If
-        If (eros And eroscountry$ <> "Israel") Or geo Then
+        If (eros Or geo) And LCase(eroscountry$) <> "israel" Then
             Call Temperatures(lgAT, -ltAT, MinTK, AvgTK, MaxTK, ier)
-       Else
+        Else
             Call Temperatures(ltAT, lgAT, MinTK, AvgTK, MaxTK, ier)
             End If
         If ier = 0 Then
@@ -3459,8 +3611,8 @@ t90:  If nstat% = 100 Then
         SunriseSunset.Visible = False
         SunriseSunset.Timer1.Enabled = False
         astronplace = False
-        eros = False
-        geo = False
+        If Not calnodevis Then eros = False
+        If Not calnodevis Then geo = False
         If Katz = True Then
            If katznum% = 0 Then
               katznum% = 1

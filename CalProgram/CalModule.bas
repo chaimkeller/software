@@ -34,7 +34,7 @@ Public Const UTIL_PROGID = "Bullzip.PDFUtil"
 Public currentdir As String, citynames$(800), cityhebnames$(800), numcities%, citnam$
 Public errorfnd As Boolean, hebcityname$, s1blk, s2blk, defdriv$, SRTMflag As Integer
 Public nearobstnez(3, 601), nearobstski(3, 601), nfind%, nfind1%, rhday%
-Public nrnez%(601), nrski%(601), nearnez As Boolean, nearski As Boolean
+Public nrnez%(601), nrski%(601), nearnez As Boolean, nearski As Boolean, calnodevis As Boolean
 Public initdir As Boolean, tblmesag%, autocancel As Boolean, parshiotEY As Boolean
 Public Katz As Boolean, katznum%, katzhebnam$, katztotal%, NearWarning(1) As Boolean
 Public astrplaces$(100), astcoord(5, 100), autoNoCDcheck As Boolean, cityAutoEng$, cityAutoHeb$, numAstPlaces%
@@ -53,11 +53,12 @@ Public rescal, portrait As Boolean, prespap%, Loadcombo%, endyr%, RemoveUnderlin
 Public xc(2), y1(2), y2(2), y3(2), y4(2), y5(2), de(2), ys(2), difdyy%, autoprint As Boolean, autosave As Boolean
 Public tim$(3, 366), papername$(20), papersize(2, 20) As Integer, numpaper%, margins(4, 20)
 Public monthe$(12), monthh$(1, 14), mdates$(2, 13), mmdate%(2, 13), montheh$(1, 12)
-Public dx, dy, xot, yot, xo, yo, dey(2), fillcol, geo As Boolean, eros As Boolean
+Public dx, dy, xot, yot, xo, yo, dey(2), fillcol, geo As Boolean, eros As Boolean, nweatherflag As Integer
 Public stortim$(6, 12, 32), stormon$(12), storheader$(1, 5), geotz!, Option1b As Boolean, Option2b As Boolean
 Public astronplace As Boolean, astkmx, astkmy, asthgt, astname$, distlim As Single, distlimnum As Integer
 Public drivjk$, drivfordtm$, drivcities$, goahead As Boolean, title$, address$, drivprom$, drivprof$
-Public citynodenum%, optionheb As Boolean, progvernum As Single, datavernum As Single
+Public citynodenum%, optionheb As Boolean, progvernum As Single, datavernum As Single, AddObsTime As Integer
+Public cushion(5) As Integer, obsdistlim(5) As Integer, obscushion As Integer, outdistlim As Double
 Public ecnam$, eroscityflag As Boolean, citnamp$, aveusa As Boolean, errorreport As Boolean
 Public erosstatenum As Integer
 Public erosstates(50) As String
@@ -2425,6 +2426,16 @@ katzyo% = 0
 '         cap6$(2) = "הזמנים הכתובים בצבע בהיר מבוססים על אופק קרוב מידי, ויתכן שאינם מדוייקים"
          End If
       End If
+      If AddObsTime = 1 Then
+         'add captions for adding additional time for near obstructions
+         If optionheb Then
+            cap6$(1) = heb2$(15)
+            cap6$(2) = heb2$(15)
+         Else
+            cap6$(1) = "A larger cushion has been used for days where the horizon is obstructed by near obstructions."
+            cap6$(2) = "A larger cushion has been used for days where the horizon is obstructed by near obstructions."
+            End If
+         End If
    For i% = 1 To 2
       coordxlab1(i%) = (xo + xc(i%)) * conv ' - Dev.TextWidth(cap1$(i%)) ' * Val(newhebcalfm.Text13.Text) * 0.12 / 2
       coordylab1(i%) = (yo + ys(i%) + y1(i%)) * conv
@@ -4497,10 +4508,11 @@ header$(4) = cap4$(tmpsetflg%)
 header$(5) = cap5$(tmpsetflg%)
 header$(6) = cap6$(tmpsetflg%)
 
-If (tmpsetflg% = 1 And NearWarning(0) = False) Or _
-   (tmpsetflg% = 2 And NearWarning(1) = False) Then
+If (tmpsetflg% = 1 And NearWarning(0) = False And AddObsTime = 0) Or _
+   (tmpsetflg% = 2 And NearWarning(1) = False And AddObsTime = 0) Then
    header$(6) = sEmpty 'no near obstructions detected
    End If
+   
    
 For stori% = 0 To 5
    storheader$(tmpsetflg% - 1, stori%) = header$(stori% + 1)
@@ -4518,8 +4530,8 @@ Dev.Print header$(4)
 Dev.CurrentX = coordxlab5(tmpsetflg%) - Dev.TextWidth(header$(5)) / 2
 Dev.CurrentY = coordylab5(tmpsetflg%) - Dev.TextHeight(header$(5)) / 2
 Dev.Print header$(5)
-If nearcolor = True Then
-   If nearnez = True Or nearski = True Then
+If nearcolor = True Or AddObsTime = 1 Then
+   If nearnez = True Or nearski = True Or AddObsTime = 1 Then
       Dev.CurrentX = coordxlab6(tmpsetflg%) - Dev.TextWidth(header$(6)) / 2
       Dev.CurrentY = coordylab6(tmpsetflg%) - Dev.TextHeight(header$(6)) / 2
       Dev.Print header$(6)

@@ -256,8 +256,12 @@ Dim eroslongitude As Double, eroslatitude As Double
 'Private eroslocat(50, 50, 150) As String '(states,cities,locations)
 Private Sub Form_Load()
    'version: 01/28/2004
+   
+   calnodevis = True
       
    Israelflag% = 0 '<--EY
+   
+   eros = True
   
     'read the eroscity.sav file to determine states and city areas
     'then read the individual sav files and load the individual locations
@@ -668,6 +672,7 @@ stateerror:
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+   eros = False
    Unload Me
    Set calnode = Nothing
    If CalMDIform.Visible = False Then

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.MDIForm CalMDIform 
    BackColor       =   &H8000000C&
    Caption         =   "Calendar Programs"
@@ -119,6 +119,13 @@ Begin VB.MDIForm CalMDIform
    End
    Begin VB.Menu filefm 
       Caption         =   "&File"
+      Begin VB.Menu mnuStndRef 
+         Caption         =   "Use Standard Refraction"
+      End
+      Begin VB.Menu mnuVDW 
+         Caption         =   "Use VDW raytracing Ref."
+         Checked         =   -1  'True
+      End
       Begin VB.Menu exitfm 
          Caption         =   "E&xit"
       End
@@ -199,6 +206,34 @@ Private Sub MDIForm_Load()
    ch = 360# / (pi2 * 15)  '57.29578 / 15  'conv rad to hr
    cd = pi / 180#  'conv deg to rad
    
+'look for PathsZones_dtm.txt file and if exists read in cushions, else set up cushion defaults
+myfile = Dir(App.Path & "\PathsZones_dtm.txt")
+If myfile <> sEmpty Then
+   filin% = FreeFile
+   Open App.Path & "\PathsZones_dtm.txt" For Input As #filin%
+   Do Until EOF(filin%)
+      Line Input #filin%, doclin$
+      Select Case doclin$
+         Case "[time cushions]"
+            Input #filin%, cushion(0), cushion(1), cushion(2), cushion(3), cushion(4)
+         Case "[obstruction limit]"
+            Input #filin%, obsdistlim(0), obsdistlim(1), obsdistlim(2), obsdistlim(3)
+            Exit Do
+      End Select
+   Loop
+   Close #filin%
+Else
+   cushion(0) = 15 'EY JKH DTM
+   cushion(1) = 45 'GTOPO30
+   cushion(2) = 35 'SRTM 90 m
+   cushion(3) = 20 'SRTM 30 m, NED 1 arcsec DTM
+   cushion(4) = 15 'astronomical calculations
+   obsdistlim(0) = 5 'EY JKH DTM
+   obsdistlim(1) = 30 'GTOPO30
+   obsdistlim(2) = 10 'SRTM 90 m
+   obsdistlim(3) = 6 'SRTM 30 m, NED 1 arcsec DTM (30 m)
+   End If
+   
    If Not internet Then 'allow user to calculate tables for entire Hebrew calendar
       RefHebYear% = 1
       RefCivilYear% = -3760
@@ -211,7 +246,7 @@ Private Sub MDIForm_Load()
    Screen.MousePointer = vbHourglass
    numdriv% = Drive1.ListCount
    driveletters$ = "cdefghijklmnop"
-   S1% = 0: S2% = 0: S3% = 0
+   s1% = 0: S2% = 0: S3% = 0
    For i% = 1 To numdriv%
 '   For i% = 4 To numdriv%
       drivlet$ = Mid$(driveletters$, i%, 1)
@@ -225,8 +260,8 @@ Private Sub MDIForm_Load()
             'Use bitwise comparison to make sure MyName is a directory.
             If (GetAttr(mypath & myname) And vbDirectory) = vbDirectory Then
                myname = LCase(myname)
-               If S1% = 0 And myname = "jk" Then
-                  S1% = 1: drivjk$ = drivlet$ + ":\jk\"
+               If s1% = 0 And myname = "jk" Then
+                  s1% = 1: drivjk$ = drivlet$ + ":\jk\"
 
                ElseIf S2% = 0 And myname = "fordtm" Then
                   S2% = 1: drivfordtm$ = drivlet$ + ":\fordtm\"
@@ -237,14 +272,14 @@ Private Sub MDIForm_Load()
                   defdriv$ = drivlet$
 
                   End If
-               If S1% = 1 And S2% = 1 And S3% = 1 Then GoTo cdc1
+               If s1% = 1 And S2% = 1 And S3% = 1 Then GoTo cdc1
                End If 'it represents a directory
             End If
          myname = Dir 'Get next entry
       Loop
    Next i%
 
-cdc1: If S1% = 0 Then
+cdc1: If s1% = 0 Then
          drivjk$ = InputBox("Can't find the ""jk"" directory, please give the full path name below " + _
                   "(e.g., if jk is a subdirectory of c:\program\random\, then input: ""c:\program\random\"" (ncluding the last backslash)")
          If drivjk$ <> sEmpty Then 'check the directory
@@ -304,14 +339,14 @@ cdc3: If S3% = 0 Then
 '         defdriv$ = drivlet$
 '         GoTo 5
 '         End If
-      If S1% = 1 And S2% = 1 And S3% = 1 Then GoTo 5
+      If s1% = 1 And S2% = 1 And S3% = 1 Then GoTo 5
    'if got here, means that couldn't find the cities directory
 ce10: If internet = False Then
          MsgBox "Can't locate necessary directories! ABORTING program...Sorry", vbCritical + vbOKOnly, "Cal Programs"
          End If
       Call MDIform_queryunload(i%, j%)
       Exit Sub
-
+      
    '******skip splash screen for Internet Server Version**********
 5  internet = False
    optionheb = True
@@ -409,6 +444,9 @@ ce10: If internet = False Then
 cd10:
    myfile = Dir(drivjk$ + "netzend.tmp")
    If myfile <> sEmpty Then Kill drivjk$ + "netzend.tmp"
+   
+   myfile = Dir(drivjk$ + "refflag.tmp")
+   If myfile <> sEmpty Then Kill drivjk$ + "refflag.tmp"
 
 If internet = False Then
    waitime = Timer
@@ -902,6 +940,38 @@ End Sub
 
 Private Sub mnuChaiAir_Click()
    calAirfm.Visible = True
+End Sub
+
+Private Sub mnuStndRef_Click()
+    If mnuStndRef.Checked Then
+    Else
+       nweatherflag = 1
+       mnuStndRef.Checked = True
+       mnuVDW.Checked = False
+       
+       'write refflag file
+       filflag% = FreeFile
+       Open drivjk$ & "refflag.tmp" For Output As #filflag%
+       Print #filflag%, nweatherflag%
+       Close #filflag%
+       
+       End If
+End Sub
+
+Private Sub mnuVDW_Click()
+  If mnuVDW.Checked Then
+  Else
+    nweatherflag = 0
+    mnuVDW.Checked = True
+    mnuStndRef.Checked = False
+       
+    'write refflag file
+    filflag% = FreeFile
+    Open drivjk$ & "refflag.tmp" For Output As #filflag%
+    Print #filflag%, nweatherflag%
+    Close #filflag%
+    
+    End If
 End Sub
 
 Private Sub Toolbar1_ButtonClick(ByVal Button As MSComCtlLib.Button)
