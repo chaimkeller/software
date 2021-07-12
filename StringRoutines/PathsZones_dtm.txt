@@ -6,8 +6,9 @@ c:/Inetpub/cgi-bin/
 c:/Inetpub/cgi-bin/
 c:/Inetpub/webpub/
 c:/jk/public_html/cities/
-d:/USA/
+c:/USA/
 c:/3AS/
+c:/DevStudio/Vb/WorldClim_bil/
 
 [zemanim_eng]
 MA72min.zma
@@ -91,11 +92,13 @@ Mexico_City_heb.zma
 -.0048345814464145
 -4.90660400743218e-4
 -1.60099622077352e-5
-9.56267125268496f
+9.56267125268496
 1.687
 2.18
 -0.2
+1.0856
 1
 11.1
 1.0
 0.01
+0

@@ -308,7 +308,7 @@ double tims[2][7][366];
 double azils[2][2][366];
 
 char heb1[85][255]; //[sunrisesunset] NOTICE: largest hebrew string is 99 characters long
-char heb2[25][255];//[newhebcalfm]
+char heb2[26][255];//[newhebcalfm]
 char heb3[33][255];//[zmanlistfm]
 char heb4[8][100]; //[hebweek] NOTICE: largest hebrew string is 20 characters long
 char heb5[40][100];//[holidays] NOTICE largest hebrew string is 20 characters long
@@ -543,6 +543,11 @@ bool SingleDay = false;
 short SingleDayNum;
 short SingleYr;
 ////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////adding cushion option variables ///////////////
+short AddCushion = 0;
+short CushionAmount = 0;
+/////////////////////////////////////////////////////////////////
 
 //////////////////cloudy-windy-night/day flag////////////////////////////////////////
 bool CloudWind = false;
@@ -886,12 +891,19 @@ The values set for debugging the program are simply the cgi arguments that are p
 21 ast = true/false flag for astronomical calculation (mishor or astronomical)
 22 types = defines table type, ranges form 0 to 13 (see code for explanation)
 23 SRTMflag = flag to determine type of DTM to use or what type of DTM was used to create the profiles, value = 0-13
+24.SingleDay = flag to calculate only single day using advanced input of ground temperature and pressure
+25 SingleYr = year of the single day
+26 SingleDayNum = day number of the single day
+27 Tground = ground temperature (Kelvin) of the single day
+28 Pressure = ground pressure (mb) of the single day 
+29 CloudWind = flag to indicate cludy or windy day (remove inversion fix)
+30 AddCushion = flag to indicate whether to add further cushion instead of printing green times
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 7.0f;
+float vernum = 8.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -987,6 +999,9 @@ __asm{
 		optionheb = true;
 		if (optionhebnum) optionheb = false;
 		RoundSecondsin = atoi(getpair(&NumCgiInputs, "cgi_RoundSecond"));
+
+		////added 071221///////////////////
+		AddCushion = atoi(getpair(&NumCgiInputs, "cgi_AddCushion"));
 
 		///unique to Chai tables
 		numUSAcities1 = atoi(getpair(&NumCgiInputs, "cgi_USAcities1")); //Metro area
@@ -1098,23 +1113,23 @@ __asm{
 /*//<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
 	else if (argc == 1) //not using console
 	{
-		strcpy( TableType, "BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
-		strcpy( country, "Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
+		strcpy( MetroArea, "Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( country, "USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
-		g_yrheb = 5781; //5779;//5776; //5775;
+		g_yrheb = 5782; //5781; //5779;//5776; //5775;
 		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
 		typezman = 8; // acc. to which opinion
 		optionheb = false; //true;//false;
 		RoundSecondsin = 1;//5;
 
 		///unique to Chai tables
-		numUSAcities1 = 3;//1; //2;//11; //2; //Metro area
-		numUSAcities2 = 2; //7;//0; //75; //city area
-		searchradius = 1;//4;//1; //search area
+		numUSAcities1 = 27; //3; //27; //3;//1; //2;//11; //2; //Metro area
+		numUSAcities2 = 1; //4; //1; //2; //7;//0; //75; //city area
+		searchradius = 8; //1; //8; //1;//4;//1; //search area
 		yesmetro = 0; //1; //0;  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
-		GoldenLight = 1;
+		GoldenLight = 0; //1;
 
 		//test lat,lon, hgt inputs 32.027585
 		eroslatitudestr = "31.706938"; //"30.960207"; //"37.683140"; //"30.92408"; //"31.858246"; //"31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
@@ -1125,17 +1140,17 @@ __asm{
 		erosdiflogstr = "1"; //"2";
 
 
-		searchradiusin = 1;//4; //0.9;
-		geotz = 2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
+		searchradiusin = 8; //1; //8; //1;//4; //0.9;
+		geotz = 2; //-5; //2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
 		sunsyes = 1;//0; //1;//0; //= 1 print individual sunrise/sunset tables
 					 //= 0 don't print individual sunrise/sunset tables
 
 		///////////////////astronomical type//////////////////////
-		ast = true;//false; //= false for mishor, = true for astronomical
+		ast = false;//false; //= false for mishor, = true for astronomical
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		types = 0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
 		SRTMflag = 0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
@@ -1150,12 +1165,14 @@ __asm{
 		HebrewInterface = false;// true;//false; //=true for Hebrew webpages
 
 		//////////////////added 030921 /////////////diagnostics for single day/////////////////////////////////////////
-		SingleDay = true; //true;
+		SingleDay = false; //true;
 		SingleYr = 2021;
 		SingleDayNum = 83; //300; //162;
 		g_Tground = -9999; //288.15;
 		g_Pressure = -9999; //1013.25;
 		////////////////////////////////////////////////////////////////////////////////////////////////
+
+		AddCushion = false; //true;
 
 		/////////////////diagnostics  032421 /////////////////
 		//http://localhost/cgi-bin/ChaiTables.cgi/?cgi_TableType=BY&cgi_country=Eretz_Yisroel&cgi_USAcities1=1&cgi_USAcities2=0
@@ -1924,6 +1941,7 @@ __asm{
 				distlims[3] = distlims[3] * cushion_factor;
 				distlim = distlims[3];
 				cushion[3] = __max(15, Cint(cushion[3] * cushion_factor));
+				CushionAmount = cushion[3];
                 break;
             case 11: //visible sunset calculated from 30m DTM
      	  		nplac[0] = 0;
@@ -1934,6 +1952,7 @@ __asm{
 				distlims[3] = distlims[3] * cushion_factor;
 				distlim = distlims[3];
 				cushion[3] = __max(15, Cint(cushion[3] * cushion_factor));
+				CushionAmount = cushion[3];
 		  		break;
 		    case 12: //visible GokldenLight sunrise/sunset calculated from 30m DTM
 			case 13:
@@ -1945,7 +1964,8 @@ __asm{
 				distlims[3] = distlims[3] * cushion_factor;
 				distlim = distlims[3];
 				cushion[3] = __max(15, Cint(cushion[3] * cushion_factor));
-                break;
+ 				CushionAmount = cushion[3];
+               break;
 		}
 
       //aveusa = true; //invert coordinates in SunriseSunset due to
@@ -4477,7 +4497,7 @@ void timestring( short ii, short k, short iii )
 		strcpy( ntim, buff1 );
 	}
 
-	if (positnear != 0)
+	if (positnear != 0 && !AddCushion)
 	{
 		sprintf( buff1, "%s%s%s", "<font color=\"#33cc66\">", ntim, "</font>" );
 		strcpy( ntim, buff1 );
@@ -6177,24 +6197,28 @@ short calnearsearch( char *bat, char *sun )
 				accur[0] = cushion[1]; //cushions
 				accur[1] = -cushion[1];
 				distlim = distlims[1];
+				CushionAmount = cushion[1];
 				break;
 			case 1:
 				SRTMflag = 1; //SRTM level 2 (30 m)
 				accur[0] = cushion[3]; //cushions
 				accur[1] = -cushion[3];
 				distlim = distlims[3];
+				CushionAmount = cushion[13];
 				break;
 			case 2:
 				SRTMflag = 2; //SRTM level 1 (90 m)
 				accur[0] = cushion[2]; //cushions
 				accur[1] = -cushion[2];
 		        distlim = distlims[2];
+				CushionAmount = cushion[12];
 				break;
 			case 9:
 				SRTMflag = 9; //Eretz Yisroel neighborhoods
 				accur[0] = cushion[0]; //cushions
 				accur[1] = -cushion[0];
 				distlim = distlims[0];
+				CushionAmount = cushion[0];
 				break;
 			}
 			break;
@@ -7266,7 +7290,14 @@ short CreateHeaders( short types )
 		{
 			//sprintf( l_buffcopy, "%s%s%s%s", &heb2[17][0], ". ", &heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
 			sprintf( l_buffcopy, "%s%s%s%s%4.1f%s%s%s", &heb2[17][0], ". ", &heb2[23][0], "&nbsp;", vernum, ", ",&heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
-	        sprintf( l_buffwarning, "%s %3.1f %s", &heb2[15][0], distlim, &heb1[72][0] );
+	        if (!AddCushion)
+			{
+				sprintf( l_buffwarning, "%s %3.1f %s", &heb2[15][0], distlim, &heb1[72][0] );
+			}
+			else
+			{
+				sprintf( l_buffwarning, "%s", &heb2[25][0] );
+			}
 	        sprintf( l_buffazimuth, "%s", &heb2[24][0] );
 			if (GoldenLight && sqrt(pow(Gold.vert[4],2.0) + pow((Gold.vert[5] - eroshgt) * 0.001,2.0)) > 1.5) 
 			{
@@ -7281,8 +7312,16 @@ short CreateHeaders( short types )
 			                    , &heb2[3][0], "&nbsp;", &heb2[4][0], datavernum, ".", progvernum);
 	        //sprintf( l_buffwarning, "%s%s%3.1f%s%s%s", &heb2[5][0], &heb2[6][0], distlim
 			//                                       , &heb2[7][0], "\"", &heb2[8][0] );
-	        sprintf( l_buffwarning, "%s%s%3.1f%s%s%s", &heb2[5][0], &heb2[6][0], distlim
+			if (!AddCushion)
+			{
+				sprintf( l_buffwarning, "%s%s%3.1f%s%s%s", &heb2[5][0], &heb2[6][0], distlim
 			                                       , &heb2[7][0], "&quot;", &heb2[8][0] );
+			}
+			else
+			{
+				sprintf( l_buffwarning, "%s", &heb2[25][0] );
+			}
+
 	        sprintf( l_buffazimuth, "%s", &heb2[24][0] );
 		}
 	}
@@ -7304,7 +7343,14 @@ short CreateHeaders( short types )
 		{
 			//sprintf( l_buffcopy, "%s%4.1f", "All <em>zemanim</em> are in Standard Time. <u>Shabbosim are underlined</u>. &#169;Luchos Chai&nbsp;<a href=\"http://www.chaitables.com\">www.chaitables.com</a>.  Version: ", vernum  );
 			sprintf( l_buffcopy, "%s%4.1f", "Add a hour for DST. <u>Shabbosim are underlined</u>. &#169;Luchos Chai&nbsp;<a href=\"http://www.chaitables.com\">www.chaitables.com</a>.  Version: ", vernum  );
-			sprintf( l_buffwarning, "%s%3.1f%s", "\"Green\" denotes diminished accuracy due to obstructions closer than ", distlim, " km." );
+			if (!AddCushion)
+			{
+				sprintf( l_buffwarning, "%s%3.1f%s", "\"Green\" denotes diminished accuracy due to obstructions closer than ", distlim, " km." );
+			}
+			else
+			{
+				sprintf( l_buffwarning, "%s", "A larger cushion has been used for days where the horizon is obstructed by near obstructions." );
+			}
 	        sprintf( l_buffazimuth, "%s", "''?'' denotes insufficient azimuth range for calculation (pick a place with an unobstructed view, or shave obstructions)" );
 			if (GoldenLight && sqrt(pow(Gold.vert[4],2.0) + pow((Gold.vert[5] - eroshgt) * 0.001,2.0)) > 1.5) 
 			{
@@ -7315,7 +7361,14 @@ short CreateHeaders( short types )
 		{
 			//sprintf( l_buffcopy, "%s%s%s%d%s%d", "All times are according to Standard Time. Shabbosim are underlined. ", "&#169;", " Luchos Chai, Fahtal  56, Jerusalem  97430; Tel/Fax: +972-2-5713765. Version: ", datavernum, ".", progvernum );
 			sprintf( l_buffcopy, "%s%s%s%d%s%d", "Add a hour for DST. Shabbosim are underlined. ", "&#169;", " Luchos Chai, info@chaitables.com; Tel/Fax: +972-2-5713765. Version: ", datavernum, ".", progvernum );
-			sprintf( l_buffwarning, "%s%3.1f%s", "The lighter colors denote times that may be inaccurate due to near obstructions (closer than ", distlim, " km).  It is possible that such near obstructions should be ignored." );
+			if (!AddCushion)
+			{
+				sprintf( l_buffwarning, "%s%3.1f%s", "The lighter colors denote times that may be inaccurate due to near obstructions (closer than ", distlim, " km).  It is possible that such near obstructions should be ignored." );
+			}
+			else
+			{
+				sprintf( l_buffwarning, "%s", "A larger cushion has been used for days where the horizon is obstructed by near obstructions." );
+			}
 	        sprintf( l_buffazimuth, "%s", "''?'' denotes insufficient azimuth range for calculation (pick a place with an unobstructed view, or shave obstructions)" );
 		}
 	}
@@ -10756,6 +10809,10 @@ char *IsoToUnicode( char *str )
 	double vbwexp;
 	bool SingleDayModel = SingleDay;
 
+	//added 070521 -- variables for adding added cushion
+	double AddedTime = 0;
+	double accobs = 0;
+
 /**************************************************************/
 
 /*       Version 19 (of netzski6) */
@@ -10975,6 +11032,17 @@ alem */
 		//-----------------------------------------------------
 		for ( dy = (double) yrstrt[nyear - FirstSecularYr]; dy <= d__1; dy++)
 		{
+
+			//diagnostics
+			//example of how to debug for a certain year and daynumber
+			//then set a break point on ccc = 1
+			/*
+			if (nyear == 2022 && dy == 2)
+			{
+				short ccc;
+				ccc = 1;
+			}
+			*/
 
 			//day iteration
 			ndystp = (int)dy;
@@ -11314,10 +11382,10 @@ L692:
 					//first iteration to find top of sun with refraction
 					if (!VDW_REF) {
 						refract_(&al1, &p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
-					    al1 = alt1 / cd + .2666f + pt * refrac1;
+					    al1 = alt1 / cd + .2667f + pt * refrac1;
 					} else {
 						refvdw_(&hgt, &al1, &refrac1);
-						al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1;
+						al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1;
 					}
 
 					//iterate in solar altitude until converges according to convergence criteria
@@ -11329,10 +11397,10 @@ L692:
 							//subsequent iterations
 							if (!VDW_REF) {
 								refract_(&al1, &p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
-								al1 = alt1 / cd + .2666f + pt * refrac1;
+								al1 = alt1 / cd + .2667f + pt * refrac1;
 							} else {
 								refvdw_(&hgt, &al1, &refrac1);
-								al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1;
+								al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1;
 							}
 
 							//top of sun with refraction
@@ -11397,6 +11465,29 @@ L692:
 					dobss = dobsy / elevintx * (azi1 - elev[ne].vert[0]) + elev[ne].vert[2];
 					//record visual sunset results for time,azimuth,dist. to obstructions
 
+					//<<<<<<<<<<added 070521 >>>> option to add larger cushion instead of printing near obstructions days in green
+					AddedTime = 0.0;
+					if (AddCushion)
+					{
+						//check if this is considered near obstruction, if so add time cushion
+						if (dobss > 0 && lt < 90)
+						{
+							accobs = 300 * (cos(31.0 * cd)/cos(lt * cd)) * atan(0.001 * distlim/dobss)/cd;
+							AddedTime = accobs - CushionAmount;
+							if (AddedTime < 0) AddedTime = 0.0;
+							
+						}
+						else
+						{
+							//add 1 hour
+							AddedTime = 3600;
+						}
+
+						t3sub = t3sub - AddedTime/3600;
+						
+					}
+					///////////////////////////////////////070521 end /////////////////////////////////////////////
+
             	//only record times if they are earlier (sunrise) or latter (sunset)
 					if (nfil == 0) //first set of times////////////////////////////////////
 					{
@@ -11445,10 +11536,10 @@ L692:
 				//also first iteration to find top of sun with refraction
 				if (!VDW_REF) {
 					refract_(&al1, &p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
-					al1 = alt1 / cd + .2666f + pt * refrac1;
+					al1 = alt1 / cd + .2667f + pt * refrac1;
 				} else {
 					refvdw_(&hgt, &al1, &refrac1);
-					al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1;
+					al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1;
 				}
 
 				//iterate in solar altitude until converges according to convergence criteria
@@ -11459,10 +11550,10 @@ L692:
 						al1o = al1;
 						if (!VDW_REF) {
 							refract_(&al1, &p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
-							al1 = alt1 / cd + .2666f + pt * refrac1;
+							al1 = alt1 / cd + .2667f + pt * refrac1;
 						} else {
 							refvdw_(&hgt, &al1, &refrac1);
-							al1 = alt1 / cd + .2666f + pt * vdwsf * refrac1;
+							al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1;
 						}
 						
 						if (fabs(al1 - al1o) < .004f) {
@@ -11530,6 +11621,29 @@ L692:
 							//minus the adhoc winter fix if any
 	               			t3sub = t3;
 						}
+
+						///////////////added 070521 option to add cushion instead of printing green for near obstructions
+						AddedTime = 0.0;
+						if (AddCushion)
+						{
+							//check if this is considered near obstruction, if so add time cushion
+							if (dobss > 0 && lt < 90)
+							{
+								accobs = 300 * (cos(31.0 * cd)/cos(lt * cd)) * atan(.001 * distlim/dobss)/cd;
+								AddedTime = accobs - CushionAmount;
+								if (AddedTime < 0) AddedTime = 0.0;
+								
+							}
+							else
+							{
+								//add 1 hour
+								AddedTime = 3600;
+							}
+
+							t3sub = t3sub + AddedTime/3600;
+							
+						}
+						/////////////////////////////////end 070521/////////////////////////////////
 
 						//record visual sunrise results for time,azimuth,dist.to obstructions
 						if (nfil == 0) //first set of times////////////////////////////////////
@@ -12775,6 +12889,10 @@ short WriteHtmlHeader()
 
 	}
 
+	//diagnostics  -- example
+	/*
+	fprintf(stdout, "%s %d\n", "AddCushion = ", AddCushion );
+	*/
 
 	wroteheader = true; //flag that header has been written
 
@@ -13075,7 +13193,7 @@ L590:
 		*air = cd * 90. + (eps + *vdwsf * (ref + refrac1)) / 1e3;
 		///////////////////////////////////////////////////////////////////////////////////
 
-		*a1 = (ref + refrac1) * 1e-3;  //convert to radians from mrad
+		*a1 = (ref + refrac1) / (cd * 1e3);  //convert to degrees from mrad (to be consistent with the units in the VDW_REF = false option
 
 	}
 	else
@@ -13376,7 +13494,7 @@ L_692:
 			pt = 1;
 			refract_(&al1, p, t, hgt, nweather, dy, &refrac1, ns1, ns2);
 /*          first iteration to find position of upper limb of sun */
-			al1 = alt1 / cd + .2666f + pt * refrac1;
+			al1 = alt1 / cd + .2667f + pt * refrac1;
 /*          top of sun with refraction */
 			if (*niter == 1)
 			{
@@ -13385,7 +13503,7 @@ L_692:
 					al1o = al1;
 					refract_(&al1, p, t, hgt, nweather, dy, &refrac1, ns1, ns2);
 /*                  subsequent iterations */
-					al1 = alt1 / cd + .2666f + pt * refrac1;
+					al1 = alt1 / cd + .2667f + pt * refrac1;
 /*                  top of sun with refraction */
 					if (fabs(al1 - al1o) < .004f) break;
 /* L693: */
@@ -13450,7 +13568,7 @@ L_692:
 			pt = 1;
 			refract_(&al1, p, t, hgt, nweather, dy, &refrac1, ns1, ns2);
 /*              first iteration to find top of sun */
-			al1 = alt1 / cd + .2666f + pt * refrac1;
+			al1 = alt1 / cd + .2667f + pt * refrac1;
 /*              top of sun with refraction */
 			if (*niter == 1)
 			{
@@ -13459,7 +13577,7 @@ L_692:
 					al1o = al1;
 					refract_(&al1, p, t, hgt, nweather, dy, &refrac1, ns1, ns2);
 /*                      subsequent iterations */
-					al1 = alt1 / cd + .2666f + pt * refrac1;
+					al1 = alt1 / cd + .2667f + pt * refrac1;
 /*                      top of sun with refraction */
 					if (fabs(al1 - al1o) < .004f) break;
 /* L750: */
@@ -13961,6 +14079,7 @@ void AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6,
 		nacurr = 0; //add the adhoc fix in the calling module if not calculating the visible sunset
 		if (*adhocset) {
 			if (*FindWinter) {
+				*EnableSunsetInv = false;
 				DayLength = 2 * *sr1;
 				//make sure that it is cold by checking miniimum temperature for the relevant month
 				//use Meeus's forumula p. 66 to convert daynumber to month,
@@ -14043,7 +14162,7 @@ void AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6
 	}
 	//add solar semidiamter to depression angle, *air, and compensate for variable
 	//semidiameter as a function of the anomaly to first approx (based on AA-1996 C24)
-	*air = *air + (1. + cos(*aas) * .0167) * .2666 * cd;
+	*air += (1. + cos(*aas) * .0167) * .2667 * cd;
 	/*              calculate sunset */
 	sr2 = acos(-tan(*lr) * tan(*d__) + cos(*air) / (cos(*lr) * cos(*d__))) * ch;
 	sr2 *= hr;
@@ -14077,6 +14196,7 @@ void AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6
 		nacurr = 0;  //only add fix in calling module if not calculating the visible sunset
 		if (*adhocrise) {
 			if (*FindWinter) {
+				*EnableSunriseInv = false;
 				DayLength = 2 * *sr1;
 				//make sure that it is cold by checking miniimum temperature for the relevant month
 				//use Meeus's forumula p. 66 to convert daynumber to month,
@@ -14551,7 +14671,7 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 						 nyl, ms, aas, ob, &ra, es, 1);
 		}
 
-	    *air = *air + (1. + cos(*aas) * .0167) * .2666 * cd;
+	    *air = *air + (1. + cos(*aas) * .0167) * .2667 * cd;
 		if ( fabs(((-tan(*lr) * tan(d__)) + (cos(*air) / cos(*lr) / cos(d__)))) > 1.0 )
 		{
 			//sun doesn't rise that day
@@ -18999,8 +19119,8 @@ T50:
 			Y = lt;
 			X = lg;
     
-			IKMY = (int)((ULYMAP - Y) / YDIM) + 1;
-			IKMX = (int)((X - ULXMAP) / XDIM) + 1;
+			IKMY = Cint((ULYMAP - Y) / YDIM) + 1;
+			IKMX = Cint((X - ULXMAP) / XDIM) + 1;
 			tncols = NCOLS;
 			numrec = (IKMY - 1) * tncols + IKMX - 1;
 			pos = fseek(stream,numrec * 2L,SEEK_SET);
