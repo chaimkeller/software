@@ -1401,7 +1401,7 @@ Private Sub importmapfm_Click()
    filsav% = FreeFile
    found% = 0
    placnam$ = "start"
-   Open drivjk$ + "skyworld.sav" For Input As #filsav%
+   Open drivjk_c$ + "skyworld.sav" For Input As #filsav%
    Do Until EOF(filsav%)
       oldplacnam$ = placnam$
       Input #filsav%, placnam$, itmx, itmy, itmhgt
@@ -1409,6 +1409,9 @@ Private Sub importmapfm_Click()
          response = MsgBox("Error in skyworld.sav detected after entry: " + oldplacnam$, vbCritical + vbOKOnly, "Maps & More")
          Close #filsav%
          Exit Sub
+         End If
+      If placnam$ = "Collins House" Then
+         ccc = 1
          End If
       If UCase(Mid$(placnam$, 1, Len(rootname$))) = UCase(rootname$) Then
          l2 = itmx
@@ -1516,6 +1519,8 @@ Private Sub importmapfm_Click()
    Exit Sub
 
 errhand:
+    ier = MsgBox("error detected: " & Str(Err.Number) & " " & Err.Description, vbcriticial + vbOKOnly, "Error detected")
+    
 End Sub
 
 Private Sub Combo1_Change()
@@ -4719,7 +4724,7 @@ d100:   Next i%
                     coordmode2% = 1
                     Maps.Label5.Caption = "ITMx"
                     Maps.Label6.Caption = "ITMy"
-                    Maps.Text7.Text = hgtob - 1.8
+                    Maps.Text7.Text = hgtob - 1.8 'remove observer's height added in profile calculation
                     Maps.Text5.Text = kmxob * 1000
                     Maps.Text6.Text = kmyob * 1000 + 1000000
                     kmxc = Maps.Text5.Text: kmyc = Maps.Text6.Text
@@ -4729,7 +4734,7 @@ d100:   Next i%
                    coordmode2% = 2
                    Maps.Label5.Caption = "long."
                    Maps.Label6.Caption = "latit."
-                   Maps.Text7.Text = hgtob - 1.8
+                   Maps.Text7.Text = hgtob - 1.8 'remove observer's height added in profile calculation
                    Maps.Text5.Text = -kmyob
                    Maps.Text6.Text = kmxob
                    lon = Maps.Text5.Text
@@ -4748,6 +4753,12 @@ d100:   Next i%
                              vbExclamation + vbOKOnly, "Maps&More"
                       Close #obsfilnum%
                       Exit Sub
+                      End If
+                   If world = False And (Abs(kmxob) < 90 And Abs(kmyob) < 90) Then
+                      'obstruction coordinates are in geo coordinates, convert to itm
+                      Call GEOCASC(kmyob, kmxob, G11, G22)
+                      kmyob = G11 * 0.001
+                      kmxob = G22 * 0.001
                       End If
                    obsnum% = obsnum% + 1
                    'If obsnum% > travelmax% Then

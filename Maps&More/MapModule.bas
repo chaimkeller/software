@@ -403,6 +403,7 @@ g99:
 
 End Sub
 Public Sub casgeo(kmx, kmy, lg, lt)
+'converts ITM to geo using Clark geoid
         G1# = kmy - 1000000
         G2# = kmx
         r# = 57.2957795131
@@ -506,6 +507,7 @@ End Sub
 
 
 Public Sub GEOCASC(L11, L22, G11, G22)
+      'convert from geo, (lg,lt) = (l11,l22) to itm (kmx,kmy) = (G11,G22)
       Dim D1 As Double, D2 As Double, D5 As Double, E3 As Double
       Dim G1 As Double, G2 As Double, G3 As Double, D4 As Double
       Dim l1 As Double, l2 As Double, l3 As Double, l4 As Double
