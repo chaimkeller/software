@@ -593,7 +593,7 @@ L7:
     do_lio(&c__3, &c__1, (char *)&nzskflg, (ftnlen)sizeof(integer));
     do_lio(&c__5, &c__1, (char *)&geotd, (ftnlen)sizeof(doublereal));
     e_rsle();
-    if (nzskflg <= -4 || geotd != 2) {
+    if (nzskflg <= -4) {
 	geo = TRUE_;
     } else {
 	geotd = 2.;
@@ -719,6 +719,13 @@ L7:
 	do_lio(&c__3, &c__1, (char *)&yrend[1], (ftnlen)sizeof(integer));
 	do_lio(&c__3, &c__1, (char *)&nsetflag, (ftnlen)sizeof(integer));
 	e_rsle();
+
+	if (fabs(kmxo) > 80 && fabs(kmyo) > 80 && geotd == 0)
+	{
+		//these are ITM coordinates for EY location
+		geo = FALSE_;
+		geotd = 2;
+	}
 
 	if (!ReadTemps) {
 		if (!geo) {
