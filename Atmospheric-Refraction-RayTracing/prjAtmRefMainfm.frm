@@ -1478,12 +1478,22 @@ Begin VB.Form prjAtmRefMainfm
             ToolTipText     =   "Show van der Werf's info screens and plots from the original  program"
             Top             =   240
             Width           =   5055
+            Begin VB.TextBox txtDryPressure 
+               Alignment       =   2  'Center
+               Enabled         =   0   'False
+               Height          =   285
+               Left            =   3480
+               TabIndex        =   246
+               Text            =   "0.0"
+               Top             =   4680
+               Width           =   1215
+            End
             Begin VB.CheckBox chkVDW_Show 
                Caption         =   "Show VDW info screens"
                Height          =   255
                Left            =   1560
                TabIndex        =   145
-               Top             =   5880
+               Top             =   6000
                Width           =   2295
             End
             Begin VB.CommandButton cmdVDW 
@@ -1492,7 +1502,7 @@ Begin VB.Form prjAtmRefMainfm
                Left            =   840
                TabIndex        =   144
                ToolTipText     =   "Use Siebren van der Werf formulation for ray tracing"
-               Top             =   5280
+               Top             =   5520
                Width           =   3375
             End
             Begin VB.TextBox txtNSTEPS 
@@ -1606,6 +1616,14 @@ Begin VB.Form prjAtmRefMainfm
                Top             =   360
                Width           =   1215
             End
+            Begin VB.Label lblDryPressure 
+               Caption         =   "Dry Pressure (PA - PW)"
+               Height          =   255
+               Left            =   240
+               TabIndex        =   247
+               Top             =   4680
+               Width           =   2895
+            End
             Begin VB.Label lblInv 
                Alignment       =   2  'Center
                Caption         =   "Use the Ducting Layer controls to add an inversion and the Min Wavelength text box to change the wavelength"
@@ -1613,7 +1631,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   375
                Left            =   360
                TabIndex        =   237
-               Top             =   4800
+               Top             =   5040
                Width           =   4335
             End
             Begin VB.Label lbl13 
@@ -1665,10 +1683,11 @@ Begin VB.Form prjAtmRefMainfm
                Width           =   2655
             End
             Begin VB.Label lbl6 
-               Caption         =   "Atmospheric pressure (hPa) at h=0"
+               Caption         =   "Total Atm.Pressure (hPa) at h=0"
                Height          =   255
                Left            =   240
                TabIndex        =   130
+               ToolTipText     =   "Dry plus Wet atmospheric pressure at ground level"
                Top             =   2160
                Width           =   2655
             End
@@ -1800,7 +1819,7 @@ Begin VB.Form prjAtmRefMainfm
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtHumid"
-               BuddyDispid     =   196757
+               BuddyDispid     =   196759
                OrigLeft        =   2760
                OrigTop         =   4680
                OrigRight       =   3015
@@ -2071,7 +2090,7 @@ Begin VB.Form prjAtmRefMainfm
                Value           =   100
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtEInv"
-               BuddyDispid     =   196781
+               BuddyDispid     =   196783
                OrigLeft        =   4080
                OrigTop         =   1320
                OrigRight       =   4335
@@ -2104,7 +2123,7 @@ Begin VB.Form prjAtmRefMainfm
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtSInv"
-               BuddyDispid     =   196782
+               BuddyDispid     =   196784
                OrigLeft        =   4200
                OrigTop         =   960
                OrigRight       =   4455
@@ -2137,7 +2156,7 @@ Begin VB.Form prjAtmRefMainfm
                Value           =   5
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtDInv"
-               BuddyDispid     =   196783
+               BuddyDispid     =   196785
                OrigLeft        =   4440
                OrigTop         =   600
                OrigRight       =   4695
@@ -2267,7 +2286,7 @@ Begin VB.Form prjAtmRefMainfm
                _Version        =   393216
                Value           =   10
                BuddyControl    =   "txtHeightStepSize"
-               BuddyDispid     =   196791
+               BuddyDispid     =   196793
                OrigLeft        =   3120
                OrigTop         =   1920
                OrigRight       =   3375
@@ -2400,7 +2419,7 @@ Begin VB.Form prjAtmRefMainfm
                Value           =   6
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtLapse"
-               BuddyDispid     =   196800
+               BuddyDispid     =   196802
                OrigLeft        =   3480
                OrigTop         =   2640
                OrigRight       =   3735
@@ -2604,7 +2623,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   285
                Left            =   2760
                TabIndex        =   25
-               Text            =   "100"
+               Text            =   "756.7"
                ToolTipText     =   "Observer's height in meters"
                Top             =   480
                Width           =   1200
@@ -4554,7 +4573,7 @@ Private Sub cmdCalcTR_Click()
        j = 0
        TotalDist = 0
        Do While Not EOF(filein%)
-          Input #filein%, Temp, A, b, TR
+          Input #filein%, temp, A, b, TR
           TotalDist = D1 * 0.001 + j * Val(txtStepD1)
           j = j + 1
           TransferCurve(j, 1) = " " & CStr(TotalDist)
@@ -4762,15 +4781,15 @@ Private Sub cmdCalcTR_Click()
          
        j = 0
        Do While Not EOF(filein%)
-          Input #filein%, Temp, A, b, TR
+          Input #filein%, temp, A, b, TR
           j = j + 1
-          TransferCurve(j, 1) = " " & CStr(Temp)
+          TransferCurve(j, 1) = " " & CStr(temp)
           TransferCurve(j, 2) = TR
           
           PATHLENGTH = Sqr(TotalDist ^ 2# + ((H21 - H11) * 0.001 - 0.5 * (TotalDist ^ 2#) / (Rearth * 0.001)) ^ 2#)
           
-          PtX.Add Temp
-          PtY.Add Temp * (TR * Temp * Temp) / (0.0083 * PATHLENGTH * 0.001 * Press0)
+          PtX.Add temp
+          PtY.Add temp * (TR * temp * temp) / (0.0083 * PATHLENGTH * 0.001 * Press0)
           
           If TR > maxva Then maxva = TR
           If TR < minva Then minva = TR
@@ -6031,7 +6050,10 @@ Private Sub cmdMenat_Click()
 'struct {
 'Dim hj(50) As Double, tj(50) As Double, pj(50) As Double, at(50) As Double, ct(50) As Double
 
-Dim zz_1 As zz
+'Dim zz_1 As zz
+
+Dim zz_1() As zz
+
 
 '} zz_
 '
@@ -6127,6 +6149,9 @@ Dim FNM As String, AtmType As Integer, AtmNumber As Integer, lpsrate As Double, 
    
    RefCalcType% = 2
    CalcComplete = False
+   
+HCROSS = 0
+TGROUND = 0
 
 STARTALT = Val(txtStartAlt.Text)
 DELALT = Val(txtDelAlt.Text)
@@ -6422,19 +6447,23 @@ RE = ra * 1000#
 '    printf(" INPUT BEGINNING HEIGHT FOR CALCULATION (M)--> ")
 '    scanf("%lg", &hz1)
 '
-    hz1 = prjAtmRefMainfm.txtHeight
+    hz1 = prjAtmRefMainfm.txtHeight.Text 'txtHOBS
     hz1 = hz1 / 1000# 'beginning observer height to kms
 '
 '    printf(" INPUT END HEIGHT FOR CALCULATION (M)--> ")
 '    scanf("%lg", &hz2)
+    hz2 = hz1 'no stepsize in observer height ever implemented
     hz2 = hz2 / 1000# 'end observer height in kms
 '
 '    printf(" INPUT STEP HEIGHT FOR CALCULATION (M)--> ")
 '    scanf("%lg", &dhz)
-    dhz = 100 'meters
+       
+    dhz = 1#  'no stepsize in observer height ever implemented
+    
     dhz = dhz / 1000# 'stepsize in observer height in kms
     d__1 = (hz2 - hz1) / dhz
     nhgt = CInt(d__1) + 1
+    nhgt = 1 'loop not yet implemented <<<<<<<<<<<
 '
 '/*        WRITE (*,'(A,F6.1)')' PRESENT HEIGHT FOR CALCULATION =',HZ*1000 */
 '/*       WRITE (*,'(A\)')' WANT NEW HEIGHT ? (Y/N)' */
@@ -6453,10 +6482,15 @@ RE = ra * 1000#
 '    //if (isn <> 1 and isn <>2) isn = 1
 '
 '    /*
+    ReDim Preserve zz_1(NumLayers - 1) As zz '<<<
+    
     For k = 1 To NumLayers
-        zz_1.hj(k - 1) = ELV(k - 1) ' //hs(k - 1)
-        zz_1.tj(k - 1) = TMP(k - 1) ' //ts(k - 1)
-        zz_1.pj(k - 1) = PRSR(k - 1) ' //ps(k - 1)
+'        zz_1.hj(k - 1) = ELV(k - 1) ' //hs(k - 1)
+'        zz_1.tj(k - 1) = TMP(k - 1) ' //ts(k - 1)
+'        zz_1.pj(k - 1) = PRSR(k - 1) ' //ps(k - 1)
+        zz_1(k - 1).hj = ELV(k - 1) ' //hs(k - 1)
+        zz_1(k - 1).tj = TMP(k - 1) ' //ts(k - 1)
+        zz_1(k - 1).pj = PRSR(k - 1) ' //ps(k - 1)
     Next k
 '    /*
 '    if (isn == 1) {
@@ -6470,22 +6504,46 @@ RE = ra * 1000#
 '    /*
 '
 '    }
+'    For k = 1 To NumLayers
+'        l = k + 1
+'        If (k < NumLayers) Then
+'            zz_1.AT(k - 1) = (zz_1.tj(l - 1) - zz_1.tj(k - 1)) / (zz_1.hj(l -
+'                1) - zz_1.hj(k - 1))
+'            End If
+'        If (k < NumLayers) Then
+'            If (zz_1.tj(l - 1) <> zz_1.tj(k - 1)) Then '//non-isothermic region
+'
+'                zz_1.ct(k - 1) = Log(zz_1.pj(l - 1) / zz_1.pj(k - 1)) / Log( _
+'                    zz_1.tj(l - 1) / zz_1.tj(k - 1))
+'
+'            Else '//isothermic region  -- interpolate between the two layer's pressures
+'
+'                zz_1.ct(k - 1) = (zz_1.pj(l - 1) - zz_1.pj(k - 1)) / (zz_1.hj(l - _
+'                1) - zz_1.hj(k - 1))
+'
+'                End If
+'
+''    printf("%i3, %f6, %f9, %f7, AT=%f7, CT=%f9\n", k, zz_1.hj(k - 1), zz_1.pj(k - 1), zz_1.tj(k - 1), zz_1.at(k - 1), zz_1.ct(k - 1))
+'          End If
+'     Next k
+    
+    'reformat 072521
     For k = 1 To NumLayers
         l = k + 1
         If (k < NumLayers) Then
-            zz_1.AT(k - 1) = (zz_1.tj(l - 1) - zz_1.tj(k - 1)) / (zz_1.hj(l - _
-                1) - zz_1.hj(k - 1))
+            zz_1(k - 1).AT = (zz_1(l - 1).tj - zz_1(k - 1).tj) / (zz_1(l - 1).hj _
+                 - zz_1(k - 1).hj)
             End If
         If (k < NumLayers) Then
-            If (zz_1.tj(l - 1) <> zz_1.tj(k - 1)) Then '//non-isothermic region
+            If (zz_1(l - 1).tj <> zz_1(k - 1).tj) Then '//non-isothermic region
             
-                zz_1.ct(k - 1) = Log(zz_1.pj(l - 1) / zz_1.pj(k - 1)) / Log( _
-                    zz_1.tj(l - 1) / zz_1.tj(k - 1))
+                zz_1(k - 1).ct = Log(zz_1(l - 1).pj / zz_1(k - 1).pj) / Log( _
+                    zz_1(l - 1).tj / zz_1(k - 1).tj)
             
             Else '//isothermic region  -- interpolate between the two layer's pressures
             
-                zz_1.ct(k - 1) = (zz_1.pj(l - 1) - zz_1.pj(k - 1)) / (zz_1.hj(l - _
-                1) - zz_1.hj(k - 1))
+                zz_1(k - 1).ct = (zz_1(l - 1).pj - zz_1(k - 1).pj) / (zz_1(l - 1).hj _
+                 - zz_1(k - 1).hj)
             
                 End If
 
@@ -6529,11 +6587,15 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
    wl = 380# + CDbl(KWAV - 1) * 5#
    wl = wl / 1000# 'convert to nm
    
-    nhgt = 1 'use so far only one height '<<<<<<<<<<<<<<
+    Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, 0) 'reset
+   
+'    nhgt = 1 'use so far only one height '<<<<<<<<<<<<<<
     i__1 = nhgt
     For nkhgt = 1 To i__1
 '    {
-'
+'        Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * nkhgt / i__1))
+'        DoEvents
+
         hz = hz1 + (nkhgt - 1) * dhz
 '        //mhgt = floor(hz*1000)
 '
@@ -6542,6 +6604,11 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
 '        //fprintf(stream, "%lg, %lg, %lg, %lg\n", XP, hz, A1, A2)
 '
 '        printf("Observer height (m) = %lg\n", hz * 1000.0)
+     
+        epg1 = epg
+        jstep = jstep + 1
+
+        ALFA(KWAV, CInt(KWAV - KMIN)) = epg1
 '
         d__1 = (epg2 - epg1) / estep
         nang = CInt(Abs(d__1)) + 1
@@ -6562,8 +6629,8 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
             epg = epg1 - (kgr - 1) * estep
             ALFA(KWAV, kgr) = epg
             
-            Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * kgr / nang))
-            DoEvents
+'            Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * kgr / nang))
+'            DoEvents
 
             If (epg > 0# And epg < estep) Then
                epg = 0#
@@ -6584,7 +6651,7 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
                 hen1 = hz + dh / 2#
                 End If
                 
-            If hen1 = 0 And zz_1.hj(0) = 0 Then 'hit rock bottom
+            If hen1 = 0 And zz_1(0).hj = 0 Then 'zz_1.hj(0) = 0 Then 'hit rock bottom
                jstop = kgr
                Exit For
                End If
@@ -6611,6 +6678,9 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
 
             i__3 = nz
             For n = 1 To i__3 'trace over all the layers
+            
+                Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * n / i__3))
+                DoEvents
 
                 b = bn 'initial zenith angle
                 e = pi2 - b 'initial view angle
@@ -6716,15 +6786,17 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
 '                Write #fileout%, XP, ru 'A1, A2
                 
                 If ru < ra Then 'collided with the surface
-                   Write #fileout%, XP * 1000#, -1000, ALFA(KWAV, kgr), e2, dt1 * 0.001 * 180# * 60 / pi
+                   Write #fileout%, XP * 1000#, -1000, (ra + hen) * 1000# * Cos(ANGLE) - RE, ALFA(KWAV, kgr), e2, dt1 * 0.001 * 180# * 60 / pi
                    jstop = kgr
                 Else
                    'limit the recording to every other step
                    If n Mod Val(prjAtmRefMainfm.txtHeightStepSize.Text) = 0 Then
-                      Write #fileout%, XP * 1000#, (ru - ra) * 1000#, ALFA(KWAV, kgr), e2, dt1 * 0.001 * 180# * 60 / pi
+                      Write #fileout%, XP * 1000#, (ru - ra) * 1000#, (ra + hen) * 1000# * Cos(ANGLE) - RE, ALFA(KWAV, kgr), e2, dt1 * 0.001 * 180# * 60 / pi
                       End If
                    jstop = -1
                    End If
+                   
+                ALFT(KWAV, kgr) = ALFA(KWAV, kgr) - dt1 * 0.001 * 180# * 60 / pi 'true depression angle in minutes of degree
                 
                 If (rt >= rsof) Then
                     Exit For
@@ -6733,18 +6805,20 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
                 fiem = epzm - 4.665 - dt1
                 fieg = fiem * ramg
                 
+'                ALFT(KWAV, kgr) = ALFA(KWAV, kgr) - dt1 * 0.001 * 180# * 60 / pi 'true depression angle in minutes of degree
+                
                 If jstop <> -1 Then Exit For
 
             Next n
                         
-            If jstop <> -1 Then Exit For
+'            If jstop <> -1 Then Exit For
 '
 '            printf("View Angle (deg.) = %lg, Accumlated refraction (mrad) = %lg\n", epg, dt1)
 '            If epg = 0 Then
 '               prjAtmRefMainfm.lblRef = "View Angle (deg.) = " & epg & vbCrLf & "Accumlated refraction (mrad) = " & dt1
 '               End If
             
-            ALFT(KWAV, kgr) = ALFA(KWAV, kgr) - dt1 * 0.001 * 180# * 60 / pi 'true depression angle in minutes of degree
+'            ALFT(KWAV, kgr) = ALFA(KWAV, kgr) - dt1 * 0.001 * 180# * 60 / pi 'true depression angle in minutes of degree
             
 '            If ALFA(KWAV, kgr) = 0 Then
 '               ccc = 1
@@ -6752,11 +6826,10 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
 
             START = True
             XP = 0#
-
         Next kgr
-        If jstop <> -1 Then Exit For
+'        If jstop <> -1 Then Exit For
     Next nkhgt
-   If jstop <> -1 Then Exit For
+'   If jstop <> -1 Then Exit For
    
 Next KWAV
 
@@ -6764,8 +6837,14 @@ Close #fileout%
 
 Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, 0)
 prjAtmRefMainfm.progressfrm.Visible = False
+
+If n_size = 0 And kgr <> 0 Then jstop = kgr
+If kgr > 1 Then jstop = kgr - 1
      
-StatusMes = "Apparent Altitude of the Horizon (arcminutes) = " & Str(ALFA(KWAV, jstop - 1)) & vbCrLf & "True Altitude of the Horizon (arcminutes) = " & Str((-DACOS(ra / (ra + hz)) / CONV))
+If jstop <> -1 Then
+    StatusMes = "HOE = " & Str$(hz1 * 1000#) & " meters" & vbCrLf & "Apparent Alt. of Horizon (arcminu.) = " & Str(ALFA(KWAV - 1, jstop)) & vbCrLf & "True Altitude of the Horizon (arcminutes) = " & Str((-DACOS(ra / (ra + hz)) / CONV))
+    End If
+    
 Call StatusMessage(StatusMes, 1, 0)
 prjAtmRefMainfm.lblHorizon.Caption = StatusMes
 prjAtmRefMainfm.lblHorizon.Refresh
@@ -6780,24 +6859,29 @@ CalcComplete = True
 Dim hgt As Double, Pr As Double, Te As Double
 NumTemp = 0
 For j = 1 To NNN
-   For hgt = zz_1.hj(j - 1) To zz_1.hj(j) - Val(prjAtmRefMainfm.txtHeightStepSize.Text) * 0.001 Step Val(prjAtmRefMainfm.txtHeightStepSize.Text) * 0.001
+'   For hgt = zz_1.hj(j - 1) To zz_1.hj(j) - Val(prjAtmRefMainfm.txtHeightStepSize.Text) * 0.001 Step Val(prjAtmRefMainfm.txtHeightStepSize.Text) * 0.001
+   For hgt = zz_1(j - 1).hj To zz_1(j).hj - Val(prjAtmRefMainfm.txtHeightStepSize.Text) * 0.001 Step Val(prjAtmRefMainfm.txtHeightStepSize.Text) * 0.001
       Call layers_int(hgt, zz_1, NumLayers, Pr, Te)
-      ELV(NumTemp) = hgt * 1000#
+      ELV(NumTemp) = hgt
       TMP(NumTemp) = Te
       PRSR(NumTemp) = Pr
       NumTemp = NumTemp + 1
    Next hgt
 Next j
-ELV(NumTemp) = zz_1.hj(NNN - 1) * 1000#
-TMP(NumTemp) = zz_1.tj(NNN - 1)
-PRSR(NumTemp) = zz_1.pj(NNN - 1)
+'ELV(NumTemp) = zz_1.hj(NNN - 1) * 1000#
+'TMP(NumTemp) = zz_1.tj(NNN - 1)
+'PRSR(NumTemp) = zz_1.pj(NNN - 1)
+'ELV(NumTemp) = zz_1(NNN - 1).hj
+'TMP(NumTemp) = zz_1(NNN - 1).tj
+'PRSR(NumTemp) = zz_1(NNN - 1).pj
 NNN = NumTemp
+NumLayers = NNN
 'now load up temperature and pressure charts
     
  ReDim TransferCurve(1 To NNN, 1 To 2) As Variant
  
  For j = 1 To NNN
-    TransferCurve(j, 1) = " " & CStr(ELV(j - 1) * 0.001)
+    TransferCurve(j, 1) = " " & CStr(ELV(j - 1))
 '         TransferCurve(J, 2) = ELV(J - 1) * 0.001
     TransferCurve(j, 2) = TMP(j - 1)
  Next j
@@ -6835,11 +6919,11 @@ Open App.Path & "\tc_M.dat" For Output As #filnum%
 '      WRITE (20,*) N
 NumTc = 0
 Print #filnum%, n_size
-For j = 1 To jstop - 1
+For j = 1 To kgr - 1
 '        WRITE(20,1) ALFA(KMIN,J),ALFT(KMIN,J)
     Print #filnum%, ALFA(KMIN, j), ALFT(KMIN, j)
     If ALFA(KMIN, j) = 0 Then 'display the refraction value for the zero view angle ray
-       prjAtmRefMainfm.lblRef.Caption = "Atms. refraction (deg.) = " & Abs(ALFT(KMIN, j)) / 60# & vbCrLf & "Atms. refraction (mrad) = " & Abs(ALFT(KMIN, j)) * 1000# * cd / 60#
+       prjAtmRefMainfm.lblRef.Caption = "Atms. refraction (deg.) = " & Abs(-ALFT(KMIN, j)) / 60# & vbCrLf & "Atms. refraction (mrad) = " & Abs(ALFT(KMIN, j)) * 1000# * cd / 60#
        prjAtmRefMainfm.lblRef.Refresh
        DoEvents
        End If
@@ -6884,6 +6968,23 @@ End With
 '    AtmRefPicSunfm.WindowState = vbMinimized
 '    BrutonAtmReffm.WindowState = vbMaximized
  'set size of picref by size of earth
+ 
+ 'find HCROSS for calculation methods that didn't define it yet
+If HCROSS = 0 And TGROUND = 0 Then
+    TGROUND = TMP(0)
+    For i = 1 To NumLayers
+'           If HL(i) > 10 And i <> 1 Then
+       If TMP(i) = TMP(i - 1) And ELV(i) > 9 Then 'this is by definition the cross over region, i.e., the beginning of the isothermal region
+         HCROSS = ELV(i) * 1000
+         If HCROSS > 12 Then 'determination of HCROSS from atmosspheric file failed, i.e., troposphere is full sure < 12 km high
+            HCROSS = (TGROUND - 216.65) / 0.0065
+            End If
+         Exit For
+         End If
+    Next i
+    If HCROSS = 0 Then HCROSS = 12000
+    End If
+ 
  Call PlotRayTracing(prjAtmRefMainfm, prjAtmRefMainfm.Picture2, prjAtmRefMainfm.cmbSun, prjAtmRefMainfm.cmbAlt)
  prjAtmRefMainfm.cmbSun.Clear
  prjAtmRefMainfm.cmbAlt.Clear
@@ -10127,7 +10228,7 @@ Private Sub cmdSmaller_Click()
 End Sub
 
 Private Sub cmdTest_Click()
-   Dim Temp As Double, TR As Double, RETH As Double, cd As Double, bbb As Double
+   Dim temp As Double, TR As Double, RETH As Double, cd As Double, bbb As Double
    RETH = 6356.766
    cd = 3.14159265359 / 180#
    
@@ -10186,16 +10287,16 @@ Private Sub cmdTest_Click()
            
         j = 0
         Do While Not EOF(filein%)
-           Input #filein%, Temp, A, b, TR
+           Input #filein%, temp, A, b, TR
            j = j + 1
-           TransferCurve(j, 1) = " " & CStr(Temp)
+           TransferCurve(j, 1) = " " & CStr(temp)
            TransferCurve(j, 2) = TR
            
            PATHLENGTH = Sqr(TotalDist ^ 2# + ((H21 - H11) * 0.001 - 0.5 * (TotalDist ^ 2#) / RETH) ^ 2#)
            
-           PtX.Add Temp
-           bbb = (TR * Temp * Temp) / (0.0083 * PATHLENGTH * Val(txtPress0))
-           PtY.Add bbb * Temp
+           PtX.Add temp
+           bbb = (TR * temp * temp) / (0.0083 * PATHLENGTH * Val(txtPress0))
+           PtY.Add bbb * temp
            
            If TR > maxva Then maxva = TR
            If TR < minva Then minva = TR
@@ -10234,7 +10335,7 @@ Private Sub cmdTest_Click()
        j = 0
        TotalDist = 0
        Do While Not EOF(filein%)
-          Input #filein%, Temp, A, b, TR
+          Input #filein%, temp, A, b, TR
           TotalDist = Val(txtD1) + j * Val(txtStepD1)
           j = j + 1
           TransferCurve(j, 1) = " " & CStr(TotalDist)
@@ -10910,7 +11011,7 @@ BETAST = Val(txtBETAST) * 60#
 WAVELN = Val(txtKmin) * 0.001 'Val(txtWAVELN)
 OBSLAT = Val(txtOBSLAT)
 NSTEPS = Val(txtNSTEPS)
-RELHUM = Val(txtHumid)
+If OptionSelby.Value = True Then RELHUM = Val(txtHumid)
 RELH = RELHUM / 100
 
 
@@ -11270,6 +11371,7 @@ Dim FK2 As Double, FK3 As Double, FK4 As Double, HSTEP As Double
 
 H = 0#
 PRESSD1(1) = Press0 - RELH * fVAPOR(0#, -1, NumLayers)
+txtDryPressure.Text = Trim$(Str$(PRESSD1(1))) 'display the dry pressure, i.e., total atmospheric pressure is combination of dry and wet pressure
 For i = 1 To (31000 + 15) Step 1
 '    If i = 31000 Then
 '       ccc = 1
@@ -11588,8 +11690,8 @@ Else 'no need to use less resolution
             With .ValueScale
                 .Auto = False
                 .MajorDivision = 10
-                .Maximum = MaxTemp * 1.01
-                .Minimum = MinTemp
+                .Maximum = MaxTemp * 1.2
+                .Minimum = MinTemp * 0.9
             End With
         End With
 '        With .Axis(VtChAxisIdY2)
@@ -11619,7 +11721,7 @@ If NNN > 1000 Then
    Next j
 Else
    For j = 1 To NNN
-     TransferCurve(j, 2) = PRSR((j - 1) * 10)
+     TransferCurve(j, 2) = PRSR(j - 1)
    Next j
    End If
  
@@ -12086,6 +12188,11 @@ NORAYPRINT:
 
         'END DO-LOOP OVER PATH
         nloop = nloop + 1
+        If (n_size + 1 <= 1) Then
+            'assume ldxx ghzn 10000 loops, there are probably less
+            Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * nloop / 10000#))
+            End If
+
     Loop
 NEXTRAY:
 '    a$ = INKEY$
@@ -12113,10 +12220,13 @@ NEXTRAY:
         End If
            
 '   Call UpdateStatus(prjAtmRefMainfm, picProgBar,1, CLng(100# * CInt(Abs(BETAM - BETALO) / BETAST + 1) / CInt(Abs(BETAHI - BETALO) / BETAST + 1)))
-    Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * jstep / (n_size + 1)))
+    If (n_size > 1) Then
+        Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * jstep / (n_size + 1)))
+        End If
 
 'Next BETAM
 Next jstep
+
 ENDOFCALCULATION:
 '========================END OF CALCULATION=====================
 
@@ -12283,7 +12393,7 @@ If n_size = 0 And jstep <> 0 Then jstop = jstep
 If jstep > 1 Then jstop = jstep - 1
 
 If jstop <> -1 Then
-    StatusMes = "Apparent Altitude of the Horizon (arcminutes) = " & Str(ALFA(KMIN, jstop - 1)) & vbCrLf & "True Altitude of the Horizon (arcminutes) = " & Str((-DACOS(Rearth / (Rearth + HOBS)) / RADCON))
+    StatusMes = "HOE = " & txtHOBS & " meters" & vbCrLf & "Apparent Altitude of the Horizon (arcminutes) = " & Str(ALFA(KMIN, jstop - 1)) & vbCrLf & "True Altitude of the Horizon (arcminutes) = " & Str((-DACOS(Rearth / (Rearth + HOBS)) / RADCON))
     End If
 Call StatusMessage(StatusMes, 1, 0)
 prjAtmRefMainfm.lblHorizon.Caption = StatusMes

@@ -28,7 +28,7 @@ Public SINV As Double, EINV As Double, HGTSCALE As Double, DTINV As Double
 Public ALT(NumSuns + 1) As Double, AZM(NumSuns + 1) As Double ', CNST(1000) As Double
 
 Public KSTOP As Long, III As Long, IIS As Long, j As Long, ISSR As Integer, INVFLAG As Integer
-Public AMZOBS As Double, BETA As Double, X As Double, DIS As Double
+Public AMZOBS As Double, BETA As Double, x As Double, DIS As Double
 Public Theta As Double, H As Double, UP As Double, XD As Double, HD As Double
 Public R1 As Double, R2 As Double, z As Double, ARGT As Double, UsingHSatmosphere As Boolean
 Public DZ As Double, AMGAM As Double, xc As Double, YC As Double, ZC As Double
@@ -76,10 +76,10 @@ Public Xorigin As Double, Yorigin As Double, RefZoomed As Boolean, PicsResized A
 
 Public Zoom As Double, twipsx As Double, twipsy As Double, pixwi As Double, pixhi As Double
 
-Declare Function ExtFloodFill Lib "gdi32" (ByVal hdc As Long, ByVal X As Long, ByVal Y As Long, ByVal crColor As Long, ByVal wFillType As Long) As Long
-Declare Function FloodFill Lib "gdi32" (ByVal hdc As Long, ByVal X As Long, ByVal Y As Long, ByVal crColor As Long) As Long
+Declare Function ExtFloodFill Lib "gdi32" (ByVal hdc As Long, ByVal x As Long, ByVal y As Long, ByVal crColor As Long, ByVal wFillType As Long) As Long
+Declare Function FloodFill Lib "gdi32" (ByVal hdc As Long, ByVal x As Long, ByVal y As Long, ByVal crColor As Long) As Long
       
-Declare Function SetPixel Lib "gdi32" (ByVal hdc As Long, ByVal X As Long, ByVal Y As Long, ByVal crColor As Long) As Long
+Declare Function SetPixel Lib "gdi32" (ByVal hdc As Long, ByVal x As Long, ByVal y As Long, ByVal crColor As Long) As Long
 
 Public Declare Sub Sleep Lib "kernel32.dll" (ByVal dwMilliseconds As Long)
 
@@ -88,8 +88,8 @@ Public Const FLOODFILLBORDER = 0
 Public Const FLOODFILLSURFACE = 1
 
 Public Type POINTAPI
-    X As Double
-    Y As Double
+    x As Double
+    y As Double
 End Type
 
 Public Type PicZoom
@@ -103,17 +103,25 @@ Public RefZoom As PicZoom
 
 Public nearmouse_digi As POINTAPI
 
+'Public Type zz 'used in Menat ray tracing
+' hj(50) As Double
+' tj(50) As Double
+' pj(50) As Double
+' AT(50) As Double
+' ct(50) As Double
+'End Type
+
 Public Type zz 'used in Menat ray tracing
- hj(50) As Double
- tj(50) As Double
- pj(50) As Double
- AT(50) As Double
- ct(50) As Double
+ hj As Double
+ tj As Double
+ pj As Double
+ AT As Double
+ ct As Double
 End Type
 
 '**********Digitizer flags and parameters**************** '<<<<<<<<<<<<digi changes
 Public Declare Function GetCursorPos Lib "user32" (lpPoint As POINTAPI) As Long
-Public Declare Function StretchBlt Lib "gdi32" (ByVal hdc As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hSrcDC As Long, ByVal XSrc As Long, ByVal YSrc As Long, ByVal nSrcWidth As Long, ByVal nSrcHeight As Long, ByVal dwRop As Long) As Long
+Public Declare Function StretchBlt Lib "gdi32" (ByVal hdc As Long, ByVal x As Long, ByVal y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal hSrcDC As Long, ByVal XSrc As Long, ByVal YSrc As Long, ByVal nSrcWidth As Long, ByVal nSrcHeight As Long, ByVal dwRop As Long) As Long
 Public Declare Function SetStretchBltMode Lib "gdi32" (ByVal hdc As Long, ByVal hStretchMode As Long) As Long
 Public Declare Function GetDC Lib "user32" (ByVal hwnd As Long) As Long
 Public Declare Function ReleaseDC Lib "user32" (ByVal hwnd As Long, ByVal hdc As Long) As Long
@@ -125,7 +133,7 @@ Public worldcd%(28)
 Public Const INIT_VALUE = 9999999
 
 '-------------------API for mouse control using GTCO digitizer--------------------------
-Public Declare Function SetCursorPos Lib "user32" (ByVal X As Long, ByVal Y As Long) As Long
+Public Declare Function SetCursorPos Lib "user32" (ByVal x As Long, ByVal y As Long) As Long
 Public Declare Sub mouse_event Lib "user32" (ByVal dwFlags As Long, ByVal dX As Long, ByVal dy As Long, ByVal cButtons As Long, ByVal dwExtraInfo As Long)
 Public Declare Function ClipCursor Lib "user32" (lpRect As Any) As Long
 
@@ -224,14 +232,14 @@ Public Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (By
       
       '***********Fancy progress bar global variables and API
 Declare Function BitBlt Lib "gdi32" (ByVal hDestDC As _
- Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As _
+ Long, ByVal x As Long, ByVal y As Long, ByVal nWidth As _
  Long, ByVal nHeight As Long, ByVal hSrcDC As Long, _
  ByVal XSrc As Long, ByVal YSrc As Long, ByVal dwRop As _
  Long) As Long
 Public pbScaleWidth As Long
 
 '*****************Windows API functions, subroutines and constants*********
-Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal X As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
+Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
 Declare Function BringWindowToTop Lib "user32" (ByVal hwnd As Long) As Long
 Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
 Declare Function GetSystemDirectory Lib "kernel32" Alias "GetSystemDirectoryA" (ByVal lpBuffer As String, ByVal nsize As Long) As Long
@@ -912,7 +920,7 @@ End Sub
 'C   "integrating" the product of the wavelength distribution of
 'C   energy and the XYZ functions.
 'C
-   Public Sub EXYZ(X As Double, Y As Double, z As Double, ByRef EDIS() As Double)
+   Public Sub EXYZ(x As Double, y As Double, z As Double, ByRef EDIS() As Double)
 '       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 '        Option Explicit
         
@@ -974,8 +982,8 @@ End Sub
           YY = YY + EDIS(k) * WXYZ(2, k)
           zz = zz + EDIS(k) * WXYZ(3, k)
        Next k
-       X = XX
-       Y = YY
+       x = XX
+       y = YY
        z = zz
 '       Return
 
@@ -1243,6 +1251,7 @@ InversionLayer = False
 
 HgtMult = 1#
 If prjAtmRefMainfm.OptionSelby Then HgtMult = 1000#
+'If RefCalcType% = 2 Then HgtMult = 1#
 
 PicCenterX = picRef.Width * 0.5 + Xorigin
 PicCenterY = picRef.height * 0.5 - Yorigin
@@ -1349,16 +1358,19 @@ For i = NumTemp To 1 Step -1
 '           ElseIf InversionLayer And TMP(i - 1) > TMP(i) And ELV(i - 1) < 11000 Then
 '               InversionLayer = False
               'mark the inversion layer
+            If i = 19 Then
+               ccc = 1
+               End If
 '               picRef.Circle (PicCenterX, PicCenterY - Multiplication * HOBS), CSng(Multiplication * (RE + ELV(i - 1))), QBColor(1)
             If slope0 * slope1 < 0 And ELV(i - 1) * HgtMult < HCROSS And i < NumTemp And i > 1 Then
                picRef.Circle (PicCenterX, PicCenterY), CSng(Multiplication * (RE + ELV(i - 1) * HgtMult)), QBColor(1)
                NumInversions = NumInversions + 1
                ReDim Preserve InvLabels(NumInversions)
-               InvLabels(NumInversions - 1).X = CLng(picRef.Width * 0.5)
-               InvLabels(NumInversions - 1).Y = CLng(PicCenterY - CSng(Multiplication * (RE + ELV(i - 1) * HgtMult)))
+               InvLabels(NumInversions - 1).x = CLng(picRef.Width * 0.5)
+               InvLabels(NumInversions - 1).y = CLng(PicCenterY - CSng(Multiplication * (RE + ELV(i - 1) * HgtMult)))
                'if shifted by translation, calculate how much to shift in y
                DeltaX = picRef.Width * 0.5 - PicCenterX
-               InvLabels(NumInversions - 1).Y = CLng(PicCenterY - Sqr((Multiplication * (RE + ELV(i - 1) * HgtMult)) ^ 2 - DeltaX ^ 2))
+               InvLabels(NumInversions - 1).y = CLng(PicCenterY - Sqr((Multiplication * (RE + ELV(i - 1) * HgtMult)) ^ 2 - DeltaX ^ 2))
                ReDim Preserve InvText(NumInversions)
                InvText(NumInversions - 1) = "Inversion at: " & Str(ELV(i - 1) * HgtMult) & " meters"
                End If
@@ -1414,8 +1426,8 @@ picRef.Line (PicCenterX, PicCenterY - Multiplication * RE)-(PicCenterX, PicCente
 'now add labels to inversions if any
 If NumInversions > 0 Then
    For i = 1 To NumInversions
-       picRef.CurrentX = InvLabels(i - 1).X
-       picRef.CurrentY = InvLabels(i - 1).Y
+       picRef.CurrentX = InvLabels(i - 1).x
+       picRef.CurrentY = InvLabels(i - 1).y
        
        picRef.FontSize = 12
        picRef.FontName = "Arial"
@@ -1467,8 +1479,8 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
           If numStep& = 0 Then
              xpath0 = A1
              ypath0 = A2
-             RayTrace(NumViewAngles&, numStep&).X = xpath0 / Multiplication
-             RayTrace(NumViewAngles&, numStep&).Y = ypath0 / Multiplication
+             RayTrace(NumViewAngles&, numStep&).x = xpath0 / Multiplication
+             RayTrace(NumViewAngles&, numStep&).y = ypath0 / Multiplication
              XP0 = XP
              YP0 = YP
              NumTraces(NumViewAngles&) = numStep&
@@ -1482,8 +1494,8 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
             If XP >= XP0 Then
                xpath = A1
                ypath = A2
-               RayTrace(NumViewAngles&, numStep&).X = xpath / Multiplication
-               RayTrace(NumViewAngles&, numStep&).Y = ypath / Multiplication
+               RayTrace(NumViewAngles&, numStep&).x = xpath / Multiplication
+               RayTrace(NumViewAngles&, numStep&).y = ypath / Multiplication
                If NumViewAngles& = cmbAlt.ListIndex Or cmbAlt.ListIndex = cmbAlt.ListCount - 1 Then
                   If ypath <> 0 Then
                     picRef.Line (PicCenterX + xpath0, PicCenterY - ypath0)-(PicCenterX + xpath, PicCenterY - ypath), LineColor
@@ -1516,8 +1528,8 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
                numStep& = 0
                xpath0 = A1
                ypath0 = A2
-               RayTrace(NumViewAngles&, numStep&).X = xpath0 / Multiplication
-               RayTrace(NumViewAngles&, numStep&).Y = ypath0 / Multiplication
+               RayTrace(NumViewAngles&, numStep&).x = xpath0 / Multiplication
+               RayTrace(NumViewAngles&, numStep&).y = ypath0 / Multiplication
                XP0 = XP
                YP0 = YP
                NumTraces(NumViewAngles&) = numStep&
@@ -1564,17 +1576,17 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
          NumViewAngles& = SunAngles(NA - 1, cmbAlt.ListIndex) - 1
          For i = 0 To NumTraces(NumViewAngles& - 1) - 1
         
-            xpath0 = RayTrace(NumViewAngles&, i).X * Multiplication
-            ypath0 = RayTrace(NumViewAngles&, i).Y * Multiplication
-            xpath = RayTrace(NumViewAngles&, i + 1).X * Multiplication
-            ypath = RayTrace(NumViewAngles&, i + 1).Y * Multiplication
+            xpath0 = RayTrace(NumViewAngles&, i).x * Multiplication
+            ypath0 = RayTrace(NumViewAngles&, i).y * Multiplication
+            xpath = RayTrace(NumViewAngles&, i + 1).x * Multiplication
+            ypath = RayTrace(NumViewAngles&, i + 1).y * Multiplication
            
             If ypath > 0 Then
                 picRef.Line (PicCenterX + xpath0, PicCenterY - ypath0)-(PicCenterX + xpath, PicCenterY - ypath), LineColor
                 End If
             
             If RecordVertices And Val(cmbAlt.Text) = SunAngle Then
-               Write #fileout%, RayTrace(NumViewAngles&, i).X, RayTrace(NumViewAngles&, i).Y - RE
+               Write #fileout%, RayTrace(NumViewAngles&, i).x, RayTrace(NumViewAngles&, i).y - RE
                End If
             
          Next i
@@ -1590,10 +1602,10 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
              NumViewAngles& = SunAngles(NA - 1, j) - 1
              For i = 0 To NumTraces(NumViewAngles& - 1) - 1
             
-                xpath0 = RayTrace(NumViewAngles&, i).X * Multiplication
-                ypath0 = RayTrace(NumViewAngles&, i).Y * Multiplication
-                xpath = RayTrace(NumViewAngles&, i + 1).X * Multiplication
-                ypath = RayTrace(NumViewAngles&, i + 1).Y * Multiplication
+                xpath0 = RayTrace(NumViewAngles&, i).x * Multiplication
+                ypath0 = RayTrace(NumViewAngles&, i).y * Multiplication
+                xpath = RayTrace(NumViewAngles&, i + 1).x * Multiplication
+                ypath = RayTrace(NumViewAngles&, i + 1).y * Multiplication
                
                 If ypath > 0 Then
                     picRef.Line (PicCenterX + xpath0, PicCenterY - ypath0)-(PicCenterX + xpath, PicCenterY - ypath), LineColor
@@ -1659,8 +1671,8 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
           If numStep& = 0 Then
              xpath0 = A1
              ypath0 = A2
-             RayTrace(NumViewAngles&, numStep&).X = xpath0 / Multiplication
-             RayTrace(NumViewAngles&, numStep&).Y = ypath0 / Multiplication
+             RayTrace(NumViewAngles&, numStep&).x = xpath0 / Multiplication
+             RayTrace(NumViewAngles&, numStep&).y = ypath0 / Multiplication
              XP0 = XP
              YP0 = YP
              NumTraces(NumViewAngles&) = numStep&
@@ -1674,8 +1686,8 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
             If XP >= XP0 Then
                xpath = A1
                ypath = A2
-               RayTrace(NumViewAngles&, numStep&).X = xpath / Multiplication
-               RayTrace(NumViewAngles&, numStep&).Y = ypath / Multiplication
+               RayTrace(NumViewAngles&, numStep&).x = xpath / Multiplication
+               RayTrace(NumViewAngles&, numStep&).y = ypath / Multiplication
                If NumViewAngles& = cmbAlt.ListIndex Or cmbAlt.ListIndex = cmbAlt.ListCount - 1 Then
                   If ypath > 0 Then
                      picRef.Line (PicCenterX + xpath0, PicCenterY - ypath0)-(PicCenterX + xpath, PicCenterY - ypath), LineColor
@@ -1709,8 +1721,8 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
                numStep& = 0
                xpath0 = A1
                ypath0 = A2
-               RayTrace(NumViewAngles&, numStep&).X = xpath0 / Multiplication
-               RayTrace(NumViewAngles&, numStep&).Y = ypath0 / Multiplication
+               RayTrace(NumViewAngles&, numStep&).x = xpath0 / Multiplication
+               RayTrace(NumViewAngles&, numStep&).y = ypath0 / Multiplication
                XP0 = XP
                YP0 = YP
                NumTraces(NumViewAngles&) = numStep&
@@ -1756,17 +1768,17 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
                
          For i = 0 To NumTraces(NumViewAngles& - 1) - 1
         
-            xpath0 = RayTrace(NumViewAngles& - 1, i).X * Multiplication
-            ypath0 = RayTrace(NumViewAngles& - 1, i).Y * Multiplication
-            xpath = RayTrace(NumViewAngles& - 1, i + 1).X * Multiplication
-            ypath = RayTrace(NumViewAngles& - 1, i + 1).Y * Multiplication
+            xpath0 = RayTrace(NumViewAngles& - 1, i).x * Multiplication
+            ypath0 = RayTrace(NumViewAngles& - 1, i).y * Multiplication
+            xpath = RayTrace(NumViewAngles& - 1, i + 1).x * Multiplication
+            ypath = RayTrace(NumViewAngles& - 1, i + 1).y * Multiplication
            
             If ypath <> 0 Then
                picRef.Line (PicCenterX + xpath0, PicCenterY - ypath0)-(PicCenterX + xpath, PicCenterY - ypath), LineColor
                End If
             
             If RecordVertices And Val(cmbAlt.Text) = SunAngle Then
-               Write #fileout%, RayTrace(NumViewAngles& - 1, i).X, RayTrace(NumViewAngles&, i).Y - RE
+               Write #fileout%, RayTrace(NumViewAngles& - 1, i).x, RayTrace(NumViewAngles&, i).y - RE
                End If
            
          Next i
@@ -1782,10 +1794,10 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
              NumViewAngles& = SunAngles(NA - 1, j) - 1
              For i = 0 To NumTraces(NumViewAngles& - 1) - 1
             
-                xpath0 = RayTrace(NumViewAngles& - 1, i).X * Multiplication
-                ypath0 = RayTrace(NumViewAngles& - 1, i).Y * Multiplication
-                xpath = RayTrace(NumViewAngles& - 1, i + 1).X * Multiplication
-                ypath = RayTrace(NumViewAngles& - 1, i + 1).Y * Multiplication
+                xpath0 = RayTrace(NumViewAngles& - 1, i).x * Multiplication
+                ypath0 = RayTrace(NumViewAngles& - 1, i).y * Multiplication
+                xpath = RayTrace(NumViewAngles& - 1, i + 1).x * Multiplication
+                ypath = RayTrace(NumViewAngles& - 1, i + 1).y * Multiplication
                
                 If ypath <> 0 Then
                     picRef.Line (PicCenterX + xpath0, PicCenterY - ypath0)-(PicCenterX + xpath, PicCenterY - ypath), LineColor
@@ -2096,8 +2108,8 @@ Public Sub PictureBoxZoom(ByRef picBox As PictureBox, ByVal MouseKeys As Long, B
    
    'move them to the center of picBox
    If RefZoom.Left = INIT_VALUE And RefZoom.Top = INIT_VALUE Then
-      RefZoom.Left = blink_mark.X
-      RefZoom.Top = blink_mark.Y
+      RefZoom.Left = blink_mark.x
+      RefZoom.Top = blink_mark.y
       End If
    NewLeft = RefZoom.Left * NewZoom 'CLng(XCenter - nearmouse_digi.X) ' * NewZoom)
    NewTop = RefZoom.Top * NewZoom 'CLng(YCenter - nearmouse_digi.Y) ' * NewZoom)
@@ -2189,7 +2201,7 @@ PictureBoxZoom_Error:
     MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure PictureBoxZoom of Module modHook"
 End Sub
 
-Public Sub ShiftMap(X As Single, Y As Single)
+Public Sub ShiftMap(x As Single, y As Single)
 'This routine shifts the map in order to put the requested
 'coordinate as close to the center of the picture frame as
 'possible
@@ -2197,8 +2209,8 @@ Public Sub ShiftMap(X As Single, Y As Single)
      On Error GoTo errhand
         
      'pixel coordinates of the cursor is
-     ITMx0 = X / twipsx
-     ITMy0 = Y / twipsy
+     ITMx0 = x / twipsx
+     ITMy0 = y / twipsy
      
      'we want it to be at middle of Picture1, i.e., at
      ITMx1 = prjAtmRefMainfm.picture1.Width / 2
@@ -2458,7 +2470,7 @@ Public Function LoadAtmospheres(filename As String, AtmType As Integer, AtmNumbe
    Dim ElevSource(1) As Double, PresSource(1) As Double, LapseSource(1) As Double
    Dim NumSource As Long, StatusMes As String
    Dim HH0 As Double, HH As Double, Lapse0 As Double, Lapse As Double, Hgts As Double
-   Dim Temp As Double, Temp0 As Double, press As Double, Press0 As Double
+   Dim temp As Double, Temp0 As Double, press As Double, Press0 As Double
    Dim StartTemp As Double, StepHgt As Double, AConst As Double, CConst As Double
    Dim MultStep As Double, Isothermic As Boolean, StepBorder As Double, StepNudge As Double
    Dim LapseRateCalc As Double, DocSplit() As String, OffsetHgt As Double
@@ -2793,16 +2805,16 @@ ConvertToElevTempPress:
              If NumSource = 0 Then
                 Input #filnum%, HH0, Temp0, Press0
 
-                Input #filnum%, HH, Temp, press
+                Input #filnum%, HH, temp, press
                 HH0 = HH0 * 1000 'convert to meters
                 HH = HH * 1000
-                AConst = (Temp - Temp0) / (HH - HH0)
+                AConst = (temp - Temp0) / (HH - HH0)
                 
                 StepNudge = 0#
                    
                 'check for isothermal regions
-                If Temp <> Temp0 Then
-                   CConst = Log(press / Press0) / Log(Temp / Temp0)
+                If temp <> Temp0 Then
+                   CConst = Log(press / Press0) / Log(temp / Temp0)
                    Isothermic = False
                 Else
                    Isothermic = True
@@ -2837,9 +2849,9 @@ ConvertToElevTempPress:
                 Next Hgts
              Else
                 HH0 = HH
-                Temp0 = Temp
+                Temp0 = temp
                 Press0 = press
-                Input #filnum%, HH, Temp, press
+                Input #filnum%, HH, temp, press
                 HH = HH * 1000
                 
                 StepNudge = 0#
@@ -2852,11 +2864,11 @@ ConvertToElevTempPress:
                    MultStep = 20
                    End If
                    
-                AConst = (Temp - Temp0) / (HH - HH0)
+                AConst = (temp - Temp0) / (HH - HH0)
                 
                 'check for isothermal regions
-                If Temp <> Temp0 Then
-                   CConst = Log(press / Press0) / Log(Temp / Temp0)
+                If temp <> Temp0 Then
+                   CConst = Log(press / Press0) / Log(temp / Temp0)
                    Isothermic = False
                 Else
                    Isothermic = True
@@ -3654,7 +3666,7 @@ End Sub
 'The following function will return the inverse tangent in the proper
 'quadrant determined by the signs of x and y.
 'http://computer-programming-forum.com/16-visual-basic/f6b1e67cca79ee85.htm
-Public Function Atan2(X As Double, Y As Double) As Double
+Public Function Atan2(x As Double, y As Double) As Double
 '-pi < Atan2 <= pi
 '    If x > 0 Then Atan2 = Atn(y / x): Exit Function     '1st & 4th quadrants
 '    If x < 0 And y > 0 Then Atan2 = Atn(y / x) + PI: Exit Function      '2nd quadrant
@@ -3662,23 +3674,23 @@ Public Function Atan2(X As Double, Y As Double) As Double
 '    If x = 0 And y > 0 Then Atan2 = PI / 2: Exit Function
 '    If x = 0 And y < 0 Then Atan2 = -PI / 2
 
-If X Then
-        Atan2 = Atn(Y / X) - (X > 0) * 3.14159265358979
+If x Then
+        Atan2 = Atn(y / x) - (x > 0) * 3.14159265358979
     Else
-        Atan2 = 1.5707963267949 + (Y > 0) * 3.14159265358979
+        Atan2 = 1.5707963267949 + (y > 0) * 3.14159265358979
 End If
 End Function
 'The following function will return the inverse tangent in the proper
 'quadrant determined by the signs of x and y.
 'http://computer-programming-forum.com/16-visual-basic/f6b1e67cca79ee85.htm
-Function Atan2_2(X As Double, Y As Double) As Double
+Function Atan2_2(x As Double, y As Double) As Double
 '-pi < Atan2 <= pi
     Const pi As Double = 3.14159265358979
-    If X > 0 Then Atan2_2 = Atn(Y / X): Exit Function     '1st & 4th quadrants
-    If X < 0 And Y > 0 Then Atan2_2 = Atn(Y / X) + pi: Exit Function      '2nd quadrant
-    If X < 0 And Y < 0 Then Atan2_2 = Atn(Y / X) - pi: Exit Function      '3rd quadrant
-    If X = 0 And Y > 0 Then Atan2_2 = pi / 2: Exit Function
-    If X = 0 And Y < 0 Then Atan2_2 = -pi / 2
+    If x > 0 Then Atan2_2 = Atn(y / x): Exit Function     '1st & 4th quadrants
+    If x < 0 And y > 0 Then Atan2_2 = Atn(y / x) + pi: Exit Function      '2nd quadrant
+    If x < 0 And y < 0 Then Atan2_2 = Atn(y / x) - pi: Exit Function      '3rd quadrant
+    If x = 0 And y > 0 Then Atan2_2 = pi / 2: Exit Function
+    If x = 0 And y < 0 Then Atan2_2 = -pi / 2
 End Function
 
 Public Function DistTrav(lat_0 As Double, lon_0 As Double, lat_1 As Double, lon_1 As Double, Mode%) As Double
@@ -3727,7 +3739,8 @@ Public Function DistTrav(lat_0 As Double, lon_0 As Double, lat_1 As Double, lon_
       
    
 End Function
-Public Function fun_(h__ As Double, zz_1 As zz, num_Layers As Integer) As Double
+'Public Function fun_(h__ As Double, zz_1 As zz, num_Layers As Integer) As Double
+Public Function fun_(h__ As Double, zz_1() As zz, num_Layers As Integer) As Double
 '{
 '    /* System generated locals */
      Dim ret_val As Double, d__1 As Double
@@ -3739,9 +3752,45 @@ Public Function fun_(h__ As Double, zz_1 As zz, num_Layers As Integer) As Double
     Dim m As Integer, n As Integer
     Dim P As Double, T As Double
 
+   'note that if height, h__ is greater than the last layer,
+   'then thsi routine uses the temperature and pressure of the last layer
+
+'    For n = 1 To num_Layers
+'        m = n - 1
+'        If (h__ - zz_1.hj(n - 1) <= 0#) Then
+'            Exit For
+'            'GoTo L15
+''        Else
+''            GoTo L10
+'            End If
+''L10:
+'
+'    Next n
+''L15:
+'    If m < 1 Then 'hit the earth
+'       ret_val = -1
+'       fun_ = ret_val
+'       Exit Function
+'       End If
+'
+'    T = zz_1.tj(m - 1) + zz_1.AT(m - 1) * (h__ - zz_1.hj(m - 1))
+'    d__1 = T / zz_1.tj(m - 1)
+'
+'    If (zz_1.tj(m) <> zz_1.tj(m - 1)) Then 'non-isothermic region
+'
+'        P = zz_1.pj(m - 1) * d__1 ^ zz_1.ct(m - 1)
+'        ret_val = P * 0.000079 / T
+'
+'    Else 'interpolate pressure between the pressure of the two adjoining layers
+'
+'        P = zz_1.pj(m - 1) + zz_1.ct(m - 1) * (h__ - zz_1.hj(m - 1))
+'        ret_val = P * 0.000079 / T
+'        End If
+        
+'''''''''''''''''''''new format 072521''''''''''''''''''''''''''''''
     For n = 1 To num_Layers
         m = n - 1
-        If (h__ - zz_1.hj(n - 1) <= 0#) Then
+        If (h__ - zz_1(n - 1).hj <= 0#) Then
             Exit For
             'GoTo L15
 '        Else
@@ -3757,17 +3806,17 @@ Public Function fun_(h__ As Double, zz_1 As zz, num_Layers As Integer) As Double
        Exit Function
        End If
        
-    T = zz_1.tj(m - 1) + zz_1.AT(m - 1) * (h__ - zz_1.hj(m - 1))
-    d__1 = T / zz_1.tj(m - 1)
+    T = zz_1(m - 1).tj + zz_1(m - 1).AT * (h__ - zz_1(m - 1).hj)
+    d__1 = T / zz_1(m - 1).tj
 
-    If (zz_1.tj(m) <> zz_1.tj(m - 1)) Then 'non-isothermic region
+    If (zz_1(m).tj <> zz_1(m - 1).tj) Then 'non-isothermic region
 
-        P = zz_1.pj(m - 1) * d__1 ^ zz_1.ct(m - 1)
+        P = zz_1(m - 1).pj * d__1 ^ zz_1(m - 1).ct
         ret_val = P * 0.000079 / T
         
     Else 'interpolate pressure between the pressure of the two adjoining layers
 
-        P = zz_1.pj(m - 1) + zz_1.ct(m - 1) * (h__ - zz_1.hj(m - 1))
+        P = zz_1(m - 1).pj + zz_1(m - 1).ct * (h__ - zz_1(m - 1).hj)
         ret_val = P * 0.000079 / T
         End If
 
@@ -3775,13 +3824,40 @@ Public Function fun_(h__ As Double, zz_1 As zz, num_Layers As Integer) As Double
 '    return ret_val
     fun_ = ret_val
 End Function
-Public Sub layers_int(h__ As Double, zz_1 As zz, num_Layers As Integer, P As Double, T As Double)
+'Public Sub layers_int(h__ As Double, zz_1 As zz, num_Layers As Integer, P As Double, T As Double)
+Public Sub layers_int(h__ As Double, zz_1() As zz, num_Layers As Integer, P As Double, T As Double)
 'increase resolution of Menat atmospheres
 Dim n As Integer, m As Integer, d__1 As Double
 
+'    For n = 1 To num_Layers
+'       m = n - 1
+'       If (h__ - zz_1.hj(n - 1) <= 0#) Then
+'          Exit For
+'          End If
+'    Next n
+'
+'    If m < 1 Then 'hit the earth, just return the ground temp and pressure
+'       P = PRSR(0)
+'       T = TMP(0)
+'       Exit Sub
+'       End If
+'
+'    T = zz_1.tj(m - 1) + zz_1.AT(m - 1) * (h__ - zz_1.hj(m - 1))
+'    d__1 = T / zz_1.tj(m - 1)
+'
+'    If (zz_1.tj(m) <> zz_1.tj(m - 1)) Then 'non-isothermic region
+'
+'        P = zz_1.pj(m - 1) * d__1 ^ zz_1.ct(m - 1)
+'
+'    Else 'interpolate pressure between the pressure of the two adjoining layers
+'
+'        P = zz_1.pj(m - 1) + zz_1.ct(m - 1) * (h__ - zz_1.hj(m - 1))
+'        End If
+                
+''''''''''''''''''''new format 072521''''''''''''''''''''''''
     For n = 1 To num_Layers
        m = n - 1
-       If (h__ - zz_1.hj(n - 1) <= 0#) Then
+       If (h__ - zz_1(n - 1).hj <= 0#) Then
           Exit For
           End If
     Next n
@@ -3792,16 +3868,16 @@ Dim n As Integer, m As Integer, d__1 As Double
        Exit Sub
        End If
    
-    T = zz_1.tj(m - 1) + zz_1.AT(m - 1) * (h__ - zz_1.hj(m - 1))
-    d__1 = T / zz_1.tj(m - 1)
+    T = zz_1(m - 1).tj + zz_1(m - 1).AT * (h__ - zz_1(m - 1).hj)
+    d__1 = T / zz_1(m - 1).tj
 
-    If (zz_1.tj(m) <> zz_1.tj(m - 1)) Then 'non-isothermic region
+    If (zz_1(m).tj <> zz_1(m - 1).tj) Then 'non-isothermic region
 
-        P = zz_1.pj(m - 1) * d__1 ^ zz_1.ct(m - 1)
+        P = zz_1(m - 1).pj * d__1 ^ zz_1(m - 1).ct
         
     Else 'interpolate pressure between the pressure of the two adjoining layers
 
-        P = zz_1.pj(m - 1) + zz_1.ct(m - 1) * (h__ - zz_1.hj(m - 1))
+        P = zz_1(m - 1).pj + zz_1(m - 1).ct * (h__ - zz_1(m - 1).hj)
         End If
 
 End Sub
@@ -3830,10 +3906,10 @@ MyCallback_Error:
     MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure MyCallback of Module modHardy"
 End Sub
 
-Public Function FunTPI(X As Double) As Double
+Public Function FunTPI(x As Double) As Double
     'removes multiples of 2*pi
     pi2 = 2 * pi
-    FunTPI = (X / (pi2) - Int(X / (pi2))) * pi2
+    FunTPI = (x / (pi2) - Int(x / (pi2))) * pi2
 End Function
 Public Sub casgeo(kmx, kmy, lg, lt)
 
@@ -3976,11 +4052,11 @@ T50:
        filein% = FreeFile
        Open FileNameBil For Binary As #filein%
    
-        Y = lat
-        X = lon
+        y = lat
+        x = lon
         
-        IKMY& = CLng((ULYMAP - Y) / YDIM) + 1
-        IKMX& = CLng((X - ULXMAP) / XDIM) + 1
+        IKMY& = CLng((ULYMAP - y) / YDIM) + 1
+        IKMX& = CLng((x - ULXMAP) / XDIM) + 1
         tncols = NCOLS
         numrec& = (IKMY& - 1) * tncols + IKMX&
         Get #filein%, (numrec& - 1) * 2 + 1, IO%
@@ -4010,7 +4086,7 @@ T50:
      
 End Sub
 
-Public Sub worldheights(lg, lt, Hgt)
+Public Sub worldheights(lg, lt, hgt)
    Dim leros As Long, lmag As Long
    Dim world As Boolean, srtmdtm As String, DTMflag As Integer
    Dim NCOLS As Integer, NROWS As Integer, AA$, j%
@@ -4090,8 +4166,8 @@ wh50:
          GoSub Eroshgt
          Close #worldfnum%
          worldfnum% = 0
-         Hgt = integ2%
-         If Hgt = -32768 Then Hgt = 0 'void
+         hgt = integ2%
+         If hgt = -32768 Then hgt = 0 'void
          Exit Sub
          End If
        End If
@@ -4202,7 +4278,7 @@ gtopo:
         GoSub Eroshgt
         Close #worldfnum%
         worldfnum% = 0
-        Hgt = integ2%
+        hgt = integ2%
         End If
     Else
        If mapEROSDTMwarn.Visible = True Then
@@ -4218,7 +4294,7 @@ gtopo:
           End If
        'continue reading
         GoSub Eroshgt
-        Hgt = integ2%
+        hgt = integ2%
         End If
     Exit Sub
 
@@ -4314,7 +4390,7 @@ Return
 
 worlderror:
    If routeload = True Or travelmode = True Then
-      Hgt = 0
+      hgt = 0
       Exit Sub
       End If
    ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
@@ -4387,7 +4463,7 @@ g21:    IR% = NROW% - (Jg% - 1) * 800
         hgt2 = IO% * 0.1
         If hgt2 < -1000 Then hgt2 = -9999
         GoTo g99
-g35:    Hgt = -9999 'MsgBox " ERROR IN GETZ ", vbCritical + vbOKOnly, "SkyLight"
+g35:    hgt = -9999 'MsgBox " ERROR IN GETZ ", vbCritical + vbOKOnly, "SkyLight"
         Close #filnumg%
         CHMNEO = "  "
 g99:
@@ -4487,7 +4563,7 @@ End Function
 Public Function CalcVDWRef(lat As Double, lon As Double, height As Double, DayNumber As Integer, year As Integer, _
                            viewangle As Double) As Double
                            
-   Dim Coef(4, 10) As Double, Ref As Double, VA As Double
+   Dim Coef(4, 10) As Double, ref As Double, VA As Double
    Dim CA(10) As Double
    Dim vbweps(6) As Double, vdwref(6) As Double, ier As Integer, TK As Double
    Dim VDWSF As Double, VDWALT As Double, lnhgt As Double, pi As Double, cd As Double
@@ -4555,28 +4631,28 @@ Public Function CalcVDWRef(lat As Double, lon As Double, height As Double, DayNu
     
     If height > 0 Then lnhgt = Log(height * 0.001)
     If dy <= ns1 Or dy >= ns2 Then 'winter refraction
-       Ref = 0: eps = 0
+       ref = 0: EPS = 0
        If height <= 0 Then GoTo 690
-       Ref = Exp(winref(4) + winref(5) * lnhgt + _
+       ref = Exp(winref(4) + winref(5) * lnhgt + _
            winref(6) * lnhgt * lnhgt + winref(7) * lnhgt * lnhgt * lnhgt)
 '           ref = ((winref(2, n2%) - winref(2, n1%)) / 2) * (hgt - h1) + winref(2, n1%)
-       eps = Exp(winref(0) + winref(1) * lnhgt + _
+       EPS = Exp(winref(0) + winref(1) * lnhgt + _
             winref(2) * lnhgt * lnhgt + winref(3) * lnhgt * lnhgt * lnhgt)
 '           eps = ((winref(1, n2%) - winref(1, n1%)) / 2) * (hgt - h1) + winref(1, n1%)
-690    Air = 90 * cd + (eps + Ref + winrefo) / 1000
-       AirMenatRefDip = eps + Ref + winrefo
+690    Air = 90 * cd + (EPS + ref + winrefo) / 1000
+       AirMenatRefDip = EPS + ref + winrefo
 '       lblMenatAir.Caption = AirMenatRefDip & " mrad"
     ElseIf dy > ns1 And dy < ns2 Then
-       Ref = 0: eps = 0
+       ref = 0: EPS = 0
        If height <= 0 Then GoTo 695
-       Ref = Exp(sumref(4) + sumref(5) * lnhgt + _
+       ref = Exp(sumref(4) + sumref(5) * lnhgt + _
            sumref(6) * lnhgt * lnhgt + sumref(7) * lnhgt * lnhgt * lnhgt)
        'ref = ((sumref(2, n2%) - sumref(2, n1%)) / 2) * (hgt - h1) + sumref(2, n1%)
-       eps = Exp(sumref(0) + sumref(1) * lnhgt + _
+       EPS = Exp(sumref(0) + sumref(1) * lnhgt + _
             sumref(2) * lnhgt * lnhgt + sumref(3) * lnhgt * lnhgt * lnhgt)
 '           eps = ((sumref(1, n2%) - sumref(1, n1%)) / 2) * (hgt - h1) + sumref(1, n1%)
-695    Air = 90 * cd + (eps + Ref + sumrefo) / 1000
-       AirMenatRefDip = eps + Ref + sumrefo
+695    Air = 90 * cd + (EPS + ref + sumrefo) / 1000
+       AirMenatRefDip = EPS + ref + sumrefo
 '       lblMenatAir.Caption = AirMenatRefDip & " mrad"
        End If
     End If
@@ -4695,23 +4771,23 @@ Public Function CalcVDWRef(lat As Double, lon As Double, height As Double, DayNu
            
            End If
            
-           Ref = CA(0)
+           ref = CA(0)
            
     Else
         
         'calculate for range of view angles
-        Ref = 0#
+        ref = 0#
         For i = 0 To 10
             CA(i) = Coef(0, i) + Coef(1, i) * height + Coef(2, i) * (height ^ 2) + Coef(3, i) * (height ^ 3) + Coef(4, i) * (height ^ 4)
         Next i
         For i = 0 To 10
-            Ref = Ref + CA(i) * VA ^ i
+            ref = ref + CA(i) * VA ^ i
         Next i
          
         End If
                
-   RefFromHorToInfExp = Ref 'calculated from exponent
-   CalcVDWRef = Ref
+   RefFromHorToInfExp = ref 'calculated from exponent
+   CalcVDWRef = ref
    Exit Function
 '        lblref1.Caption = Str(Ref) & " mrad"
                
@@ -4731,7 +4807,7 @@ Public Function CalcVDWRef(lat As Double, lon As Double, height As Double, DayNu
          lnhgt + vdwref(3) * lnhgt * lnhgt * lnhgt + vdwref(4) _
          * lnhgt * lnhgt * lnhgt * lnhgt + vdwref(5) * lnhgt * _
          lnhgt * lnhgt * lnhgt * lnhgt)
-     eps = Exp(vbweps(0) + vbweps(1) * lnhgt + vbweps(2) * lnhgt * _
+     EPS = Exp(vbweps(0) + vbweps(1) * lnhgt + vbweps(2) * lnhgt * _
          lnhgt + vbweps(3) * lnhgt * lnhgt * lnhgt + vbweps(4) _
          * lnhgt * lnhgt * lnhgt * lnhgt)
 '/*         now add the all the contributions together due to the observer's height */
@@ -4747,11 +4823,11 @@ Public Function CalcVDWRef(lat As Double, lon As Double, height As Double, DayNu
         Exit Function
 L690:
         A1 = 0#
-        Air = cd * 90# + (eps + VDWSF * (ref2 + 9.56267125268496)) / 1000#
+        Air = cd * 90# + (EPS + VDWSF * (ref2 + 9.56267125268496)) / 1000#
         
-        TotalRefWithDip = eps + VDWSF * (ref2 + 9.56267125268496) '& " mrad"
+        TotalRefWithDip = EPS + VDWSF * (ref2 + 9.56267125268496) '& " mrad"
         
-        A1 = (ref2 + Ref) / 1000#
+        A1 = (ref2 + ref) / 1000#
 '/*         leave a1 in radians */
         A1 = Atn(Tan(A1) * VDWALT)
         
@@ -4773,9 +4849,9 @@ L690:
         refFromExp = RefNorms * (288.15 / TK) ^ RefExponent
 '        lblrefexponent.Caption = refFromExp & " mrad"
         TotalRefFromHgtExp = refFromExp
-        Air = cd * 90# + (eps + refFromExp + VDWSF * 9.56267125268496) / 1000#
+        Air = cd * 90# + (EPS + refFromExp + VDWSF * 9.56267125268496) / 1000#
         
-        TotalGeoRef = eps + refFromExp + VDWSF * 9.56267125268496 '& " mrad"
+        TotalGeoRef = EPS + refFromExp + VDWSF * 9.56267125268496 '& " mrad"
         Exit Function
         End If
 
