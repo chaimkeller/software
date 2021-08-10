@@ -70,16 +70,13 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
 /* Main program */ int MAIN__(void)
 {
     /* Format strings */
-    //static char fmt_710[] = "(a11,3x,a8,2x,a12,3x,f7.3,3x,f6.2)"
-    static char fmt_710[] = "(a11,3x,a8,2x,a12,3x,f7.3,3x,f8.4,3x,f6.2)"; //081021 added ,3x,f8.4 for viewangle
-    //static char fmt_785[] = "(a11,2x,a8,3x,a12,3x,f7.3,3x,f6.2)"; 
-    static char fmt_785[] = "(a11,2x,a8,3x,a12,3x,f7.3,3x,f8.4,3x,f6.2)"; //same
+    static char fmt_710[] = "(a11,3x,a8,2x,a12,3x,f7.3,3x,f6.2)";
+    static char fmt_785[] = "(a11,2x,a8,3x,a12,3x,f7.3,3x,f6.2)";
     static char fmt_700[] = "(1x,a11,3x,a8,3x,a8,3x,a9,3x,i1)";
     static char fmt_705[] = "(a11,3x,a8,3x,a8,3x,a9)";
     static char fmt_770[] = "(1x,a11,3x,a8,3x,a8,3x,a9,3x,i1)";
     static char fmt_775[] = "(a11,3x,a8,3x,a8,3x,a9)";
-    //static char fmt_1305[] = "(a11,3x,a8,6x,a12,3x,f7.3,3x,f6.2)";
-    static char fmt_1305[] = "(a11,3x,a8,6x,a12,3x,f7.3,3x,f8.4,3x,f6.2)"; //same
+    static char fmt_1305[] = "(a11,3x,a8,6x,a12,3x,f7.3,3x,f6.2)";
 
     /* System generated locals */
     integer i__1, i__2, i__3, i__4;
@@ -183,12 +180,9 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static char placn[30*2*100];
     static integer nplac[2];
     static char fileo[27];
-    static doublereal dobsf, geotd, avref,viewangf; //////viewangf added 081021 ///////////////
+    static doublereal dobsf, geotd, avref;
     static char namet[23];
     static doublereal distd, dobss[1464]	/* was [2][2][366] */, lnhgt;
-	/////////////added 081021 to keep track of viewangle at sunries/sunset/////////////
-	static doublereal viewang[1464], viewangle;
-	/////////////////////////////////////////////////////////////////
     static integer nyear;
     static doublereal dobsy;
     static integer yrend[2];
@@ -355,7 +349,7 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static cilist io___256 = { 0, 3, 0, "(A1,A27,A1)", 0 };
 
 
-/*       Version 21 //20 //19 //18 //17 */
+/*       Version 20 //19 //18 //17 */
 /*       this program calculates sunrise/sunset tables for lattest format */
 /*       it is called by the WINDOWS 95 program CAL PROGRAM */
 /*       the output filenames reside on the file NETZSKIY.tm3 */
@@ -414,8 +408,6 @@ outine. */
 /*
 /*		Version 18: removed redundant use of VDW rescaling
 /*		Version 19: uses maximum WorldClim temperatures for VDW calcuations
-/*		Version 20: added option to add cushion instead of printing in green
-/*		Version 21: add final viewangle output
 /*
 /* ----------------------------------------------------- */
 /*            = 20 * maxang + 1 ;number of azimuth points separated by .1 degrees */
@@ -428,7 +420,7 @@ outine. */
 /*        REAL*4 azin(nplace) */
 /*        LOGICAL ,SUMMER,WINTER */
 /* ////////////////////////////////////////////////////////////////////////////// */
-/*       Version 15-etc. parameters */
+/*       Version 15-18 parameters */
 /* 		MT is Minimum Temperature Array, AT is Average Temperature Array */
 /*	    VERSION 20 -- add option to add additional cushion to times (handling problem won't print green times) */
     pi = acos(-1.);
@@ -840,7 +832,7 @@ L7:
 		s_copy(placn + (nsetflag + 1 + (nplac[0] << 1) - 3) * 30, 
 			fileo + 15, (ftnlen)30, (ftnlen)8);
 /*                names used for COMPARE for versions <= 14 */
-		 if (nplac[0] < 10) {
+		if (nplac[0] < 10) {
 		    s_wsfi(&io___58);
 		    do_fio(&c__1, (char *)&nplac[0], (ftnlen)sizeof(integer));
 		    e_wsfi();
@@ -2032,11 +2024,6 @@ L700:
 			    do_fio(&c__1, comentss, (ftnlen)12);
 			    do_fio(&c__1, (char *)&azi1, (ftnlen)sizeof(
 				    doublereal));
-				////////////////081021/////add viewangle/////////////
-				viewangle = 0.0;
-			    do_fio(&c__1, (char *)&viewangle, (ftnlen)sizeof(
-				    doublereal));
-				//////////////////////////////////////////////
 			    do_fio(&c__1, (char *)&dobs, (ftnlen)sizeof(
 				    doublereal));
 			    e_wsfe();
@@ -2157,11 +2144,6 @@ L700:
 			    do_fio(&c__1, comentss, (ftnlen)12);
 			    do_fio(&c__1, (char *)&azi1, (ftnlen)sizeof(
 				    doublereal));
-				//////////////081021/////////add viewangle//////
-				viewangle = 0.0;
-			    do_fio(&c__1, (char *)&viewangle, (ftnlen)sizeof(
-				    doublereal));
-				/////////////////////////////////////////////
 			    do_fio(&c__1, (char *)&dobs, (ftnlen)sizeof(
 				    doublereal));
 			    e_wsfe();
@@ -2378,9 +2360,6 @@ L695:
 				    2) - 4];
 			    dobs = dobsy / elevintx * (azi1 - elev[(ne << 2) 
 				    - 4]) + elev[(ne << 2) - 2];
-				////////////////added 081021///recrod viewangle at sunset/////////////
-				viewangle = al1;
-				//////////////////////////////////////////////////////////////
 
 				//////////////option to add cushion for near obstructions/////070521/////////////////
 				AddedTime = 0.0;
@@ -2443,10 +2422,6 @@ L695:
 				do_fio(&c__1, comentss, (ftnlen)12);
 				do_fio(&c__1, (char *)&azi1, (ftnlen)sizeof(
 					doublereal));
-				///////////////081021 add viewangle ////////////
-				do_fio(&c__1, (char *)&viewangle, (ftnlen)sizeof(
-					doublereal));
-				/////////////////////////////////////////////////
 				do_fio(&c__1, (char *)&dobs, (ftnlen)sizeof(
 					doublereal));
 				e_wsfe();
@@ -2645,9 +2620,6 @@ L760:
 			    dobs = dobsy / elevintx * (azi1 - elev[(ne << 2) 
 				    - 4]) + elev[(ne << 2) - 2];
 /*                 sunrise */
-				/////////////////added 081021///record viewangle at sunrise/////////
-				viewangle = alt1;
-				////////////////////////////////////////////////
 
 				if (elevint > alt1_2 && showCalc)
 				{
@@ -2771,10 +2743,6 @@ L760:
 				do_fio(&c__1, comentss, (ftnlen)12);
 				do_fio(&c__1, (char *)&azi1, (ftnlen)sizeof(
 					doublereal));
-				/////////////added 081021 -- record viewangle at sunrise/sunset/////
-				do_fio(&c__1, (char *)&viewangle, (ftnlen)sizeof(
-					doublereal));
-				/////////////////////////////////////////////
 				do_fio(&c__1, (char *)&dobs, (ftnlen)sizeof(
 					doublereal));
 				e_wsfe();
@@ -2862,8 +2830,6 @@ L920:
 			    azi1;
 		    dobss[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
 			    dobs;
-			viewang[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] =
-				viewangle;
 		} else {
 /*           check if sunrise/sunset for new place is earlier/later */
 		    if (nsetflag == 0) {
@@ -2889,8 +2855,6 @@ L920:
 				     - 7] = azi1;
 			    dobss[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1)
 				     - 7] = dobs;
-			    viewang[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1)
-				     - 7] = viewangle;
 			}
 		    } else if (nsetflag == 1) {
 /*              sunset */
@@ -2905,8 +2869,6 @@ L920:
 				     - 7] = azi1;
 			    dobss[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1)
 				     - 7] = dobs;
-			    viewang[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1)
-				     - 7] = viewangle;
 			}
 		    }
 		}
@@ -3047,13 +3009,11 @@ L1000:
 			1) << 1) - 7) * 12, (ftnlen)12, (ftnlen)12);
 		azinss = azils[nsetflag + 1 + (nyrstp + (i__ << 1) << 1) - 7];
 		dobsf = dobss[nsetflag + 1 + (nyrstp + (i__ << 1) << 1) - 7];
-		viewangf = viewang[nsetflag + 1 + (nyrstp + (i__ << 1) << 1) - 7];
 		s_wsfe(&io___251);
 		do_fio(&c__1, dat, (ftnlen)11);
 		do_fio(&c__1, timss, (ftnlen)8);
 		do_fio(&c__1, comentss, (ftnlen)12);
 		do_fio(&c__1, (char *)&azinss, (ftnlen)sizeof(real));
-		do_fio(&c__1, (char *)&viewangf, (ftnlen)sizeof(doublereal)); //////added 081021 /////////////
 		do_fio(&c__1, (char *)&dobsf, (ftnlen)sizeof(doublereal));
 		e_wsfe();
 /* L1500: */
