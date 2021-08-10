@@ -33,6 +33,7 @@ Begin VB.Form frmSetCond
          BeginProperty Panel1 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
             AutoSize        =   1
             Object.Width           =   5133
+            Key             =   ""
             Object.Tag             =   ""
          EndProperty
       EndProperty
@@ -1801,7 +1802,7 @@ Private Sub mnuRestore_Click()
     
     Dim MaxDirLen As Integer, sShortPath As String
     Dim filplt%, doclin$, FileOut As String, found%
-    Dim sPath As String, J%, RootName$
+    Dim sPath As String, J%, RootName$, SplitDoc() As String
     
     If numfiles% <> 0 Then 'clear present plot and reclaim memory
        cmdClear_Click
@@ -1811,7 +1812,12 @@ Private Sub mnuRestore_Click()
     filplt% = FreeFile
     numfiles% = 0
     Open App.Path & "\PlotFiles.txt" For Input As #filplt%
-    Input #filplt%, doclin$
+    Line Input #filplt%, doclin$
+    SplitDoc = Split(doclin$, ",")
+    If UBound(SplitDoc) = 1 Then
+       'new format that records font size of axis labels
+       txtAxisLabelSize.Text = SplitDoc(1)
+       End If
     Line Input #filplt%, NewDoclin$
     If InStr(NewDoclin$, ",") = 0 Then
        'old format without format size recorded
@@ -1966,7 +1972,7 @@ Private Sub mnuRestoreOther_Click()
 
    On Error GoTo mnuRestoreOther_Click_Error
    
-   Dim FileInPlotFiles$, NewDoclin$
+   Dim FileInPlotFiles$, NewDoclin$, SplitDoc() As String
    
    'pick other restore file
    CommonDialog1.CancelError = True
@@ -1995,7 +2001,12 @@ Private Sub mnuRestoreOther_Click()
     filplt% = FreeFile
     numfiles% = 0
     Open FileInPlotFiles$ For Input As #filplt%
-    Input #filplt%, doclin$
+    Line Input #filplt%, doclin$
+    SplitDoc = Split(doclin$, ",")
+    If UBound(SplitDoc) = 1 Then
+       'new format that records font size of axis labels
+       txtAxisLabelSize.Text = SplitDoc(1)
+       End If
     'see if new format with value of font size
     Line Input #filplt%, NewDoclin$
     If InStr(NewDoclin$, ",") = 0 Then
@@ -2149,7 +2160,7 @@ Private Sub mnuSave_Click()
    
    filplt% = FreeFile
    Open App.Path & "\PlotFiles.txt" For Output As #filplt%
-   Print #filplt%, "This file is used by Plot. Don't erase it!"
+   Print #filplt%, "This file is used by Plot. Don't erase it!" & "," & txtAxisLabelSize.Text
    Write #filplt%, XTitle$, Val(txtTitleXfont.Text)
    Write #filplt%, YTitle$, Val(txtTitleYfont.Text)
    Write #filplt%, Title$, Val(txtTitlefont.Text)

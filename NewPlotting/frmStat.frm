@@ -1,29 +1,50 @@
 VERSION 5.00
 Begin VB.Form frmStat 
    Caption         =   "Statistics"
-   ClientHeight    =   9240
+   ClientHeight    =   10395
    ClientLeft      =   120
    ClientTop       =   480
    ClientWidth     =   6810
    Icon            =   "frmStat.frx":0000
    LinkTopic       =   "Form1"
    LockControls    =   -1  'True
-   ScaleHeight     =   9240
+   ScaleHeight     =   10395
    ScaleWidth      =   6810
    StartUpPosition =   3  'Windows Default
    Begin VB.Frame frmBoundary 
       Caption         =   "Boundaries"
-      Height          =   975
+      Height          =   1935
       Left            =   120
       TabIndex        =   15
       Top             =   6360
       Width           =   2175
+      Begin VB.TextBox txtYmax 
+         Alignment       =   2  'Center
+         Height          =   285
+         Left            =   600
+         TabIndex        =   21
+         Tag             =   "limit stat analysis to <= this ymax"
+         Text            =   "txtYmax"
+         Top             =   1440
+         Width           =   1335
+      End
+      Begin VB.TextBox txtYmin 
+         Alignment       =   2  'Center
+         Height          =   285
+         Left            =   600
+         TabIndex        =   20
+         Text            =   "txtYmin"
+         ToolTipText     =   "limit stat analysis to >= this ymin"
+         Top             =   1080
+         Width           =   1335
+      End
       Begin VB.TextBox txtXmax 
          Alignment       =   2  'Center
          Height          =   285
          Left            =   600
          TabIndex        =   19
          Text            =   "txtXmax"
+         ToolTipText     =   "Limit stat analysis to  <=n this x max"
          Top             =   560
          Width           =   1455
       End
@@ -33,8 +54,25 @@ Begin VB.Form frmStat
          Left            =   600
          TabIndex        =   17
          Text            =   "txtXmin"
+         ToolTipText     =   "limit stat analysis to x values >= this x min"
          Top             =   200
          Width           =   1455
+      End
+      Begin VB.Label lblYmax 
+         Caption         =   "Ymax"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   23
+         Top             =   1460
+         Width           =   495
+      End
+      Begin VB.Label lblYmin 
+         Caption         =   "Ymin"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   22
+         Top             =   1120
+         Width           =   375
       End
       Begin VB.Label lblXmax 
          Caption         =   "Xmax"
@@ -58,7 +96,7 @@ Begin VB.Form frmStat
       Height          =   975
       Left            =   2400
       TabIndex        =   9
-      Top             =   6360
+      Top             =   6840
       Width           =   4335
       Begin VB.TextBox txtUnits 
          Alignment       =   2  'Center
@@ -152,17 +190,17 @@ Begin VB.Form frmStat
          Strikethrough   =   0   'False
       EndProperty
       Height          =   495
-      Left            =   240
+      Left            =   120
       TabIndex        =   6
-      Top             =   7400
-      Width           =   6495
+      Top             =   8520
+      Width           =   6615
    End
    Begin VB.Frame frmStats 
       Caption         =   "Statistical Analysis"
       Height          =   1215
       Left            =   120
       TabIndex        =   4
-      Top             =   7920
+      Top             =   9120
       Width           =   6615
       Begin VB.Label lblVariance 
          Alignment       =   2  'Center
@@ -278,7 +316,7 @@ Private Sub cmdStat_Click()
   Dim DataValues As COORDINATE
   Dim FitValues As COORDINATE
   Dim Xo As Double, Yo As Double
-  Dim X1 As Double, Y1 As Double
+  Dim x1 As Double, y1 As Double
   Dim YInterpolate As Double
   Dim freefitfile%, freedatafile%, numRowsData%, numRowsFit%
   Dim SumOfAbsVariance As Double
@@ -377,6 +415,7 @@ Private Sub cmdStat_Click()
        DataValues.X = dPlot(SelectedData, 0, numRowsData% - 1)
        DataValues.Y = dPlot(SelectedData, 1, numRowsData% - 1)
        If DataValues.X < Val(txtXmin.Text) Or DataValues.X > Val(txtXmax.Text) Then GoTo lp500
+       If DataValues.Y < Val(txtYmin.Text) Or DataValues.Y > Val(txtYmax.Text) Then GoTo lp500
        Seek (freefitfil%), 1 'set at beginning of fit file
        numRowsFit% = 0
        Do Until EOF(freefitfil%)
@@ -391,18 +430,18 @@ Private Sub cmdStat_Click()
           numRowsFit% = numRowsFit% + 1
           FitValues.X = dPlot(SelectedFit, 0, numRowsFit% - 1)
           FitValues.Y = dPlot(SelectedFit, 1, numRowsFit% - 1)
-          X1 = FitValues.X
-          Y1 = FitValues.Y
-          If X0 < DataValues.X And X1 < DataValues.X Then
+          x1 = FitValues.X
+          y1 = FitValues.Y
+          If X0 < DataValues.X And x1 < DataValues.X Then
              'keep on looping through fit file
-          ElseIf X0 <= DataValues.X And X1 > DataValues.X Then
+          ElseIf X0 <= DataValues.X And x1 > DataValues.X Then
              'found x match, so interpolate
-             YInterpolate = (DataValues.X - X0) * (Y1 - Y0) / (X1 - X0) + Y0
+             YInterpolate = (DataValues.X - X0) * (y1 - Y0) / (x1 - X0) + Y0
              MeanDiff = MeanDiff + Abs(DataValues.Y - YInterpolate)
              StatVariance = StatVariance + (DataValues.Y - YInterpolate) * (DataValues.Y - YInterpolate)
              NumSumVariance = NumSumVariance + 1
              'now add to sum
-          ElseIf X0 > DataValues.X And X1 > DataValues.X Then
+          ElseIf X0 > DataValues.X And x1 > DataValues.X Then
              'couldn't find any match, so skip this point
              Exit Do
              End If
@@ -415,6 +454,7 @@ lp500:
     freedatafil% = 0
     freefitfil% = 0
     
+lp600:
     If NumSumVariance > 0 Then
         MeanDiff = Val(txtMult.Text) * MeanDiff / NumSumVariance
         StatVariance = Val(txtMult.Text) * Sqr(StatVariance / NumSumVariance)
@@ -436,8 +476,10 @@ cmdStat_Click_Error:
     Screen.MousePointer = vbDefault
     If freedatafil% > 0 Then Close #freedatafil%
     If freefitfil% > 0 Then Close #freefitfil%
-    If Err.Number = 9 Then
+    If Err.Number = 9 And numRowsFit% < 1 Then
        Call MsgBox("You must first plot the files before running a statistical analysis!", vbInformation, "Statistical analysis error")
+    ElseIf Err.Number = 9 And numRowsFit% > 1 Then
+       GoTo lp600
     Else
        MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdStat_Click of Form frmStat"
        End If
@@ -458,6 +500,8 @@ Private Sub Form_Load()
   'set boundaries for analysis
   txtXmin = frmSetCond.txtValueX0.Text
   txtXmax = frmSetCond.txtValueX1.Text
+  txtYmin = frmSetCond.txtValueY0.Text
+  txtYmax = frmSetCond.txtValueY1.Text
   
 End Sub
 

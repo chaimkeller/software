@@ -45,7 +45,7 @@ Dim dy As Double
 End Function
 
 ' Find the least squares linear fit.
-Public Function FindPolynomialLeastSquaresFit(ByVal PtX As Collection, ByVal PtY As Collection, ByVal degree As Integer) As Collection
+Public Function FindPolynomialLeastSquaresFit(ByVal PtX As Collection, ByVal PtY As Collection, ByVal degree As Integer, ier As Integer) As Collection
 Dim J As Integer
 Dim pt As Integer
 Dim a_sub  As Integer
@@ -79,7 +79,8 @@ Dim answer() As Double
     Next J
 
     ' Solve the equations.
-    answer = GaussianElimination(coeffs)
+    answer = GaussianElimination(coeffs, ier)
+    If ier = -1 Then Exit Function
 
     ' Return the result converted into a Collection.
     Set FindPolynomialLeastSquaresFit = New Collection
@@ -90,7 +91,7 @@ End Function
 
 ' Perform Gaussian elimination on these coefficients.
 ' Return the array of values that gives the solution.
-Private Function GaussianElimination(coeffs() As Double) As Double()
+Private Function GaussianElimination(coeffs() As Double, ier As Integer) As Double()
 Dim max_equation As Integer
 Dim max_coeff As Integer
 Dim I As Integer
@@ -131,7 +132,14 @@ Dim solution() As Double
         ' Make sure we found an equation with
         ' a non-zero ith coefficient.
         coeff_i_i = coeffs(I, I)
-        If coeff_i_i = 0 Then Stop
+        If coeff_i_i = 0 Then
+           Call MsgBox("Determinant is zero" _
+                       & vbCrLf & "" _
+                       & vbCrLf & "Aborting fit" _
+                       , vbExclamation, "Gaussian Elimination Error")
+           ier = -1
+           Exit Function
+           End If
 
         ' Normalize the ith equation.
         For J = I To max_coeff

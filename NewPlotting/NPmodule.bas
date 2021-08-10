@@ -65,7 +65,12 @@ Sub OpenRead(numfil%, nFile As Integer)
              foundX% = 0
              foundY% = 0
 10:
+             If numRows% > 1 Then
+                doclin0$ = doclin$
+                End If
+                
              Line Input #freefil%, doclin$
+             
              'skip blank lines
              If Trim$(doclin$) = sEmpty Then GoTo 10
              For J% = 1 To FilForm(2, Val(PlotInfo(0, numfil%))) - 1
@@ -109,14 +114,19 @@ Sub OpenRead(numfil%, nFile As Integer)
              'check for negative progression of x values
              If numRows% - 1 >= 1 And Not SoundWarning And Not Fitting Then 'And PlotInfo(1, numfil%) = 0 Then
                 If dPlot(numfil%, 0, numRows% - 1) < dPlot(numfil%, 0, numRows% - 2) Then
-                
+                   
                    'sound warning only once
                    Select Case MsgBox("Some or all of the X values of the following file are not sorted from smallest to largest." _
                                       & vbCrLf & vbCrLf & "" _
                                       & PlotInfo(7, numfil%) _
+                                      & vbCrLf & vbCrLf & "This is what was found: " _
+                                      & vbCrLf & "x value at row: " & Str$(numRows% - 1) & " was < than x value at row: " & Str$(numRows% - 2) _
+                                      & vbCrLf & Str$(dPlot(numfil%, 0, numRows% - 1)) & " < " & Str$(dPlot(numfil%, 0, numRows% - 2)) _
+                                      & vbCrLf & "The two lines in the file are: " _
+                                      & vbCrLf & "first: " & doclin0$ & " and then: " & doclin$ _
                                       & vbCrLf & "" _
                                       & vbCrLf & "This will limit your plotting and fitting options." _
-                                      & vbCrLf & "Do you want it sorted?" _
+                                      & vbCrLf & "Do you want it sorted? (Choose ""Cancel"" to end warnings.)" _
                                       & vbCrLf & "" _
                                       & vbCrLf & "(Hint: another option is to  permanently reverse the ordeer" _
                                       & vbCrLf & "by checking the ""Reverse ""checkbox in the plot option dialog)" _
@@ -127,7 +137,7 @@ Sub OpenRead(numfil%, nFile As Integer)
                     Case vbNo
                    
                     Case vbCancel
-                   
+                        SoundWarning = True
                    End Select
                    
                    End If
@@ -144,7 +154,12 @@ Sub OpenRead(numfil%, nFile As Integer)
           
        Case 1 'delimited row of numbers
           'read one row having PlotInfo(2, numfil%) columns
-          Do Until EOF(freefil%)
+           Do Until EOF(freefil%)
+          
+            If numRows% > 1 Then
+               Xvalue0 = Xvalue
+               End If
+             
              For J% = 1 To FilForm(2, Val(PlotInfo(0, numfil%)))
                  ReDim Preserve Data(J% - 1)
                  Input #freefil%, Data(J% - 1)
@@ -163,14 +178,19 @@ Sub OpenRead(numfil%, nFile As Integer)
              'check for negative progression of x values
              If numRows% - 1 >= 1 And Not SoundWarning And Not Fitting Then ' And PlotInfo(1, numfil%) = 0 Then
                 If dPlot(numfil%, 0, numRows% - 1) < dPlot(numfil%, 0, numRows% - 2) Then
-                
+                   
                    'sound warning only once
                    Select Case MsgBox("Some or all of the X values of the following file are not sorted from smallest to largest." _
                                       & vbCrLf & vbCrLf & "" _
                                       & PlotInfo(7, numfil%) _
+                                      & vbCrLf & vbCrLf & "This is what was found: " _
+                                      & vbCrLf & "x value at row: " & Str$(numRows%) & " was < than x value at row: " & Str$(numRows% - 1) _
+                                      & vbCrLf & vbCrLf _
+                                      & vbCrLf & "The two x values read in are: " _
+                                      & vbCrLf & Str$(dPlot(numfil%, 0, numRows% - 1)) & " < " & Str$(dPlot(numfil%, 0, numRows% - 2)) _
                                       & vbCrLf & "" _
                                       & vbCrLf & "This will limit your plotting and fitting options." _
-                                      & vbCrLf & "Do you want it sorted?" _
+                                      & vbCrLf & "Do you want it sorted? (Choose ""Cancel"" to end warnings.)" _
                                       & vbCrLf & "" _
                                       & vbCrLf & "(Hint: another option is to  permanently reverse the ordeer" _
                                       & vbCrLf & "by checking the ""Reverse ""checkbox in the plot option dialog)" _
@@ -183,7 +203,7 @@ Sub OpenRead(numfil%, nFile As Integer)
                     Case vbCancel
                    
                    End Select
-                   
+                       SoundWarning = True
                    End If
                  End If
           Loop

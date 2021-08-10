@@ -569,6 +569,7 @@ Private Sub cmdFit_Click()
   Dim sTemp As String, sPath As String, sShortPath As String
   Dim numlist%, pos1%, MultiSelectPath As Boolean, sPath0 As String
   Dim sDriveLetter As String, MaxDirLen As Integer, PlotFileName$
+  Dim numToFit As Integer, ier As Integer
   
 '  On Error GoTo cmdFit_Click_Error
 
@@ -669,20 +670,24 @@ Private Sub cmdFit_Click()
                 numRows% = 0
                 MaxX = -999999
                 MinX = -MaxX
+                numToFit = 0
                 Do Until EOF(freefil%)
                    Line Input #freefil%, doclin$
                    numRows% = numRows% + 1
                    Xvalue = dPlot(I, 0, numRows% - 1)
                    Yvalue = dPlot(I, 1, numRows% - 1)
-                   If Xvalue > MaxX Then MaxX = Xvalue
-                   If Xvalue < MinX Then MinX = Xvalue
-                   PtX.Add Xvalue
-                   PtY.Add Yvalue
+                   If Xvalue >= Val(Text1.Text) And Xvalue <= Val(Text2.Text) Then
+                      If Xvalue > MaxX Then MaxX = Xvalue
+                      If Xvalue < MinX Then MinX = Xvalue
+                      PtX.Add Xvalue
+                      PtY.Add Yvalue
+                      numToFit = numToFit + 1
+                      End If
                 Loop
                 
                 Text1 = MinX
                 Text2 = MaxX
-                txtNumFitPnts.Text = numRows%
+                txtNumFitPnts.Text = numToFit 'numRows%
                 
                 Close #freefil%
                
@@ -696,7 +701,8 @@ Private Sub cmdFit_Click()
                    
                 If degree = 0 Then degree = 1
                 PolyDeg = degree
-                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree)
+                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                If ier = -1 Then Exit Sub
             
                 With flxGridFit
                     .Rows = PolyDeg + 2
@@ -1286,7 +1292,8 @@ WizardSection:
                     
                 If degree = 0 Then degree = 1
                 PolyDeg = degree
-                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree)
+                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                If ier = -1 Then Exit Sub
             
                 With flxGridFit
                     .Rows = PolyDeg + 2
@@ -1736,6 +1743,8 @@ End Sub
 
 Private Sub cmdWizard_Click()
 
+  Dim ier As Integer
+
   If flxlstFiles.list.Count = 0 Then
      MsgBox "Plot buffer is empty!", vbExclamation + vbOKOnly, "Plot"
      Exit Sub
@@ -1851,7 +1860,8 @@ Private Sub cmdWizard_Click()
                 degree = cmbDeg.ListIndex + 1
                 If degree = 0 Then degree = 1
                 PolyDeg = degree
-                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree)
+                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                If ier = -1 Then Exit Sub
             
                 With flxGridFit
                     .Rows = PolyDeg + 2
