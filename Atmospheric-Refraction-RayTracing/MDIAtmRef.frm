@@ -24,10 +24,12 @@ Begin VB.MDIForm MDIAtmRef
       BeginProperty Panels {8E3867A5-8586-11D1-B16A-00C0F0283628} 
          NumPanels       =   2
          BeginProperty Panel1 {8E3867AB-8586-11D1-B16A-00C0F0283628} 
-            Object.Width           =   17639
+            AutoSize        =   2
+            Object.Width           =   17648
             MinWidth        =   17639
          EndProperty
          BeginProperty Panel2 {8E3867AB-8586-11D1-B16A-00C0F0283628} 
+            AutoSize        =   2
          EndProperty
       EndProperty
    End

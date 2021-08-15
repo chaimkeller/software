@@ -8,13 +8,13 @@ Begin VB.Form prjAtmRefMainfm
    ClientHeight    =   12090
    ClientLeft      =   510
    ClientTop       =   1140
-   ClientWidth     =   14160
+   ClientWidth     =   17835
    Icon            =   "prjAtmRefMainfm.frx":0000
    LinkTopic       =   "Form1"
    LockControls    =   -1  'True
    MDIChild        =   -1  'True
    ScaleHeight     =   12090
-   ScaleWidth      =   14160
+   ScaleWidth      =   17835
    WindowState     =   2  'Maximized
    Begin TabDlg.SSTab TabRef 
       Height          =   11775
@@ -1519,7 +1519,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   285
                Left            =   3480
                TabIndex        =   141
-               Text            =   "32"
+               Text            =   "32.0"
                Top             =   3960
                Width           =   1215
             End
@@ -1567,7 +1567,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   285
                Left            =   3480
                TabIndex        =   131
-               Text            =   "1010"
+               Text            =   "1013.25"
                Top             =   2160
                Width           =   1215
             End
@@ -1612,7 +1612,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   285
                Left            =   3480
                TabIndex        =   121
-               Text            =   "756.5"
+               Text            =   "756.7"
                Top             =   360
                Width           =   1215
             End
@@ -2561,14 +2561,6 @@ Begin VB.Form prjAtmRefMainfm
             TabIndex        =   7
             Top             =   240
             Width           =   4695
-            Begin VB.CheckBox chkUseAlt 
-               Height          =   255
-               Left            =   4200
-               TabIndex        =   250
-               ToolTipText     =   "Use this starting aaltitude instead of the Max View Ang input"
-               Top             =   960
-               Width           =   255
-            End
             Begin VB.TextBox txtKStep 
                Alignment       =   2  'Center
                Height          =   285
@@ -2583,7 +2575,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   285
                Left            =   2760
                TabIndex        =   39
-               Text            =   "574"
+               Text            =   "585"
                Top             =   4440
                Width           =   1200
             End
@@ -2592,7 +2584,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   285
                Left            =   2760
                TabIndex        =   37
-               Text            =   "574"
+               Text            =   "585"
                Top             =   3960
                Width           =   1200
             End
@@ -2650,7 +2642,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   285
                Left            =   2760
                TabIndex        =   25
-               Text            =   "756.5"
+               Text            =   "756.7"
                ToolTipText     =   "Observer's height in meters"
                Top             =   480
                Width           =   1200
@@ -2818,7 +2810,7 @@ Begin VB.Form prjAtmRefMainfm
                Italic          =   0   'False
                Strikethrough   =   0   'False
             EndProperty
-            Height          =   1400
+            Height          =   1335
             Left            =   5400
             TabIndex        =   95
             Top             =   8040
@@ -3603,7 +3595,7 @@ ps100:
          
          BETA = ALFA(k, j) * CONV
          RC = RCV(k, II) * Cos(BETA) * Cos(BETA) * Cos(BETA)
-         x = 0#
+         X = 0#
 'C        INITIAL RAY - LEHN'S EQUATION 12 & 17
          If (BETA >= 0#) Then
             DIS = Tan(BETA) ^ 2# + 2# * (ELV(II) - HOBS) * (RC - RE) / (RC * RE)
@@ -3631,19 +3623,19 @@ ps100:
             Theta = 0#
             Theta_M = 0#
             H = HOBS
-            Do While ((II >= 1) And (II <= NNN) And (x <= XMAX))
+            Do While ((II >= 1) And (II <= NNN) And (X <= XMAX))
             
 '               IF (IPLOT = 1) WRITE (20,1) X,H
-               If (IPLOT = 1) Then Print #filnum%, Format(x, "######0.0####"), Format(H, "######0.0####"), Format(ALFA(k, j), "######0.0####")
+               If (IPLOT = 1) Then Print #filnum%, Format(X, "######0.0####"), Format(H, "######0.0####"), Format(ALFA(k, j), "######0.0####")
 
                XD = 0#
                HD = H
                
 'C              FILL IN THE GAPS DURING RAY TRACING
-               Do While ((IPLOT = 1) And (XD <= UP) And ((x + XD) <= XMAX))
+               Do While ((IPLOT = 1) And (XD <= UP) And ((X + XD) <= XMAX))
 '                 IF (IPLOT = 1) WRITE(20,1) X+XD,HD
                  If (IPLOT = 1 And XD <> 0) Then
-                    Print #filnum%, Format(x + XD, "######0.0####"), Format(HD, "######0.0####"), Format(ALFA(k, j), "######0.0####")
+                    Print #filnum%, Format(X + XD, "######0.0####"), Format(HD, "######0.0####"), Format(ALFA(k, j), "######0.0####")
                     End If
                 XD = XD + DELTA
                 HD = ((1# / RE) - (1# / RC)) * (XD ^ 2#) / 2# + XD * Tan(BETA) + H
@@ -3696,7 +3688,7 @@ ps100:
                      End If
                      
                   RC = RCV(k, II) * Cos(BETA) * Cos(BETA)
-                  x = x + UP
+                  X = X + UP
                   
 'C                 CALCULATE NEW UP VALUE
                   If ((II >= 1) And (II <= NNN)) Then
@@ -3734,7 +3726,7 @@ ps100:
                   Loop
                   
                If (II = 0) Then ALFT(k, j) = -1000#
-               If (x >= XMAX) Then IDCT(j) = 1
+               If (X >= XMAX) Then IDCT(j) = 1
                IEND(j) = II
             Next j '<2
             
@@ -3842,8 +3834,8 @@ ps100:
         If ALFT(KMIN, j) <> -1000 Then
             NumTc = NumTc + 1
             For KA = 1 To NumSuns
-               y = ALFT(KMIN, j) - ALT(KA)
-               If Abs(y) <= ROBJ Then
+               Y = ALFT(KMIN, j) - ALT(KA)
+               If Abs(Y) <= ROBJ Then
                   'only accept rays that pass over the horizon (ALFT(KMIN, J) <> -1000) and are within the solar disk
                   SunAngles(KA - 1, NumSunAlt(KA - 1)) = j
                   NumSunAlt(KA - 1) = NumSunAlt(KA - 1) + 1
@@ -3938,9 +3930,9 @@ ps100:
                EDIS(k) = 0#
 'C          DRAW SUNS
                For KA = 1 To NumSuns
-                  y = ALFT(k, j) - ALT(KA)
-                  x = (CDbl(i) / PPAM) - AZM(KA)
-                  RHO = Sqr(x * x + y * y)
+                  Y = ALFT(k, j) - ALT(KA)
+                  X = (CDbl(i) / PPAM) - AZM(KA)
+                  RHO = Sqr(X * X + Y * Y)
                   If (RHO <= ROBJ) Then
                      U = 0.6
                      DARK = (1# - U * (1# - Sqr(1# - (RHO / ROBJ) ^ 2))) / (1# - U / 3#)
@@ -5692,7 +5684,7 @@ Private Sub cmdHS_Click()
       Dim C1 As Double, C2 As Double, C3 As Double, C4 As Double, C5 As Double, C6 As Double, r0 As Double, TEMPO As Double, DN0 As Double, RDNDR0 As Double, sk0 As Double, f0 As Double
       Dim rt As Double, TT As Double, DNT As Double, RDNDRT As Double, SINE As Double, zt As Double, ft As Double, DNTS As Double, RDNDRP As Double, zts As Double, fts As Double
       Dim rs As Double, DNS As Double, RDNDRS As Double, zs As Double, FS As Double, REFOLD As Double, z0 As Double, ZRANGE As Double, fb As Double, ff As Double, fo As Double, fe As Double
-      Dim H As Double, r As Double, SZ As Double, rg As Double, DR As Double, Tg As Double, DN As Double, RDNDR As Double, T As Double, F As Double, refp As Double, reft As Double
+      Dim H As Double, r As Double, SZ As Double, rg As Double, DR As Double, tg As Double, DN As Double, RDNDR As Double, T As Double, F As Double, refp As Double, reft As Double
 
       ZOBS = 90# * cd 'zenith angle in radians, use straight angle for now
       HM = HOBS
@@ -5836,7 +5828,7 @@ Private Sub cmdHS_Click()
                   Do While (Abs(DR) > 1# And j < 4)
                      j = j + 1
                      If (k = 1) Then
-                        Call sla__ATMT(r0, TDKOK, ALPHA, GAMM2, DELM2, C1, C2, C3, C4, C5, C6, rg, Tg, DN, RDNDR)
+                        Call sla__ATMT(r0, TDKOK, ALPHA, GAMM2, DELM2, C1, C2, C3, C4, C5, C6, rg, tg, DN, RDNDR)
                      Else
                         Call sla__ATMS(rt, TT, DNT, GAMAL, rg, DN, RDNDR)
                      End If
@@ -6223,12 +6215,10 @@ ier = 0
 '    int ier = 0
 
 Dim FNM As String, AtmType As Integer, AtmNumber As Integer, lpsrate As Double, tst As Double, pst As Double, NNN As Long
-Dim Path As Double, Pg As Double, Tg As Double
 
 '/////////diagnostics/////////////////
 DiagnoseIndex = True
 DiagnosticsAtm = True
-DiagnoseIndexHgt = 0
 '///////////////////////////////////
 If DiagnoseIndex Then
    fildiag% = FreeFile
@@ -6568,13 +6558,6 @@ ps100:
 '    //output file
      fileout% = FreeFile
      Open App.Path & "\test_M.dat" For Output As #fileout%
-     
-    If OptionSelby.Value = False And chkDucting.Value = vbUnchecked Then
-        Print #fileout%, "Standard Menat refraction calculation"
-    ElseIf OptionSelby.Value = True Then
-        Print #fileout%, "Custom atmospheric layer file type" & Str(AtmNumber); " used with" & Str(NumLayers) & " layers"
-        End If
-     
 '    if ( !( stream = fopen( "MENAT.OUT", "w")) )
 '    {
 '        return -1
@@ -6618,21 +6601,6 @@ ps100:
 '    //if (isn <> 1 and isn <>2) isn = 1
 '
 '    /*
-
-    
-    If Val(txtHeight.Text) < ELV(0) Then
-        'couldn't find a temperature and pressure
-        Call MsgBox("Your ground height is set less than the minimum layer height in the special atmosphere you selected." _
-                    & vbCrLf & "" _
-                    & vbCrLf & "To use this atmosphere, you can renormalize the heights to zero" _
-                    & vbCrLf & "Or enter a higher elevation for the HOE.", vbInformation, "Missing layer")
-        Screen.MousePointer = vbDefault
-        Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, 0)
-        prjAtmRefMainfm.progressfrm.Visible = False
-        cmdMenat.Enabled = True
-        Exit Sub
-        End If
-        
     ReDim Preserve zz_1(NumLayers - 1) As zz '<<<
     
     For k = 1 To NumLayers
@@ -6643,7 +6611,6 @@ ps100:
         zz_1(k - 1).tj = TMP(k - 1) ' //ts(k - 1)
         zz_1(k - 1).pj = PRSR(k - 1) ' //ps(k - 1)
     Next k
-   
     
     If hsof < 35 Then
        'insure that there is enough atmosphere for refraction calculation
@@ -6780,13 +6747,6 @@ ps100:
    estep = CDbl(1 / PPAM)
    nang = n_size
    
-   If chkUseAlt.Value = vbChecked Then
-      epg1 = txtStartAlt.Text
-      epg2 = epg1
-      estep = 1
-      epg = epg1
-      End If
-   
 '   epg1 = 180
 '   epg2 = 180
 '   epg = 180
@@ -6802,7 +6762,6 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
    
 '    nhgt = 1 'use so far only one height '<<<<<<<<<<<<<<
     i__1 = nhgt
-    Path = 0
     For nkhgt = 1 To i__1
 '    {
 '        Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * nkhgt / i__1))
@@ -6869,19 +6828,11 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
                End If
             
             If (START) Then
-                'Write #fileout%, 0#, hz1 * 1000#, ALFA(KWAV, kgr), ALFA(KWAV, kgr), 0#
-                Print #fileout%, Format(0#, "######0.0####"), Format(0#, "######0.0####"), Format(hz1 * 1000#, "######0.0####"), Format(ALFA(KWAV, kgr), "######0.0####"), Format(ALFA(KWAV, kgr), "######0.0####"), Format(0#, "######0.0####")
+                Write #fileout%, 0#, hz1 * 1000#, ALFA(KWAV, kgr), ALFA(KWAV, kgr), 0#
                 START = False
                 End If
             
-            enm = fun_(hen1, zz_1, NumLayers, XP, Tg, Pg)
-            If enm = -1 Then
-                'collided with surface
-                enm = 0#
-                End If
-                    
-            cz = Cos(epz) * (ra + hz) * (enm + 1#)
-            
+            cz = Cos(epz) * (ra + hz) * (fun_(hen1, zz_1, NumLayers) + 1#)
             bz = pi2 - epz '//zenith angle
             bn = bz
 '    /*           write(*,*)' bn=',bn */
@@ -6945,8 +6896,6 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
                 hev = hen + dh
 '
                 el = sqt_(e, dh, rt) 'path length of light ray from last height to current height
-                
-                Path = Path + e1
 '
                 s = el * Cos(e)  'begin law of sin calculation of the subtended cylindrical angle at the Earth's center
 '
@@ -6964,20 +6913,11 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
                 at2 = at2 + A2  'this is the total cylindrical angle, theta
                 s2 = at2 * ra 'this is the total length along the circumference of the earth
                 a3 = q6 * A2 'ditto in mrad
-                en = fun_(hen, zz_1, NumLayers, XP, Tg, Pg) 'variable portion of the index of refraction at this height
-                If en = -1 Then
-                   'collided with surface
-                   ru = -1000
-                   GoTo m100
-                   End If
-                   
+                en = fun_(hen, zz_1, NumLayers) 'variable portion of the index of refraction at this height
+                
                 '/////////////diagnostics////////////////////////
                 If DiagnoseIndex Then
-'                      Write #fildiag%, hen, 1 + en
-                    If (hen * 1000# - DiagnoseIndexHgt) >= 1 And DiagnoseIndexHgt <= 5000 Then
-                       Print #fildiag%, Format(Str(hen * 1000#), "####0.0#####"), Format(Str(1 + en), "#.0########"), Format(Str(Tg), "####0.0####")
-                       DiagnoseIndexHgt = hen * 1000#
-                       End If
+                   If n Mod 10 = 0 Then Write #fildiag%, hen, 1 + en
                    End If
                 '//////////////////////////////////////////////
                 
@@ -6987,11 +6927,8 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
 '        /* >>          WRITE(*,*)' G(DEG)=',G/CO */
                 g1 = q3 * g
                 e2 = q3 * (pi2 - g)
-                em = fun_(hev, zz_1, NumLayers, XP, Tg, Pg) + 1#
-                If en = -1 Then
-                    GoTo m100 'collided with surface
-                    End If
-                    
+                em = fun_(hev, zz_1, NumLayers) + 1#
+
                 sbn = (en + 1#) * Sin(g) / em 'Snell's law, where new angle asin(sbn) which is g + incremental refraction
 '        /* >>          WRITE(*,*)' SBN=',SBN */
                 If (sbn > 1#) Then
@@ -7005,9 +6942,9 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
                     dh = -el * Abs(d__1)
                     End If
 
-                d__ = bn - g 'refraction for last step
+                d__ = bn - g
                 d6 = q6 * d__
-                T = T + d__  'accumluated refraction
+                T = T + d__
                 dt1 = q3 * T
                 dtg = dt1 * ramg
                 fr = 1#
@@ -7025,19 +6962,14 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
 '                'fprintf(stream, "%lg, %lg, %lg, %lg\n", XP, ru - ra, A1, A2)
 '                fprintf(stream, "%lg, %lg\n", A1, A2)
 '                Write #fileout%, XP, ru 'A1, A2
-m100:
+                
                 If ru < ra Then 'collided with the surface
-'                   Write #fileout%, XP * 1000#, (ra + hen) * 1000# * Cos(ANGLE) - RE, -1000, ALFA(KWAV, kgr), e2, dt1 * 0.001 * 180# * 60 / pi
-'                   Write #fileout%, XP * 1000#, Path, -1000, ALFA(KWAV, kgr), e2, dt1 * 0.001 * 180# * 60 / pi
-                   Print #fileout%, Format(XP * 1000#, "######0.0####"), Format(Path, "######0.0####"), Format(-1000, "######0.0####"), Format(ALFA(KWAV, kgr), "######0.0####"), Format(e2, "######0.0####"), Format(dt1 * 0.001 * 180# * 60 / pi, "######0.0####")
-                   
+                   Write #fileout%, XP * 1000#, -1000, (ra + hen) * 1000# * Cos(ANGLE) - RE, ALFA(KWAV, kgr), e2, dt1 * 0.001 * 180# * 60 / pi
                    jstop = kgr
                 Else
                    'limit the recording to every other step
                    If n Mod Val(prjAtmRefMainfm.txtHeightStepSize.Text) = 0 Then
-'                      Write #fileout%, XP * 1000#, (ru - ra) * 1000#, (ra + hen) * 1000# * Cos(ANGLE) - RE, ALFA(KWAV, kgr), e2, dt1 * 0.001 * 180# * 60 / pi
-'                      Write #fileout%, XP * 1000#, Path, (ru - ra) * 1000#, ALFA(KWAV, kgr), e2, dt1 * 0.001 * 180# * 60 / pi
-                      Print #fileout%, Format(XP * 1000#, "######0.0####"), Format(Path, "######0.0####"), Format((ru - ra) * 1000#, "######0.0####"), Format(ALFA(KWAV, kgr), "######0.0####"), Format(e2, "######0.0####"), Format(dt1 * 0.001 * 180# * 60 / pi, "######0.0####")
+                      Write #fileout%, XP * 1000#, (ru - ra) * 1000#, (ra + hen) * 1000# * Cos(ANGLE) - RE, ALFA(KWAV, kgr), e2, dt1 * 0.001 * 180# * 60 / pi
                       End If
                    jstop = -1
                    End If
@@ -7300,16 +7232,16 @@ Print #filnum%, n_size
 For j = 1 To kgr - 1
 '        WRITE(20,1) ALFA(KMIN,J),ALFT(KMIN,J)
     Print #filnum%, ALFA(KMIN, j), ALFT(KMIN, j)
-    If ALFA(KMIN, j) = 0 Or kgr = 2 Then 'display the refraction value for the zero or only view angle ray
-       prjAtmRefMainfm.lblRef.Caption = "Atms. refraction (deg.) at " & ALFA(KMIN, j) / 60 & " deg = " & Abs(-ALFT(KMIN, j)) / 60# & vbCrLf & "Atms. refraction (mrad) at " & ALFA(KMIN, j) / 60 & " deg = " & Abs(ALFT(KMIN, j)) * 1000# * cd / 60#
+    If ALFA(KMIN, j) = 0 Then 'display the refraction value for the zero view angle ray
+       prjAtmRefMainfm.lblRef.Caption = "Atms. refraction (deg.) = " & Abs(-ALFT(KMIN, j)) / 60# & vbCrLf & "Atms. refraction (mrad) = " & Abs(ALFT(KMIN, j)) * 1000# * cd / 60#
        prjAtmRefMainfm.lblRef.Refresh
        DoEvents
        End If
 'store all view angles that contribute to sun's orb
     NumTc = NumTc + 1
     For KA = 1 To NumSuns
-       y = ALFT(KMIN, j) - ALT(KA)
-       If Abs(y) <= ROBJ Then
+       Y = ALFT(KMIN, j) - ALT(KA)
+       If Abs(Y) <= ROBJ Then
           'only accept rays that pass over the horizon (ALFT(KMIN, J) <> -1000) and are within the solar disk
           SunAngles(KA - 1, NumSunAlt(KA - 1)) = j
           NumSunAlt(KA - 1) = NumSunAlt(KA - 1) + 1
@@ -7426,17 +7358,17 @@ Public Function sqt_(e As Double, dh As Double, r__ As Double) As Double
 '    'double sin(double), sqrt(double)
 '
 '    /* Local variables */
-    Dim q As Double, y As Double
+    Dim q As Double, Y As Double
 
     q = r__ * Sin(e)
-    y = r__ * 2# + dh
+    Y = r__ * 2# + dh
 '/* >>     WRITE(*,*)' DH=',DH */
     If (dh < 0#) Then
-        d__1 = q * q + dh * y
+        d__1 = q * q + dh * Y
         ret_val = -q - Sqr(Abs(d__1))
         End If
     If (dh >= 0#) Then
-        d__1 = q * q + dh * y
+        d__1 = q * q + dh * Y
         ret_val = -q + Sqr(Abs(d__1))
         End If
         
@@ -8863,7 +8795,7 @@ Dim dndrt As Double, zt As Double, ft As Double, dndrts As Double, nts As Double
 Dim zts As Double, fts As Double, rs As Double, ns As Double
 Dim dndrs As Double, zs As Double, FS As Double, ref0 As Double, refp As Double
 Dim reft As Double, fb As Double, H As Double, step As Double
-Dim z As Double, rg As Double, T As Double, Tg As Double, n As Double, dndr As Double
+Dim z As Double, rg As Double, T As Double, tg As Double, n As Double, dndr As Double
 Dim F As Double, fe As Double, fo As Double, ff As Double, ex1 As Double, ex2 As Double
 Dim gcr As Double, md As Double, mw As Double, gamma As Double, z2 As Double, s As Double
 Dim ht As Double, hs As Double, dgr As Double, refmrad As Double
@@ -9430,13 +9362,13 @@ For k = 1 To 2
         r00 = rg
         For j = 1 To 4
             If (k = 1) Then
-                Call atmostro(r0, t0, A(), rg, Tg, n, dndr, P)
+                Call atmostro(r0, t0, A(), rg, tg, n, dndr, P)
                 
                 If chkCiddor.Value = vbChecked Then
-                   Call INDEX_CIDDOR(wl * 1000, Tg, P * 100, ups, 402, DA, DW, Index)
+                   Call INDEX_CIDDOR(wl * 1000, tg, P * 100, ups, 402, DA, DW, Index)
                    'now move up by 100 meters to calculate dn/dr
-                   Call atmostro(r0, t0, A(), rg + DeltaR, Tg, n2, dndr, P)
-                   Call INDEX_CIDDOR(wl * 1000, Tg, P * 100, ups, 402, DA, DW, Index2)
+                   Call atmostro(r0, t0, A(), rg + DeltaR, tg, n2, dndr, P)
+                   Call INDEX_CIDDOR(wl * 1000, tg, P * 100, ups, 402, DA, DW, Index2)
                    dndr = (Index2 - Index) / DeltaR
                    n = Index
                    End If
@@ -9725,8 +9657,8 @@ For j = 1 To jstop - 1
 'store all view angles that contribute to sun's orb
     NumTc = NumTc + 1
     For KA = 1 To NumSuns
-       y = ALFT(KMIN, j) - ALT(KA)
-       If Abs(y) <= ROBJ Then
+       Y = ALFT(KMIN, j) - ALT(KA)
+       If Abs(Y) <= ROBJ Then
           'only accept rays that pass over the horizon (ALFT(KMIN, J) <> -1000) and are within the solar disk
           SunAngles(KA - 1, NumSunAlt(KA - 1)) = j
           NumSunAlt(KA - 1) = NumSunAlt(KA - 1) + 1
@@ -10892,7 +10824,6 @@ cmdVDW_error = 0
 '/////////diagnostics/////////////
 Diagnostics = False 'diagnose pressure arrays
 DiagnoseIndex = True 'diagnose index of refraction
-DiagnoseIndexHgt = 0
 '//////////////////////////////////////////////////
 
 
@@ -11852,7 +11783,6 @@ For HLoop = HgtStart To HgtEnd Step HgtStep
         filetemp% = FreeFile
         If OptionSelby.Value = False And chkDucting.Value = vbUnchecked Then
             FilNm = App.Path & "\TR_VDW_" & Trim(Str(Fix(TempStart))) & "-" & Trim(Str(Fix(TempEnd))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
-            Print #filetemp%, "Standard REF2017 atmosphere calculation with Tground =" & Str(TGROUND) & " ground pressure: " & Str(Press0) & " Steps: " & txtNSTEPS
             Open FilNm For Output As #filetemp%
         ElseIf chkDucting.Value = vbChecked Then
             FilNm = App.Path & "\TR_VDW_INV_" & Trim(Str(Fix(TempStart))) & "-" & Trim(Str(Fix(TempEnd))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
@@ -11881,7 +11811,6 @@ For HLoop = HgtStart To HgtEnd Step HgtStep
         If OptionSelby.Value = False And chkDucting.Value = vbUnchecked Then
             FilNm = App.Path & "\TR_VDW_" & Trim(Str(Fix(TGROUND))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
             Open FilNm For Output As #fileout%
-            Print #fileout%, "Standard REF2017 atmosphere calculation with Tground =" & Str(TGROUND) & " ground pressure: " & Str(Press0) & " Steps: " & txtNSTEPS
         ElseIf chkDucting.Value = vbChecked Then
             FilNm = App.Path & "\TR_VDW_INV_" & Trim(Str(Fix(TGROUND))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
             Open FilNm For Output As #fileout%
@@ -11940,14 +11869,14 @@ PRESSD1(1) = Press0 - RELH * fVAPOR(0#, -1, NumLayers)
 '   End If
    
 'txtDryPressure.Text = Trim$(Str$(PRESSD1(1))) 'display the dry pressure, i.e., total atmospheric pressure is combination of dry and wet pressure
-'If OptionSelby Then
+If OptionSelby Then
    Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, 0)
-'   End If
+   End If
    
 For i = 1 To (31000 + 15) Step 1
-'    If OptionSelby Then
-'       Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * i / 31015))
-'       End If
+    If OptionSelby Then
+       Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * i / 31015))
+       End If
 '    If i = 31000 Then
 '       ccc = 1
 '       End If
@@ -12027,16 +11956,16 @@ For i = 1 To (31000 + 15) Step 1
     If Diagnostics And Not OptionSelby And i Mod 10 = 0 Then Write #filtstout, i + 1, PRESSD1(i) 'diagnostics, height in meters, pressure at that height
     '///////////////////////////////////////////////////
     
-'    If OptionSelby Then
+    If OptionSelby Then
        Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * i / 31015))
-'       End If
+       End If
     
 Next i
 If Diagnostics And Not OptionSelby Then Close #filtstout
 
-'    If OptionSelby Then
+    If OptionSelby Then
        Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, 0)
-'       End If
+       End If
 
 '===FIND PDM1 AT -1 METER===
 'If OptionSelby.Value = True Then
@@ -12285,9 +12214,9 @@ For i = I2LOW To (HLIMIT / 10 + 5) Step 1
 '//////////////////diagnostics///////////////////////////////
     If Diagnostics And i Mod 10 = 0 Then Write #filtstout, 10 * i + 10, PRESSD2(i)  'diagnostics
 '////////////////////////////////////////////////////////////
-'    If OptionSelby Then
+    If OptionSelby Then
        Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * (i - I2LOW) / ((HLIMIT / 10 + 5) - I2LOW)))
-'       End If
+       End If
 Next i
 
 If OptionSelby Then 'use as much of the radiosonde or special atmoshpere values as possible
@@ -12721,13 +12650,7 @@ Dim nloop As Long
 For jstep = 1 To n_size + 1
 
     ALFA(KMIN, jstep) = (CDbl(n_size / 2 - (jstep - 1)) / PPAM)
-    If chkUseAlt.Value = vbChecked Then
-       'use this start value
-       BETAM = txtStartAlt.Text
-       ALFA(KMIN, jstep) = BETAM
-    Else
-       BETAM = ALFA(KMIN, jstep)
-       End If
+    BETAM = ALFA(KMIN, jstep)
 
     DPATH = fGUESSP(BETAM, HMAXT) / NSTEPS
     
@@ -12949,9 +12872,7 @@ NORAYPRINT:
         nloop = nloop + 1
         If (n_size + 1 <= 1) Then
             'assume ldxx ghzn 10000 loops, there are probably less
-            If txtNSTEPS = 0 Then nnnsteps = 100000#
-            If txtNSTEPS > 0 Then nnnsteps = 5 * Val(txtNSTEPS)
-            Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * nloop / nnnsteps))
+            Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, CLng(100# * nloop / 10000#))
             End If
 
     Loop
@@ -13206,11 +13127,8 @@ If Not CalcSondes Then Close
   For j = 1 To jstop
   '        WRITE(20,1) ALFA(KMIN,J),ALFT(KMIN,J)
       Print #filnum%, ALFA(KMIN, j), ALFT(KMIN, j)
-'      If ALFA(KMIN, j) = 0 And found% = 0 Then 'display the refraction value for the zero view angle ray
-'         prjAtmRefMainfm.lblRef.Caption = "Atms. refraction (deg.) = " & Abs(ALFT(KMIN, j)) / 60# & vbCrLf & "Atms. refraction (mrad) = " & Abs(ALFT(KMIN, j)) * 1000# * cd / 60#
-      If (ALFA(KMIN, j) = 0 Or jstop = 1) And found% = 0 Then 'display the refraction value for the zero or only view angle ray
-         prjAtmRefMainfm.lblRef.Caption = "Atms. refraction (deg.) at " & ALFA(KMIN, j) / 60 & " deg = " & Abs(ALFT(KMIN, j)) / 60# & vbCrLf & "Atms. refraction (mrad) at " & ALFA(KMIN, j) / 60 & " deg = " & Abs(ALFT(KMIN, j)) * 1000# * cd / 60#
-         
+      If ALFA(KMIN, j) = 0 And found% = 0 Then 'display the refraction value for the zero view angle ray
+         prjAtmRefMainfm.lblRef.Caption = "Atms. refraction (deg.) = " & Abs(ALFT(KMIN, j)) / 60# & vbCrLf & "Atms. refraction (mrad) = " & Abs(ALFT(KMIN, j)) * 1000# * cd / 60#
          VRefDeg = Abs(ALFT(KMIN, j)) / 60#
          prjAtmRefMainfm.lblRef.Refresh
          found% = 1
@@ -13228,8 +13146,8 @@ If Not CalcSondes Then Close
   'store all view angles that contribute to sun's orb
       NumTc = NumTc + 1
       For KA = 1 To NumSuns
-         y = ALFT(KMIN, j) - ALT(KA)
-         If Abs(y) <= ROBJ Then
+         Y = ALFT(KMIN, j) - ALT(KA)
+         If Abs(Y) <= ROBJ Then
             'only accept rays that pass over the horizon (ALFT(KMIN, J) <> -1000) and are within the solar disk
             SunAngles(KA - 1, NumSunAlt(KA - 1)) = j
             NumSunAlt(KA - 1) = NumSunAlt(KA - 1) + 1
@@ -13488,7 +13406,7 @@ cmdVDW_error = 0
    Exit Sub
 
 cmdVDW_Click_Error:
-    Resume 'diagnostics
+'    Resumej 'diagnostics
     cmdVDW_error = -1
     If CalcSondes Then
        CalcSondes = False
@@ -13507,14 +13425,14 @@ cmdVDW_Click_Error:
 End Sub
 
 '===================FUNCTIONS=================================
-Function fACS(x As Double) As Double
+Function fACS(X As Double) As Double
 'Arccosine
-fACS = 2 * Atn(1) - Atn(x / Sqr(1# - x * x))
+fACS = 2 * Atn(1) - Atn(X / Sqr(1# - X * X))
 End Function
 
-Function fASN(x As Double) As Double
+Function fASN(X As Double) As Double
 'Arcsine
-fASN = Atn(x / Sqr(1# - x * x))
+fASN = Atn(X / Sqr(1# - X * X))
 End Function
 
 
@@ -13538,39 +13456,39 @@ Function fFNDPD1(H As Double, PRESSD1() As Double, Dist As Double, NumLayers As 
 'Interpolation in the array PRESSD1
 'DefDbl A-H, O-Z
 'SHARED HLIMIT, PDM1, RELH, BD, BW, HMAXP1
-Dim y As Double, i As Long, P1 As Double, P2 As Double, DP2DY As Double, FK1 As Double, FK2 As Double, FK3 As Double, FK4 As Double
+Dim Y As Double, i As Long, P1 As Double, P2 As Double, DP2DY As Double, FK1 As Double, FK2 As Double, FK3 As Double, FK4 As Double
 Dim YSTEP As Double
   
 If (H < (HMAXP1 + 1) And H >= 0) Then
-    y = H
-    YSTEP = y - Int(y)
+    Y = H
+    YSTEP = Y - Int(Y)
     'STEP 1
-    i = Int(y)
+    i = Int(Y)
     P1 = PRESSD1(i + 1)
-    P2 = RELH * fVAPOR(y, Dist, NumLayers)
-    DP2DY = RELH * fDVAPDT(y, Dist, NumLayers) * fDTDH(y, Dist, NumLayers)
-    FK1 = -DP2DY - BD * P1 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers) - BW * P2 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers)
+    P2 = RELH * fVAPOR(Y, Dist, NumLayers)
+    DP2DY = RELH * fDVAPDT(Y, Dist, NumLayers) * fDTDH(Y, Dist, NumLayers)
+    FK1 = -DP2DY - BD * P1 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers) - BW * P2 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers)
     'END STEP 1
     'STEP 2
-    y = i + YSTEP / 2
+    Y = i + YSTEP / 2
     P1 = PRESSD1(i + 1) + FK1 * YSTEP / 2
-    P2 = RELH * fVAPOR(y, Dist, NumLayers)
-    DP2DY = RELH * fDVAPDT(y, Dist, NumLayers) * fDTDH(y, Dist, NumLayers)
-    FK2 = -DP2DY - BD * P1 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers) - BW * P2 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers)
+    P2 = RELH * fVAPOR(Y, Dist, NumLayers)
+    DP2DY = RELH * fDVAPDT(Y, Dist, NumLayers) * fDTDH(Y, Dist, NumLayers)
+    FK2 = -DP2DY - BD * P1 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers) - BW * P2 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers)
     'END STEP 2
     'STEP 3
-    y = i + YSTEP / 2
+    Y = i + YSTEP / 2
     P1 = PRESSD1(i + 1) + FK2 * YSTEP / 2
-    P2 = RELH * fVAPOR(y, Dist, NumLayers)
-    DP2DY = RELH * fDVAPDT(y, Dist, NumLayers) * fDTDH(y, Dist, NumLayers)
-    FK3 = -DP2DY - BD * P1 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers) - BW * P2 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers)
+    P2 = RELH * fVAPOR(Y, Dist, NumLayers)
+    DP2DY = RELH * fDVAPDT(Y, Dist, NumLayers) * fDTDH(Y, Dist, NumLayers)
+    FK3 = -DP2DY - BD * P1 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers) - BW * P2 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers)
     'END STEP 3
     'STEP 4
-    y = i + YSTEP
+    Y = i + YSTEP
     P1 = PRESSD1(i + 1) + FK3 * YSTEP
-    P2 = RELH * fVAPOR(y, Dist, NumLayers)
-    DP2DY = RELH * fDVAPDT(y, Dist, NumLayers) * fDTDH(y, Dist, NumLayers)
-    FK4 = -DP2DY - BD * P1 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers) - BW * P2 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers)
+    P2 = RELH * fVAPOR(Y, Dist, NumLayers)
+    DP2DY = RELH * fDVAPDT(Y, Dist, NumLayers) * fDTDH(Y, Dist, NumLayers)
+    FK4 = -DP2DY - BD * P1 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers) - BW * P2 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers)
     'END STEP 4
     fFNDPD1 = PRESSD1(i + 1) + (YSTEP / 6) * (FK1 + 2 * FK2 + 2 * FK3 + FK4)
 Else
@@ -13581,37 +13499,37 @@ Function fFNDPD2(H As Double, PRESSD2() As Double, Dist As Double, NumLayers As 
 'Interpolation in the array PRESSD2
 'DefDbl A-H, O-Z
 'SHARED HLIMIT, PDM10
-Dim y As Double, i As Long, P1 As Double, P2 As Double, DP2DY As Double, FK1 As Double, FK2 As Double, FK3 As Double, FK4 As Double
+Dim Y As Double, i As Long, P1 As Double, P2 As Double, DP2DY As Double, FK1 As Double, FK2 As Double, FK3 As Double, FK4 As Double
 Dim YSTEP As Double
-y = H
-YSTEP = (y - Int(y)) * 10
+Y = H
+YSTEP = (Y - Int(Y)) * 10
 'STEP 1
-i = Int(y / 10)
+i = Int(Y / 10)
 P1 = PRESSD2(i + 1)
-P2 = RELH * fVAPOR(y, Dist, NumLayers)
-DP2DY = RELH * fDVAPDT(y, Dist, NumLayers) * fDTDH(y, Dist, NumLayers)
-FK1 = -DP2DY - BD * P1 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers) - BW * P2 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers)
+P2 = RELH * fVAPOR(Y, Dist, NumLayers)
+DP2DY = RELH * fDVAPDT(Y, Dist, NumLayers) * fDTDH(Y, Dist, NumLayers)
+FK1 = -DP2DY - BD * P1 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers) - BW * P2 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers)
 'END STEP 1
 'STEP 2
-y = i + YSTEP / 2
+Y = i + YSTEP / 2
 P1 = PRESSD2(i + 1) + FK1 * YSTEP / 2
-P2 = RELH * fVAPOR(y, Dist, NumLayers)
-DP2DY = RELH * fDVAPDT(y, Dist, NumLayers) * fDTDH(y, Dist, NumLayers)
-FK2 = -DP2DY - BD * P1 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers) - BW * P2 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers)
+P2 = RELH * fVAPOR(Y, Dist, NumLayers)
+DP2DY = RELH * fDVAPDT(Y, Dist, NumLayers) * fDTDH(Y, Dist, NumLayers)
+FK2 = -DP2DY - BD * P1 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers) - BW * P2 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers)
 'END STEP 2
 'STEP 3
-y = i + YSTEP / 2
+Y = i + YSTEP / 2
 P1 = PRESSD2(i + 1) + FK2 * YSTEP / 2
-P2 = RELH * fVAPOR(y, Dist, NumLayers)
-DP2DY = RELH * fDVAPDT(y, Dist, NumLayers) * fDTDH(y, Dist, NumLayers)
-FK3 = -DP2DY - BD * P1 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers) - BW * P2 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers)
+P2 = RELH * fVAPOR(Y, Dist, NumLayers)
+DP2DY = RELH * fDVAPDT(Y, Dist, NumLayers) * fDTDH(Y, Dist, NumLayers)
+FK3 = -DP2DY - BD * P1 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers) - BW * P2 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers)
 'END STEP 3
 'STEP 4
-y = i + YSTEP
+Y = i + YSTEP
 P1 = PRESSD2(i + 1) + FK3 * YSTEP
-P2 = RELH * fVAPOR(y, Dist, NumLayers)
-DP2DY = RELH * fDVAPDT(y, Dist, NumLayers) * fDTDH(y, Dist, NumLayers)
-FK4 = -DP2DY - BD * P1 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers) - BW * P2 * fGRAVRAT(y) / fTEMP(y, Dist, NumLayers)
+P2 = RELH * fVAPOR(Y, Dist, NumLayers)
+DP2DY = RELH * fDVAPDT(Y, Dist, NumLayers) * fDTDH(Y, Dist, NumLayers)
+FK4 = -DP2DY - BD * P1 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers) - BW * P2 * fGRAVRAT(Y) / fTEMP(Y, Dist, NumLayers)
 'END STEP 4
 fFNDPD2 = PRESSD2(i + 1) + (YSTEP / 6) * (FK1 + 2 * FK2 + 2 * FK3 + FK4)
 PD2READY:
@@ -13679,10 +13597,7 @@ End If
 '///////////////diagnostics///////////////////////////////
 If DiagnoseIndex And fildiag% > 0 Then 'diagnostics, record the height and the index of refraction
 '   Write #fildiag%, H, fREFIND, Dist, NumLayers, PD, PW, AD, AW, fTEMP(H, Dist, NumLayers)
-   If H - DiagnoseIndexHgt >= 1 And H <= 5000 Then
-      Print #fildiag%, Format(Str(H), "####0.0#####"), Format(Str(fREFIND), "#.0########"), Format(Str(fTEMP(H, Dist, NumLayers)), "###0.0##")
-      DiagnoseIndexHgt = H
-      End If
+   Write #fildiag%, H, fREFIND, fTEMP(H, Dist, NumLayers)
    End If
 '//////////////////////////////////////////////////
    
@@ -16593,19 +16508,19 @@ End Sub
 
 
 
-Private Sub Picture2_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub Picture2_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
    Dim ier As Integer
-   ier = MouseDown(Button, Shift, x, y)
+   ier = MouseDown(Button, Shift, X, Y)
 End Sub
 
-Private Sub Picture2_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub Picture2_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    Dim ier As Integer
-   ier = MouseMove(Button, Shift, x, y)
+   ier = MouseMove(Button, Shift, X, Y)
 End Sub
 
-Private Sub Picture2_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub Picture2_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
    Dim ier As Integer
-   ier = MouseUp(Button, Shift, x, y)
+   ier = MouseUp(Button, Shift, X, Y)
 End Sub
 
 Private Sub picVDW_KeyPress(KeyAscii As Integer)
@@ -16626,7 +16541,7 @@ End Sub
 '        End If
 'End Sub
 
-Private Sub picVDW_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub picVDW_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
    If TabRef.Tab = 7 Then
         KeyPressed = 1
         End If
@@ -16949,7 +16864,7 @@ Public Sub MouseWheel(ByVal MouseKeys As Long, ByVal Rotation As Long, ByVal Xpo
 '  End If
 End Sub
 'MouseDown Event for Picture2
-Public Function MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single) As Integer
+Public Function MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single) As Integer
    On Error GoTo errhand
         
     Dim twipscX As Long, twipscY As Long
@@ -16960,8 +16875,8 @@ Public Function MouseDown(Button As Integer, Shift As Integer, x As Single, y As
    
    If Button = 1 And _
       Not DigitizerEraser Then
-      drag1x = x
-      drag1y = y
+      drag1x = X
+      drag1y = Y
       dragbegin = True
       drag2x = drag1x
       drag2y = drag1y
@@ -16979,7 +16894,7 @@ errhand:
 
 End Function
 'mouseup event for prjAtmRefMainfm.picture1
-Public Function MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single) As Integer
+Public Function MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single) As Integer
   Dim VarD As Double
   Dim BytePosit As Long
   
@@ -17011,13 +16926,13 @@ Public Function MouseUp(Button As Integer, Shift As Integer, x As Single, y As S
   
   On Error GoTo errhand
   
-  nearmouse_digi.x = x
-  nearmouse_digi.y = y
+  nearmouse_digi.X = X
+  nearmouse_digi.Y = Y
   
   prjAtmRefMainfm.picture1.MousePointer = vbCrosshair 'restore crosshair cursor
   
-    Xcoord = x
-    Ycoord = y
+    Xcoord = X
+    Ycoord = Y
     
     Select Case Button
        Case 1  'left button
@@ -17085,15 +17000,15 @@ errhand:
 
 End Function
 'mousemouse of prjAtmRefMainfm.picture1
-Public Function MouseMove(Button As Integer, step As Integer, x As Single, y As Single) As Integer
+Public Function MouseMove(Button As Integer, step As Integer, X As Single, Y As Single) As Integer
   'As cursor moves over map, display readout of coordinates.
   
   On Error GoTo errhand
   
   Dim next_mouse As POINTAPI
   
-  nearmouse_digi.x = x
-  nearmouse_digi.y = y
+  nearmouse_digi.X = X
+  nearmouse_digi.Y = Y
   
 '  GetCursorPos next_mouse
 '  hDnext = GetDC(0)
@@ -17121,23 +17036,23 @@ Public Function MouseMove(Button As Integer, step As Integer, x As Single, y As 
       'check if cursor left the picture frame, if so move scroll bars
       'to allow for dragging over entire map
       '(move the picture by the smallest increment = 1)
-      If x / twipsx < Picture2.Left + HScroll1.Value Then
+      If X / twipsx < Picture2.Left + HScroll1.Value Then
          'scroll map to right
          If HScroll1.Value - 1 >= HScroll1.Min Then
             HScroll1.Value = HScroll1.Value - 1
             End If
-      ElseIf x / twipsx > Picture2.Width + Picture2.Left + HScroll1.Value Then
+      ElseIf X / twipsx > Picture2.Width + Picture2.Left + HScroll1.Value Then
          'scroll map to left
          If HScroll1.Value + 1 <= HScroll1.max Then
             HScroll1.Value = HScroll1.Value + 1
             End If
          End If
-      If y / twipsy < Picture2.Top + VScroll1.Value Then
+      If Y / twipsy < Picture2.Top + VScroll1.Value Then
          'scroll map down
          If VScroll1.Value - 1 >= VScroll1.Min Then
             VScroll1.Value = VScroll1.Value - 1
             End If
-      ElseIf y / twipsy > Picture2.Top + Picture2.height + VScroll1.Value Then
+      ElseIf Y / twipsy > Picture2.Top + Picture2.height + VScroll1.Value Then
          'scroll map up
          If VScroll1.Value + 1 <= VScroll1.max Then
             VScroll1.Value = VScroll1.Value + 1
@@ -17145,19 +17060,19 @@ Public Function MouseMove(Button As Integer, step As Integer, x As Single, y As 
          End If
       
       'draw new drag box
-      prjAtmRefMainfm.picture1.Line (x, y)-(drag1x, drag1y), QBColor(15), B
+      prjAtmRefMainfm.picture1.Line (X, Y)-(drag1x, drag1y), QBColor(15), B
 '      GDMDIform.StatusBar1.Panels(1).Text = GDMDIform.StatusBar1.Panels(1).Text & "X,Y,drag1x,drag1y= " & str(x) + ", " & str(Y) & ", " & str(drag1x) & ", " & str(drag1y)
 
       prjAtmRefMainfm.picture1.Refresh
       
       'record new drag end coordinates
-      drag2x = x: drag2y = y
+      drag2x = X: drag2y = Y
       
       End If
       
   'Convert coordinates to pixels
-  Xcoord = x / (twipsx * RefZoom.LastZoom)
-  Ycoord = y / (twipsy * RefZoom.LastZoom)
+  Xcoord = X / (twipsx * RefZoom.LastZoom)
+  Ycoord = Y / (twipsy * RefZoom.LastZoom)
   
   'Convert pixel coordinates to ITM
   ITMx = ((LRGeoX - ULGeoX) / pixwi) * Xcoord + ULGeoX
@@ -17192,12 +17107,12 @@ Public Function SQT(e As Double, dh As Double, r As Double) As Double
 'E is the angle the ray makes with horizontal = 90 - z, where z is the zenith angle
 'DH is the incremental increase in the radia distance from the center of the earth from the last ray vertex
 'RT is the radial distance of the last ray vertex.
-Dim q As Double, y As Double
+Dim q As Double, Y As Double
 
 q = r * Sin(e * cd)
-y = 2# * r + dh
-If (dh < 0) Then SQT = -q - Sqr(Abs(q * q + dh * y))
-If (dh >= 0) Then SQT = -q + Sqr(Abs(q * q + dh * y))
+Y = 2# * r + dh
+If (dh < 0) Then SQT = -q - Sqr(Abs(q * q + dh * Y))
+If (dh >= 0) Then SQT = -q + Sqr(Abs(q * q + dh * Y))
 
 End Function
 

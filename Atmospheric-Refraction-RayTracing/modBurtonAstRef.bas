@@ -20,7 +20,7 @@ Public CV(2001, 2001, 4) As Double
 Public ELV(MaxViewSteps&) As Double, TMP(MaxViewSteps&) As Double, PRSR(MaxViewSteps&) As Double, RCV(82, MaxViewSteps&) As Double
 Public IndexRefraction(MaxViewSteps&) As Double
 Public ALFA(82, MaxViewSteps&) As Double, ALFT(82, MaxViewSteps&) As Double, SSR(82, MaxViewSteps&) As Double
-Public AA(MaxViewSteps&) As Double, AT(MaxViewSteps&) As Double
+Public AA(MaxViewSteps&) As Double, AT(MaxViewSteps&) As Double, VRefDeg As Double, CalcSondes As Boolean
 Public den As Double, RefCalcType%
 Public EDIS(82) As Double, IDCT(10001) As Double, IEND(10001) As Double
 Public AIRM(MaxViewSteps&) As Double, ADEN(MaxViewSteps&) As Double, RC As Double
@@ -83,6 +83,8 @@ Declare Function SetPixel Lib "gdi32" (ByVal hdc As Long, ByVal x As Long, ByVal
 
 Public Declare Sub Sleep Lib "kernel32.dll" (ByVal dwMilliseconds As Long)
 
+Public fildiag%, DiagnoseIndex As Boolean, DiagnoseIndexHgt As Double
+
 '--------------API constants used for generating terminator (floods region with specified color)-------------
 Public Const FLOODFILLBORDER = 0
 Public Const FLOODFILLSURFACE = 1
@@ -111,7 +113,7 @@ Public nearmouse_digi As POINTAPI
 ' ct(50) As Double
 'End Type
 
-Public Type zz 'used in Menat ray tracing
+Public Type zz 'used in Menat ray tracing as working array, and as temp array in VDW raytracing
  hj As Double
  tj As Double
  pj As Double
@@ -2638,6 +2640,19 @@ Public Function LoadAtmospheres(filename As String, AtmType As Integer, AtmNumbe
                        GoSub ConvertToElevTempPress3
                        End If
                  Else
+                    If CalcSondes Then
+                       'skip notifications
+                       MDIAtmRef.StatusBar.Panels(2).Text = prjAtmRefMainfm.txtOther.Text & " Lowtran atms. file - convert elevations to km"
+                        If Mode = 1 Then
+                           GoSub ConvertToElevTempPress
+                        ElseIf Mode > 2 And Mode < 5 Then
+                           GoSub ConvertToElevTempPress2
+                        ElseIf Mode = 5 Then
+                           GoSub ConvertToElevTempPress3
+                           End If
+                        GoTo la100
+                        End If
+                              
                     Select Case MsgBox("Confirm that the file of this file is the same as the Lowtran atmospheric files," _
                                        & vbCrLf & sEmpty _
                                        & vbCrLf & "i.e., rows having three columns corresponding to:" _
@@ -2677,7 +2692,7 @@ Public Function LoadAtmospheres(filename As String, AtmType As Integer, AtmNumbe
            End Select
         
      End Select
-      
+la100:
       Screen.MousePointer = vbDefault
       LoadAtmospheres = 0
       Exit Function
@@ -3349,6 +3364,7 @@ Return
    Exit Function
 
 LoadAtmospheres_Error:
+    Resume
     Close
     
    prjAtmRefMainfm.cmdCalc.Enabled = True
@@ -3740,17 +3756,30 @@ Public Function DistTrav(lat_0 As Double, lon_0 As Double, lat_1 As Double, lon_
    
 End Function
 'Public Function fun_(h__ As Double, zz_1 As zz, num_Layers As Integer) As Double
-Public Function fun_(h__ As Double, zz_1() As zz, num_Layers As Integer) As Double
+'---------------------------------------------------------------------------------------
+' Procedure : fun_
+' Author    : chaim
+' Date      : 8/13/2021
+' Purpose   : inputs: 1. height of ray (km)
+'                     2.elevation (km),temperature (deg K), pressure (mb) array zz_1
+'                     2. number of layers
+'                     3. distance along circumference of earth (km)
+'           : outputs: fun_ = variable part of index of refraction (unitless)
+'                      Temparature, T, at the height, h__ (degrees Kelvin)
+'                      Pressure, P, at the height, h__ (mb)
+'---------------------------------------------------------------------------------------
+'
+Public Function fun_(h__ As Double, zz_1() As zz, num_Layers As Integer, Dist As Double, T As Double, P As Double) As Double
 '{
 '    /* System generated locals */
-     Dim ret_val As Double, d__1 As Double
+     Dim ret_val As Double, d__1 As Double, GrndHgt As Double
 
 '    /* Builtin functions */
 '    'double pow_dd(double *, double *)
 '
 '    /* Local variables */
     Dim m As Integer, n As Integer
-    Dim P As Double, T As Double
+'    Dim P As Double, T As Double
 
    'note that if height, h__ is greater than the last layer,
    'then thsi routine uses the temperature and pressure of the last layer
@@ -3788,10 +3817,46 @@ Public Function fun_(h__ As Double, zz_1() As zz, num_Layers As Integer) As Doub
 '        End If
         
 '''''''''''''''''''''new format 072521''''''''''''''''''''''''''''''
+    
+'////////////////ground hugging added to Menat atmospheres on 081321 //////////////////////////////
+    If prjAtmRefMainfm.OptionSelby.Value = True And prjAtmRefMainfm.chkHgtProfile.Value = vbChecked And prjAtmRefMainfm.chkDruk.Value = vbChecked And Dist <> -1 Then
+        GrndHgt = DistModel(Dist) 'assumes that atmospheric layers are displaced vertically
+        GrndHgt = GrndHgt * 0.001
+        
+        '///////////////fixed on 081321////////////////////
+        If h__ < GrndHgt Then h__ = GrndHgt 'light doesn't travel underground!!!!
+        '///////////////////////////////////////////
+        
+    Else
+        GrndHgt = 0#
+        End If
+'
+'    found% = 0
+'    For n = 2 To num_Layers - 1
+'        m = n - 1
+'        If (h__ - zz_1(n - 1).hj - GrndHgt <= 0#) Then
+'            found% = 1
+'            Exit For
+'            End If
+''L10:
+'
+'    Next n
+''L15:
+'    If found% = 0 Then
+'        'hit the ground
+'       ret_val = -1
+'       fun_ = ret_val
+'       Exit Function
+'       End If
+       
     For n = 1 To num_Layers
         m = n - 1
-        If (h__ - zz_1(n - 1).hj <= 0#) Then
+        If (h__ - zz_1(n - 1).hj - GrndHgt < 0#) Then
             Exit For
+        ElseIf (h__ - zz_1(n - 1).hj - GrndHgt = 0#) Then
+            m = 1
+            Exit For
+
             'GoTo L15
 '        Else
 '            GoTo L10
@@ -3799,24 +3864,24 @@ Public Function fun_(h__ As Double, zz_1() As zz, num_Layers As Integer) As Doub
 'L10:
 
     Next n
-'L15:
+L15:
     If m < 1 Then 'hit the earth
        ret_val = -1
        fun_ = ret_val
        Exit Function
        End If
        
-    T = zz_1(m - 1).tj + zz_1(m - 1).AT * (h__ - zz_1(m - 1).hj)
+    T = zz_1(m - 1).tj + zz_1(m - 1).AT * (h__ - zz_1(m - 1).hj - GrndHgt)
     d__1 = T / zz_1(m - 1).tj
 
-    If (zz_1(m).tj <> zz_1(m - 1).tj) Then 'non-isothermic region
+    If (zz_1(m).tj + GrndHgt <> zz_1(m - 1).tj + GrndHgt) Then 'non-isothermic region
 
         P = zz_1(m - 1).pj * d__1 ^ zz_1(m - 1).ct
         ret_val = P * 0.000079 / T
         
     Else 'interpolate pressure between the pressure of the two adjoining layers
 
-        P = zz_1(m - 1).pj + zz_1(m - 1).ct * (h__ - zz_1(m - 1).hj)
+        P = zz_1(m - 1).pj + zz_1(m - 1).ct * (h__ - zz_1(m - 1).hj - GrndHgt)
         ret_val = P * 0.000079 / T
         End If
 
@@ -4471,7 +4536,7 @@ g99:
 End Sub
 
 Public Function DistModel(Dist As Double) As Double
-   Dim DistModelCoef(11) As Double, i As Integer
+   Dim DistModelCoef(12) As Double, i As Integer
    Dim dist1 As Double, dist2 As Double, hgt1 As Double, hgt2 As Double, numHgts As Long
    
    DistModel = 0
@@ -4480,6 +4545,7 @@ Public Function DistModel(Dist As Double) As Double
         '10th order polynomial fit to height vs distance profile between Rabbi Druk's obsdervation place and due East for 80 km
         
         If (Dist > 0 And Dist < 80000 And Dist <> -1) Then
+            'at zero azimuth, i.e., due East
             DistModelCoef(0) = 719.595830740319
             DistModelCoef(1) = -4.81685432649849E-02
             DistModelCoef(2) = -5.00526065276487E-06
@@ -4491,10 +4557,34 @@ Public Function DistModel(Dist As Double) As Double
             DistModelCoef(8) = -4.30862997078586E-32
             DistModelCoef(9) = 2.22937939762269E-37
             DistModelCoef(10) = -4.82303278939318E-43
-            
-            For i = 0 To 10
+            DistModelCoef(11) = 0#
+
+            DistModel = 0
+            For i = 0 To 11
                DistModel = DistModel + DistModelCoef(i) * (Dist ^ CDbl(i))
             Next i
+            
+            If DistModel < -430 Then DistModel = -430 'can't be lower than water level of Dead Sea
+            
+'             'for winter at 30 degrees azimuth
+'             DistModelCoef(0) = 832.772132844035
+'             DistModelCoef(1) = -0.244714550731683
+'             DistModelCoef(2) = 6.84359980795917E-05
+'             DistModelCoef(3) = -1.00460673653427E-08
+'             DistModelCoef(4) = 8.25791986979131E-13
+'             DistModelCoef(5) = -4.26494539579878E-17
+'             DistModelCoef(6) = 1.44294055937789E-21
+'             DistModelCoef(7) = -3.21094617296788E-26
+'             DistModelCoef(8) = 4.62408002443649E-31
+'             DistModelCoef(9) = -4.13125184516663E-36
+'             DistModelCoef(10) = 2.07681721286578E-41
+'             DistModelCoef(11) = -4.4844262868453E-47
+'
+'            DistModel = 0
+'            For i = 0 To 11
+'               DistModel = DistModel + DistModelCoef(i) * (Dist ^ CDbl(i))
+'            Next i
+            
          ElseIf Dist = 0 Then
             DistModel = 800.5 'last height of profile in Harei Moav
          ElseIf Dist = -1 Or Dist > 80000 Then
@@ -4673,10 +4763,10 @@ Public Function CalcVDWRef(lat As Double, lon As Double, height As Double, DayNu
        dy = DayNumber
        k% = 2
        If (yl = 366) Then k% = 1
-       MMonth% = Int(9 * (k% + dy) / 275 + 0.98)
+       mMonth% = Int(9 * (k% + dy) / 275 + 0.98)
     
 '       If optMin.Value = True Then
-          TK = MT(MMonth%) + 273.15 'mean minimum temperature for this month in degrees Kelvin
+          TK = MT(mMonth%) + 273.15 'mean minimum temperature for this month in degrees Kelvin
 '       Else
 '          TK = AT(MMonth%) + 273.15 'mean minimum temperature for this month in degrees Kelvin
 '          End If
