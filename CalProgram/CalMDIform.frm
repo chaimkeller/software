@@ -126,6 +126,14 @@ Begin VB.MDIForm CalMDIform
          Caption         =   "Use VDW raytracing Ref."
          Checked         =   -1  'True
       End
+      Begin VB.Menu mnuAdhocSunrise 
+         Caption         =   "Use adhoc fix for sunrises"
+         Checked         =   -1  'True
+      End
+      Begin VB.Menu mnuDST 
+         Caption         =   "&Add hour for DST"
+         Checked         =   -1  'True
+      End
       Begin VB.Menu exitfm 
          Caption         =   "E&xit"
       End
@@ -295,7 +303,13 @@ cdc1: If s1% = 0 Then
          ElseIf drivjk$ = sEmpty Then 'user canceled the operation
             GoTo ce10
             End If
+              
          End If
+         
+        'just remove adhoc sunrise fix file if it exists
+        If Dir(drivjk$ & "adhocflag.tmp") <> sEmpty Then
+           Kill drivjk$ & "adhocflag.tmp"
+           End If
       
 cdc2: If S2% = 0 Then
          drivfordtm$ = InputBox("Can't find the ""fordtm"" directory, please give the full path name below " + _
@@ -936,6 +950,35 @@ generrhand:
         End If
    
    
+End Sub
+
+Private Sub mnuAdhocSunrise_Click()
+
+    If mnuAdhocSunrise.Checked Then
+          
+       adhocflag% = 1 'use adhoc sunrise fix
+       mnuStndRef.Checked = True
+       mnuVDW.Checked = False
+       
+       'write adhocflag file
+       filflag% = FreeFile
+       Open drivjk$ & "adhocflag.tmp" For Output As #filflag%
+       Print #filflag%, adhocflag%
+       Close #filflag%
+       
+    Else
+       adhocflag% = 0 'don't use adhoc sunrise fix
+       mnuStndRef.Checked = True
+       mnuVDW.Checked = False
+       
+       'write adhocflag file
+       filflag% = FreeFile
+       Open drivjk$ & "adhocflag.tmp" For Output As #filflag%
+       Print #filflag%, adhocflag%
+       Close #filflag%
+       
+       End If
+       
 End Sub
 
 Private Sub mnuChaiAir_Click()

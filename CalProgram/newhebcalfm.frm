@@ -83,9 +83,12 @@ Begin VB.Form newhebcalfm
       TabCaption(1)   =   "Bottom Calendar (usually sunset)"
       TabPicture(1)   =   "newhebcalfm.frx":0990
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Frame10"
+      Tab(1).Control(0)=   "Frame6"
+      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "Frame9"
-      Tab(1).Control(2)=   "Frame6"
+      Tab(1).Control(1).Enabled=   0   'False
+      Tab(1).Control(2)=   "Frame10"
+      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).ControlCount=   3
       Begin VB.Frame Frame10 
          Height          =   2295

@@ -748,7 +748,7 @@ Private Sub Check3_Click()
                Text1 = obsdistlim(0)
                distlim = obsdistlim(0)
                outdistlim = obsdistlim(0)
-               obscusion = cushion(0)
+               obscushion = cushion(0)
             Else
                Text1 = 10 'SRTM is worst than NED
                distlim = 10
@@ -894,7 +894,7 @@ Private Sub chkObst_Click()
                Text1 = obsdistlim(0)
                distlim = obsdistlim(0)
                outdistlim = obsdistlim(0)
-               obscusion = cushion(0)
+               obscushion = cushion(0)
             Else
                Text1 = 10 'SRTM is worst than NED
                distlim = 10
@@ -1783,10 +1783,28 @@ Private Sub OKbut_Click(Index As Integer)
             End If
          End If
       'newhebcalfm.Combo5.AddItem "כל הזמנים לפי שעון חורף.  כדי להשתמש בזמנים אלו לקביעת שעות היום, יש לעשות שאלת חכם."
-      newhebcalfm.Combo5.AddItem heb1$(24)
-      If optionheb = False Then
-         newhebcalfm.Combo5.AddItem "All times are according to Standard Time."
+      
+      '////////////////added DST support on 082921////////////////////////////////////
+      If optionheb Then
+         If CalMDIform.mnuDST.Checked Then
+            newhebcalfm.Combo5.AddItem sEmpty
+         Else
+            newhebcalfm.Combo5.AddItem heb1$(24)
+            End If
+      Else
+         If CalMDIform.mnuDST.Checked Then
+            newhebcalfm.Combo5.AddItem sEmpty
+         Else
+            newhebcalfm.Combo5.AddItem "All times are according to Standard Time."
+            End If
          End If
+      '/////////////////////////////////////////////////////////////////
+      
+      '////////////////////fixed 082921 -- PathZones cushions overides any other stored setting//////////////////
+      newhebcalfm.Text2.Text = obscushion
+      newhebcalfm.Text32.Text = -obscushion
+      '////////////////////////////////////////////////////////////////////////////////////////////////////////
+      
       'newhebcalfm.Combo7.AddItem "מבוסס על השקיעה המאוחרת ביותר הנראית מעל האופק המערבי האמיתי, מנקודה כלשהי ביישוב - מידי יום ביומו"
       If eros = False Then
          newhebcalfm.Combo7.AddItem heb1$(13)
@@ -1840,10 +1858,28 @@ Private Sub OKbut_Click(Index As Integer)
             End If
          End If
       'newhebcalfm.Combo10.AddItem "כל הזמנים לפי שעון חורף.  כדי להשתמש בזמנים אלו לקביעת שעות היום, יש לעשות שאלת חכם."
-      newhebcalfm.Combo10.AddItem heb1$(24)
-      If optionheb = False Then
-         newhebcalfm.Combo10.AddItem "All times are according to Standard Time."
+'      newhebcalfm.Combo10.AddItem heb1$(24)
+'      If optionheb = False Then
+'         newhebcalfm.Combo10.AddItem "All times are according to Standard Time."
+'         End If
+         
+      '////////////////added DST support on 082921////////////////////////////////////
+      If optionheb Then
+        If CalMDIform.mnuDST.Checked Then
+           newhebcalfm.Combo10.AddItem sEmpty
+        Else
+           newhebcalfm.Combo10.AddItem heb1$(24)
+           End If
+      Else
+         If CalMDIform.mnuDST.Checked Then
+            newhebcalfm.Combo10.AddItem sEmpty
+         Else
+            newhebcalfm.Combo10.AddItem "All times are according to Standard Time."
+            End If
          End If
+      '/////////////////////////////////////////////////////////////////
+         
+         
       End If
    
    If Check4.Value = vbChecked Then 'add captions for astronomical sunrise

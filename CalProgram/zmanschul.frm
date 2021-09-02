@@ -1497,7 +1497,7 @@ Private Sub Command3_Click()
    Dim ExcelSheet As Excel.Worksheet
    
    'variables for determining the onset and end of daylight saving time
-   Dim stryrDST%, endyrDST%, strdaynum1%, enddaynum1%, strdaynum2%, enddaynum2%
+   Dim stryrDST%, endyrDST%, strdaynum(1), enddaynum(1)
    Dim MonStart%, MonEnd%, yl As Integer
    Dim DSTadd As Integer, DSThour As Integer
    
@@ -1517,7 +1517,8 @@ Private Sub Command3_Click()
   If hebcal Then fshabos% = fshabos0%
   lenyr1% = yrend%(0)
   
-  If DSTcheck Then
+  If DSTcheck And Not CalMDIform.mnuDST.Checked Then
+     'if calmdiform.mndst.checked = true, then an hour has already been added for DST
   
      'open DST_EY.txt file and determine the daynumber of the beginning and end of DST in EY
      stryrDST% = yrheb% + RefCivilYear% - RefHebYear% '(yrheb% - 5758) + 1997
@@ -1531,28 +1532,28 @@ Private Sub Command3_Click()
             MarchDate = (31 - (Fix(stryrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
             OctoberDate = (31 - (Fix(stryrDST% * 5 / 4) + 1) Mod 7)
             YearLength% = DaysinYear(stryrDST%)
-            strdaynum1% = DayNumber(YearLength%, 3, MarchDate)
-            enddaynum1% = DayNumber(YearLength%, 10, OctoberDate)
+            strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
+            enddaynum(0) = DayNumber(YearLength%, 10, OctoberDate)
             
             MarchDate = (31 - (Fix(endyrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
             OctoberDate = (31 - (Fix(endyrDST% * 5 / 4) + 1) Mod 7)
             YearLength% = DaysinYear(endyrDST%)
-            strdaynum2% = DayNumber(YearLength%, 3, MarchDate)
-            enddaynum2% = DayNumber(YearLength%, 10, OctoberDate)
+            strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
+            enddaynum(1) = DayNumber(YearLength%, 10, OctoberDate)
         
         Case "USA" 'English {USA DST rules}
         
             MarchDate = 14 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
             NovemberDate = 7 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
             YearLength% = DaysinYear(stryrDST%)
-            strdaynum1% = DayNumber(YearLength%, 3, MarchDate)
-            enddaynum1% = DayNumber(YearLength%, 11, NovemberDate)
+            strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
+            enddaynum(0) = DayNumber(YearLength%, 11, NovemberDate)
             
             MarchDate = 14 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
             NovemberDate = 7 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
             YearLength% = DaysinYear(endyrDST%)
-            strdaynum2% = DayNumber(YearLength%, 3, MarchDate)
-            enddaynum2% = DayNumber(YearLength%, 11, NovemberDate)
+            strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
+            enddaynum(1) = DayNumber(YearLength%, 11, NovemberDate)
             
         Case Else 'not implemented yet for other countries
         
@@ -1829,11 +1830,38 @@ Private Sub Command3_Click()
                          End Select
 '                         outdoc$ = t3subb$ + "   " + outdoc$
                          End If
-                      outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + Trim$(stortim$(4, isc% - 1, ks% - 1)) + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
-                      If parshiotEY Or parshiotdiaspora Then
-                        Call InsertHolidays(calday$, isc%, ks%)
-                        outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + calday$ + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
-                        End If
+                         
+                      Select Case cmbLanguage.ListIndex
+                         Case 0 'Hebrew rtl order of columns
+                            outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + Trim$(stortim$(4, isc% - 1, ks% - 1)) + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
+                            If parshiotEY Or parshiotdiaspora Then
+                              Call InsertHolidays(calday$, isc%, ks%)
+                              outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + calday$ + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
+                              End If
+                         Case 1 'English ltr order of columns
+                            outdoc$ = Trim$(stortim$(3, isc% - 1, ks% - 1)) + _
+                                    "       " + _
+                                    Trim$(stortim$(4, isc% - 1, ks% - 1)) + _
+                                    "   " + _
+                                    Trim$(stortim$(2, isc% - 1, ks% - 1)) + _
+                                    "   " + _
+                                    outdoc$ + _
+                                    "    " + _
+                                    Trim$(stortim$(0, isc% - 1, ks% - 1))
+
+                            If parshiotEY Or parshiotdiaspora Then
+                              Call InsertHolidays(calday$, isc%, ks%)
+                              outdoc$ = Trim$(stortim$(3, isc% - 1, ks% - 1)) + _
+                                        "       " + _
+                                        calday$ + _
+                                        "   " + _
+                                        Trim$(stortim$(2, isc% - 1, ks% - 1)) + _
+                                        "   " + _
+                                        outdoc$ + _
+                                        "    " + _
+                                        Trim$(stortim$(0, isc% - 1, ks% - 1))
+                              End If
+                      End Select
                       Print #schulnum%, outdoc$
                   Next j%
                ElseIf mmdate%(2, isc%) < mmdate%(1, isc%) Then
@@ -1933,11 +1961,44 @@ Private Sub Command3_Click()
                          End Select
 '                         outdoc$ = t3subb$ + "   " + outdoc$
                          End If
-                      outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + Trim$(stortim$(4, isc% - 1, ks% - 1)) + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
-                      If parshiotEY Or parshiotdiaspora Then
-                        Call InsertHolidays(calday$, isc%, ks%)
-                        outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + calday$ + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
-                        End If
+'                      outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + Trim$(stortim$(4, isc% - 1, ks% - 1)) + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
+'                      If parshiotEY Or parshiotdiaspora Then
+'                        Call InsertHolidays(calday$, isc%, ks%)
+'                        outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + calday$ + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
+'                        End If
+                      Select Case cmbLanguage.ListIndex
+                         Case 0 'Hebrew rtl order of columns
+                            outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + Trim$(stortim$(4, isc% - 1, ks% - 1)) + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
+                            If parshiotEY Or parshiotdiaspora Then
+                              Call InsertHolidays(calday$, isc%, ks%)
+                              outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + calday$ + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
+                              End If
+                         Case 1 'English ltr order of columns
+                            outdoc$ = Trim$(stortim$(3, isc% - 1, ks% - 1)) + _
+                                    "       " + _
+                                    Trim$(stortim$(4, isc% - 1, ks% - 1)) + _
+                                    "   " + _
+                                    Trim$(stortim$(2, isc% - 1, ks% - 1)) + _
+                                    "   " + _
+                                    outdoc$ + _
+                                    "    " + _
+                                    Trim$(stortim$(0, isc% - 1, ks% - 1))
+
+                            If parshiotEY Or parshiotdiaspora Then
+                              Call InsertHolidays(calday$, isc%, ks%)
+                              outdoc$ = Trim$(stortim$(3, isc% - 1, ks% - 1)) + _
+                                        "       " + _
+                                        calday$ + _
+                                        "   " + _
+                                        Trim$(stortim$(2, isc% - 1, ks% - 1)) + _
+                                        "   " + _
+                                        outdoc$ + _
+                                        "    " + _
+                                        Trim$(stortim$(0, isc% - 1, ks% - 1))
+                              End If
+                      End Select
+                        
+                        
                       Print #schulnum%, outdoc$
                   Next j%
                   yrn% = yrn% + 1
@@ -2036,11 +2097,44 @@ Private Sub Command3_Click()
                          End Select
 '                         outdoc$ = t3subb$ + "   " + outdoc$
                          End If
-                      outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + Trim$(stortim$(4, isc% - 1, ks% - 1)) + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
-                      If parshiotEY Or parshiotdiaspora Then
-                        Call InsertHolidays(calday$, isc%, ks%)
-                        outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + calday$ + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
-                        End If
+'                      outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + Trim$(stortim$(4, isc% - 1, ks% - 1)) + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
+'                      If parshiotEY Or parshiotdiaspora Then
+'                        Call InsertHolidays(calday$, isc%, ks%)
+'                        outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + calday$ + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
+'                        End If
+                      Select Case cmbLanguage.ListIndex
+                         Case 0 'Hebrew rtl order of columns
+                            outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + Trim$(stortim$(4, isc% - 1, ks% - 1)) + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
+                            If parshiotEY Or parshiotdiaspora Then
+                              Call InsertHolidays(calday$, isc%, ks%)
+                              outdoc$ = Trim$(stortim$(0, isc% - 1, ks% - 1)) + "    " + outdoc$ + "   " + Trim$(stortim$(2, isc% - 1, ks% - 1)) + "   " + calday$ + "       " + Trim$(stortim$(3, isc% - 1, ks% - 1))
+                              End If
+                         Case 1 'English ltr order of columns
+                            outdoc$ = Trim$(stortim$(3, isc% - 1, ks% - 1)) + _
+                                    "       " + _
+                                    Trim$(stortim$(4, isc% - 1, ks% - 1)) + _
+                                    "   " + _
+                                    Trim$(stortim$(2, isc% - 1, ks% - 1)) + _
+                                    "   " + _
+                                    outdoc$ + _
+                                    "    " + _
+                                    Trim$(stortim$(0, isc% - 1, ks% - 1))
+
+                            If parshiotEY Or parshiotdiaspora Then
+                              Call InsertHolidays(calday$, isc%, ks%)
+                              outdoc$ = Trim$(stortim$(3, isc% - 1, ks% - 1)) + _
+                                        "       " + _
+                                        calday$ + _
+                                        "   " + _
+                                        Trim$(stortim$(2, isc% - 1, ks% - 1)) + _
+                                        "   " + _
+                                        outdoc$ + _
+                                        "    " + _
+                                        Trim$(stortim$(0, isc% - 1, ks% - 1))
+                              End If
+                      End Select
+                        
+                        
                       Print #schulnum%, outdoc$
                   Next j%
                   End If
@@ -2310,9 +2404,9 @@ Private Sub Command3_Click()
                       
                       netz = Val(Mid$(stortim$(0, isc% - 1, ks% - 1), 1, 1)) + Val(Mid$(stortim$(0, isc% - 1, ks% - 1), 3, 2)) / 60 + Val(Mid$(stortim$(0, isc% - 1, ks% - 1), 6, 2)) / 3600
                       
-                      If DSTcheck Then
+                      If DSTcheck And Not CalMDIform.mnuDST.Checked Then
                          'add hour for DST
-                         If j% >= strdaynum1% And j% < enddaynum1% Then
+                         If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
                             DSTadd = 1
                             netz = netz + 1
                          Else
@@ -2485,9 +2579,9 @@ Private Sub Command3_Click()
                       
                       netz = Val(Mid$(stortim$(0, isc% - 1, ks% - 1), 1, 1)) + Val(Mid$(stortim$(0, isc% - 1, ks% - 1), 3, 2)) / 60 + Val(Mid$(stortim$(0, isc% - 1, ks% - 1), 6, 2)) / 3600
                       
-                      If DSTcheck Then
+                      If DSTcheck And Not CalMDIform.mnuDST.Checked Then
                          'add hour for DST
-                         If j% >= strdaynum1% And j% < enddaynum1% Then
+                         If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
                             DSTadd = 1
                             netz = netz + 1
                          Else
@@ -2651,9 +2745,9 @@ Private Sub Command3_Click()
                       
                       netz = Val(Mid$(stortim$(0, isc% - 1, ks% - 1), 1, 1)) + Val(Mid$(stortim$(0, isc% - 1, ks% - 1), 3, 2)) / 60 + Val(Mid$(stortim$(0, isc% - 1, ks% - 1), 6, 2)) / 3600
                       
-                      If DSTcheck Then
+                      If DSTcheck And Not CalMDIform.mnuDST.Checked Then
                          'add hour for DST
-                         If j% >= strdaynum2% And j% < enddaynum2% Then
+                         If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
                             DSTadd = 1
                             netz = netz + 1
                          Else
@@ -2919,6 +3013,12 @@ Private Sub Command3_Click()
             
             'final page break
             'ExcelSheet.Rows(numday%).PageBreak
+            
+            If cmbLanguage.ListIndex = 1 Then
+                'English table, but...
+                'all the columns were written RTL, so reverse them
+                ExcelSheet.DisplayRightToLeft = True
+                End If
 
             ExcelSheet.SaveAs filnam$
             Screen.MousePointer = vbDefault

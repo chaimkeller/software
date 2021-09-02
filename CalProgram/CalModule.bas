@@ -2117,6 +2117,67 @@ End Sub
 Sub PrinttoDev(Dev, PrinterFlag As Boolean)
 
 Dim lResult As Long, cirx As Single, ciry As Single
+
+'//////////////////DST support for Israel, USA added 082921/////////////////////////////////////
+Dim stryrDST%, endyrDST%, strdaynum(1) As Integer, enddaynum(1) As Integer
+
+Dim MarchDate As Integer
+Dim OctoberDate As Integer
+Dim NovemberDate As Integer
+Dim YearLength As Integer
+Dim DSThour As Integer
+   
+Dim DSTadd As Boolean
+
+If CalMDIform.mnuDST.Checked = True Then
+   DSTadd = True
+   End If
+  
+If DSTadd Then
+
+   'open DST_EY.txt file and determine the daynumber of the beginning and end of DST in EY
+   stryrDST% = yrheb% + RefCivilYear% - RefHebYear% '(yrheb% - 5758) + 1997
+   endyrDST% = yrheb% + RefCivilYear% - RefHebYear% + 1 '(yrheb% - 5758) + 1998
+   
+   'find beginning and ending day numbers for each civil year
+   Select Case eroscountry$
+   
+      Case "Israel", "" 'EY eros or cities using 2017 DST rules
+      
+          MarchDate = (31 - (Fix(stryrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
+          OctoberDate = (31 - (Fix(stryrDST% * 5 / 4) + 1) Mod 7)
+          YearLength% = DaysinYear(stryrDST%)
+          strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
+          enddaynum(0) = DayNumber(YearLength%, 10, OctoberDate)
+          
+          MarchDate = (31 - (Fix(endyrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
+          OctoberDate = (31 - (Fix(endyrDST% * 5 / 4) + 1) Mod 7)
+          YearLength% = DaysinYear(endyrDST%)
+          strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
+          enddaynum(1) = DayNumber(YearLength%, 10, OctoberDate)
+      
+      Case "USA" 'English {USA DST rules}
+      
+          MarchDate = 14 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
+          NovemberDate = 7 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
+          YearLength% = DaysinYear(stryrDST%)
+          strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
+          enddaynum(0) = DayNumber(YearLength%, 11, NovemberDate)
+          
+          MarchDate = 14 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
+          NovemberDate = 7 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
+          YearLength% = DaysinYear(endyrDST%)
+          strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
+          enddaynum(1) = DayNumber(YearLength%, 11, NovemberDate)
+          
+      Case Else 'not implemented yet for other countries
+         DSTadd = False
+      
+   End Select
+   End If
+   
+'///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 On Error GoTo generrhand
 
 If Not PrinterFlag Then
@@ -3105,6 +3166,7 @@ For i% = 1 To endyr%
       For j% = mmdate%(1, i%) To mmdate%(2, i%)
           k% = k% + 1
           tims$ = Trim$(tim$(yrn% - 1, j%))
+            
           'If endyr% = 12 Then 'regular year
              Dev.CurrentX = coordxreg(tmpsetflg%, i%)
              Dev.CurrentY = coordy(tmpsetflg%, k%)
@@ -3139,6 +3201,18 @@ For i% = 1 To endyr%
           ElseIf Not PrinterFlag Then
              frcolor = QBColor(0)
              End If
+          
+          '//////////////added 082921--DST support//////////////
+          If DSTadd Then
+             DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
+             'add hour for DST
+             If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
+                DSThour = DSThour + 1
+                Mid$(tims$, 1, InStr(1, tims$, ":") - 1) = Trim$(Str$(DSThour))
+                End If
+             End If
+          '//////////////////////////////////////////////////
+             
           Dev.Print tims$
           Dev.ForeColor = frcolor
           stortim$(tmpsetflg% - 1, i% - 1, k% - 1) = tims$
@@ -3242,6 +3316,18 @@ For i% = 1 To endyr%
           ElseIf Not PrinterFlag Then
              frcolor = QBColor(0)
              End If
+          
+          '//////////////added 082921--DST support//////////////
+          If DSTadd Then
+             DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
+             'add hour for DST
+             If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
+                DSThour = DSThour + 1
+                Mid$(tims$, 1, InStr(1, tims$, ":") - 1) = Trim$(Str$(DSThour))
+                End If
+             End If
+          '//////////////////////////////////////////////////
+             
           Dev.Print tims$
           Dev.ForeColor = frcolor
           
@@ -3425,6 +3511,18 @@ End If
           ElseIf Not PrinterFlag Then
              frcolor = QBColor(0)
              End If
+          
+          '//////////////added 082921--DST support//////////////
+          If DSTadd Then
+             DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
+             'add hour for DST
+             If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
+                DSThour = DSThour + 1
+                Mid$(tims$, 1, InStr(1, tims$, ":") - 1) = Trim$(Str$(DSThour))
+                End If
+             End If
+          '//////////////////////////////////////////////////
+             
           Dev.Print tims$
           Dev.ForeColor = frcolor
           stortim$(tmpsetflg% - 1, i% - 1, k% - 1) = tims$
