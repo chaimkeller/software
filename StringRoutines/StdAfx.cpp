@@ -33,7 +33,7 @@
 
 //////////////////////global array bounds///////////////////////////////////////
 #define MAXANGRANGE 80 //maximum degrees assuming 0.1 degrees steps
-#define MAXCGIVARS 35 //maximum number of cgi variables
+#define MAXCGIVARS 37 //maximum number of cgi variables
 #define MAXDBLSIZE 100 //maximum character size of data elements to be read using ParseString
 #define WIDTHFIELD 0 //0 for false - use predeter__mind html cell widths, = 1 for letting program deter__min it
 #define INPUT_TYPE 1 //0 for post, 1 for get
@@ -92,7 +92,7 @@ void timestring( short ii, short k, short iii);
 void parseit( char outdoc[], bool *closerow, short linnum, short mode);
 short CheckInputs(char *strlat, char *strlon, char *strhgt);
 short Caldirectories();
-short SunriseSunset(short types, short ExtTemp[]);
+short SunriseSunset(short types, bool *adhocrise, bool *adhocset, short ExtTemp[]);
 short CreateHeaders(short types);
 short ReadHebHeaders();
 short PrintSingleTable(short setflag, short types);
@@ -100,7 +100,7 @@ short calnearsearch( char *batfile, char *sun);
 short netzskiy( char *batfile, char *sun);
 short WriteUserLog( int UserNumber, short zmanyes, short typezman, char *errorstr );
 void ErrorHandler( short mode, short ier);
-short YearLength( short myear);
+short YearLength( const short *myear);
 short int height(long numrc);
 
 short iswhite(char c);
@@ -115,11 +115,12 @@ char *IsoToUnicode( char *str );
 short LoadConstants(short zmanyes, short typezman, char filzman[] );
 short LoadTitlesSponsors();
 short PrintMultiColTable(char filzman[], short ExtTemp[] );
-char *round( double tim, short stepps, short accurr, short sp, char t3subb[], const short mode );
+char *round( double tim, short stepps, short accurr, short sp, short *DST, 
+			 char t3subb[], const short mode );
 char *EngCalDate(short ndy, short EngYear, short yl, char *caldate );
 void PST_iterate( short *k, short *j, short *i, short *ntotshabos, short *dayweek
 				 , short *yrn, short *fshabos, short *nshabos, short *addmon
-				 , short setflag, short sp, short types, short yl, short iheb );
+				 , short setflag, short sp, short *DST, short types, short yl, short iheb );
 short WriteHtmlHeader();
 short WriteHtmlClosing();
 short decl_(double *dy1, double *mp, double *mc, double *ap, double *ac
@@ -155,7 +156,7 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp );
 ////////////////////////netzski6///////////////////////////////////////
 short netzski6(char *fileon, double lg, double lt, double hgt, double aprn,
 			               float geotd, short nsetflag, short nfil,
-						   short *nweather, double *meantemp, 
+						   short *nweather, double *meantemp, bool *adhocrise, bool *adhocset,
      		               short *ns1, short *ns2, short *ns3, short *ns4, double *WinTemp,
 						   short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 
@@ -196,7 +197,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 				 double *avekmxzman, double *avekmyzman, double *avehgtzman,
 		         short *ns1, short *ns2, short *ns3, short *ns4, short *nweather,
 				 short *numzman, short *numsort, double *t6, double *t3, double *t3sub99,
- 				 double *jdn, int *nyl, short *mday, short *mon,
+ 				 double *jdn, int *nyl, short *mday, short *mon, short *DST,
 				 short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 ////////////////////////////cal (for zemanim)/////////////////////////////////////////////////////////
 short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *hgto, short *yro, double *td,
@@ -215,7 +216,6 @@ double Decl3(double *, double *, double *, double *, short *, short *,
 ////////////////WorldClim temperature files///////////////////////////////
 short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] );
 
-short DaysInYear(const short *nyr);
 double MonthFromDay(const short *nyl, const double *dy);
 
 double obliqeq(double *jd);
@@ -235,6 +235,12 @@ short checkenviron();
 ////////////////html5 plot/////////////////
 void PlotGraphHTML5(short nomentr, double vang_max, double vang_min, bool NearObstructions, short optang);
 /////////////////////////////////////////////
+
+/////////////functions needed for DST determination/////////////////
+short DayNumber(short ylyd, short mon, short mday);
+short IsDST(char *country, char *city, short StartDay[], short EndDay[] );
+/////////////////////////////////////////////////////////////////////
+
 
 /************file folder paths/weather modeling****************/
 //eventually these will be stored in a file with a php interface
@@ -552,6 +558,10 @@ short CushionAmount = 0;
 //////////////////cloudy-windy-night/day flag////////////////////////////////////////
 bool CloudWind = false;
 //////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////calculate times according to DST////////////////////////
+bool DSTcheck = true;
+//////////////////////////////////////////////////////////////////////////////
 
 /************************Conversions from ITM to WGS84, etc*********************/
 //*****************************************************************************************************
@@ -898,12 +908,14 @@ The values set for debugging the program are simply the cgi arguments that are p
 28 Pressure = ground pressure (mb) of the single day 
 29 CloudWind = flag to indicate cludy or windy day (remove inversion fix)
 30 AddCushion = flag to indicate whether to add further cushion instead of printing green times
+31 added user control over adhocrise, adhocset
+32 added DST support for Israel, USA, Canada, Mexico, and Europe
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 8.0f;
+float vernum = 9.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -937,6 +949,8 @@ int main(int argc, char* argv[])
 	short optionhebnum = 0;
 	short NumCgiInputs = 0;
 	short foundcity = 0;
+	bool adhocrise = true;
+	bool adhocset = false;
 
 	////////////////////if first entry is not = -9999, then using external temperatures inputed by user/////
 	////////////////////to calculat the vdw scaling factors//////////////////////////////////////
@@ -1107,6 +1121,21 @@ __asm{
 		}
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_adhocrise")), "false") )
+           adhocrise = false; //don't remove cushions for thermal inversion region
+
+		if (CloudWind) adhocrise = false;  //on a cloudy or windy night, then don't subtract the adhoc sunrise fix
+
+		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_adhocset")), "true") )
+           adhocset = true; //add cushions for thermal inversion region for simsets
+
+		///////////////////////////DST support switch/////////////////////////////
+
+		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "false") )
+           DSTcheck = false; //add cushions for thermal inversion region for simsets
+
+		//////////////////////////////////////////////////////////////////////////
+
 		CGI = 1;
 
    }
@@ -1140,7 +1169,7 @@ __asm{
 		erosdiflogstr = "1"; //"2";
 
 
-		searchradiusin = 8; //1; //8; //1;//4; //0.9;
+		searchradiusin = 2; //8; //1; //8; //1;//4; //0.9;
 		geotz = 2; //-5; //2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
 		sunsyes = 1;//0; //1;//0; //= 1 print individual sunrise/sunset tables
 					 //= 0 don't print individual sunrise/sunset tables
@@ -1172,7 +1201,7 @@ __asm{
 		g_Pressure = -9999; //1013.25;
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
-		AddCushion = false; //true;
+		AddCushion = true; //false; //true;
 
 		/////////////////diagnostics  032421 /////////////////
 		//http://localhost/cgi-bin/ChaiTables.cgi/?cgi_TableType=BY&cgi_country=Eretz_Yisroel&cgi_USAcities1=1&cgi_USAcities2=0
@@ -1545,6 +1574,9 @@ __asm{
 
         parshiotflag = 1; //Eretz Yisroel parshiot
 
+		distlim = distlims[0];
+		CushionAmount = cushion[0];
+
 	}
 	else if ( InStr( TableType, "Chai") ) //World-wide tables based on SRTM, 30m DEM
 	{
@@ -1816,6 +1848,34 @@ __asm{
 		strcat( erosareabat, eroscountry );
 		sprintf( currentdir, "%s%s%s%s", drivcities, "eros/", &erosareabat, "/" );
 
+		if (strstr(eroscountry, "Israel"))
+		{
+			distlim = distlims[0];
+			CushionAmount = cushion[0];
+		}
+		else if (strstr(eroscountry, "USA"))
+		{
+			distlim = distlims[3];
+			CushionAmount = cushion[3];
+		}
+		else if (strstr(eroscountry, "England"))
+		{
+			distlims[3] = distlims[3] * cushion_factor;
+			distlim = distlims[3];
+			cushion[3] = __max(15, Cint(cushion[3] * cushion_factor));
+			CushionAmount = cushion[3];
+		}
+		else if (eroslatitude < 0) //South America - 90 meter SRTM <--needs to be updated
+		{
+			distlim = distlims[2];
+			CushionAmount = cushion[2];
+		}
+		else //Canada, Europe
+		{
+			distlim = distlims[3];
+			CushionAmount = cushion[3];
+		}
+
 	}
 	else if ( InStr( TableType, "Astr") ) //calculations based on coordinates, 1)astronomical 2) visible 
 	{
@@ -1855,6 +1915,8 @@ __asm{
 		{
 			parshiotflag = 1;  //'inside the borders of Eretz Yisroel
 			cushion_factor = 1.0;
+			eroscountry[0] = '\0';
+			strcpy(eroscountry, "Israel");
 
 			if (SRTMflag > 9)
 			{
@@ -1871,6 +1933,25 @@ __asm{
         else
 		{
 			parshiotflag = 2; //somewhere in the diaspora
+
+			//figure out where it is for determining its DST mode
+			if ( lat > 32.5 && geotz >= -8 && geotz <= -5 )
+			{
+				strcpy(eroscountry, "USA");
+			}
+			else if ( lat > 37 && lat < 65 && lon > -25 && geotz >= 0 && geotz <= 1 )
+			{
+				strcpy(eroscountry, "Europe");
+			}
+			else if ( lat < -9.8 && geotz >= 8 && geotz <= 10.5 )
+			{
+				strcpy(eroscountry, "Australia");
+			}
+			else if (lat < -24.5 && lat > 14 && lon > 91  && geotz >= -8 && geotz <= -5)
+			{
+				strcpy(eroscountry, "Mexico");
+			}
+
 			/*
 			if (types == 10 || types == 11) //not yet supported outside Eretz Yisroel
 			{
@@ -1907,7 +1988,11 @@ __asm{
 		{
 			case -1: //<--use inputed coordinates for calculating zemanim
 			case 0: //visible sunrise calculated from 30m DTM
+				distlim = distlims[3];
+				CushionAmount = cushion[3];
 			case 1: //visible sunset calculated from 30m DTM
+				distlim = distlims[3];
+				CushionAmount = cushion[3];
             case 2:
  				nplac[0] = 1;
 		  		nplac[1] = 0;
@@ -2006,7 +2091,7 @@ __asm{
 
 	if (sunsyes) //print sunrise/sunset tables
 	{
-		if (SunriseSunset(types, ExtTemp)) return -1;
+		if (SunriseSunset(types, &adhocrise, &adhocset, ExtTemp)) return -1;
 	}
 
 
@@ -3436,11 +3521,13 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 	short myear = StartYr;
 	short fshabos = 0;
 	short iheb = 0;
+	short DST = 0;
 
 	//////////////variables from newzemanim/cal//////////
 	double jdn;
 	int nyl;
 	short mday, mon, newlen;
+	short ier, StartDay[2], EndDay[2];
 
 
 	nshabos = 0;
@@ -3450,12 +3537,24 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 	fshabos = fshabos0;
  	if (!(optionheb)) iheb = 1;
 
+	//////////////////added 090121 DST support////////////////////////////////
+	if (DSTcheck)  //calcualte onset and end of DST
+	{
+		ier = IsDST(eroscountry, eroscity, StartDay, EndDay);
+		if (ier < 0) //no DST info retrieved
+		{
+			DSTcheck = false;
+		}
+
+	}
+	/////////////////////////////////////////////////////////////////////////
+
 	///////////////write html,version of sorted zmanim table////////////////////
 
 	//write html header if not already written before writing the individual sunrise/sunset tables
 	if (sunsyes == 0) WriteHtmlHeader();
 
-	yl = YearLength( myear ); //length of starting year in days
+	yl = YearLength( &myear ); //length of starting year in days
 
 	//convert Hebrew Year in English numbers to string
 	itoa(g_yrheb, l_yrheb, 10);
@@ -3671,7 +3770,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 				//(this happens in the year 2006, 2036)
 				yrn++; //next year
 				myear++;
-				yl = YearLength( myear );
+				yl = YearLength( &myear );
 
 			}
 
@@ -3682,6 +3781,15 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 			{
 				numday++;
 				k++;
+
+				if (DSTcheck)
+				{
+					DST = 0;
+					if (j >= StartDay[yrn - 1] && j < EndDay[yrn - 1])
+					{
+						DST = 1;
+					}
+				}
 
 				//increment line number
 				linnum++;
@@ -3709,7 +3817,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 						&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
 						&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
 						&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
-						&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+						&jdn, &nyl, &mday, &mon, &DST, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
 					{
 						//exectued without error, all the zemanim strings are in array c_zmantimes
 						//add them to table using parseit
@@ -3742,6 +3850,15 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 				numday++;
 				k++;
 
+				if (DSTcheck)
+				{
+					DST = 0;
+					if (j >= StartDay[yrn - 1] && j < EndDay[yrn - 1])
+					{
+						DST = 1;
+					}
+				}
+
 				//increment line number
 				linnum++;
 
@@ -3768,7 +3885,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 						&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
 						&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
 						&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
-						&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+						&jdn, &nyl, &mday, &mon, &DST, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
 					{
 						//exectued without error, all the zemanim strings are in array c_zmantimes
 						//add them to table using parseit
@@ -3793,12 +3910,21 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 
 			yrn++; //next year
 			myear++;
-			yl = YearLength( myear );
+			yl = YearLength( &myear );
 
 			for (j = 1; j <= g_mmdate[1][i - 1]; j++)
 			{
 				numday++;
 				k++;
+
+				if (DSTcheck)
+				{
+					DST = 0;
+					if (j >= StartDay[yrn - 1] && j < EndDay[yrn - 1])
+					{
+						DST = 1;
+					}
+				}
 
 				//increment line number
 				linnum++;
@@ -3826,7 +3952,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 						&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
 						&fdy,&ec, &e2c, avekmxzman, avekmyzman, avehgtzman, &ns1, &ns2,
 						&ns3, &ns4, &nweather, &numzman, &numsort, &t6, &t3, &t3sub99,
-						&jdn, &nyl, &mday, &mon, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
+						&jdn, &nyl, &mday, &mon, &DST, MinTemp, AvgTemp, MaxTemp, ExtTemp)) )
 					{
 						//exectued without error, all the zemanim strings are in array c_zmantimes
 						//add them to table using parseit
@@ -4425,7 +4551,7 @@ void heb12monthHTML(short setflag)
 	fprintf(stdout, "%s\n", "    <col width=\"670\">");
 	fprintf(stdout, "%s\n", "    <tr>");
 	fprintf(stdout, "%s\n", "        <td width=\"670\" valign=\"top\">");
-	if (NearWarning[setflag]) //print near obstructions warning
+	if (NearWarning[setflag] || AddCushion) //print near obstructions warning
 	{
    		buff1[0] = '\0'; //clear buffer
 		sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font size=\"1\" style=\"font-size: 8pt\"><b>", &storheader[ii][5][0], "</b></font></p>" );
@@ -5013,7 +5139,7 @@ void heb13monthHTML(short setflag)
 	fprintf(stdout, "%s\n", "    <col width=\"696\">");
 	fprintf(stdout, "%s\n", "    <tr>");
 	fprintf(stdout, "%s\n", "        <td width=\"696\" valign=\"top\">");
-	if (NearWarning[setflag]) //print near obstruction warning
+	if (NearWarning[setflag] || AddCushion) //print near obstruction warning
 	{
    		buff1[0] = '\0'; //clear buffer
 		sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font size=\"1\" style=\"font-size: 8pt\"><b>", &storheader[ii][5][0], "</b></font></p>" );
@@ -6561,7 +6687,7 @@ ny500:
 }
 
 ////////////////////////////SunriseSunset/////////////////////
-short SunriseSunset( short types, short ExtTemp[] )
+short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp[] )
 //////////////////////////////////////////////////////////////
 //sets up headers, strings for tables
 //////////////////////////////////////////////////////////////
@@ -6711,7 +6837,7 @@ short SunriseSunset( short types, short ExtTemp[] )
 		}
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
-					    &nweather, &meantemp, &ns1, &ns2, &ns3, &ns4, &WinTemp,
+					    &nweather, &meantemp, adhocrise, adhocset, &ns1, &ns2, &ns3, &ns4, &WinTemp,
 						MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 		if (ier) //error detected
@@ -6925,7 +7051,7 @@ short SunriseSunset( short types, short ExtTemp[] )
 		}
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
-					    &nweather, &meantemp, &ns1, &ns2, &ns3, &ns4, &WinTemp,
+					    &nweather, &meantemp, adhocrise, adhocset, &ns1, &ns2, &ns3, &ns4, &WinTemp,
 						MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 		if (ier) //error detected
@@ -7186,7 +7312,7 @@ short SunriseSunset( short types, short ExtTemp[] )
 		}
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
-					    &nweather, &meantemp, &ns1, &ns2, &ns3, &ns4, &WinTemp,
+					    &nweather, &meantemp, adhocrise, adhocset, &ns1, &ns2, &ns3, &ns4, &WinTemp,
 						MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
 		if (ier) //error detected
@@ -7288,9 +7414,16 @@ short CreateHeaders( short types )
 	  	//copyright and warning lines
 		if (SRTMflag > 9)
 		{
-			//sprintf( l_buffcopy, "%s%s%s%s", &heb2[17][0], ". ", &heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
-			sprintf( l_buffcopy, "%s%s%s%s%4.1f%s%s%s", &heb2[17][0], ". ", &heb2[23][0], "&nbsp;", vernum, ", ",&heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
-	        if (!AddCushion)
+			if (DSTcheck)
+			{
+				sprintf( l_buffcopy, "%s%s%s%s%4.1f%s%s%s", &heb2[27][0], ". ", &heb2[23][0], "&nbsp;", vernum, ", ",&heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
+			}
+			else
+			{
+				sprintf( l_buffcopy, "%s%s%s%s%4.1f%s%s%s", &heb2[17][0], ". ", &heb2[23][0], "&nbsp;", vernum, ", ",&heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
+			}
+			
+			if (!AddCushion)
 			{
 				sprintf( l_buffwarning, "%s %3.1f %s", &heb2[15][0], distlim, &heb1[72][0] );
 			}
@@ -7306,12 +7439,17 @@ short CreateHeaders( short types )
 		}
 		else
 		{
-		  	//sprintf( l_buffcopy, "%s%s%s%s%s%s%s%d%s%d", &heb1[24][0], "&nbsp;", &heb2[2][0], "\""
-			//                    , &heb2[3][0], "&nbsp;", &heb2[4][0], datavernum, ".", progvernum);
-		  	sprintf( l_buffcopy, "%s%s%s%s%s%s%s%d%s%d", &heb1[24][0], "&nbsp;", &heb2[2][0], "&quot;"
+			if (DSTcheck)
+			{
+		  		sprintf( l_buffcopy, "%s%s%s%s%s%s%s%d%s%d", &heb1[82][0], "&nbsp;", &heb2[2][0], "&quot;"
 			                    , &heb2[3][0], "&nbsp;", &heb2[4][0], datavernum, ".", progvernum);
-	        //sprintf( l_buffwarning, "%s%s%3.1f%s%s%s", &heb2[5][0], &heb2[6][0], distlim
-			//                                       , &heb2[7][0], "\"", &heb2[8][0] );
+			}
+			else
+			{
+			  	sprintf( l_buffcopy, "%s%s%s%s%s%s%s%d%s%d", &heb1[24][0], "&nbsp;", &heb2[2][0], "&quot;"
+			                    , &heb2[3][0], "&nbsp;", &heb2[4][0], datavernum, ".", progvernum);
+			}
+
 			if (!AddCushion)
 			{
 				sprintf( l_buffwarning, "%s%s%3.1f%s%s%s", &heb2[5][0], &heb2[6][0], distlim
@@ -7343,6 +7481,15 @@ short CreateHeaders( short types )
 		{
 			//sprintf( l_buffcopy, "%s%4.1f", "All <em>zemanim</em> are in Standard Time. <u>Shabbosim are underlined</u>. &#169;Luchos Chai&nbsp;<a href=\"http://www.chaitables.com\">www.chaitables.com</a>.  Version: ", vernum  );
 			sprintf( l_buffcopy, "%s%4.1f", "Add a hour for DST. <u>Shabbosim are underlined</u>. &#169;Luchos Chai&nbsp;<a href=\"http://www.chaitables.com\">www.chaitables.com</a>.  Version: ", vernum  );
+			if (DSTcheck) 
+			{
+				sprintf( l_buffcopy, "%s%4.1f", "<u>Shabbosim are underlined</u>. &#169;Luchos Chai&nbsp;<a href=\"http://www.chaitables.com\">www.chaitables.com</a>.  Version: ", vernum  );
+			}
+			else
+			{
+				sprintf( l_buffcopy, "%s%4.1f", "Add a hour for DST. <u>Shabbosim are underlined</u>. &#169;Luchos Chai&nbsp;<a href=\"http://www.chaitables.com\">www.chaitables.com</a>.  Version: ", vernum  );
+			}
+
 			if (!AddCushion)
 			{
 				sprintf( l_buffwarning, "%s%3.1f%s", "\"Green\" denotes diminished accuracy due to obstructions closer than ", distlim, " km." );
@@ -7360,7 +7507,15 @@ short CreateHeaders( short types )
 		else
 		{
 			//sprintf( l_buffcopy, "%s%s%s%d%s%d", "All times are according to Standard Time. Shabbosim are underlined. ", "&#169;", " Luchos Chai, Fahtal  56, Jerusalem  97430; Tel/Fax: +972-2-5713765. Version: ", datavernum, ".", progvernum );
-			sprintf( l_buffcopy, "%s%s%s%d%s%d", "Add a hour for DST. Shabbosim are underlined. ", "&#169;", " Luchos Chai, info@chaitables.com; Tel/Fax: +972-2-5713765. Version: ", datavernum, ".", progvernum );
+			if (DSTcheck) 
+			{
+				sprintf( l_buffcopy, "%s%s%s%d%s%d", "Shabbosim are underlined. ", "&#169;", " Luchos Chai, info@chaitables.com; Tel/Fax: +972-2-5713765. Version: ", datavernum, ".", progvernum );
+			}
+			else
+			{
+				sprintf( l_buffcopy, "%s%s%s%d%s%d", "Add a hour for DST. Shabbosim are underlined. ", "&#169;", " Luchos Chai, info@chaitables.com; Tel/Fax: +972-2-5713765. Version: ", datavernum, ".", progvernum );
+			}
+
 			if (!AddCushion)
 			{
 				sprintf( l_buffwarning, "%s%3.1f%s", "The lighter colors denote times that may be inaccurate due to near obstructions (closer than ", distlim, " km).  It is possible that such near obstructions should be ignored." );
@@ -9142,7 +9297,7 @@ HC500:  //calculate length of Hebrew year
 		g_stdyy = g_dyy;
 		g_styr += 1;
 
-		g_yl = YearLength( g_styr ); //length of new civil year
+		g_yl = YearLength( &g_styr ); //length of new civil year
 
 		g_rh2 = g_n1rh; //rh2% is the day of the week (1-7) of the Rosh Hashonoh
 		g_leapyr2 = g_leapyear; //store leap year parameter
@@ -9159,7 +9314,7 @@ void engdate()
 {
 	//char buff[10];
 
-	g_yl =  YearLength( g_styr); //length of this civil year
+	g_yl =  YearLength( &g_styr); //length of this civil year
 
 	if (g_dyy > g_yl ) //it is a new civil year
 	{
@@ -9171,7 +9326,7 @@ void engdate()
 
 		g_dyy = g_dyy - g_yl; //current daynumber of new civil year
 
-		g_yl =  YearLength( g_styr); //length of new civil year
+		g_yl =  YearLength( &g_styr); //length of new civil year
 	}
 
 	g_leapyr = 0;
@@ -9246,6 +9401,8 @@ short PrintSingleTable(short setflag, short tbltypes)
 	short iheb = 0;
 	short ynum = 0;
 	bool foundday = false;
+	short DST = 0;
+	short ier, StartDay[2], EndDay[2];
 
 
 	NearWarning[0] = false;
@@ -9259,11 +9416,12 @@ short PrintSingleTable(short setflag, short tbltypes)
 	addmon = 0;
 	ntotshabos = 0;
 	fshabos = fshabos0;
+
 	if (!(optionheb)) iheb = 1;
 
    	myear = g_yrheb - 3761;
 
-	yl = YearLength( myear );
+	yl = YearLength( &myear );
 
 	if (SingleDay)
 	{
@@ -9279,6 +9437,19 @@ short PrintSingleTable(short setflag, short tbltypes)
 
 	sp = 1; //round up
 	if (setflag == 1) sp = 2; //round down
+
+
+	//////////////////added 090121 DST support////////////////////////////////
+	if (DSTcheck)  //calcualte onset and end of DST
+	{
+		ier = IsDST(eroscountry, eroscity, StartDay, EndDay);
+		if (ier < 0) //no DST info retrieved
+		{
+			DSTcheck = false;
+		}
+
+	}
+	/////////////////////////////////////////////////////////////////////////
 
 	for (i = 1; i <= endyr; i++)
 	{
@@ -9299,10 +9470,19 @@ short PrintSingleTable(short setflag, short tbltypes)
 			for (j = g_mmdate[0][i - 1]; j <= g_mmdate[1][i - 1]; j++)
 			{
 
+				if (DSTcheck)
+				{
+					DST = 0;
+					if (j >= StartDay[yrn - 1] && j < EndDay[yrn - 1])
+					{
+						DST = 1;
+					}
+				}
+
 			    if (SingleDay && (ynum == yrn && SingleDayNum == j )) foundday = true;  //single day mode daynum check
 
 				PST_iterate( &k, &j, &i, &ntotshabos, &dayweek, &yrn, &fshabos,
-					         &nshabos, &addmon, setflag, sp, tbltypes, yl, iheb );
+					         &nshabos, &addmon, setflag, sp, &DST, tbltypes, yl, iheb );
 			}
 		}
 		else if (g_mmdate[1][i - 1] < g_mmdate[0][i - 1])
@@ -9316,10 +9496,19 @@ short PrintSingleTable(short setflag, short tbltypes)
 			for (j = g_mmdate[0][i - 1]; j <= yrend[0]; j++)
 			{
 
+				if (DSTcheck)
+				{
+					DST = 0;
+					if (j >= StartDay[yrn - 1] && j < EndDay[yrn - 1])
+					{
+						DST = 1;
+					}
+				}
+
 			    if (SingleDay && (ynum == yrn && SingleDayNum == j )) foundday = true;  //single day mode daynum check
 
 				PST_iterate( &k, &j, &i, &ntotshabos, &dayweek, &yrn, &fshabos,
-					         &nshabos, &addmon, setflag, sp, tbltypes, yl, iheb );
+					         &nshabos, &addmon, setflag, sp, &DST, tbltypes, yl, iheb );
 			}
 
 
@@ -9328,10 +9517,19 @@ short PrintSingleTable(short setflag, short tbltypes)
 			for (j = 1; j <= g_mmdate[1][i - 1]; j++)
 			{
 
+				if (DSTcheck)
+				{
+					DST = 0;
+					if (j >= StartDay[yrn - 1] && j < EndDay[yrn - 1])
+					{
+						DST = 1;
+					}
+				}
+
 			    if (SingleDay && (ynum == yrn && SingleDayNum == j )) foundday = true;  //single day mode daynum check
 
 				PST_iterate( &k, &j, &i, &ntotshabos, &dayweek, &yrn, &fshabos,
-					         &nshabos, &addmon, setflag, sp, tbltypes, yl, iheb );
+					         &nshabos, &addmon, setflag, sp, &DST, tbltypes, yl, iheb );
 			}
 
 
@@ -9445,7 +9643,7 @@ char *EngCalDate(short ndy, short EngYear, short yl, char caldate[] )
 ////////////////////PST_iterate////////////////////////////////////////////
 void PST_iterate( short *k, short *j, short *i, short *ntotshabos, short *dayweek
 				 , short *yrn, short *fshabos, short *nshabos, short *addmon
-				 , short setflag, short sp, short tbltypes, short yl, short iheb )
+				 , short setflag, short sp, short *DST, short tbltypes, short yl, short iheb )
 //////////////////////////////////////////////////////////////////////////
 //performs iteration operations for PrinttoSingleFile
 {
@@ -9454,7 +9652,7 @@ void PST_iterate( short *k, short *j, short *i, short *ntotshabos, short *daywee
 	*k += 1;
 
 		
-	round( tims[*yrn - 1][tbltypes][*j - 1], steps[setflag], accur[setflag], sp, t3subb, 0 );
+	round( tims[*yrn - 1][tbltypes][*j - 1], steps[setflag], accur[setflag], sp, DST, t3subb, 0 );
 
 	if (tbltypes == 0 || tbltypes == 1) //check for near obstructions
 	{
@@ -9497,7 +9695,7 @@ void PST_iterate( short *k, short *j, short *i, short *ntotshabos, short *daywee
 
 
 ///////////////////////function round///////////////////////////
-char *round( double tim, short stepps, short accurr, short sp, char t3subb[], const short mode )
+char *round( double tim, short stepps, short accurr, short sp, short *DST, char t3subb[], const short mode )
 ////////////////////////////////////////////////////////////////
 //converts fractional hour into time string
 //rounds to requested step size and adds cushions
@@ -9507,6 +9705,9 @@ char *round( double tim, short stepps, short accurr, short sp, char t3subb[], co
 /////////////////////////////////////////////////////////////
 //sp = 1 forces rounding up
 //sp = 2 or -1 forces rounding down
+//////////////////added 083121//////DST flag/////////////////////
+//DST = 0 'don't add hour
+//DST = 1 'add hour
 //////////////////////////////////added 031721////////////////////////////
 //mode = 0 for netz, sky tables (used for not underlinning, or lining out skipped days)
 //mode = 1 for zemanim
@@ -9625,6 +9826,10 @@ rnd50:
 		minmin = 0;
 		hrad = 1;
 	}
+
+	/////////////////////////added 090121//////DST support//////////////////////
+	if (*DST == 1) thr += 1;  
+	///////////////////////////////////////////////////////////////////////
 
 	////////////////////hours/////////////////////////////
 	hrhr = thr + hrad;
@@ -10713,7 +10918,7 @@ char *IsoToUnicode( char *str )
 /////////////////////netzski6////////////////////////////////////////
  short netzski6(char *fileon, double lg, double lt, double hgt, double aprn,
 			               float geotd, short nsetflag, short nfil,
-						   short *nweather, double *meantemp, 
+						   short *nweather, double *meantemp, bool *adhocrise, bool *adhocset,
      		               short *ns1, short *ns2, short *ns3, short *ns4, double *WinTemp,
 						   short mint[], short avgt[], short maxt[], short ExtTemp[] )
 //////////////////////////////////////////////////////////////////////
@@ -10734,10 +10939,6 @@ char *IsoToUnicode( char *str )
 /************* Local variables ******************/
 
     //flags that reduce the sunrise times by 15 seconds or add 15 seconds to the sunset
-	bool adhocrise = true; //default is to use adhoc fix for sunrise
-	if (CloudWind) adhocrise = false;  //on a cloudy or windy night, then don't subtract the adhoc sunrise fix
-    bool adhocset = false;
-
     //short nweather;
     double elevintx, elevinty, d__, z__;
 	//double p;
@@ -11107,7 +11308,7 @@ alem */
 				//Nsetflag = 1 or Nsetflag = 3 OR Nsetflag = 5 */
 				///////////Astronomical/Mishor sunset///////////////////////////////////////////////////////////
             AstronSunset(&ndirec, &dy, &lr, &lt, &t6, &mp, &mc, &ap, &ac, &ms, &aas, &es,
-						&ob, &d__, &air, &sr1, nweather, ns3, ns4, &adhocset, &t3,
+						&ob, &d__, &air, &sr1, nweather, ns3, ns4, adhocset, &t3,
 						&astro, &azi1, &jdn, &mday, &mon, &nyear, &nyl, &td,
 						mint, WinTemp, &FindWinter, &EnableSunsetInv);
 				///////////////////////////////////////////////////////////////////////////////////////////////
@@ -11199,7 +11400,7 @@ alem */
 //    calculate astron./mishor sunrise
 		///////////Astronomical/Mishor sunrise///////////////////////////////////////////////////////////
       AstronSunrise(&ndirec, &dy, &lr, &lt, &t6, &mp, &mc, &ap, &ac, &ms, &aas,
-						&es, &ob, &d__, &air, &sr1, nweather, ns3, ns4, &adhocrise,
+						&es, &ob, &d__, &air, &sr1, nweather, ns3, ns4, adhocrise,
 						&t3, &astro, &azi1, &jdn, &mday, &mon, &nyear, &nyl, &td,
 						mint, WinTemp, &FindWinter, &EnableSunriseInv);
 		///////////////////////////////////////////////////////////////////////////////////////////////
@@ -13094,7 +13295,7 @@ double tk, d__2, refrac1;
 	{
 		//using van der Werf raytracing and standard atmosphere
 		//first deter__min the temperature scaling factor for this day
-		short nyl = DaysInYear(nyr);
+		short nyl = YearLength( nyr );
 		m = MonthFromDay(&nyl, dy);
 
 		//N.b., if using user set ground temperatures, then they were already
@@ -14884,7 +15085,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 						double *avekmxzman, double *avekmyzman, double *avehgtzman,
 						short *ns1, short *ns2, short *ns3, short *ns4, short *nweather,
 						short *numzman, short *numsort, double *t6, double *t3, double *t3sub99,
-						double *jdn, int *nyl, short *mday, short *mon,
+						double *jdn, int *nyl, short *mday, short *mon, short *DST,
 						short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[])
 ///////////////////////////////////////////////////////////////
 //parses the .zma files to calculate the requested zemanim
@@ -15176,7 +15377,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 							avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99,
 							jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
-				 zmantimes[i] = t3sub;
+			 zmantimes[i] = t3sub;
              astnetznum = i;
 			}
 			else if ( ( InStr( strlwr(&zmannames[i][0][0]), "mishor" )) ||
@@ -15191,7 +15392,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 						avekmxzman, avekmyzman, &mishorhgt, t6, t3, &t3sub, t3sub99,
 						jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
-				 zmantimes[i] = t3sub;
+			 zmantimes[i] = t3sub;
              mishornetznum = i;
 		  }
 
@@ -15213,7 +15414,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 					   avekmxzman, avekmyzman,avehgtzman, t6, t3, &t3sub, t3sub99,
 					   jdn, nyl, mday, mon, MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
-				 zmantimes[i] = t3sub;
+			 zmantimes[i] = t3sub;
              astskiynum = i;
 		  	}
          else if ( ( InStr( strlwr(&zmannames[i][0][0]), "mishor" )) ||
@@ -15318,7 +15519,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 		 }
 
 		 zmantimes[n] = t3sub;
-		 round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb, 1 );
+		 round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), DST, t3subb, 1 );
 		 sprintf( &c_zmantimes[n][0], "%s", t3subb );
 		 //sprintf( &zmantitles[num][0], "%s", &zmannames[n][0][0] );
 
@@ -15331,7 +15532,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 		   if ( *dayweek == 6 ) //Then Erev Shabbos
 		   {
 			  t3sub = zmantimes[n];
-			  round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb, 1 );
+			  round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), DST, t3subb, 1 );
 			  sprintf( &c_zmantimes[n][0], "%s", t3subb );
 
 		   }
@@ -15358,21 +15559,21 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 					if ( *dayweek == 7 || *dayweek == 0 ) // Then Shabbos
 					{
 						//this is erev yom-tov that falls on shabbos (NO CANDLE LIGHTING!)
-						round( 0.0, 0, 0, 0, t3subb, 1 ); //outputs "-----"
+						round( 0.0, 0, 0, 0, DST, t3subb, 1 ); //outputs "-----"
 						sprintf( &c_zmantimes[n][0], "%s", t3subb );
 						sprintf( &zmantitles[n][0], "%s", &zmannames[n][0][0] );
 					}
 					else
 					{
 					t3sub = zmantimes[n];
-					round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb, 1 );
+					round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), DST, t3subb, 1 );
 					sprintf( &c_zmantimes[n][0], t3subb );
 					}
 
 				}
 				else
 				{
-				round( 0.0, 0, 0, 0, t3subb, 1 ); //outputs "-----"
+				round( 0.0, 0, 0, 0, DST, t3subb, 1 ); //outputs "-----"
 				sprintf( &c_zmantimes[n][0], "%s", t3subb );
 				}
 		   }
@@ -15380,7 +15581,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 	   else
 	   {
 		  t3sub = zmantimes[n];
-		  round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), t3subb, 1 );
+		  round( t3sub, atoi(&zmannames[n][7][0]), 0, atoi(&zmannames[n][6][0]), DST, t3subb, 1 );
 		  sprintf( &c_zmantimes[n][0], "%s", t3subb );
 	   }
 
@@ -15395,17 +15596,17 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 
 
 ////////////////////YearLength////////////////////////////
-short YearLength( short myear)
+short YearLength( const short *myear)
 //////////////////////////////////////////////////////////
 //calculates the length of the civil year, myear, in days
 //////////////////////////////////////////////////////////
 {
 	short yd, yl;
 
-	yd = myear - 1988;
+	yd = *myear - 1988;
     yl = 365;
     if (yd % 4 == 0) yl = 366;
-    if ((yd % 4 == 0) && (myear % 100 == 0) && (myear % 400 != 0)) yl = 365;
+    if ((yd % 4 == 0) && (*myear % 100 == 0) && (*myear % 400 != 0)) yl = 365;
 
 	return yl;
 }
@@ -19155,24 +19356,246 @@ T50:
 	return 0;
 }
 
+/*****************Determine Onset and End of Daylight Saving Time**************
+based on Javacode used in the Introduction to the Chai Air Times
+paramters: country = name of country
+		   StartDay[0],EndDay[0] - start and end daynumbers of DST for first civil year in this Hebrew year
+		   StartDay[1],EndDay[1] - start and end daynumbers of DST for second civil year in this Hebrew year
+
+  returns: true if should be DST, false if should be standard time
+*******************************************************************************/
+
+short IsDST(char *country, char *city, short StartDay[], short EndDay[])
+{
+
+	short MarchDate;
+	short AprilDate;
+	short OctoberDate;
+	short NovemberDate;
+	short yl;
+	bool PerpetualDST = false; //for countries that have adopted perpetual DST
+	char CountryBuff[255] = "";
+
+	if (strstr(country, "Israel") || strstr(city, "Israel"))
+	{
+		  PerpetualDST = false;  //set to true when perpetual DST is adopted
+		  if (PerpetualDST)
+		  {
+			  StartDay[0] = 1;
+			  StartDay[1] = 1;
+			  EndDay[0] = YearLength( &FirstSecularYr );
+			  EndDay[1] = YearLength( &SecondSecularYr );
+			  return 0;
+		  }
+
+		  //first secular year
+          MarchDate =   31-( (int)(floor (FirstSecularYr * 5 / 4)) + 4) % 7 - 2; //starts on Friday = 2 days before EU start on Sunday
+		  yl = YearLength( &FirstSecularYr );
+		  StartDay[0] = DayNumber(yl,3,MarchDate);
+
+          OctoberDate =  31-( (int)(floor (FirstSecularYr * 5 / 4)) + 1) % 7; //ends on same day it ends for EU, i.e., on Friday
+		  EndDay[0] = DayNumber(yl,10,OctoberDate);
+
+		  //second secular year
+          MarchDate =   31-( (int)(floor (SecondSecularYr * 5 / 4)) + 4) % 7 - 2; //starts on Friday = 2 days before EU start on Sunday
+		  yl = YearLength( &SecondSecularYr );
+		  StartDay[1] = DayNumber(yl,3,MarchDate);
+
+          OctoberDate =  31-( (int)(floor (SecondSecularYr * 5 / 4)) + 1) % 7; //ends on same day it ends for EU, i.e., on Friday
+		  EndDay[1] = DayNumber(yl,10,OctoberDate);
+
+		  return 0;
+
+	}
+	else if (strstr(country, "USA") || strstr(country, "Canada") || strstr(city, "USA") || strstr(city, "Canada"))
+	{
+		//not all states in the US have DST
+		if (strstr(city, "Phoenix") || strstr(city, "Honolulu") || strstr(city, "Regina"))
+		{
+			return -1; //no DST observed in these cities
+		}
+	
+	  //the rest of the USA, Candada
+
+	  PerpetualDST = false;  //set to true when USA and Canada adopt pertual DST
+	  if (PerpetualDST)
+	  {
+		  StartDay[0] = 1;
+		  StartDay[1] = 1;
+		  EndDay[0] = YearLength( &FirstSecularYr );
+		  EndDay[1] = YearLength( &SecondSecularYr );
+		  return 0;
+	  }
+
+
+	  //first secular year
+	  MarchDate = 14 - ((int)(floor (1 + FirstSecularYr * 5 / 4)) % 7);
+	  yl = YearLength( &FirstSecularYr );
+	  StartDay[0] = DayNumber(yl,3,MarchDate);
+
+      NovemberDate = 7 - ((int)(floor (1 + FirstSecularYr * 5 / 4)) % 7);
+	  EndDay[0] = DayNumber(yl,11,NovemberDate);
+
+	  //second secular year
+	  MarchDate = 14 - ((int)(floor (1 + SecondSecularYr * 5 / 4)) % 7);
+	  yl = YearLength( &SecondSecularYr );
+	  StartDay[1] = DayNumber(yl,3,MarchDate);
+
+      NovemberDate = 7 - ((int)(floor (1 + SecondSecularYr * 5 / 4)) % 7);
+	  EndDay[1] = DayNumber(yl,11,NovemberDate);
+
+	  return 0;
+
+	}
+	else if (strstr(country, "England") ||
+			 strstr(country, "France") ||
+			 strstr(country, "Germany") ||
+			 strstr(country, "Netherlands") ||
+			 strstr(country, "Belgium") ||
+			 strstr(country, "Northern_Ireland") ||
+			 strstr(country, "Yugoslavia") ||
+			 strstr(country, "Slovakia") ||
+			 strstr(country, "Romania") ||
+			 strstr(country, "Hungary") ||
+			 strstr(country, "Denmark") ||
+			 strstr(country, "Ireland") ||
+			 strstr(country, "Switzerland") ||
+			 strstr(country, "Finland") ||
+			 strstr(country, "Ukraine") ||
+			 strstr(country, "Norway") ||
+			 strstr(country, "France") ||
+			 strstr(country, "Czechoslovakia") ||
+			 strstr(country, "Sweden") ||
+			 strstr(country, "Italy") ||
+			 strstr(country, "Europe") ||
+			 strstr(city, "Europe"))
+	{
+	   //countries in Europe having DST
+
+		  PerpetualDST = false;  //set to true when Europe adopts perpetual DST
+		  if (PerpetualDST)
+		  {
+			  StartDay[0] = 1;
+			  StartDay[1] = 1;
+			  EndDay[0] = YearLength( &FirstSecularYr );
+			  EndDay[1] = YearLength( &SecondSecularYr );
+			  return 0;
+		  }
+
+		//first secular year
+		MarchDate =   31-( (int)(floor (FirstSecularYr * 5 / 4)) + 4) % 72; //starts on Sunday = 2 days after Israel
+		yl = YearLength( &FirstSecularYr );
+		StartDay[0] = DayNumber(yl,3,MarchDate);
+
+		OctoberDate =  31-( (int)(floor (FirstSecularYr * 5 / 4)) + 1) % 7; //ends on same day it ends for EU, i.e., on Friday
+		EndDay[0] = DayNumber(yl,10,OctoberDate);
+
+		//second secular year
+		MarchDate =   31-( (int)(floor (SecondSecularYr * 5 / 4)) + 4) % 72; //starts on Sunday = 2 days after Israel
+		yl = YearLength( &SecondSecularYr );
+		StartDay[1] = DayNumber(yl,3,MarchDate);
+
+		OctoberDate =  31-( (int)(floor (SecondSecularYr * 5 / 4)) + 1) % 7; //ends on same day it ends for EU, i.e., on Friday
+		EndDay[1] = DayNumber(yl,10,OctoberDate);
+
+		return 0;
+
+	}
+	else if (strstr(country, "Mexico") || strstr(city, "Mexico"))
+	{
+
+		  PerpetualDST = false;  //set to true when Mexico adopts perpetual DST
+		  if (PerpetualDST)
+		  {
+			  StartDay[0] = 1;
+			  StartDay[1] = 1;
+			  EndDay[0] = YearLength( &FirstSecularYr );
+			  EndDay[1] = YearLength( &SecondSecularYr );
+			  return 0;
+		  }
+
+
+		//first secular year
+        AprilDate = (2+6 * FirstSecularYr - (int)(floor (FirstSecularYr / 4) )) % 7 + 1; //old begin DST in the USA
+	    yl = YearLength( &FirstSecularYr );
+	    StartDay[0] = DayNumber(yl,4,AprilDate);
+
+        OctoberDate =  (31-( (int)(floor (FirstSecularYr * 5 / 4)) + 1) % 7); //old end DST in the USA
+	    EndDay[0] = DayNumber(yl,10,OctoberDate);
+
+		//second secular year
+        AprilDate = (2+6 * SecondSecularYr - (int)(floor (SecondSecularYr / 4) )) % 7 + 1; //old begin DST in the USA
+	    yl = YearLength( &SecondSecularYr );
+	    StartDay[1] = DayNumber(yl,4,AprilDate);
+
+        OctoberDate =  (31-( (int)(floor (SecondSecularYr * 5 / 4)) + 1) % 7); //old end DST in the USA
+	    EndDay[1] = DayNumber(yl,10,OctoberDate);
+
+		return 0;
+	}
+	else if (strstr(country, "Australia") || strstr(city, "Australia"))
+	{
+
+		  PerpetualDST = false;  //set to true when Australia adopts perpetual DST
+		  if (PerpetualDST)
+		  {
+			  StartDay[0] = 1;
+			  StartDay[1] = 1;
+			  EndDay[0] = YearLength( &FirstSecularYr );
+			  EndDay[1] = YearLength( &SecondSecularYr );
+			  return 0;
+		  }
+
+		//first secular year
+        AprilDate = (2+6 * FirstSecularYr - (int)(floor (FirstSecularYr / 4) )) % 7 + 1; //old begin DST in the USA
+	    yl = YearLength( &FirstSecularYr );
+ 	    EndDay[0] = DayNumber(yl,4,AprilDate);
+
+        OctoberDate = (2+6 * FirstSecularYr - (int)(floor(FirstSecularYr / 4) )) % 7; //its own unique start day in October
+        if (OctoberDate == 0) OctoberDate = 7;
+	    StartDay[0] = DayNumber(yl,10,OctoberDate);
+
+		//second secular year
+        AprilDate = (2+6 * SecondSecularYr - (int)(floor (SecondSecularYr / 4) )) % 7 + 1; //old begin DST in the USA
+	    yl = YearLength( &SecondSecularYr );
+ 	    EndDay[1] = DayNumber(yl,4,AprilDate);
+
+        OctoberDate = (2+6 * SecondSecularYr - (int)(floor(SecondSecularYr / 4) )) % 7; //its own unique start day in October
+        if (OctoberDate == 0) OctoberDate = 7;
+	    StartDay[1] = DayNumber(yl,10,OctoberDate);
+
+		return 0;
+
+	}
+	else
+	{
+		return -1; //if reached here, then either there is no DST, there is peptual DST, or unknown rules
+	}
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////DayNumber///////////////////////////
+//Uses Meeus formula p.65 to convert month, day, year into daynumber
+//parameters: yl = 365-366 (number of days in the year (355 for regular year, 366 for leap year)
+//			  mo = 1-12 (months)
+//            dy = 1-366 (days)
+/////////////////////////////////////////////////////////////////
+short DayNumber(short ylyd, short mon, short mday)
+{
+	short KK = 0;
+   
+    KK = 2;
+    if (ylyd == 366) KK = 1;
+    return  floor((275 * mon) / 9.0) - KK * floor((mon + 9) / 12.0) + mday - 30;
+
+}
+/////////////////////////////////////////////////////
+
 //////////////lenMonth(x) deter__mins number of days in month x, 1<=x<=12////////////////////
 //source: https://cmcenroe.me/2014/12/05/days-in-month-formula.html
 short lenMonth( short x) {
 	return 28 + (short)(x + floor(x/8)) % 2 + 2 % x + 2 * floor(1/x);
-}
-
-///////////////DaysInYear deter__mins the number of days in the year///////////////
-short DaysInYear(const short *nyr)
-//////////////////////////////////////////////////////////////////////////////////
-{
-	short nyl = 365;
-	if (*nyr % 4 == 0) {
-		nyl = 366;
-	}
-	if (*nyr % 100 == 0 && *nyr % 400 != 0) {
-		nyl = 365;
-	}
-	return nyl;
 }
 
 ////////////////MonthFromDay////////////////////////////////
