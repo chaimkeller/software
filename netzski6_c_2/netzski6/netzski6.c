@@ -558,6 +558,7 @@ L7:
 	adhocrise = TRUE_;
 	adhocset = FALSE_;
 	//read file that determines the sunrise adhoc fix value
+	//if file doesn't exist, then use initialized value for adhocrise
 	sprintf(fnam,"%s%s", drivlet, ":/jk/adhocflag.tmp");
 	if (stream = fopen( fnam, "r"))
 	{
