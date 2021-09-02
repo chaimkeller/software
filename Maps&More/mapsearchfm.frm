@@ -1,13 +1,13 @@
 VERSION 5.00
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form mapsearchfm 
    AutoRedraw      =   -1  'True
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Search for highest points"
-   ClientHeight    =   7350
+   ClientHeight    =   8055
    ClientLeft      =   6495
    ClientTop       =   1815
    ClientWidth     =   5400
@@ -16,8 +16,48 @@ Begin VB.Form mapsearchfm
    LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   7350
+   ScaleHeight     =   8055
    ScaleWidth      =   5400
+   Begin MSComctlLib.StatusBar StatusBarProg 
+      Align           =   2  'Align Bottom
+      Height          =   375
+      Left            =   0
+      TabIndex        =   63
+      Top             =   7680
+      Width           =   5400
+      _ExtentX        =   9525
+      _ExtentY        =   661
+      _Version        =   393216
+      BeginProperty Panels {8E3867A5-8586-11D1-B16A-00C0F0283628} 
+         NumPanels       =   2
+         BeginProperty Panel1 {8E3867AB-8586-11D1-B16A-00C0F0283628} 
+         EndProperty
+         BeginProperty Panel2 {8E3867AB-8586-11D1-B16A-00C0F0283628} 
+         EndProperty
+      EndProperty
+   End
+   Begin VB.CommandButton cmdCheckSkipped 
+      Caption         =   "Check for skipped points"
+      Height          =   275
+      Left            =   1180
+      TabIndex        =   61
+      Top             =   7380
+      Width           =   2415
+   End
+   Begin MSComctlLib.ProgressBar ProgressBarProfs 
+      Height          =   375
+      Left            =   120
+      TabIndex        =   62
+      Top             =   7320
+      Visible         =   0   'False
+      Width           =   4455
+      _ExtentX        =   7858
+      _ExtentY        =   661
+      _Version        =   393216
+      BorderStyle     =   1
+      Appearance      =   0
+      Scrolling       =   1
+   End
    Begin VB.Frame frmProg 
       Height          =   7335
       Left            =   4680
@@ -575,7 +615,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   20
          BuddyControl    =   "Text4"
-         BuddyDispid     =   196645
+         BuddyDispid     =   196646
          OrigLeft        =   3420
          OrigTop         =   300
          OrigRight       =   3660
@@ -597,7 +637,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   15
          BuddyControl    =   "Text3"
-         BuddyDispid     =   196647
+         BuddyDispid     =   196648
          OrigLeft        =   2100
          OrigTop         =   240
          OrigRight       =   2340
@@ -951,6 +991,286 @@ Private Sub cmdCancelSearch_Click()
    CancelSearch = True
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : cmdCheckSkipped_Click
+' Author    : chaim
+' Date      : 7/17/2020
+' Purpose   : automatically checks for skipped points
+'---------------------------------------------------------------------------------------
+'
+Private Sub cmdCheckSkipped_Click()
+
+  Dim batnum%, maplistnum%, doclin$, doclin2$, nummissing%
+  Dim SplitArray() As String
+  Dim SplitBat() As String
+  Dim LatCompare As Double, LonCompare As Double
+  Dim LatBat As Double, LonBat As Double
+  Dim found%, batnam$, tmpfile$, tmpnum%
+  
+  nummissing% = 0
+  
+    'find name of active bat file
+   On Error GoTo cmdCheckSkipped_Click_Error
+
+    Select Case MsgBox("This will check for skipped points for the following city:" _
+                       & vbCrLf & "" _
+                       & vbCrLf & mapsearchfm.Combo2.Text _
+                       & vbCrLf & "" _
+                       & vbCrLf & "Answer " _
+                       & vbCrLf & "" _
+                       & vbCrLf & "       Yes --to check for skipped sunrise profiles" _
+                       & vbCrLf & "       No - to check for skipped sunset profiles" _
+                       & vbCrLf & "" _
+                       & vbCrLf & "       Cancel - cancel the chek" _
+                       , vbYesNoCancel Or vbQuestion Or vbDefaultButton1, "Checking for skipped points")
+    
+        Case vbYes
+            sunmode = 1
+        Case vbNo
+            sunmode = 0
+        Case vbCancel
+            Exit Sub
+    
+    End Select
+    
+    'back up the mappoints file
+    FileCopy drivjk_c$ & "mappoints.sav", drivjk_c$ & "mappoints.bak"
+    nummissing% = 0
+    If world Then
+       AddPath$ = "eros\"
+    Else
+       AddPath$ = sEmpty
+       End If
+       
+    'find name of active bat file
+    nummissing% = 0
+    If sunmode >= 1 Then 'sunrises
+       batnam$ = Dir(drivcities$ & AddPath & Combo2.Text & "\netz\*.bat")
+       batnam$ = drivcities$ & AddPath & Combo2.Text & "\netz\" & batnam$
+       tmpfile$ = drivjk_c$ & "mappoints_tmp_netz.sav"
+    ElseIf sunmode <= 0 Then 'sunsets
+       batnam$ = Dir(drivcities$ & AddPath & Combo2.Text & "\skiy\*.bat")
+       batnam$ = drivcities$ & AddPath & Combo2.Text & "\netz\" & batnam$
+       tmpfile$ = drivjk_c$ & "mappoints_tmp_skiy.sav"
+       End If
+
+    maplistnum% = FreeFile
+    Open drivjk_c$ + "mappoints.sav" For Input As #maplistnum%
+    tmpnum% = FreeFile
+    Open tmpfile$ For Output As #tmpnum%
+    
+    Do Until EOF(maplistnum%)
+       Line Input #maplistnum%, doclin$
+       SplitArray = Split(doclin$, ",")
+
+       'this is a vantage point entry, so compare
+      LatCompare = Val(SplitArray(0))
+      LonCompare = Val(SplitArray(1))
+      batnum% = FreeFile
+      Open batnam$ For Input As #batnum%
+      found% = 0
+      Do Until EOF(batnum%)
+         Line Input #batnum%, docliln2$
+         SplitBat = Split(docliln2$, ",")
+         If UBound(SplitBat) > 0 Then
+              If InStr(SplitBat(0), "netz") Or InStr(SplitBat(0), "skiy") Then
+                 'this is a vantage point entry
+                 LatBat = Val(SplitBat(1))
+                 LonBat = -Val(SplitBat(2))
+                 If Abs(LatCompare - LatBat) < 0.0001 And Abs(LonCompare - LonBat) < 0.0001 Then
+                    'accounted for, skip to next entry
+                    found% = 1
+                    Exit Do
+                    End If
+                 End If
+             End If
+      Loop
+      
+      If found% = 0 Then 'add to missing list
+         Print #tmpnum%, doclin$
+         nummissing% = nummissing% + 1
+         End If
+         
+     Close #batnum%
+    Loop
+    Close #tmpnum%
+
+    If nummissing% = 0 Then
+       Call MsgBox("No missing search points found!", vbInformation Or vbDefaultButton1, "Checking for skipped points")
+       Exit Sub
+    Else
+        Select Case MsgBox("Found  " & Str(nummissing%) & " skipped search points!" _
+                           & vbCrLf & "" _
+                           & vbCrLf & "Proceed to calculate their profiles(s)?" _
+                           , vbOKCancel Or vbQuestion Or vbDefaultButton1, "Checking for skipped points")
+        
+           Case vbOK
+           
+           Case vbCancel
+             Exit Sub
+        
+        End Select
+        End If
+        
+'   cmdCheckSkipped.Enabled = False
+     'reload the saved points, and begin automatic analysis
+   If Dir(tmpfile$) <> sEmpty Then
+      'determine number of rows
+      savfil% = FreeFile
+      Open tmpfile$ For Input As #savfil%
+      mRows& = 0
+      Do Until EOF(savfil%)
+         Line Input #savfil%, doclin$
+         mRows& = mRows& + 1
+      Loop
+      Close #savfil%
+      sky2.Rows = mRows& + 1
+      
+      sky2.Clear
+      savfil% = FreeFile
+      Open tmpfile$ For Input As #savfil%
+      i& = 1
+      Do Until EOF(savfil%)
+         If i& > sky2.Rows - 1 Then Exit Do
+         Input #savfil%, savlat, savlon, savhgt, savdis
+         sky2.TextArray(skyp2(i&, 0)) = i&
+         sky2.TextArray(skyp2(i&, 1)) = savlat
+         sky2.TextArray(skyp2(i&, 2)) = savlon
+         sky2.TextArray(skyp2(i&, 3)) = savhgt
+         sky2.TextArray(skyp2(i&, 4)) = savdis
+         i& = i& + 1
+      Loop
+      Close #savfil%
+      
+      If world = False Then
+         sky2.FormatString = "^Point # |^    ITMx          |^    ITMy             |^ height(m)  |^distance(km)"
+      Else
+         sky2.FormatString = "^Point #|^ latitude       |^longitude      |^height (m)|^distance(km)       "
+         End If
+         
+      End If
+       
+    mapsearchfm.cmdCheckSkipped.Visible = False
+    mapsearchfm.ProgressBarProfs.Visible = True
+    mapsearchfm.ProgressBarProfs.Min = 0
+    mapsearchfm.ProgressBarProfs.Max = i& - 1
+    mapsearchfm.ProgressBarProfs.value = 0
+    mapsearchfm.StatusBarProg.Panels(1).Text = i& - 1
+    mapsearchfm.StatusBarProg.Panels(2).Text = "0"
+       
+    'now begin the automatic run
+   AutoProf = True 'run profile analysis automatically
+   AutoVer = True 'automatically increment the version number
+   
+   starting& = 0
+   If Dir(drivjk_c$ & "mapstatus.sav") <> sEmpty Then
+      Close
+      statfil% = FreeFile
+      Open drivjk_c$ & "mapstatus.sav" For Output As #statfil%
+      Do Until EOF(statfil%)
+         Print #statfil%, statnum&
+      Loop
+      Close #statfil%
+      End If
+      
+uoa100:
+      
+   If world = False Then GoTo w100
+   
+   'create eros.tm6 file
+   dtmfile% = FreeFile
+   Open ramdrive & ":\eros.tm6" For Output As #dtmfile%
+   Select Case DTMflag
+      Case 0, -1 'GTOPO30, SRTM30
+         outdrive$ = worlddtm
+      Case 1, 2 'SRTM
+         outdrive$ = srtmdtm
+   End Select
+   Print #dtmfile%, outdrive$; ","; DTMflag
+   Close #dtmfile%
+   
+   'create eros.tm7 flag -- to tell newreadDTM not to ask about missing tiles
+   dtmfile% = FreeFile
+   Open ramdrive & ":\eros.tm7" For Output As #dtmfile%
+   Print #dtmfile%, 1
+   Close #dtmfile%
+   
+   AutoNum& = starting&
+50 savfil% = FreeFile
+   If sunmode = 1 Then
+   ElseIf sunmode = 0 Then
+      End If
+   Open tmpfile$ For Input As #savfil%
+   looping% = 0
+   i& = 0
+   Do Until EOF(savfil%)
+      Input #savfil%, savlat, savlon, savhgt, savdis
+      i& = i& + 1
+      mapsearchfm.ProgressBarProfs.value = i&
+      mapsearchfm.StatusBarProg.Panels(2).Text = Str(i&)
+      statfil% = FreeFile 'record current status
+      Open drivjk_c$ & "mapstatus.sav" For Output As #statfil%
+      Write #statfil%, i&
+      Close #statfil%
+      If i& > AutoNum& Then
+         'inputed all the desired coordinates, so exit loop
+         looping% = 1
+
+         Exit Do
+         End If
+   Loop
+   Close #savfil%
+   
+   If looping% = 0 Then
+      'reached EOF--i.e., finished the profiles
+      mapsearchfm.ProgressBarProfs.Visible = False
+      mapsearchfm.cmdCheckSkipped.Visible = True
+      cmdCheckSkipped.Enabled = True
+      
+      AutoProf = False
+      AutoVer = False
+      Delay% = 0
+      Kill ramdrive & ":\eros.tm7"
+      Exit Sub
+      End If
+   
+   If savlon = 0 And savlat = 0 Then GoTo 50
+   lon = savlon
+   lat = savlat
+   worldmove = True
+   Call goto_click
+   jumpworld = False
+   skymove = False
+   worldmove = False
+   Skycoord% = 0
+   Call BringWindowToTop(mapsearchfm.hWnd)
+   searchhgt = savhgt
+   viewsearch = True
+   Call sunrisesunset(sunmode%)
+   viewsearch = False
+   AutoNum& = AutoNum& + 1
+   AutoVer = False 'don't increment the version number again
+   GoTo 50
+    
+
+   On Error GoTo 0
+   Exit Sub
+   
+w100: 'run analysis of Eretz Yisroel places
+   'ask for a default name
+   Unload mapsearchfm
+   Set mapsearchfm = Nothing
+   Call EYsunrisesunset(sunmode%)
+   Exit Sub
+
+cmdCheckSkipped_Click_Error:
+
+    Close
+    cmdCheckSkipped.Enabled = True
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdCheckSkipped_Click of Form mapsearchfm"
+    
+End Sub
+
 Private Sub cmdPlotSearchPnts_Click()
    'plot all the search results on the map
 
@@ -1065,6 +1385,14 @@ Private Sub cmdReLoad_Click()
       response = MsgBox("Begin automatic profile generation using these ponts for this metro area?", _
                         vbYesNoCancel + vbQuestion, "Maps & more")
       If response = vbYes Then
+         With mapsearchfm
+            .cmdCheckSkipped.Visible = False
+            .ProgressBarProfs.Visible = True
+            .ProgressBarProfs.Min = 0
+            .ProgressBarProfs.Max = i& - 1
+            .StatusBarProg.Panels(1).Text = i& - 1
+            .StatusBarProg.Panels(2).Text = "0"
+         End With
          RunOnAutomatic 'automatically process profiles
          End If
    Else
@@ -1151,10 +1479,54 @@ Private Sub cmdTotSearch_Click()
    
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : cmdSaveAll_Click
+' Author    : chaim
+' Date      : 7/21/2020
+' Purpose   :
+'---------------------------------------------------------------------------------------
+'
 Private Sub cmdSaveAll_Click()
    On Error GoTo cmdSaveAll_Click_Error
    
    Dim VerifyMode As Boolean
+   
+   savfil% = FreeFile
+   
+   Select Case MsgBox(" Do you want to append these points to the former list?" _
+                      & vbCrLf & "" _
+                      & vbCrLf & "Answer:" _
+                      & vbCrLf & "" _
+                      & vbCrLf & "       Yes -- to append" _
+                      & vbCrLf & "       No -- to save/clear the buffer and start a new list" _
+                      & vbCrLf & "" _
+                      & vbCrLf & "       Cancel - to exit this routine" _
+                      , vbYesNoCancel Or vbQuestion Or vbDefaultButton1, "Saving search results")
+   
+    Case vbYes
+        Open drivjk_c$ & "mappoints.sav" For Append As #savfil%
+   
+    Case vbNo
+        Select Case MsgBox("This operation will clear the last search bufer unless you save it." _
+                           & vbCrLf & "" _
+                           & vbCrLf & "Do you want to save the last mappoints.sav list as a ""bak"" file with the currentt date added to the name?" _
+                           , vbYesNo Or vbInformation Or vbDefaultButton1, "Saving search results")
+        
+            Case vbYes
+                bufout = FreeFile
+                BufOutName$ = drivjk_c$ & "mappoints_" & Format(Trim$(Month(Now)), "00") & Format(Trim$(Day(Now)), "00") & Format(Year(Now), "00") & ".sav"
+                FileCopy drivjk_c$ & "mappoints.sav", BufOutName$
+            Case vbNo
+        
+        End Select
+        cmdClear.value = True
+        Open drivjk_c$ & "mappoints.sav" For Output As #savfil%
+   
+    Case vbCancel
+        Close
+        Exit Sub
+   
+   End Select
    
    response = MsgBox("Do you want to verify each point?" & vbLf & vbLf & _
                      "Answer: " & vbLf & _
@@ -1168,8 +1540,6 @@ Private Sub cmdSaveAll_Click()
        VerifyMode = False
    End Select
 
-   savfil% = FreeFile
-   Open drivjk_c$ & "mappoints.sav" For Append As #savfil%
    For i& = 1 To sky2.Rows - 1
        
      'save the highlighted item's coordinates into the temporary buffer
@@ -1237,6 +1607,10 @@ cmdSaveAll_Click_Error:
        Case Else
            Close
     End Select
+
+   On Error GoTo 0
+   Exit Sub
+
 End Sub
 
 Private Sub Combo1_Click()
@@ -1306,6 +1680,8 @@ End Sub
 
 Private Sub Command1_Click()
    'perform search
+   Dim Dist As Double
+   
    On Error GoTo Command1_Click_Error
 
    If txtStep.Text = sEmpty Or Val(txtStep.Text) = 0 Then
@@ -1352,6 +1728,7 @@ Private Sub Command1_Click()
       If SearchType% = 0 Then 'simple search
         ydegkm = 180 / (pi * 6371.315)   'degrees per km latitude
         xdegkm = 180 / (pi * 6371.315 * Cos(cd * Text1))   'degrees per km longitude
+        If (Text3 < 1) Then ydegkm = xdegkm 'for a small search radius, use the same step size for x and y
         y11 = Val(Text1) - Val(Text3) * ydegkm '- del * ydegkm 'move beyond the borders by del
         y12 = Val(Text1) + Val(Text3) * ydegkm '+ del * ydegkm
         x11 = Val(Text2) - Val(Text3) * xdegkm '- del * xdegkm
@@ -1484,6 +1861,7 @@ Private Sub Command1_Click()
               Dist = 6371.315 * DACOS(cosang)
            Else
               Dist = 0
+              Dist = 6371.315 * Sqr((X1 - X2) ^ 2 + (Y1 - Y2) ^ 2)
               End If
            
            'If SearchType% = 1 Then dist = dist * 0.5
@@ -1507,7 +1885,7 @@ Private Sub Command1_Click()
                   searchhgts(0, numheights) = kmys
                   searchhgts(1, numheights) = kmxs
                   searchhgts(2, numheights) = hgts
-                  searchhgts(3, numheights) = Dist
+                  searchhgts(3, numheights) = Val(Format(Str$(Dist), "####0.0###"))
                Else
                   init = 1
                   End If
@@ -1854,7 +2232,7 @@ Private Sub Command14_Click()
         sky2.TextArray(skyp2(i&, 0)) = i&
         sky2.TextArray(skyp2(i&, 1)) = lata
         sky2.TextArray(skyp2(i&, 2)) = -lono
-        sky2.TextArray(skyp2(i&, 3)) = hgto - 1.8
+        sky2.TextArray(skyp2(i&, 3)) = hgto
         sky2.TextArray(skyp2(i&, 4)) = 0
 500
      Loop
@@ -1866,7 +2244,7 @@ Private Sub Command14_Click()
         sky2.TextArray(skyp2(i&, 0)) = i&
         sky2.TextArray(skyp2(i&, 1)) = lata * 1000
         sky2.TextArray(skyp2(i&, 2)) = 1000000 + lono * 1000
-        sky2.TextArray(skyp2(i&, 3)) = hgto - 1.8
+        sky2.TextArray(skyp2(i&, 3)) = hgto
         sky2.TextArray(skyp2(i&, 4)) = 0
 600
       Loop
@@ -2131,7 +2509,16 @@ Private Sub Command9_Click()
    Call BringWindowToTop(mapsearchfm.hWnd)
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : form_load
+' Author    : chaim
+' Date      : 7/21/2020
+' Purpose   :
+'---------------------------------------------------------------------------------------
+'
 Private Sub form_load()
+   On Error GoTo form_load_Error
+
    mapsearchfm.Width = 4770
    CancelSearch = False
    mapSearchVis = True
@@ -2166,6 +2553,13 @@ Private Sub form_load()
       End If
       
    optSimple_Click 'simple search is default
+
+   On Error GoTo 0
+   Exit Sub
+
+form_load_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure form_load of Form mapsearchfm"
    
 End Sub
 
@@ -2400,6 +2794,9 @@ Sub RunOnAutomatic()
       
 uoa100:
       
+   mapsearchfm.cmdCheckSkipped.Visible = False
+   mapsearchfm.ProgressBarProfs.Visible = True
+   
    If world = False Then GoTo w100
    
    'create eros.tm6 file
@@ -2428,6 +2825,8 @@ uoa100:
    Do Until EOF(savfil%)
       Input #savfil%, savlat, savlon, savhgt, savdis
       i& = i& + 1
+      mapsearchfm.ProgressBarProfs.value = i&
+      mapsearchfm.StatusBarProg.Panels(2).Text = Str(i&)
       statfil% = FreeFile 'record current status
       Open drivjk_c$ & "mapstatus.sav" For Output As #statfil%
       Write #statfil%, i&
@@ -2435,6 +2834,7 @@ uoa100:
       If i& > AutoNum& Then
          'inputed all the desired coordinates, so exit loop
          looping% = 1
+
          Exit Do
          End If
    Loop
@@ -2446,6 +2846,10 @@ uoa100:
       AutoVer = False
       Delay% = 0
       Kill ramdrive & ":\eros.tm7"
+      
+      mapsearchfm.ProgressBarProfs.Visible = False
+      mapsearchfm.cmdCheckSkipped.Visible = True
+      mapsearchfm.cmdCheckSkipped.Enabled = True
       
       Select Case MsgBox("Do you want to check for skipped points?", vbYesNo Or vbQuestion Or vbDefaultButton1, "Search for skipped points")
       
@@ -2492,13 +2896,25 @@ w100: 'run analysis of Eretz Yisroel places
    
 ComparePoints:
 
+    mapsearchfm.cmdCheckSkipped.Visible = False
+    mapsearchfm.ProgressBarProfs.Visible = True
+
+    Close
+    If world Then
+        AddPath$ = "eros\"
+    Else
+       AddPath$ = sEmpty
+       End If
+       
     'find name of active bat file
     nummissing% = 0
     If sunmode >= 1 Then 'sunrises
-       batnam$ = Dir(drivcities$ & Combo2.Text & "\netz\*.bat")
+       batnam$ = Dir(drivcities$ & AddPath & Combo2.Text & "\netz\*.bat")
+       batnam$ = drivcities$ & AddPath & Combo2.Text & "\netz\" & batnam$
        tmpfile$ = drivjk_c$ & "mappoints_tmp_netz.sav"
     ElseIf sunmode <= 0 Then 'sunsets
-       batnam$ = Dir(drivcities$ & Combo2.Text & "\skiy\*.bat")
+       batnam$ = Dir(drivcities$ & AddPath & Combo2.Text & "\skiy\*.bat")
+       batnam$ = drivcities$ & AddPath & Combo2.Text & "\netz\" & batnam$
        tmpfile$ = drivjk_c$ & "mappoints_tmp_skiy.sav"
        End If
 
@@ -2544,6 +2960,14 @@ ComparePoints:
     Close #tmpnum%
 
     If nummissing% > 0 Then
+       Close
+       
+       mapsearchfm.ProgressBarProfs.Max = nummissing%
+       mapsearchfm.StatusBarProg.Panels(1).Text = nummissing%
+       mapsearchfm.StatusBarProg.Panels(2).Text = "0"
+
+       mapsearchfm.ProgressBarProfs.value = 0
+       
        'reload list and restart analysis
        FileCopy drivjk_c$ + "mappoints.sav", drivjk_c$ + "mappoints_old.sav"
        Kill drivjk_c$ + "mappoints.sav"
@@ -2555,11 +2979,17 @@ ComparePoints:
        Kill drivjk_c$ + "mappoints.sav"
        FileCopy drivjk_c$ + "mappoints_old.sav", drivjk_c$ + "mappoints.sav"
        Kill drivjk_c$ + "mappoints_old.sav"
+       mapsearchfm.ProgressBarProfs.Visible = False
+       mapsearchfm.cmdCheckSkipped.Visible = True
+       mapsearchfm.cmdCheckSkipped.Enabled = True
        End If
        
     Return
 
 RunOnAutomatic_Error:
+    Close
+       
+    mapsearchfm.cmdCheckSkipped.Enabled = True
 
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure RunOnAutomatic of Form mapsearchfm"
 
