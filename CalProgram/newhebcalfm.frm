@@ -57,6 +57,7 @@ Begin VB.Form newhebcalfm
       _ExtentY        =   4895
       _Version        =   393216
       Tabs            =   2
+      Tab             =   1
       TabsPerRow      =   2
       TabHeight       =   520
       BackColor       =   5617386
@@ -72,7 +73,7 @@ Begin VB.Form newhebcalfm
       EndProperty
       TabCaption(0)   =   "Top Calendar (usually sunrise)"
       TabPicture(0)   =   "newhebcalfm.frx":0974
-      Tab(0).ControlEnabled=   -1  'True
+      Tab(0).ControlEnabled=   0   'False
       Tab(0).Control(0)=   "Frame1"
       Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "Frame2"
@@ -82,7 +83,7 @@ Begin VB.Form newhebcalfm
       Tab(0).ControlCount=   3
       TabCaption(1)   =   "Bottom Calendar (usually sunset)"
       TabPicture(1)   =   "newhebcalfm.frx":0990
-      Tab(1).ControlEnabled=   0   'False
+      Tab(1).ControlEnabled=   -1  'True
       Tab(1).Control(0)=   "Frame6"
       Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "Frame9"
@@ -92,7 +93,7 @@ Begin VB.Form newhebcalfm
       Tab(1).ControlCount=   3
       Begin VB.Frame Frame10 
          Height          =   2295
-         Left            =   -68400
+         Left            =   6600
          TabIndex        =   67
          Top             =   360
          Width           =   1335
@@ -430,7 +431,7 @@ Begin VB.Form newhebcalfm
          BackColor       =   &H00C0C0C0&
          ForeColor       =   &H00008000&
          Height          =   2295
-         Left            =   -73440
+         Left            =   1560
          TabIndex        =   66
          Top             =   360
          Width           =   5055
@@ -491,7 +492,7 @@ Begin VB.Form newhebcalfm
       Begin VB.Frame Frame6 
          BackColor       =   &H00C0C0C0&
          Height          =   2295
-         Left            =   -74880
+         Left            =   120
          TabIndex        =   65
          Top             =   360
          Width           =   1455
@@ -619,7 +620,7 @@ Begin VB.Form newhebcalfm
          BackColor       =   &H00C0C0C0&
          ForeColor       =   &H00000000&
          Height          =   2295
-         Left            =   6600
+         Left            =   -68400
          TabIndex        =   36
          Top             =   360
          Width           =   1335
@@ -973,7 +974,7 @@ Begin VB.Form newhebcalfm
       Begin VB.Frame Frame2 
          BackColor       =   &H00C0C0C0&
          Height          =   2295
-         Left            =   1560
+         Left            =   -73440
          TabIndex        =   35
          Top             =   360
          Width           =   5055
@@ -1034,7 +1035,7 @@ Begin VB.Form newhebcalfm
       Begin VB.Frame Frame1 
          BackColor       =   &H00C0C0C0&
          Height          =   2295
-         Left            =   120
+         Left            =   -74880
          TabIndex        =   34
          Top             =   360
          Width           =   1455

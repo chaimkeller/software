@@ -1740,6 +1740,7 @@ Private Sub OKbut_Click(Index As Integer)
                newhebcalfm.Combo3.AddItem "Terrain model: 25m DTM of Eretz Yisroel"
                End If
             End If
+            
          End If
       If portrait = True Then newhebcalfm.Combo4.AddItem sEmpty
       If portrait = False And astronplace = False Then
@@ -2187,6 +2188,21 @@ Private Sub OKbut_Click(Index As Integer)
          newhebcalfm.Combo9.AddItem SponsorLine$ '"Midrash Bikurei Yosef, Jerusalem"
          End If
       End If
+   
+   'if dstcheck then add blank to list in order to remove mention of standard time
+   If CalMDIform.mnuDST.Checked Then newhebcalfm.Combo5.AddItem sEmpty
+   If CalMDIform.mnuDST.Checked Then newhebcalfm.Combo10.AddItem sEmpty
+   
+   'add dedications to Seide
+   If optionheb Then
+      'add dedication to Seide
+      newhebcalfm.Combo3.AddItem heb2$(16)
+      newhebcalfm.Combo8.AddItem heb2$(16)
+   Else
+      newhebcalfm.Combo3.AddItem "In loving memory of Avrohom Yitzhak ben Zvi z''l"
+      newhebcalfm.Combo8.AddItem "In loving memory of Avrohom Yitzhak ben Zvi z''l"
+      End If
+      
    'set the lattest recorded captions as the default captions to be displayed
    newhebcalfm.Combo1.ListIndex = newhebcalfm.Combo1.ListCount - 1
    newhebcalfm.Combo2.ListIndex = newhebcalfm.Combo2.ListCount - 1
@@ -2198,10 +2214,6 @@ Private Sub OKbut_Click(Index As Integer)
    newhebcalfm.Combo8.ListIndex = newhebcalfm.Combo8.ListCount - 1
    newhebcalfm.Combo9.ListIndex = newhebcalfm.Combo9.ListCount - 1
    newhebcalfm.Combo10.ListIndex = newhebcalfm.Combo10.ListCount - 1
-   
-   If CalMDIform.mnuDST.Checked Then newhebcalfm.Combo5.Text = sEmpty
-   If CalMDIform.mnuDST.Checked Then newhebcalfm.Combo10.Text = sEmpty
-   
    
    If (newhebcalfm.Combo1.Text <> compare1$ Or newhebcalfm.Combo6.Text <> compare2$) And _
       (Check4.Value = vbUnchecked And Check5.Value = vbUnchecked And Check6.Value = vbUnchecked And Check7.Value = vbUnchecked) Then
