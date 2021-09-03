@@ -2199,6 +2199,9 @@ Private Sub OKbut_Click(Index As Integer)
    newhebcalfm.Combo9.ListIndex = newhebcalfm.Combo9.ListCount - 1
    newhebcalfm.Combo10.ListIndex = newhebcalfm.Combo10.ListCount - 1
    
+   If CalMDIform.mnuDST.Checked Then newhebcalfm.Combo5.Text = sEmpty
+   If CalMDIform.mnuDST.Checked Then newhebcalfm.Combo10.Text = sEmpty
+   
    
    If (newhebcalfm.Combo1.Text <> compare1$ Or newhebcalfm.Combo6.Text <> compare2$) And _
       (Check4.Value = vbUnchecked And Check5.Value = vbUnchecked And Check6.Value = vbUnchecked And Check7.Value = vbUnchecked) Then
