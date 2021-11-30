@@ -353,6 +353,9 @@ Private Sub prevASCIIfilbut_Click()
    Dim ExcelApp As Excel.Application
    Dim ExcelBook As Excel.Workbook
    Dim ExcelSheet As Excel.Worksheet
+   Dim Times() As String, Coords() As String
+   Dim ITMx As Double, ITMy As Double
+   Dim lat As Double, lon As Double, hgt As Double
    
 '!!!!!!!!!!!!!!!!!!!!!
 'If internet = True Then
@@ -371,19 +374,27 @@ Private Sub prevASCIIfilbut_Click()
       GoTo 25
       End If
    CommonDialog2.FileName = sEmpty
-   CommonDialog2.Filter = "List of times as outputed from netzski3 (*.ls1)|*.ls1|EXCEL file (matrix) (*.xls)|*.xls|WIN-ASCII List of Times vs. Month (*.ls2)|*.ls2|DOS-Win95 List of Times vs. Month (*.dos)|*.dos|Schul Davening Times and Moladim (*.sch)|*.sch" + _
-                          "|Menat WIN-ASCII format (*.men)|*.men|HTML format (*.html)|*.html|All files (*.*)|*.*"
+   CommonDialog2.Filter = "List of times as outputed from netzski3 (*.ls1)|*.ls1|" + _
+                          "EXCEL file (matrix) (*.xls)|*.xls|" + _
+                          "WIN-ASCII List of Times vs. Month (*.ls2)|*.ls2|" + _
+                          "List of dates and times (*.ls2)|*.ls2|" + _
+                          "DOS-Win95 List of Times vs. Month (*.dos)|*.dos|" + _
+                          "List of dates and times (*.ls3)|*.ls3|" + _
+                          "Schul Davening Times and Moladim (*.sch)|*.sch|" + _
+                          "Menat WIN-ASCII format (*.men)|*.men|" + _
+                          "HTML format (*.html)|*.html|" + _
+                          "All files (*.*)|*.*"
    CommonDialog2.FilterIndex = 1
    CommonDialog2.CancelError = True
    CommonDialog2.ShowSave
    'check for existing files, and for wrong save directories
    ext$ = RTrim$(Mid$(CommonDialog2.FileName, InStr(1, CommonDialog2.FileName, ".") + 1, 3))
    If ext$ = "htm" Then ext$ = "html"
-   If ext$ <> "ls1" And ext$ <> "xls" And ext$ <> "ls2" And ext$ <> "dos" And ext$ <> "men" And ext$ <> "sch" And ext$ <> "html" And ext$ <> "*" Then
+   If ext$ <> "ls1" And ext$ <> "xls" And ext$ <> "ls2" And ext$ <> "dos" And ext$ <> "men" And ext$ <> "ls3" And ext$ <> "sch" And ext$ <> "html" And ext$ <> "*" Then
       MsgBox "Sorry, the selected save file format is not yet available. Please choose (*.ls1) format.", vbInformation, "Cal Program"
       GoTo 10
       End If
-   If ext$ <> "ls1" And ext$ <> "xls" And ext$ <> "ls2" And ext$ <> "dos" And ext$ <> "sch" And ext$ <> "men" And ext$ <> "html" And ext$ <> "*" Then Exit Sub
+   If ext$ <> "ls1" And ext$ <> "xls" And ext$ <> "ls2" And ext$ <> "dos" And ext$ <> "ls3" And ext$ <> "sch" And ext$ <> "men" And ext$ <> "html" And ext$ <> "*" Then Exit Sub
    myfile = Dir(CommonDialog2.FileName)
    If myfile <> sEmpty And ext$ <> "xls" Then
       response = MsgBox("Write over existing file?", vbYesNoCancel + vbQuestion, "Cal Program")
@@ -648,6 +659,119 @@ Private Sub prevASCIIfilbut_Click()
      alsosunset = False
      Close #filtm1%
      Screen.MousePointer = vbDefault
+ ElseIf ext$ = "ls3" Then
+      Screen.MousePointer = vbHourglass
+      filtm1% = FreeFile
+      Open CommonDialog2.FileName For Output As #filtm1%
+125   filtm2% = FreeFile
+      If Abs(nsetflag%) = 1 Or Abs(nsetflag%) = 3 Then
+         Open drivfordtm$ + "netz\netzskiy.tm2" For Input As #filtm2%
+         Input #filtm2%, numplac%
+         
+         If numplac% = 1 Then
+         
+            'find which file was selected
+            For i% = 6 To nn4%
+               If nchecked%(i% - 5) = 1 Then
+                  Exit For
+                  End If
+            Next i%
+         
+            Print #filtm1%, "Sunrise times for: " + netzski$(0, i%) 'currentdir + "; " + CommonDialog2.FileName
+            Coords = Split(netzski$(1, i%), ",")
+            ITMx = Coords(0)
+            ITMy = Coords(1)
+            hgt = Coords(2)
+            'convert to geographic latitude and longitude if necessary
+            If geo And eroscountry <> "Israel" Then 'geo coordinates
+               lat = ITMy
+               lon = ITMx
+               Print #filtm1%, "longitude, latitude, height (m)"
+               Write #filtm1%, lon, lat, hgt
+            Else 'EY old ITM coordinates
+               Call casgeo(ITMx, ITMy, lon, lat)
+               Print #filtm1%, "ITMx, ITMy, longitude, latitude, height (m)"
+               Write #filtm1%, ITMx, ITMy, lon, lat, hgt
+               End If
+'            Print #filtm1%, netzski$(1, 6) 'coordinates,hgt,year, etc
+         Else
+            Print #filtm1%, "Sunrise times for: " + currentdir + "; " + CommonDialog2.FileName
+            End If
+            
+         Do Until EOF(filtm2%)
+            Input #filtm2%, placnam$
+            filtm3% = FreeFile
+            Open placnam$ For Input As #filtm3%
+            Do Until EOF(filtm3%)
+               Line Input #filtm3%, doclin$
+               doclin$ = Replace(doclin$, "   ", ",")
+               Times = Split(doclin$, ",")
+               Print #filtm1%, Times(0) & "," & Times(1)
+            Loop
+            Close #filtm3%
+         Loop
+         Close #filtm2%
+         If Abs(nsetflag%) = 1 Then
+            Close #filtm1
+            Screen.MousePointer = vbDefault
+            Exit Sub
+         ElseIf Abs(nsetflag%) = 3 Then
+            Print #filtm1%, sEmpty
+            Print #filtm1%, sEmpty
+            nsetflag% = 2
+            GoTo 125
+            End If
+      ElseIf Abs(nsetflag%) = 2 Then
+         Open drivfordtm$ + "skiy\netzskiy.tm2" For Input As #filtm2%
+         Input #filtm2%, numplac%
+         
+         If numplac% = 1 Then
+         
+            'find which file was selected
+            For i% = 6 To nn4%
+               If nchecked%(i% - 5) = 1 Then
+                  Exit For
+                  End If
+            Next i%
+         
+            Print #filtm1%, "Sunset times for: " + netzski$(0, i%) 'currentdir + "; " + CommonDialog2.FileName
+            Coords = Split(netzski$(1, i%), ",")
+            ITMx = Coords(0)
+            ITMy = Coords(1)
+            hgt = Coords(2)
+            'convert to geographic latitude and longitude if necessary
+            If geo And eroscountry <> "Israel" Then 'geo coordinates
+               lat = ITMy
+               lon = ITMx
+               Print #filtm1%, "longitude, latitude, height (m)"
+               Write #filtm1%, lon, lat, hgt
+            Else 'EY old ITM coordinates
+               Call casgeo(ITMx, ITMy, lon, lat)
+               Print #filtm1%, "ITMx, ITMy, longitude, latitude, height (m)"
+               Write #filtm1%, ITMx, ITMy, lon, lat, hgt
+               End If
+'            Print #filtm1%, netzski$(1, 6) 'coordinates,hgt,year, etc
+         Else
+            Print #filtm1%, "Sunset times for: " + currentdir + "; " + CommonDialog2.FileName
+            End If
+
+         Do Until EOF(filtm2%)
+            Input #filtm2%, placnam$
+            filtm3% = FreeFile
+            Open placnam$ For Input As #filtm3%
+            Do Until EOF(filtm3%)
+               Line Input #filtm3%, doclin$
+               doclin$ = Replace(doclin$, "   ", ",")
+               Times = Split(doclin$, ",")
+               Print #filtm1%, Times(0) & "," & Times(1)
+            Loop
+            Close #filtm3%
+         Loop
+         Close #filtm2%
+         Close #filtm1%
+         Screen.MousePointer = vbDefault
+         Exit Sub
+         End If
  ElseIf ext$ = "sch" Then
      zmanschul.Visible = True
  ElseIf ext$ = "dos" Or ext$ = "men" Then
