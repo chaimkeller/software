@@ -490,7 +490,7 @@ Private Sub Closebut_Click()
    SunriseSunset.Cancelbut.Enabled = True
    If SunriseSunset.Label1.Caption <> sEmpty Then SunriseSunset.Label1.Caption = captmp$
    SunriseSunset.Label1.Enabled = True
-   SunriseSunset.OKbut(0).Enabled = True
+   SunriseSunset.OKbut0.Enabled = True
    SunriseSunset.ProgressBar1.Visible = False
    SunriseSunset.Option1.Enabled = True
    SunriseSunset.Option2.Enabled = True

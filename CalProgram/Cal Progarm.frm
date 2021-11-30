@@ -869,6 +869,7 @@ End Sub
 
 Private Sub dir1_click()
       Text1.Text = Dir1.List(Dir1.ListIndex)
+      eros = False
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -1138,7 +1139,7 @@ cd500:
           
        SunriseSunset.Visible = True
        SunriseSunset.Combo1.Text = Str(yrheb%)
-       SunriseSunset.OKbut(0).Value = True
+       SunriseSunset.OKbut0.Value = True
        Exit Sub
        End If
     ChDrive defdriv$
@@ -1258,7 +1259,7 @@ Private Sub OKbutton_Click()
    SunriseSunset.Cancelbut.Enabled = True
    If SunriseSunset.Label1.Caption <> sEmpty Then SunriseSunset.Label1.Caption = captmp$
    SunriseSunset.Label1.Enabled = True
-   SunriseSunset.OKbut(0).Enabled = True
+   SunriseSunset.OKbut0.Enabled = True
    SunriseSunset.ProgressBar1.Visible = False
    SunriseSunset.Option1.Enabled = True
    SunriseSunset.Option2.Enabled = True
@@ -1518,10 +1519,10 @@ autorun:
       runningscan = True
       Caldirectories.OKbutton.Value = True
       If nearauto = False Then
-         SunriseSunset.OKbut(0).Value = True
+         SunriseSunset.OKbut0.Value = True
       ElseIf nearauto = True Then
          SunriseSunset.Check3.Value = vbChecked
-         SunriseSunset.OKbut(0).Value = True
+         SunriseSunset.OKbut0.Value = True
          End If
       stage% = 1
       
@@ -1667,10 +1668,10 @@ autorun2:
       automatic = True
       Caldirectories.OKbutton.Value = True
       If nearauto = False Then
-         SunriseSunset.OKbut(0).Value = True
+         SunriseSunset.OKbut0.Value = True
       ElseIf nearauto = True Then
          SunriseSunset.Check3.Value = vbChecked
-         SunriseSunset.OKbut(0).Value = True
+         SunriseSunset.OKbut0.Value = True
           End If
       stage% = 1
       If chkOnePage.Value Then autocancel = True

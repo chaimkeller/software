@@ -705,7 +705,11 @@ Private Sub tvwDB_DblClick()
         calnearsearchfm.Text1 = eroslongitude
         calnearsearchfm.Text2 = eroslatitude
         calnearsearchfm.Text3 = 8 'cities outside Israel
-        If eroscountry$ = "Israel" Then calnearsearchfm.Text3 = 1 'Israel neighborhoods
+        eros = True
+        If eroscountry$ = "Israel" Then
+           geotz! = 2
+           calnearsearchfm.Text3 = 1 'Israel neighborhoods
+           End If
         End If
 End Sub
 

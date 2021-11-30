@@ -25,6 +25,16 @@ Begin VB.Form SunriseSunset
    MinButton       =   0   'False
    ScaleHeight     =   7965
    ScaleWidth      =   4815
+   Begin VB.CommandButton OKbut0 
+      BackColor       =   &H0080FF80&
+      Height          =   735
+      Left            =   240
+      Picture         =   "SunriseSunset.frx":0442
+      Style           =   1  'Graphical
+      TabIndex        =   29
+      Top             =   7080
+      Width           =   2055
+   End
    Begin VB.CheckBox chkObst 
       BackColor       =   &H00C0FFFF&
       Caption         =   "Add larger cushion"
@@ -40,7 +50,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00C00000&
       Height          =   300
       Left            =   480
-      TabIndex        =   29
+      TabIndex        =   28
       ToolTipText     =   "Add larger cushions depending on how close the obstruction is"
       Top             =   2740
       Width           =   1695
@@ -60,7 +70,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00FF8080&
       Height          =   300
       Left            =   360
-      TabIndex        =   28
+      TabIndex        =   27
       ToolTipText     =   "use oold (netzski6.exe) calculation method"
       Top             =   5280
       Width           =   855
@@ -80,7 +90,7 @@ Begin VB.Form SunriseSunset
       EndProperty
       Height          =   495
       Left            =   2460
-      TabIndex        =   25
+      TabIndex        =   24
       Top             =   3100
       Width           =   1875
       Begin VB.OptionButton Option4 
@@ -97,7 +107,7 @@ Begin VB.Form SunriseSunset
          EndProperty
          Height          =   300
          Left            =   180
-         TabIndex        =   27
+         TabIndex        =   26
          Top             =   240
          Width           =   1755
       End
@@ -116,7 +126,7 @@ Begin VB.Form SunriseSunset
          Height          =   300
          Left            =   180
          MaskColor       =   &H00C0FFFF&
-         TabIndex        =   26
+         TabIndex        =   25
          Top             =   0
          Value           =   -1  'True
          Width           =   1815
@@ -125,7 +135,7 @@ Begin VB.Form SunriseSunset
    Begin MSComCtl2.UpDown UpDown2 
       Height          =   240
       Left            =   1680
-      TabIndex        =   22
+      TabIndex        =   21
       Top             =   3480
       Width           =   240
       _ExtentX        =   423
@@ -158,7 +168,7 @@ Begin VB.Form SunriseSunset
       EndProperty
       Height          =   285
       Left            =   1380
-      TabIndex        =   21
+      TabIndex        =   20
       Text            =   "5"
       Top             =   3480
       Width           =   330
@@ -166,7 +176,7 @@ Begin VB.Form SunriseSunset
    Begin MSComCtl2.UpDown UpDown1 
       Height          =   240
       Left            =   1680
-      TabIndex        =   18
+      TabIndex        =   17
       Top             =   3120
       Width           =   240
       _ExtentX        =   423
@@ -199,7 +209,7 @@ Begin VB.Form SunriseSunset
       EndProperty
       Height          =   285
       Left            =   1380
-      TabIndex        =   17
+      TabIndex        =   16
       Text            =   "5"
       Top             =   3080
       Width           =   330
@@ -219,7 +229,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00008000&
       Height          =   300
       Left            =   2520
-      TabIndex        =   16
+      TabIndex        =   15
       ToolTipText     =   "Ast sunset at hgt = 0"
       Top             =   4320
       Width           =   1815
@@ -239,7 +249,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00008000&
       Height          =   300
       Left            =   2520
-      TabIndex        =   15
+      TabIndex        =   14
       ToolTipText     =   "Ast. sunrise at hgt = 0"
       Top             =   4080
       Width           =   1815
@@ -259,7 +269,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00008000&
       Height          =   300
       Left            =   360
-      TabIndex        =   14
+      TabIndex        =   13
       ToolTipText     =   "Ast sunset incl. height"
       Top             =   4320
       Width           =   1815
@@ -279,7 +289,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00008000&
       Height          =   300
       Left            =   360
-      TabIndex        =   13
+      TabIndex        =   12
       ToolTipText     =   "Ast. sunrise incl. height"
       Top             =   4080
       Width           =   1815
@@ -290,7 +300,7 @@ Begin VB.Form SunriseSunset
       Caption         =   "Frame1"
       Height          =   495
       Left            =   2490
-      TabIndex        =   10
+      TabIndex        =   9
       Top             =   1800
       Width           =   2000
       Begin VB.OptionButton Option1 
@@ -307,7 +317,7 @@ Begin VB.Form SunriseSunset
          EndProperty
          Height          =   300
          Left            =   360
-         TabIndex        =   11
+         TabIndex        =   10
          Top             =   0
          Value           =   -1  'True
          Width           =   1575
@@ -326,7 +336,7 @@ Begin VB.Form SunriseSunset
          EndProperty
          Height          =   225
          Left            =   360
-         TabIndex        =   12
+         TabIndex        =   11
          Top             =   280
          Width           =   1455
       End
@@ -334,7 +344,7 @@ Begin VB.Form SunriseSunset
    Begin MSComctlLib.ProgressBar ProgressBar1 
       Height          =   375
       Left            =   540
-      TabIndex        =   6
+      TabIndex        =   5
       Top             =   5880
       Width           =   3735
       _ExtentX        =   6588
@@ -357,9 +367,9 @@ Begin VB.Form SunriseSunset
       EndProperty
       Height          =   735
       Left            =   2520
-      Picture         =   "SunriseSunset.frx":0442
+      Picture         =   "SunriseSunset.frx":0884
       Style           =   1  'Graphical
-      TabIndex        =   9
+      TabIndex        =   8
       Top             =   7080
       Width           =   2055
    End
@@ -378,7 +388,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00C00000&
       Height          =   255
       Left            =   480
-      TabIndex        =   8
+      TabIndex        =   7
       ToolTipText     =   "Print times from near obstructions in green"
       Top             =   2500
       Width           =   1755
@@ -391,33 +401,12 @@ Begin VB.Form SunriseSunset
    End
    Begin VB.ComboBox Combo1 
       Height          =   420
-      ItemData        =   "SunriseSunset.frx":0884
+      ItemData        =   "SunriseSunset.frx":0CC6
       Left            =   3000
-      List            =   "SunriseSunset.frx":0886
-      TabIndex        =   4
+      List            =   "SunriseSunset.frx":0CC8
+      TabIndex        =   3
       Top             =   2600
       Width           =   975
-   End
-   Begin VB.CommandButton OKbut 
-      BackColor       =   &H0080FF80&
-      Default         =   -1  'True
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   13.5
-         Charset         =   177
-         Weight          =   700
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   735
-      Index           =   0
-      Left            =   240
-      Picture         =   "SunriseSunset.frx":0888
-      Style           =   1  'Graphical
-      TabIndex        =   3
-      Top             =   7080
-      Width           =   2055
    End
    Begin VB.CheckBox Check2 
       BackColor       =   &H00C0FFFF&
@@ -484,7 +473,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00C00000&
       Height          =   255
       Left            =   1980
-      TabIndex        =   24
+      TabIndex        =   23
       Top             =   3480
       Width           =   135
    End
@@ -504,7 +493,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00C00000&
       Height          =   375
       Left            =   420
-      TabIndex        =   23
+      TabIndex        =   22
       Top             =   3400
       Width           =   975
    End
@@ -524,7 +513,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00C00000&
       Height          =   255
       Left            =   2000
-      TabIndex        =   20
+      TabIndex        =   19
       Top             =   3120
       Width           =   255
    End
@@ -544,7 +533,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00C00000&
       Height          =   375
       Left            =   420
-      TabIndex        =   19
+      TabIndex        =   18
       Top             =   3000
       Width           =   915
    End
@@ -598,7 +587,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H0080FFFF&
       Height          =   255
       Left            =   1920
-      TabIndex        =   7
+      TabIndex        =   6
       Top             =   5400
       Width           =   735
    End
@@ -632,7 +621,7 @@ Begin VB.Form SunriseSunset
       ForeColor       =   &H00FF0000&
       Height          =   255
       Left            =   2760
-      TabIndex        =   5
+      TabIndex        =   4
       Top             =   2350
       Width           =   1395
    End
@@ -755,12 +744,12 @@ Private Sub Check3_Click()
                outdistlim = 10
                obscushion = 30
                End If
-         ElseIf SRTMflag = 2 Then
+         ElseIf SRTMflag = 2 Or geotz! <> 2 Then
             Text1 = obsdistlim(3) '6 '18 'distant horizon = 18 km
             distlim = obsdistlim(3)
             outdistlim = obsdistlim(3)
             obscushion = cushion(3)
-         ElseIf SRTMflag = 9 Then
+         ElseIf SRTMflag = 9 And geotz! = 2 Then
             Text1 = obsdistlim(0) '5 'Eretz Yisroel DTM
             distlim = obsdistlim(0)
             outdistlim = obsdistlim(0)
@@ -768,10 +757,20 @@ Private Sub Check3_Click()
             End If
       Else
          SRTMflag = 9
-         Text1 = obsdistlim(0) '5 'Eretz Yisroel DTM
-         distlim = obsdistlim(0)
-         outdistlim = obsdistlim(0)
-         obscushion = cushion(0)
+         If eros = True And eroscountry$ = "Israel" Then
+            geotz! = 2
+            End If
+         If geotz! = 2 Or eros = False Then
+            Text1 = obsdistlim(0) '5 'Eretz Yisroel DTM
+            distlim = obsdistlim(0)
+            outdistlim = obsdistlim(0)
+            obscushion = cushion(0)
+         Else
+            Text1 = obsdistlim(3) '6 '18 'distant horizon = 18 km
+            distlim = obsdistlim(3)
+            outdistlim = obsdistlim(3)
+            obscushion = cushion(3)
+            End If
          End If
     Else
       Label4.Enabled = False
@@ -901,12 +900,12 @@ Private Sub chkObst_Click()
                outdistlim = 10
                obscushion = 30
                End If
-         ElseIf SRTMflag = 2 Then
+         ElseIf eros = True And eroscountry$ <> "Israel" Then
             Text1 = obsdistlim(3) '6 '18 'distant horizon = 18 km
             distlim = obsdistlim(3)
             outdistlim = obsdistlim(3)
             obscushion = cushion(3)
-         ElseIf SRTMflag = 9 Then
+         ElseIf SRTMflag = 9 Or (eros = True And eroscountry$ = "Israel") Then
             Text1 = obsdistlim(0) '5 'Eretz Yisroel DTM
             distlim = obsdistlim(0)
             outdistlim = obsdistlim(0)
@@ -914,10 +913,22 @@ Private Sub chkObst_Click()
             End If
       Else
          SRTMflag = 9
-         Text1 = obsdistlim(0) '5 'Eretz Yisroel DTM
-         distlim = obsdistlim(0)
-         outdistlim = obsdistlim(0)
-         obscushion = cushion(0)
+         If eros = True And eroscountry$ <> "Israel" Then
+            Text1 = obsdistlim(3) '6 '18 'distant horizon = 18 km
+            distlim = obsdistlim(3)
+            outdistlim = obsdistlim(3)
+            obscushion = cushion(3)
+         ElseIf eros = True And eroscountry$ = "Israel" Then
+            Text1 = obsdistlim(0) '5 'Eretz Yisroel DTM
+            distlim = obsdistlim(0)
+            outdistlim = obsdistlim(0)
+            obscushion = cushion(0)
+         Else
+            Text1 = obsdistlim(0) 'Eretz Yisroel cushions, etc is default
+            distlim = obsdistlim(0)
+            outdistlim = obsdistlim(0)
+            obscushion = cushion(0)
+            End If
          End If
     Else
       Label4.Enabled = False
@@ -998,9 +1009,7 @@ Private Sub Form_Load()
    hebcal = True
    Screen.MousePointer = vbDefault
 End Sub
-
-
-Private Sub OKbut_Click(Index As Integer)
+Private Sub OKbut0_Click()
    Dim erosfil%, myfile ',entrylin$(50)
    Dim netzlist$(2500), skiylist$(2500)
    Dim distnez(6, 601), distski(6, 601), distcheck(601)
@@ -1270,7 +1279,7 @@ Private Sub OKbut_Click(Index As Integer)
 '   ElseIf Option2b = True And Val(Combo1.Text) < 1600 Then
    If Option2b = True And Val(Combo1.Text) < 1600 Then
       response = MsgBox("Permissable range of civil years: 1600 and onward", vbOKOnly + vbExclamation, "Cal Program")
-      OKbut(0).Value = False
+      OKbut0.Value = False
       If yrheb% <> 0 Then 'convert from hebrew year to civil year
          Combo1.ListIndex = yrheb% + RefCivilYear% - RefHebYear% - 1600 '1997 - 5758 - 1600
       Else 'use current year
@@ -1309,7 +1318,7 @@ Private Sub OKbut_Click(Index As Integer)
    Label1.Caption = " Copying files...Please wait."
    Label1.Refresh
    Timer1.Enabled = False
-   OKbut(0).Enabled = False
+   OKbut0.Enabled = False
    nearyesval = False
    If Option1b = True Then
       Option2.Enabled = False
@@ -2346,10 +2355,19 @@ i500:
       Loop
       Close #newfilbat%
       End If
+      
+   '////113021 fixed bug that reset eros flag and lost geotz info when redoing eros luchos///
+   If InStr(currentdir, "eros") <> 0 Then
+      eros = True
+      geo = True
+      If eroscountry$ = "Israel" Then geotz! = 2
+      End If
+   '/////////////////////////////////////
+      
    filtm3num% = FreeFile
    Open drivjk$ + "netzskiy.tm4" For Output As #filtm3num%
    Write #filtm3num%, yrheb%
-   If geo = False Or SRTMflag = 9 Or (eros = True And eroscountry$ = "Israel") Then 'using ITM coordinates
+   If geo = False Or eroscountry$ = "Israel" Then 'using ITM coordinates
       Write #filtm3num%, nsetflag%, geotz!
    ElseIf geo = True And eros = False Then
       Write #filtm3num%, nsetflag% - 3, geotz!
@@ -2565,7 +2583,7 @@ i500:
    netzskiyfm.Visible = True
    'ret = SetWindowPos(netzskiyfm.hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    If automatic = True Or internet = True Then
-      netzskiyfm.NetzskiyOKbut(0).Value = True
+      netzskiyfm.NetzSkiyOkbut0.Value = True
       End If
       
 750   dblEndTime = Timer + 2#
@@ -2845,7 +2863,7 @@ oke5: If lngTimerID <> 0 Then
       Else
          MsgBox "SunriseSunset encountered unexpected error number" + Str$(Err.Number) + " encountered, start from the beginning.", vbCritical, "Cal Program"
          End If
-      SunriseSunset.OKbut(0).Value = False
+      SunriseSunset.OKbut0.Value = False
       SunriseSunset.Cancelbut.Value = True
       Timer1.Enabled = False
       SunriseSunset.Visible = False
@@ -3772,9 +3790,12 @@ t90:  If nstat% = 100 Then
               ElseIf SRTMflag = 2 Then 'SRTM-1
                  newhebcalfm.Text2 = "35" '35 second sunrise cushion "30" '30 second cushion'
                  newhebcalfm.Text32 = "-35" 'sunset cushion
-              ElseIf SRTMflag = 9 Then '<--EY: Eretz Yisroel DTM
+              ElseIf SRTMflag = 9 And geotz! = 2 Then '<--EY: Eretz Yisroel DTM
                  newhebcalfm.Text2 = "15" '15 sunrise second cushion (default)
                  newhebcalfm.Text32 = "-15" 'sunset cushion
+              ElseIf SRTMflag = 9 And geotz! <> 2 Then
+                 newhebcalfm.Text2 = "20"
+                 newhebcalfm.Text32 = "-20"
                  End If
               End If
               
@@ -4136,7 +4157,7 @@ errorhandel:
                GoTo t10
             Else
                 MsgBox "SunriseSunset(Timer 1) encountered undetermined error: " + CStr(Err.Number) + ", start from the beginning!", vbExclamation, "Cal Program"
-                SunriseSunset.OKbut(0).Value = False
+                SunriseSunset.OKbut0.Value = False
                 SunriseSunset.Cancelbut.Value = True
                 Timer1.Enabled = False
                 SunriseSunset.Visible = False

@@ -662,7 +662,7 @@ Private Sub Command1_Click()
         SunriseSunset.Cancelbut.Enabled = False
         If SunriseSunset.Label1.Caption <> sEmpty Then SunriseSunset.Label1.Caption = captmp$
         SunriseSunset.Label1.Enabled = False
-        SunriseSunset.OKbut(0).Enabled = False
+        SunriseSunset.OKbut0.Enabled = False
         SunriseSunset.ProgressBar1.Visible = False
         SunriseSunset.Option2.Enabled = False
         SunriseSunset.Option1.Enabled = False
@@ -703,7 +703,7 @@ Private Sub Command1_Click()
         SunriseSunset.Cancelbut.Enabled = True
         If SunriseSunset.Label1.Caption <> sEmpty Then SunriseSunset.Label1.Caption = captmp$
         SunriseSunset.Label1.Enabled = True
-        SunriseSunset.OKbut(0).Enabled = True
+        SunriseSunset.OKbut0.Enabled = True
         SunriseSunset.ProgressBar1.Visible = False
         SunriseSunset.Option2.Enabled = True
         SunriseSunset.Option1.Enabled = True
@@ -737,7 +737,7 @@ Private Sub Command1_Click()
    Option1b = True
    Option2b = False
    If internet = True Then
-      SunriseSunset.OKbut(0).Value = True
+      SunriseSunset.OKbut0.Value = True
       End If
    'SunriseSunset.Combo1.Text = 5758
    'ret = SetWindowPos(SunriseSunset.hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)

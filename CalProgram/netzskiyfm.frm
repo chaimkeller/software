@@ -8,17 +8,36 @@ Begin VB.Form netzskiyfm
    ClientWidth     =   7875
    ControlBox      =   0   'False
    LinkTopic       =   "Form1"
-   LockControls    =   -1  'True
    ScaleHeight     =   5640
    ScaleWidth      =   7875
    ShowInTaskbar   =   0   'False
+   Begin VB.CommandButton NetzSkiyOkbut0 
+      BackColor       =   &H0080FF80&
+      Caption         =   "&Accept"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   15
+         Charset         =   177
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   975
+      Left            =   3360
+      Picture         =   "netzskiyfm.frx":0000
+      Style           =   1  'Graphical
+      TabIndex        =   4
+      Top             =   4440
+      Width           =   1815
+   End
    Begin VB.CommandButton cmdAll 
       BackColor       =   &H00C0FFFF&
       Caption         =   "&Select All"
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -27,7 +46,7 @@ Begin VB.Form netzskiyfm
       Height          =   975
       Left            =   1800
       Style           =   1  'Graphical
-      TabIndex        =   4
+      TabIndex        =   3
       Top             =   4440
       Width           =   855
    End
@@ -37,7 +56,7 @@ Begin VB.Form netzskiyfm
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -46,7 +65,7 @@ Begin VB.Form netzskiyfm
       Height          =   975
       Left            =   1080
       Style           =   1  'Graphical
-      TabIndex        =   3
+      TabIndex        =   2
       Top             =   4440
       Width           =   735
    End
@@ -57,7 +76,7 @@ Begin VB.Form netzskiyfm
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   13.5
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -66,51 +85,20 @@ Begin VB.Form netzskiyfm
       Height          =   975
       Index           =   1
       Left            =   5040
-      Picture         =   "netzskiyfm.frx":0000
-      Style           =   1  'Graphical
-      TabIndex        =   1
-      Top             =   4440
-      Width           =   1815
-   End
-   Begin VB.CommandButton NetzskiyOKbut 
-      BackColor       =   &H0080FF80&
-      Caption         =   "&OK"
-      Default         =   -1  'True
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   13.5
-         Charset         =   0
-         Weight          =   700
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   975
-      Index           =   0
-      Left            =   3360
       Picture         =   "netzskiyfm.frx":0442
       Style           =   1  'Graphical
       TabIndex        =   0
       Top             =   4440
-      Width           =   1695
+      Width           =   1815
    End
    Begin VB.ListBox Netzskiylist 
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   8.25
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
       Height          =   4110
       Index           =   2
       ItemData        =   "netzskiyfm.frx":0884
       Left            =   120
       List            =   "netzskiyfm.frx":088B
       Style           =   1  'Checkbox
-      TabIndex        =   2
+      TabIndex        =   1
       Top             =   120
       Width           =   7695
    End
@@ -165,7 +153,7 @@ Private Sub NetzskiyCancelbut_Click(Index As Integer)
    '   End If
 End Sub
 
-Private Sub NetzskiyOKbut_Click(Index As Integer)
+Private Sub NetzskiyOKbut0_Click()
    Screen.MousePointer = vbHourglass
    If automatic = True Then
       waittime = Timer + 1#
