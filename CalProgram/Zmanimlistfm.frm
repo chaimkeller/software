@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "MSCOMCTL.OCX"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.Form Zmanimlistfm 
    Caption         =   "Z'manim list"
@@ -329,8 +329,8 @@ Dim noxsl As Boolean
             CommonDialog1.FileName = drivjk$ + "*.csv"
         Else
             CommonDialog1.FilterIndex = 3
-            prefix$ = Replace(eroscity$, " ", "_")
-            CommonDialog1.FileName = drivjk$ + prefix$ & yrheb% & ".xml"
+            Prefix$ = Replace(eroscity$, " ", "_")
+            CommonDialog1.FileName = drivjk$ + Prefix$ & yrheb% & ".xml"
             End If
         CommonDialog1.ShowSave
         filnam$ = CommonDialog1.FileName
@@ -393,7 +393,7 @@ c3error:
              End If
           tmpzman(i%) = zmantimes(i%, daycheck%)
        Next i%
-       'resort the times according to earliest to lattest times
+       'resort the times according to earliest to latest times
        begi% = 0
 50     earlyi% = begi%
        tim0$ = Trim$(tmpzman(begi%)) 'use day 1 to determine sorting

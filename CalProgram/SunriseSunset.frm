@@ -1778,17 +1778,17 @@ Private Sub OKbut0_Click()
             
          If optionheb = False Then
             If SRTMflag = 0 Then
-               'newhebcalfm.Combo5.AddItem "Based on the lattest sunset that is seen on any day anywhere within the search radius around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
-               newhebcalfm.Combo7.AddItem "GTOPO30 DTM based calculations of the lattest sunset within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
+               'newhebcalfm.Combo5.AddItem "Based on the latest sunset that is seen on any day anywhere within the search radius around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
+               newhebcalfm.Combo7.AddItem "GTOPO30 DTM based calculations of the latest sunset within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
             ElseIf SRTMflag = 1 Then
-               newhebcalfm.Combo7.AddItem "SRTM-2 DTM based calculations of the lattest sunset within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
+               newhebcalfm.Combo7.AddItem "SRTM-2 DTM based calculations of the latest sunset within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
                 If eroscountry$ = "USA" Then
-                  newhebcalfm.Combo7.AddItem "30m NED DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
+                  newhebcalfm.Combo7.AddItem "30m NED DTM based calculations of the latest sunset within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
                   End If
             ElseIf SRTMflag = 2 Then
-               newhebcalfm.Combo7.AddItem "SRTM-1 DTM based calculations of the lattest sunset within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
+               newhebcalfm.Combo7.AddItem "SRTM-1 DTM based calculations of the latest sunset within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
             ElseIf SRTMflag = 9 Then
-               newhebcalfm.Combo7.AddItem "Israel DTM based calculations of the lattest sunset within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; ITMy: " & Str(eroslatitude) & ", ITMx: " & Str(eroslongitude)
+               newhebcalfm.Combo7.AddItem "Israel DTM based calculations of the latest sunset within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; ITMy: " & Str(eroslatitude) & ", ITMx: " & Str(eroslongitude)
                End If
             End If
          End If
@@ -1819,7 +1819,7 @@ Private Sub OKbut0_Click()
       If eros = False Then
          newhebcalfm.Combo7.AddItem heb1$(13)
          If optionheb = False Then
-            newhebcalfm.Combo7.AddItem "Based on the lattest sunset that is seen anywhere in this place on any day"
+            newhebcalfm.Combo7.AddItem "Based on the latest sunset that is seen anywhere in this place on any day"
             End If
          End If
       If eros = False And astronplace = False Then
@@ -1995,7 +1995,7 @@ Private Sub OKbut0_Click()
          newhebcalfm.Combo7.AddItem heb1$(32)
          newhebcalfm.Combo8.AddItem sEmpty
          If optionheb = False Then
-            newhebcalfm.Combo7.AddItem "Based on the lattest Astronomical Sunrise for this place"
+            newhebcalfm.Combo7.AddItem "Based on the latest Astronomical Sunrise for this place"
             End If
          If eros = True Then
             newhebcalfm.Combo7.AddItem heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + " ," + eroscity$ + heb1$(46)
@@ -2152,7 +2152,7 @@ Private Sub OKbut0_Click()
          newhebcalfm.Combo7.AddItem heb1$(26)
          newhebcalfm.Combo7.AddItem heb1$(39)
          If optionheb = False Then
-            newhebcalfm.Combo7.AddItem "Based on the lattest mishor sunset for this place"
+            newhebcalfm.Combo7.AddItem "Based on the latest mishor sunset for this place"
             End If
          If eros = True Then
             newhebcalfm.Combo7.AddItem heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + " ," + eroscity$ + heb1$(48)
@@ -2212,7 +2212,7 @@ Private Sub OKbut0_Click()
       newhebcalfm.Combo8.AddItem "In loving memory of Avrohom Yitzhak ben Zvi z''l"
       End If
       
-   'set the lattest recorded captions as the default captions to be displayed
+   'set the latest recorded captions as the default captions to be displayed
    newhebcalfm.Combo1.ListIndex = newhebcalfm.Combo1.ListCount - 1
    newhebcalfm.Combo2.ListIndex = newhebcalfm.Combo2.ListCount - 1
    newhebcalfm.Combo3.ListIndex = newhebcalfm.Combo3.ListCount - 1

@@ -74,11 +74,11 @@ Begin VB.Form newhebcalfm
       TabCaption(0)   =   "Top Calendar (usually sunrise)"
       TabPicture(0)   =   "newhebcalfm.frx":0974
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "Frame1"
+      Tab(0).Control(0)=   "Frame3"
       Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "Frame2"
       Tab(0).Control(1).Enabled=   0   'False
-      Tab(0).Control(2)=   "Frame3"
+      Tab(0).Control(2)=   "Frame1"
       Tab(0).Control(2).Enabled=   0   'False
       Tab(0).ControlCount=   3
       TabCaption(1)   =   "Bottom Calendar (usually sunset)"
@@ -2900,7 +2900,7 @@ Private Sub newhebOpenbut_Click()
   Loop
  Close #filsav%
  
- 'set the lattest recorded captions as the default captions to be displayed
+ 'set the latest recorded captions as the default captions to be displayed
  newhebcalfm.Combo1.ListIndex = newhebcalfm.Combo1.ListCount - 1
  newhebcalfm.Combo2.ListIndex = newhebcalfm.Combo2.ListCount - 1
  newhebcalfm.Combo3.ListIndex = newhebcalfm.Combo3.ListCount - 1

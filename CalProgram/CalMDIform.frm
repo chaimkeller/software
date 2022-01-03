@@ -485,7 +485,7 @@ If internet = True Then
     'Set up timer to monitor progress of program.  If process remains
     'active after 5 minutes = , then the timer kills the process
     lngTimerID = SetTimer(0, 0, 300000, AddressOf TimerProc)
-    'read lattest *.sev file
+    'read latest *.sev file
    'On Error GoTo errhand 'if file is being read or written, retry
    'ChDrive "c"
    'ChDir "c:/inetpub/webpub/data"
