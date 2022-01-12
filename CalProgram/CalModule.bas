@@ -52,7 +52,7 @@ Public newhebout As Boolean, hebcal As Boolean, Marginshow As Boolean, SponsorLi
 Public rescal, portrait As Boolean, prespap%, Loadcombo%, endyr%, RemoveUnderline As Boolean
 Public xc(2), y1(2), y2(2), y3(2), y4(2), y5(2), de(2), ys(2), difdyy%, autoprint As Boolean, autosave As Boolean
 Public tim$(3, 366), papername$(20), papersize(2, 20) As Integer, numpaper%, margins(4, 20)
-Public monthe$(12), monthh$(1, 14), mdates$(2, 13), mmdate%(2, 13), montheh$(1, 12)
+Public monthe$(12), monthh$(1, 14), mdates$(2, 13), mmdate%(2, 13), montheh$(1, 12), calnearsearchVis As Boolean
 Public dx, dy, xot, yot, xo, yo, dey(2), fillcol, geo As Boolean, eros As Boolean, nweatherflag As Integer
 Public stortim$(6, 12, 32), stormon$(12), storheader$(1, 5), geotz!, Option1b As Boolean, Option2b As Boolean
 Public astronplace As Boolean, astkmx, astkmy, asthgt, astname$, distlim As Single, distlimnum As Integer
@@ -86,7 +86,7 @@ Public yrstrt%(1), yrend%(1), visauto As Boolean, mishorauto As Boolean, astauto
 Public BeginningYear$, EndYear$, NumCivilYears%, NumCivilYearsInc%, BeginCivilRun As Boolean
 Public PDFprinter As Boolean
 'Public MaxHourZemanios As Double
-Private Type BrowseInfo
+Public Type BrowseInfo
     lngHwnd        As Long
     pIDLRoot       As Long
     pszDisplayName As Long
@@ -97,25 +97,31 @@ Private Type BrowseInfo
     iImage         As Long
 End Type
 
-Private Const BIF_RETURNONLYFSDIRS = 1
-Private Const MAX_PATH = 260
+Public Const BIF_RETURNONLYFSDIRS = 1
+Public Const MAX_PATH = 260
 
-Private Declare Sub CoTaskMemFree Lib "ole32.dll" _
+Public Declare Sub CoTaskMemFree Lib "ole32.dll" _
     (ByVal hMem As Long)
 
-Private Declare Function lstrcat Lib "Kernel32" _
+Public Declare Function lstrcat Lib "Kernel32" _
    Alias "lstrcatA" (ByVal lpString1 As String, _
    ByVal lpString2 As String) As Long
    
-Private Declare Function SHBrowseForFolder Lib "shell32" _
+Public Declare Function SHBrowseForFolder Lib "shell32" _
    (lpBI As BrowseInfo) As Long
    
-Private Declare Function SHGetPathFromIDList Lib "shell32" _
+Public Declare Function SHGetPathFromIDList Lib "shell32" _
    (ByVal pidList As Long, ByVal lpBuffer As String) As Long
    
 '**********DTM variables**************
 Public CHMAP(14, 26) As String * 2, filnumg%
 Public CHMNE As String * 2, CHMNEO As String * 2, SF As String * 2
+
+'*********for Google Maps API calls***************
+'based on code by: http://www.vb-helper.com/howto_google_map.html
+Public Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hwnd As Long, ByVal lpOperation As String, ByVal lpFile As String, ByVal lpParameters As String, ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
+Public Const SW_SHOWNORMAL = 1
+Public Const SW_SHOWMAXIMIZED = 3
 
 Public Function BrowseForFolder(ByVal lngHwnd As Long, ByVal strPrompt As String) As String
 

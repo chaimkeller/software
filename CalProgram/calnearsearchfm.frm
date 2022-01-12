@@ -15,6 +15,17 @@ Begin VB.Form calnearsearchfm
    MinButton       =   0   'False
    ScaleHeight     =   6570
    ScaleWidth      =   5325
+   Begin VB.ComboBox cboGoogle 
+      Height          =   315
+      ItemData        =   "calnearsearchfm.frx":0442
+      Left            =   3600
+      List            =   "calnearsearchfm.frx":044F
+      Style           =   2  'Dropdown List
+      TabIndex        =   17
+      Top             =   6240
+      Visible         =   0   'False
+      Width           =   1215
+   End
    Begin VB.CommandButton cmd_ClearAll 
       Caption         =   "Clear &All"
       Height          =   255
@@ -839,13 +850,14 @@ ret50:
             dist = Sqr((lon - CDbl(eroslatitude)) ^ 2 + (lat - CDbl(eroslongitude)) ^ 2)
             End If
          If dist <= Val(calnearsearchfm.Text3) + 0.001 Then
-            calnearsearchfm.List1.AddItem Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "+###.000") & "," & Format(lat, "+###.000") & "," & Format(hgt, "+###0.0") & ", dist = " & Format(dist, "#0.0")
+            calnearsearchfm.List1.AddItem Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "+###.00000") & "," & Format(lat, "+###.00000") & "," & Format(hgt, "+###0.0") & ", dist = " & Format(dist, "#0.0")
             calnearsearchfm.List1.Selected(nn%) = True
             nn% = nn% + 1
             End If
 500
       Loop
       Close #filnum%
+      If nn% > 0 Then GoSub VisGoogle
       If internet = True And nn% = 0 Then 'just output error reports
          errorreport = True
          
@@ -986,13 +998,14 @@ ret1500: 'search both netz and skiy directories
             dist = Sqr((lon - CDbl(eroslatitude)) ^ 2 + (lat - CDbl(eroslongitude)) ^ 2)
             End If
          If dist <= Val(calnearsearchfm.Text3) + 0.001 Then
-            calnearsearchfm.List1.AddItem "netz: " & Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "+###.000") & "," & Format(lat, "+###.000") & "," & Format(hgt, "+###0.0") & ", dist = " & Format(dist, "#0.0")
+            calnearsearchfm.List1.AddItem "netz: " & Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "+###.00000") & "," & Format(lat, "+###.00000") & "," & Format(hgt, "+###0.0") & ", dist = " & Format(dist, "#0.0")
             calnearsearchfm.List1.Selected(nn%) = True
             nn% = nn% + 1
             End If
 600
       Loop
       Close #filnum%
+      GoSub VisGoogle
    Else
       response = MsgBox(Combo1.Text & " directory not found for this place!", vbCritical + vbOKOnly, "Cal Program")
       Exit Sub
@@ -1027,17 +1040,32 @@ ret1500: 'search both netz and skiy directories
             dist = Sqr((lon - CDbl(eroslatitude)) ^ 2 + (lat - CDbl(eroslongitude)) ^ 2)
             End If
          If dist <= Val(calnearsearchfm.Text3) + 0.001 Then
-            calnearsearchfm.List1.AddItem "skiy: " & Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "+###.000") & "," & Format(lat, "+###.000") & "," & Format(hgt, "+###0.0") & ", dist = " & Format(dist, "#0.0")
+            calnearsearchfm.List1.AddItem "skiy: " & Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "+###.00000") & "," & Format(lat, "+###.00000") & "," & Format(hgt, "+###0.0") & ", dist = " & Format(dist, "#0.0")
             calnearsearchfm.List1.Selected(nn%) = True
             nn% = nn% + 1
             End If
 700
       Loop
       Close #filnum%
+      GoSub VisGoogle
    Else
       response = MsgBox(Combo1.Text & " directory not found for this place!", vbCritical + vbOKOnly, "Cal Program")
       Exit Sub
       End If
+      
+   Exit Sub
+      
+VisGoogle:
+   If nn% > 0 Then
+      calnearsearchfm.StatusBar1.Panels(1).Text = "Dblclick for map"
+      calnearsearchfm.StatusBar1.Panels(1).ToolTipText = "Double click to locate on map"
+      cboGoogle.Visible = True
+   Else
+      calnearsearchfm.StatusBar1.Panels(1).Text = sEmpty
+      calnearsearchfm.StatusBar1.Panels(1).ToolTipText = sEmpty
+      cboGoogle.Visible = False
+      End If
+   Return
       
 errhand:
       If nn% > 0 Then
@@ -1050,6 +1078,9 @@ End Sub
 
 Private Sub Form_Load()
    'version: 04/08/2003
+  cboGoogle.ListIndex = 0
+  calnearsearchVis = True
+  eros = True
   
   Combo1.AddItem "sunrise"
   Combo1.AddItem "sunset"
@@ -1069,5 +1100,75 @@ End Sub
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
    Unload Me
    Set calnearsearchfm = Nothing
+   calnearsearchVis = False
 End Sub
+'---------------------------------------------------------------------------------------
+' Procedure : List1_DblClick
+' Author    : chaim
+' Date      : 1/11/2022
+' Purpose   : double click to show position on Google Map,
+' based on  : http://www.vb-helper.com/howto_google_map.html
+'---------------------------------------------------------------------------------------
+'
+Private Sub List1_DblClick()
 
+   On Error GoTo List1_DblClick_Error
+
+' The basic map URL without the address information.
+Const URL_BASE As String = "http://maps.google.com/maps?f=q&hl=en&geocode=&time=&date=&ttype=&q=@ADDR@&ie=UTF8&t=@TYPE@"
+
+Dim addr As String
+Dim url As String
+Dim DataLine() As String
+Dim latitude As Double
+Dim longitude As Double
+Dim PntSelected As Boolean
+
+    '39.358008,-76.688316
+    waitime = Timer
+    Do Until Timer > waitime + 0.1
+       DoEvents
+    Loop
+    PntSelected = Not calnearsearchfm.List1.Selected(List1.ListIndex) 'store checked status
+    DataLine = Split(calnearsearchfm.List1.List(List1.ListIndex), ",")
+    longitude = Val(DataLine(1))
+    latitude = Val(DataLine(2))
+    
+    ' A very simple URL encoding.
+    '**original code modified to contain coordinates instead of address - 011122****************
+    addr = Str$(latitude) & "," & Str$(-longitude)
+    '**********************************************************
+    addr = Replace$(addr, " ", "+")
+    addr = Replace$(addr, ",", "%2c")
+
+    ' Insert the encoded address into the base URL.
+    url = Replace$(URL_BASE, "@ADDR@", addr)
+
+    ' Insert the proper type.
+    Select Case cboGoogle.Text
+        Case "Map"
+            url = Replace$(url, "@TYPE@", "m")
+        Case "Satellite"
+            url = Replace$(url, "@TYPE@", "h")
+        Case "Terrain"
+            url = Replace$(url, "@TYPE@", "p")
+    End Select
+
+    ' "Execute" the URL to make the default browser display it.
+    ShellExecute ByVal 0&, "open", url, _
+        vbNullString, vbNullString, SW_SHOWMAXIMIZED
+        
+    'restore the check mark if checked
+    If PntSelected Then
+      calnearsearchfm.List1.Selected(List1.ListIndex) = True
+   Else
+      calnearsearchfm.List1.Selected(List1.ListIndex) = False
+      End If
+
+   On Error GoTo 0
+   Exit Sub
+
+List1_DblClick_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure List1_DblClick of Form calnearsearchfm"
+End Sub

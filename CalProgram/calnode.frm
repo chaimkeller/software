@@ -688,6 +688,7 @@ End Sub
 
 Private Sub tvwDB_Collapse(ByVal Node As MSComCtlLib.Node)
    eroscity$ = sEmpty
+   eros = True
 End Sub
 
 Private Sub tvwDB_DblClick()

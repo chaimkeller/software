@@ -869,7 +869,7 @@ End Sub
 
 Private Sub dir1_click()
       Text1.Text = Dir1.List(Dir1.ListIndex)
-      eros = False
+      If Not calnearsearchVis Then eros = False
 End Sub
 
 '---------------------------------------------------------------------------------------
