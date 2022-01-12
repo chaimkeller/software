@@ -314,7 +314,7 @@ double tims[2][7][366];
 double azils[2][2][366];
 
 char heb1[85][255]; //[sunrisesunset] NOTICE: largest hebrew string is 99 characters long
-char heb2[26][255];//[newhebcalfm]
+char heb2[30][255];//[newhebcalfm]
 char heb3[33][255];//[zmanlistfm]
 char heb4[8][100]; //[hebweek] NOTICE: largest hebrew string is 20 characters long
 char heb5[40][100];//[holidays] NOTICE largest hebrew string is 20 characters long
@@ -896,6 +896,7 @@ The values set for debugging the program are simply the cgi arguments that are p
 16 erosaprnstr = how much to shave off (kms) as a string
 17 erosdiflatstr = latitude half width of dtm tiles used in creating the profile (stirng)
 18 erosdiflogstr = " for longitude
+19 exactcoordinates = 0/1 to not use/use entered coordinates for determining zemanim instead of average coords of vantage points
 19 geotz = time zone (hrs from Greenwhich, minus for West Longitude, plus for East Longitude)
 20 sunyes = 0/1 flag to print individual surnise/sunset tables
 21 ast = true/false flag for astronomical calculation (mishor or astronomical)
@@ -908,14 +909,17 @@ The values set for debugging the program are simply the cgi arguments that are p
 28 Pressure = ground pressure (mb) of the single day 
 29 CloudWind = flag to indicate cludy or windy day (remove inversion fix)
 30 AddCushion = flag to indicate whether to add further cushion instead of printing green times
+////////////////////////////////////////////////////////////////////////////////////////////
+//new additions///////////////////////////////
 31 added user control over adhocrise, adhocset
 32 added DST support for Israel, USA, Canada, Mexico, and Europe
-////////////////////////////////////////////////////////////////////////////////////////////
+33 fixed AddCushion bug for some of the options that set CushionAmount = 0 - 011222
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 9.0f;
+float vernum = 10.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -1142,35 +1146,36 @@ __asm{
 /*//<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
 	else if (argc == 1) //not using console
 	{
-		strcpy( TableType, "Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
+		strcpy( TableType, "Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
-		strcpy( country, "USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
+		strcpy( MetroArea, "Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( country, "USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
 		g_yrheb = 5782; //5781; //5779;//5776; //5775;
 		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
 		typezman = 8; // acc. to which opinion
-		optionheb = false; //true;//false;
-		RoundSecondsin = 1;//5;
+		optionheb = false; //true; //false; //true;//false;
+		RoundSecondsin = 5; //1;//5;
 
 		///unique to Chai tables
-		numUSAcities1 = 27; //3; //27; //3;//1; //2;//11; //2; //Metro area
-		numUSAcities2 = 1; //4; //1; //2; //7;//0; //75; //city area
-		searchradius = 8; //1; //8; //1;//4;//1; //search area
-		yesmetro = 0; //1; //0;  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
+		numUSAcities1 = 4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area
+		numUSAcities2 = 15; //1; //4; //1; //2; //7;//0; //75; //city area
+		searchradius = 0.4; //8; //1; //8; //1;//4;//1; //search area
+		yesmetro = 1; //0; //1; //0;  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
 		GoldenLight = 0; //1;
 
 		//test lat,lon, hgt inputs 32.027585
-		eroslatitudestr = "31.706938"; //"30.960207"; //"37.683140"; //"30.92408"; //"31.858246"; //"31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
-		eroslongitudestr = "-35.123139"; //"-35.195719"; //"119.170837"; //"-34.96542"; //"-35.158354"; //"-35.217";//"0.2074"; //"-35.201774";//"-35.217059"; //"-35.247203";//"1.11254";//"-34.841867";//"-35.004566";//"99.201608";//"-34.83177";//"74.222"; //"-34.83177"; //"-34.851612"; //-35.164481"; //-35.239226491"; //"-35.239291"; //"21.89521";
-		eroshgtstr = "787.23"; //"29.70"; //"2843.73"; //"495.0"; //"644.26"; //"800";//"0";//"684.3";//"164.1";//"26.93";//"68.69";//"2274.5"; //"63.5";//"22.72"; //"63.5";//"788.19"; //832.3"; //"832"; //"83.2";
+		eroslatitudestr = "39.357909"; ///"55.398869"; //"31.706938"; //"30.960207"; //"37.683140"; //"30.92408"; //"31.858246"; //"31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
+		eroslongitudestr = "76.688175";//"3.388176"; //"-35.123139"; //"-35.195719"; //"119.170837"; //"-34.96542"; //"-35.158354"; //"-35.217";//"0.2074"; //"-35.201774";//"-35.217059"; //"-35.247203";//"1.11254";//"-34.841867";//"-35.004566";//"99.201608";//"-34.83177";//"74.222"; //"-34.83177"; //"-34.851612"; //-35.164481"; //-35.239226491"; //"-35.239291"; //"21.89521";
+		eroshgtstr = "0"; //"700"; //"787.23"; //"29.70"; //"2843.73"; //"495.0"; //"644.26"; //"800";//"0";//"684.3";//"164.1";//"26.93";//"68.69";//"2274.5"; //"63.5";//"22.72"; //"63.5";//"788.19"; //832.3"; //"832"; //"83.2";
 		erosaprnstr = "0.5";//"1.5";//"0.5";
 		erosdiflatstr = "1";
 		erosdiflogstr = "1"; //"2";
 
 
-		searchradiusin = 2; //8; //1; //8; //1;//4; //0.9;
-		geotz = 2; //-5; //2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
+		searchradiusin = 0.8; //0.4; //2; //8; //1; //8; //1;//4; //0.9;
+		geotz = -5; //2; //0;//-5; //2; //-5; //2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
 		sunsyes = 1;//0; //1;//0; //= 1 print individual sunrise/sunset tables
 					 //= 0 don't print individual sunrise/sunset tables
 
@@ -1179,8 +1184,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -6330,14 +6335,14 @@ short calnearsearch( char *bat, char *sun )
 				accur[0] = cushion[3]; //cushions
 				accur[1] = -cushion[3];
 				distlim = distlims[3];
-				CushionAmount = cushion[13];
+				CushionAmount = cushion[3];
 				break;
 			case 2:
 				SRTMflag = 2; //SRTM level 1 (90 m)
 				accur[0] = cushion[2]; //cushions
 				accur[1] = -cushion[2];
 		        distlim = distlims[2];
-				CushionAmount = cushion[12];
+				CushionAmount = cushion[2];
 				break;
 			case 9:
 				SRTMflag = 9; //Eretz Yisroel neighborhoods
@@ -7409,6 +7414,7 @@ short CreateHeaders( short types )
 		}
 */
 		//sprintf( title, "%s %s%s%s", &heb1[1][0], "\"", TitleLine, "\"" );
+		///////////////fixed missing space 120621//////////////////////
 		sprintf( title, "%s %s%s%s", &heb1[1][0], "&quot;", TitleLine, "&quot;" );
 
 	  	//copyright and warning lines
@@ -7416,7 +7422,7 @@ short CreateHeaders( short types )
 		{
 			if (DSTcheck)
 			{
-				sprintf( l_buffcopy, "%s%s%s%s%4.1f%s%s%s", &heb2[27][0], ". ", &heb2[23][0], "&nbsp;", vernum, ", ",&heb2[16][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
+				sprintf( l_buffcopy, "%s%s%s%s%4.1f%s%s%s", &heb2[17][0], ". ", &heb2[23][0], "&nbsp;", vernum, ", ",&heb2[26][0], " <a href=\"http://www.chaitables.com\">www.chaitables.com</a>"  );
 			}
 			else
 			{
@@ -7577,7 +7583,7 @@ short CreateHeaders( short types )
 					//nsetflag = 0; //visible sunrise/astr. sunrise/chazos
 					if ( InStr( &storheader[0][0][0], "NA") || strlen(Trim(&storheader[0][0][0])) <= 2 ) //use defaults
 					{
-						sprintf( &storheader[0][0][0], "%s%s%s%s%s%s%s", title, &heb1[8][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
+						sprintf( &storheader[0][0][0], "%s %s%s%s%s%s%s", title, &heb1[8][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 						sprintf( &storheader[0][1][0], "%s", &heb1[16][0] );
 						sprintf( &storheader[0][2][0], "%s", &heb1[21][0] );
 					}
@@ -10311,7 +10317,9 @@ short LoadTitlesSponsors()
 				buff[16] = 0;
 
 				//sprintf( &heb3[12][0],"%s%s%s%s%s%s",&heb1[1][0],"\"",TitleLine,"\"","&nbsp;",buff);
-				sprintf( &heb3[12][0],"%s%s%s%s%s%s",&heb1[1][0],"&quot;",TitleLine,"$quot;","&nbsp;",buff);
+				//sprintf( &heb3[12][0],"%s%s%s%s%s%s",&heb1[1][0],"&quot;",TitleLine,"$quot;","&nbsp;",buff);
+				////////////////fixed missing space 120621/////////////////////////////////
+				sprintf( &heb3[12][0],"%s%s%s%s%s",&heb1[1][0],"&nbsp;&quot;",TitleLine,"$quot;&nbsp;",buff);
 
 			}
 
