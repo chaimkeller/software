@@ -104,15 +104,6 @@ Begin VB.Form mapdiskDTMfm
          End
          Begin VB.OptionButton optJK 
             Caption         =   "JK's 25-m DTM"
-            BeginProperty Font 
-               Name            =   "MS Sans Serif"
-               Size            =   8.25
-               Charset         =   177
-               Weight          =   400
-               Underline       =   0   'False
-               Italic          =   0   'False
-               Strikethrough   =   0   'False
-            EndProperty
             Height          =   195
             Left            =   720
             TabIndex        =   49
@@ -1023,7 +1014,7 @@ Drive4_Change_Error:
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Drive4_Change of Form mapdiskDTMfm"
 End Sub
 
-Private Sub Form_Load()
+Private Sub form_load()
    On Error GoTo errhand
    
    myfile = Dir(drivjk_c$ + "mapcdinfo.sav")
@@ -1031,23 +1022,45 @@ Private Sub Form_Load()
       israeldtmcd = True
       worlddtmcd = True
       srtmdtmcd = True
-      Drive1(1).Drive = "j"
-      israeldtm = "j"
-      Drive2(1).Drive = "j"
-      Drive5(0).Drive = "e"
-      worlddtm = "j"
-      ramdrive = "g"
-      Drive5(1).Drive = "e"
-      srtmdtm = "e"
+      'Turbo2cdDir$, USADir$, GEOTOPO30Dir$, D3ASDir$
+      If drivdtm$ <> sEmpty Then
+         Drive1(1).Drive = Mid$(drivdtm$, 1, 1)
+         israeldtm = Mid$(drivdtm$, 1, 1)
+      Else
+         Drive1(1).Drive = MainDir$
+         israeldtm = MainDir$
+         End If
+      If GEOTOPO30Dir$ <> sEmpty Then
+         worldtm = Mid$(GEOTOPO30Dir$, 1, 1)
+         Drive2(1).Drive = Mid$(GEOTOPO30Dir$, 1, 1)
+      Else
+         worlddtm = MainDir$
+         Drive2(1).Drive = MainDir$
+         End If
+      If USADir$ <> sEmpty Then
+         srtmdtm = Mid$(USADir$, 1, 1)
+         Drive5(1).Drive = Mid$(USADir$, 1, 1)
+      Else
+         srtmdtm = "e"
+         Drive2(1).Drive = MainDir$
+         End If
+      If D3ASDir$ <> sEmpty Then
+         Drive5(0).Drive = Mid$(D3ASDir$, 1, 1)
+      Else
+         Drive5(0).Drive = MainDir$
+         End If
+         
+      ramdrive = MainDir$
+      
       If WinVer = 5 Or WinVer = 261 Then
          'Windows 2000 or XP
-         ramdrivef = "e"
-         Drive3(1).Drive = "e"
-         Drive4(1).Drive = "e"
+         ramdrivef = MainDir$
+         Drive3(1).Drive = MainDir$
+         Drive4(1).Drive = MainDir$
       ElseIf WinVer > 5 Then
-         ramdrivef = "c"
-         Drive3(1).Drive = "c"
-         Drive4(1).Drive = "c"
+         ramdrivef = MainDir$
+         Drive3(1).Drive = MainDir$
+         Drive4(1).Drive = MainDir$
       Else
          Drive3(1).Drive = "g"
          Drive4(1).Drive = "e"

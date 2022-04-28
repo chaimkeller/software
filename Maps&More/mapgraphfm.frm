@@ -1313,13 +1313,13 @@ ca81:
             Line Input #batfile%, doclin$
             Do Until EOF(batfile%)
                Input #batfile%, doclin$, kmyeroscheck, kmxeroscheck, hgteroscheck
-               If kmyeros = kmyeroscheck And kmxeros = -kmxeroscheck Then
+               If kmyeros = kmyeroscheck And kmxeros = -kmxeroscheck And hgteroscheck = hgteros Then
                   Close #batfile%
                   Screen.MousePointer = vbDefault
                   For i% = 0 To Forms.count - 1
                      ret = SetWindowPos(Forms(i%).hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                   Next i%
-                  If Not AutoProf Then response = MsgBox("You have already recorded a place with these coordinates!", vbOKOnly + vbExclamation, "Maps & More")
+                  If Not AutoProf Then response = MsgBox("You have already recorded a place with these coordinates and elevations!", vbOKOnly + vbExclamation, "Maps & More")
                   For i% = 0 To Forms.count - 1
                     ret = SetWindowPos(Forms(i%).hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                   Next i%

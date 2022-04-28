@@ -226,6 +226,7 @@ Public SearchVis As Boolean, WinVer As Long, XDIM As Double, YDIM As Double, noV
 Public AutoPress As Boolean, IsraelDTMsource%, OnlyExtractFile As Boolean, EastOnly As Boolean, WestOnly As Boolean
 Public CalculateProfile As Integer, SearchCrossSection As Boolean, SearchCrossObstruct As Boolean
 Public rderos2_use As Boolean, IgnoreTiles%, autoazirange%, NoCDWarning As Boolean, TemperatureModel%
+Public MainDir$, Turbo2cdDir$, USADir$, GEOTOPO30Dir$, D3ASDir$
 
 '----------------GPS global constants------------------------
 Public Const MAX_PORT = 15 'maximum number of com ports to search
@@ -5162,6 +5163,12 @@ DTMerrreturn:
 
 End Sub
 Sub mapCrossSections()
+
+    Dim LimHeight As Integer, filcross%
+   On Error GoTo mapCrossSections_Error
+
+    LimHeight = 0
+
       'determine if second point is visible from first point
       'and dump crosssection into csection.tmp
 
@@ -5235,11 +5242,11 @@ cs50:
     'Close
     If Not SearchCrossSection Then
     
-      filtmp% = FreeFile
-      Open drivjk_c$ + "crossect.tmp" For Output As #filtmp%
-      Print #filtmp%, "Cross Section Graph File"
+      filcross% = FreeFile
+      Open drivjk_c$ + "crossect.tmp" For Output As #filcross%
+      Print #filcross%, "Cross Section Graph File"
       If world = False Then
-         Print #filtmp%, "Begin, End, Number of Points" & "(" & Str(crosssectionpnt(0, 0)) & "," _
+         Print #filcross%, "Begin, End, Number of Points" & "(" & Str(crosssectionpnt(0, 0)) & "," _
                                                                & Str(crosssectionpnt(0, 1)) & "," _
                                                                & Str(crosssectionhgt(0)) & ")," _
                                                       & " (" & Str(crosssectionpnt(1, 0)) & "," _
@@ -5247,7 +5254,7 @@ cs50:
                                                               & Str(crosssectionhgt(1)) & ")" & "," _
                                                               & Str(sectnumpnt&)
       Else
-         Print #filtmp%, "Begin, End, Number of Points" & "(" & Str(-lg1) & "," _
+         Print #filcross%, "Begin, End, Number of Points" & "(" & Str(-lg1) & "," _
                                                                & Str(lt1) & "," _
                                                                & Str(crosssectionhgt(0)) & ")," _
                                                       & " (" & Str(-lg2) & "," _
@@ -5260,7 +5267,7 @@ cs50:
     'record first point
     Screen.MousePointer = vbHourglass
     If Not SearchCrossSection Then
-       Write #filtmp%, Val(Format(azi, "###0.000")), Val(Format(va, "##0.000")), Val(Format(crosssectionpnt(0, 1), "######.000")), Val(Format(crosssectionpnt(0, 0), "#######.000")), Val(Format(0, "#####.0")), Val(Format(hgt1, "####0.0"))
+       Write #filcross%, Val(Format(azi, "###0.000")), Val(Format(va, "##0.000")), Val(Format(crosssectionpnt(0, 1), "######.000")), Val(Format(crosssectionpnt(0, 0), "#######.000")), Val(Format(0, "#####.0")), Val(Format(hgt1, "####0.0"))
        End If
 
     obstruct% = 0
@@ -5276,7 +5283,7 @@ cs50:
              mapCrossSection.CSectProgressBar.Visible = False
              mapCrossSection.lblObstruction.Caption = sEmpty
              Screen.MousePointer = vbDefault
-             Close #filtmp%
+             Close #filcross%
              Exit Sub
              End If
          coord1 = (i& / (sectnumpnt& - 1)) * runit1 + crosssectionpnt(0, 0)
@@ -5290,6 +5297,32 @@ cs50:
          'find longitude, latitude at this point
          Call casgeo(corx, cory, lg, lt)
          hgt2 = hgtpnt
+         
+         '/////////////added 080521/////////////////////////
+         'limit negative elevations to level of Dead Sea
+         If hgt2 < -430 And LimHeight = 0 Then
+               Select Case MsgBox("The elevation is less than the water level of the Dead Sea." _
+                                  & vbCrLf & "" _
+                                  & vbCrLf & "Do you want to limit the elevation to above that elevation?" _
+                                  , vbYesNo Or vbInformation Or vbDefaultButton1, "Below Sea Level")
+               
+                Case vbYes
+                
+                   LimHeight = 1 'limit elevation to the Dead Sea's water level
+               
+                Case vbNo
+                
+                   LimHeight = -1 'gnore further checks
+               
+               End Select
+               
+            ElseIf hgt2 < -430 And LimHeight = 1 Then
+               
+               hgt2 = -430 'water height of the Dead Sea 080521
+            
+               End If
+         '////////////////////////////////////////////////////////
+         
          lg2v = lg
          lt2v = lt
          GoSub viewan
@@ -5299,7 +5332,7 @@ cs50:
             If SearchCrossSection Then GoTo mcs500 'obstruction found so abort further search
             End If
          If Not SearchCrossSection Then
-            Write #filtmp%, Val(Format(azi, "###0.000")), Val(Format(va, "##0.000")), Val(Format(coord1, "######.000")), Val(Format(coord2, "#######.000")), Val(Format(dista, "#####.0")), Val(Format(hgt2, "####0.0"))
+            Write #filcross%, Val(Format(azi, "###0.000")), Val(Format(va, "##0.000")), Val(Format(coord1, "######.000")), Val(Format(coord2, "#######.000")), Val(Format(dista, "#####.0")), Val(Format(hgt2, "####0.0"))
             End If
          
          'increment progressbar
@@ -5312,7 +5345,7 @@ cs50:
             End If
 
        Next i&
-       Close #filtmp%
+       Close #filcross%
     Else
      lt2vo = crosssectionpnt(0, 1)
      lg2vo = -crosssectionpnt(0, 0)
@@ -5353,7 +5386,7 @@ cs50:
              mapCrossSection.CSectProgressBar.Visible = False
              mapCrossSection.lblObstruction.Caption = sEmpty
              Screen.MousePointer = vbDefault
-             Close #filtmp%
+             Close #filcross%
              Exit Sub
              End If
              
@@ -5543,7 +5576,7 @@ cs50:
               obstruct% = 1
               End If
 
-           Write #filtmp%, Val(Format(azi, "###0.000")), Val(Format(va, "##0.000")), Val(Format(lt2v, "######.000")), Val(Format(-lg2v, "#######.000")), Val(Format(dista, "#####.0")), Val(Format(hgt2, "####0.0"))
+           Write #filcross%, Val(Format(azi, "###0.000")), Val(Format(va, "##0.000")), Val(Format(lt2v, "######.000")), Val(Format(-lg2v, "#######.000")), Val(Format(dista, "#####.0")), Val(Format(hgt2, "####0.0"))
 '           sgn1 = sgn2 * (lg2v - lg2vo)
 '           lt2vo = lt2v
 '           lg2vo = lg2v
@@ -5606,7 +5639,7 @@ cs50:
              mapCrossSection.CSectProgressBar.Visible = False
              mapCrossSection.lblObstruction.Caption = sEmpty
              Screen.MousePointer = vbDefault
-             Close #filtmp%
+             Close #filcross%
              Exit Sub
              End If
           If slopetype% = 0 Then
@@ -5644,7 +5677,7 @@ cs50:
              End If
            
          If Not SearchCrossSection Then
-            Write #filtmp%, Val(Format(azi, "###0.000")), Val(Format(va, "##0.000")), Val(Format(lt2v, "######.000")), Val(Format(-lg2v, "#######.000")), Val(Format(dista, "#####.0")), Val(Format(hgt2, "####0.0"))
+            Write #filcross%, Val(Format(azi, "###0.000")), Val(Format(va, "##0.000")), Val(Format(lt2v, "######.000")), Val(Format(-lg2v, "#######.000")), Val(Format(dista, "#####.0")), Val(Format(hgt2, "####0.0"))
             End If
          nprogress2% = Int(i& * 100# / sectnumpnt&)
          If nprogress2% <> nprogress% Then
@@ -5655,7 +5688,7 @@ cs50:
          lg2vo = lg2v
        Next i&
      End If
-     If Not SearchCrossSection Then Close #filtmp%
+     If Not SearchCrossSection Then Close #filcross%
     End If
     Screen.MousePointer = vbDefault
     If Not SearchCrossSection Then mapCrossSection.CSectProgressBar.Visible = False
@@ -5740,6 +5773,19 @@ viewan:
      azi = azi / cd
 Return
 
+   On Error GoTo 0
+   Exit Sub
+
+mapCrossSections_Error:
+    
+    If Err.Number = 54 Then
+        'start over
+        Close #filcross%
+        GoTo cs50
+        End If
+    If filcross% > 0 Then Close #filcross%
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure mapCrossSections of Module MapModule"
+'    Resume
 End Sub
 Function MinArray(X() As Double, NumArray As Integer) As Integer
    'returns smallest member of array x() having NumArray members

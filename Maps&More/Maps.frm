@@ -1694,8 +1694,10 @@ Private Sub MDIForm_Load()
    'find location of default drives
    numdriv% = Drive1.ListCount
    
-   driveletters$ = "cdefghijklmnop"
-   s1% = 0: S2% = 0: s3% = 0: s4% = 0: s5% = 0: s6% = 0
+   MainDir$ = App.Path
+   
+   driveletters$ = "cefghijklmnop"
+   s1% = 0: S2% = 0: s3% = 0: s4% = 0: s5% = 0: s6% = 0: s7% = 0: s8% = 0: s9% = 0: s10% = 0: s11% = 0
    For i% = 1 To numdriv%
 '   For i% = 4 To numdriv%
       drivlet$ = Mid$(driveletters$, i%, 1)
@@ -1726,9 +1728,20 @@ Private Sub MDIForm_Load()
                '   s5% = 1: drivprof$ = drivlet$ + ":\prof\"
                ElseIf s6% = 0 And myname = "dtm" Then
                   s6% = 1: drivdtm$ = drivlet$ + ":\dtm\"
+               ElseIf s7% = 0 And myname = "turbo2cd" Then
+                  s7% = 1: Turbo2cdDir$ = drivlet$ + ":\turbo2cd\"
+               ElseIf s8% = 0 And myname = "usa" Then
+                  s8% = 1: USADir$ = drivlet$ + ":\usa\"
+               ElseIf s9% = 0 And myname = "turbo2cd" Then
+                  s9% = 1: Turbo2cdDir$ = drivlet$ + ":\turbo2cd\"
+               ElseIf s10% = 0 And myname = "E020n40" Then
+                  s10% = 1: GEOTOPO30Dir$ = drivlet$ + ":"
+               ElseIf s11% = 0 And myname = "3AS" Then
+                  s11% = 1: D3ASDir$ = drivlet$ + ":\3AS\"
                   End If
                'If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s5% = 1 And s6% = 1 Then GoTo cdc1
-               If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s6% = 1 Then GoTo cdc1
+               If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s6% = 1 And s7% = 1 And _
+                  s8% = 0 And s9% = 0 And s10% = 0 And s11% = 0 Then GoTo cdc1
                End If 'it represents a directory
             End If
          myname = Dir 'Get next entry
@@ -1850,9 +1863,29 @@ cdc6: If s6% = 0 Then
             GoTo ce10
             End If
          End If
+         
+cdc7: If s7% = 0 Then
+         Turbo2cdDir$ = InputBox("Can't find the ""turbo2cd"" directory, please give the full path name below " + _
+                  "(e.g., if dtm is a subdirectory of c:\program\random\, then input: ""c:\program\random\"" (ncluding the last backslash)")
+         If drivprof$ <> sEmpty Then 'check the directory
+            myname = Dir(drivdtm$, vbDirectory)
+            If myname = sEmpty Then
+               response = MsgBox("The directory was not found at at the inputed path.  Do you wan't to try inputing it's path again? (inclue the drive letter, as well as the last backslash, e.g., ""c:\program\random\"")", vbCritical + vbYesNo, "Cal Programs")
+               If response = vbYes Then
+                  GoTo cdc7
+               Else
+                  GoTo ce10
+                  End If
+            Else
+               s6% = 1
+               End If
+         ElseIf Turbo2cdDir$ = sEmpty Then 'user canceled the operation
+            GoTo ce10
+            End If
+         End If
 
 '      If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s5% = 1 And s6% = 1 Then GoTo 5
-      If s1% = 1 And S2% = 1 And s3% = 1 And s6% = 1 Then GoTo 5
+      If s1% = 1 And S2% = 1 And s3% = 1 And s6% = 1 And s7% = 1 Then GoTo 5
    'if got here, means that couldn't find the cities directory
 ce10: MsgBox "Can't locate necessary directories! ABORTING program...Sorry", vbCritical + vbOKOnly, "Cal Programs"
       Call MDIform_queryunload(i%, j%)
@@ -1863,15 +1896,31 @@ ce10: MsgBox "Can't locate necessary directories! ABORTING program...Sorry", vbC
 
    myfile = Dir(drivjk$ + "mapcdinfo.sav")
    If myfile = sEmpty Then
-      israeldtmcdf = True
-      israeldtmcd = israeldtmcdf
-      worlddtmcdf = True
-      worlddtmcd = worlddtmcdf
-      israeldtmf = "j"
-      israeldtm = israeldtmf
-      worlddtmf = "j"
-      worlddtm = worlddtmf
-      RdHalYes = False
+      'use the searched for inputs
+      If drivdtm$ <> sEmpty Then
+         israeldtmcdf = False
+         israeldtmcd = israeldtmcdf
+         israeldtmf = drivdtm$
+         israeldtmcdnumf = 0
+         israeldtm = drivdtm$
+         RdHalYes = True
+      Else
+        israeldtmcdf = True
+        israeldtmcd = israeldtmcdf
+        israeldtmf = "j"
+        israeldtm = israeldtmf
+        RdHalYes = False
+        End If
+      If GEOTOPO30Dir$ <> sEmpty Then
+         worlddtmcdf = False
+         worlddtmf = GEOTOPO30Dir$
+         worldtmcdnuMf = 0
+      Else
+        worlddtmcdf = True
+        worlddtmcd = worlddtmcdf
+        worlddtmf = "j"
+        worlddtm = worlddtmf
+        End If
    Else
       mapinfonum% = FreeFile
       Open drivjk$ + "mapcdinfo.sav" For Input As #mapinfonum%
