@@ -1223,7 +1223,7 @@ Private Sub appendfrm_Click()
   Else
     CommonDialog1.Filter = "world travel files (*.wtf)|*.wtf|"
     CommonDialog1.FilterIndex = 1
-    CommonDialog1.FileName = "c:\dtm\*.wtf"
+    CommonDialog1.FileName = drivdtm$ & "*.wtf"
    End If
   CommonDialog1.ShowOpen
   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
@@ -1696,7 +1696,12 @@ Private Sub MDIForm_Load()
    
    MainDir$ = App.Path
    
-   driveletters$ = "cefghijklmnop"
+   If WinVer = 5 Or WinVer = 261 Then 'Windows 2000 or XP
+      driveletters$ = "cdefghijklmnop" 'include "d" directory in list
+   Else
+      driveletters$ = "cefghijklmnopq" 'exclude "d" directory
+      End If
+      
    s1% = 0: S2% = 0: s3% = 0: s4% = 0: s5% = 0: s6% = 0: s7% = 0: s8% = 0: s9% = 0: s10% = 0: s11% = 0
    For i% = 1 To numdriv%
 '   For i% = 4 To numdriv%
@@ -2137,8 +2142,8 @@ map50:
    noheights = False
    hgtTrig = -9999
 10 myfile = Dir(israeldtm + ":\dtm\dtm-map.loc")
-   If myfile = sEmpty Then
-      myfile = Dir(worlddtm + ":\Gt30dem.gif")
+   If myfile = sEmpty Then 'use GTOPO30 DTM as default elevations
+      myfile = Dir(worlddtm + ":\E020N40\E020N40.GIF") ' + "Dir(worlddtm + ":\GIFGt30dem.gif")
       If myfile = sEmpty Then
          noheights = True
          mnuTrigDrag.Enabled = False
@@ -2158,7 +2163,7 @@ map50:
          Toolbar1.Buttons(1).value = tbrPressed
          End If
       End If
-15 If noheights = False And world = False Then
+15 If noheights = False And world = False Then 'use JK's DTM as default elevations
       Toolbar1.Buttons(1).value = tbrPressed
       tblbuttons%(1) = 1
       filnum% = FreeFile
@@ -3525,7 +3530,7 @@ Private Sub routefm_Click()
      CommonDialog1.CancelError = True
      CommonDialog1.Filter = "world travel files (*.wtf)|*.wtf|"
      CommonDialog1.FilterIndex = 1
-     CommonDialog1.FileName = "c:\dtm\*.wtf"
+     CommonDialog1.FileName = drivdtm$ & "*.wtf"
      CommonDialog1.ShowOpen
      Screen.MousePointer = vbHourglass
      openfile$ = CommonDialog1.FileName
@@ -3610,12 +3615,12 @@ Private Sub routefm_Click()
       Else
         'check if there is a USGUS EROS CD in the CD-drive
         On Error GoTo rsunrerr
-        myfile = Dir(worlddtm + ":\Gt30dem.gif")
+        myfile = Dir(worlddtm + ":\E020N40\E020N40.GIF") 'Dir(worlddtm + ":\Gt30dem.gif")
         If myfile = sEmpty Then
            'check if there are stored DTM files in c:\dtm
-            doclin$ = Dir("c:\dtm\*.BIN")
-            myfile = Dir("c:\dtm\eros.tm3")
-            If doclin$ <> sEmpty And myfile <> sEmpty And Dir("c:\dtm\*.BI1") <> sEmpty Then
+            doclin$ = Dir(drivdtm$ & "*.BIN")
+            myfile = Dir(drivdtm$ & "eros.tm3")
+            If doclin$ <> sEmpty And myfile <> sEmpty And Dir(drivdtm$ & "*.BI1") <> sEmpty Then
               'leave rest of checking for sunrisesunset routine
                checkdtm = True
                Call sunrisesunset(1)
@@ -4431,7 +4436,7 @@ Private Sub Toolbar1_ButtonClick(ByVal Button As MSComCtlLib.Button)
 d10:         If world = False Then
                 myfile = Dir(israeldtm + ":\dtm\dtm-map.loc")
              Else
-                myfile = Dir(worlddtm + ":\Gt30dem.gif")
+                myfile = Dir(worlddtm + ":\E020N40\E020N40.GIF") 'Dir(worlddtm + ":\Gt30dem.gif")
                 End If
              If myfile = sEmpty Then
                 If world = False Then
@@ -5678,7 +5683,7 @@ tr50:           ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0,
                 Else
                    CommonDialog1.Filter = "world travel files (*.wtf)|*.wtf|"
                    CommonDialog1.FilterIndex = 1
-                   CommonDialog1.FileName = "c:\dtm\*.wtf"
+                   CommonDialog1.FileName = drivdtm$ & "*.wtf"
                    End If
                 CommonDialog1.ShowSave
                 'read the files coordinates, goto there, and then plot the obstructions
@@ -5887,12 +5892,12 @@ to550:  If world = True And showroute = True Then
            On Error GoTo sunerr
            If world = True Then
                 'check if there is a USGUS EROS CD or SRTM CD in the CD-drive
-                 myfile = Dir(worlddtm + ":\Gt30dem.gif")
+                 myfile = Dir(worlddtm + ":\E020N40\E020N40.GIF") 'Dir(worlddtm + ":\Gt30dem.gif")
                 If myfile = sEmpty Then
-                   'check if there are stored DTM files in c:\dtm
-                   doclin$ = Dir("c:\dtm\*.BIN")
-                   myfile = Dir("c:\dtm\eros.tm3")
-                   If doclin$ <> sEmpty And myfile <> sEmpty And Dir("c:\dtm\*.BI1") <> sEmpty Then
+                   'check if there are stored DTM files in drivdtm$
+                   doclin$ = Dir(drivdtm$ & "*.BIN")
+                   myfile = Dir(drivdtm$ & "eros.tm3")
+                   If doclin$ <> sEmpty And myfile <> sEmpty And Dir(drivdtm$ & "*.BI1") <> sEmpty Then
                      'leave rest of checking for sunrisesunset routine
                      checkdtm = True
                      Call sunrisesunset(1)
@@ -5948,12 +5953,12 @@ to550:  If world = True And showroute = True Then
             If world = True Then
                  'check if there is a USGUS EROS CD in the CD-drive
                  On Error GoTo sunerr
-                 myfile = Dir(worlddtm + ":\Gt30dem.gif")
+                 myfile = Dir(worlddtm + ":\E020N40\E020N40.GIF") 'Dir(worlddtm + ":\Gt30dem.gif")
                  If myfile = sEmpty Then
-                    'check if there are stored DTM files in c:\dtm
-                    doclin$ = Dir("c:\dtm\*.BIN")
-                    myfile = Dir("c:\dtm\eros.tm3")
-                    If doclin$ <> sEmpty And myfile <> sEmpty And Dir("c:\dtm\*.BI1") <> sEmpty Then
+                    'check if there are stored DTM files in drivdtm$
+                    doclin$ = Dir(drivdtm$ & "*.BIN")
+                    myfile = Dir(drivdtm$ & "eros.tm3")
+                    If doclin$ <> sEmpty And myfile <> sEmpty And Dir(drivdtm$ & "*.BI1") <> sEmpty Then
                       'leave rest of checking for sunrisesunset routine
                       checkdtm = True
                       Call sunrisesunset(0)
@@ -6126,13 +6131,13 @@ Private Sub MDIform_queryunload(Cancel As Integer, UnloadMode As Integer)
 'now save the world DTM extraction if desired
 fq4: doclin$ = Dir(ramdrive + ":\*.bin")
    myfile = Dir(drivjk$ + "eros.tm3")
-   myfile2 = Dir("c:\dtm\eros.tm3")
+   myfile2 = Dir(drivdtm$ & "eros.tm3")
    If myfile2 = sEmpty Then GoTo fq02
-   If doclin$ <> sEmpty And myfile <> sEmpty And Dir("c:\dtm\*.bi1") <> sEmpty Then
+   If doclin$ <> sEmpty And myfile <> sEmpty And Dir(drivdtm$ & "*.bi1") <> sEmpty Then
       'check if .BIN file has already been saved
        If myfile2 <> sEmpty Then
           filtmp% = FreeFile
-          Open "c:\dtm\eros.tm3" For Input As #filtmp%
+          Open drivdtm$ & "eros.tm3" For Input As #filtmp%
           Line Input #filtmp%, filn33$
           Input #filtmp%, L1ch, L2ch, hgtch, angch, apch, modch%, modvalch%
           Input #filtmp%, beglogch, endlogch, beglatch, endlatch
@@ -6150,11 +6155,11 @@ fq4: doclin$ = Dir(ramdrive + ":\*.bin")
              'its the same file, so don't save it again
              GoTo fq5
           Else 'old file found saved on c:\dtm, delete it since it is not relevant
-             myfile3 = Dir("c:\dtm\*.bin")
-             If myfile3 <> sEmpty Then Kill "c:\dtm\" + myfile3
-             myfile3 = Dir("c:\dtm\*.bi1")
-             If myfile3 <> sEmpty Then Kill "c:\dtm\" + myfile3
-             Kill "c:\dtm\" + myfile2
+             myfile3 = Dir(drivdtm$ & "*.bin")
+             If myfile3 <> sEmpty Then Kill drivdtm$ & "" + myfile3
+             myfile3 = Dir(drivdtm$ & "*.bi1")
+             If myfile3 <> sEmpty Then Kill drivdtm$ & "" + myfile3
+             Kill drivdtm$ & "" + myfile2
              End If
           End If
 
@@ -6162,42 +6167,42 @@ fq02: lResult = FindWindow(vbNullString, terranam$)
       If lResult <> 0 Then ret = BringWindowToTop(lResult)
       ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
       
-      myfile = Dir("c:\dtm\*.tBI")
+      myfile = Dir(drivdtm$ & "*.tBI")
       If myfile <> sEmpty Then
 
       response = MsgBox("Before exiting do you want to save the DTM? (*.BIN/*.BI1) files?", vbQuestion + vbYesNoCancel, "Maps & More")
       If response = vbYes Then
-'         myfile = Dir("c:\dtm\" + doclin$)
+'         myfile = Dir(drivdtm$ & "" + doclin$)
 '         If myfile <> sEmpty Then
 '            response = MsgBox("File already exists, overwrite it?", vbExclamation + vbYesNo, "Maps & More")
 '            If response = vbNo Then
 '               GoTo fq5
 '               End If
 '            End If
-         myfile = Dir("c:\dtm\*.tBI")
+         myfile = Dir(drivdtm$ & "*.tBI")
          If myfile <> sEmpty Then
-            FileCopy "c:\dtm\" + myfile, "c:\dtm\" + Mid$(myfile, 1, Len(myfile) - 4) + ".BI1"
-            Kill "c:\dtm\" + myfile
+            FileCopy drivdtm$ & "" + myfile, drivdtm$ & "" + Mid$(myfile, 1, Len(myfile) - 4) + ".BI1"
+            Kill drivdtm$ & "" + myfile
          Else
             response = MsgBox("Sorry can't save the DTM since the BI1 file was not found!", vbExclamation + vbOKOnly, "Maps & More")
             GoTo fqq5
             End If
-         FileCopy ramdrive + ":\" + doclin$, "c:\dtm\" + doclin$
-         FileCopy drivjk$ + "eros.tm3", "c:\dtm\eros.tm3"
+         FileCopy ramdrive + ":\" + doclin$, drivdtm$ & "" + doclin$
+         FileCopy drivjk$ + "eros.tm3", drivdtm$ & "eros.tm3"
          If Dir(ramdrive + ":\land.x") <> sEmpty And Dir(ramdrive + ":\land.tm3") <> sEmpty Then
             response = MsgBox("Do you wan't to save the 3D Viewer (*.x) file and (*.tm3) file?", vbQuestion + vbYesNoCancel, "Maps & More")
             If response = vbYes Then
-               FileCopy ramdrive + ":\land.x", "c:\dtm\land.x"
-               FileCopy ramdrive + ":\land.tm3", "c:\dtm\land.tm3"
+               FileCopy ramdrive + ":\land.x", drivdtm$ & "land.x"
+               FileCopy ramdrive + ":\land.tm3", drivdtm$ & "land.tm3"
             ElseIf response = vbCancel Then
                Cancel = 1
                Exit Sub
                End If
             End If
      ElseIf response = vbNo Then 'erase temporarily saved .BI1 file
-         myfile = Dir("c:\dtm\*.tBI")
+         myfile = Dir(drivdtm$ & "*.tBI")
          If myfile <> sEmpty Then
-            Kill "c:\dtm\" + myfile
+            Kill drivdtm$ & "" + myfile
             End If
      ElseIf response = vbCancel Then
          Cancel = 1

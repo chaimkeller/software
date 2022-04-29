@@ -4030,7 +4030,7 @@ out50: Err.Clear
           End If
        'else check if there is any USGS EROS CD in the CD player
        If DTMflag = 0 Then
-          myfile = Dir(worlddtm + ":\Gt30dem.gif")
+          myfile = Dir(worlddtm + ":\E020N40\E020N40.GIF") 'Dir(worlddtm + ":\Gt30dem.gif")
        Else 'SRTM
           If Dir(srtmdtm & ":\3AS\", vbDirectory) = sEmpty And _
              Dir(srtmdtm & ":\USA\", vbDirectory) = sEmpty Then
@@ -4130,11 +4130,11 @@ skipcheck:
        End If
  '  Else 'check if there is a BIN, BI1 and eros.tm3 file stored in c:\dtm
       'that matches the desired extraction range
-80    doclin$ = Dir("c:\dtm\*.BIN")
-      myfile = Dir("c:\dtm\eros.tm3")
-      If doclin$ <> sEmpty And myfile <> sEmpty And Dir("c:\dtm\*.BI1") <> sEmpty Then 'read this eros.tm3 and check it
+80    doclin$ = Dir(drivdtm$ & "*.BIN")
+      myfile = Dir(drivdtm$ & "eros.tm3")
+      If doclin$ <> sEmpty And myfile <> sEmpty And Dir(drivdtm$ & "*.BI1") <> sEmpty Then 'read this eros.tm3 and check it
          filtmp% = FreeFile
-         Open "c:\dtm\eros.tm3" For Input As #filtmp%
+         Open drivdtm$ & "eros.tm3" For Input As #filtmp%
          Line Input #filtmp%, filn33$
          Input #filtmp%, L1ch, L2ch, hgtch, angch, apch, modch%, modvalch%
          Input #filtmp%, beglogch, endlogch, beglatch, endlatch
@@ -4181,14 +4181,14 @@ skipcheck:
             Open ramdrive + ":\eros.tm5" For Output As #filtmp%
             Write #filtmp%, sunmode%, modeval
             Close #filtmp%
-            FileCopy "c:\dtm\" + doclin$, ramdrive + ":\" + doclin$
-            FileCopy "c:\dtm\" + Mid$(doclin$, 1, Len(doclin$) - 4) + ".BI1", ramdrive + ":\" + Mid$(doclin$, 1, Len(doclin$) - 4) + ".BI1"
+            FileCopy drivdtm$ & "" + doclin$, ramdrive + ":\" + doclin$
+            FileCopy drivdtm$ & "" + Mid$(doclin$, 1, Len(doclin$) - 4) + ".BI1", ramdrive + ":\" + Mid$(doclin$, 1, Len(doclin$) - 4) + ".BI1"
             myfile = Dir(drivjk_c$ + "eros.tmp")
             If myfile <> sEmpty And AutoPress = False Then Kill drivjk_c$ + "eros.tmp"
             'also look for a DirectX file land.x
-            If Dir("c:\dtm\land.x") <> sEmpty And Dir("c:\dtm\land.x") <> sEmpty Then
-               FileCopy "c:\dtm\land.x", ramdrive + ":\land.x"
-               FileCopy "c:\dtm\land.tm3", ramdrive + ":\land.tm3"
+            If Dir(drivdtm$ & "land.x") <> sEmpty And Dir(drivdtm$ & "land.x") <> sEmpty Then
+               FileCopy drivdtm$ & "land.x", ramdrive + ":\land.x"
+               FileCopy drivdtm$ & "land.tm3", ramdrive + ":\land.tm3"
                End If
             skip = True
             GoTo tst2
@@ -4324,7 +4324,7 @@ skipcheck:
        'now save .BI1 file in the dtm directory as a temporary file
 tst2:  myfile = Dir(ramdrive + ":\*.BI1")
        If myfile <> sEmpty Then
-        FileCopy ramdrive + ":\" + myfile, "c:\dtm\" + Mid$(myfile, 1, Len(myfile) - 4) + ".tBI"
+        FileCopy ramdrive + ":\" + myfile, drivdtm$ & "" + Mid$(myfile, 1, Len(myfile) - 4) + ".tBI"
         End If
 
        If AutoPress Then 'automatically press the DirectX button

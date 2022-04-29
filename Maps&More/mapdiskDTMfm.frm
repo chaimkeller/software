@@ -948,9 +948,9 @@ End Sub
 Private Sub Command4_Click(Index As Integer)
   On Error GoTo c4error
   CommonDialog2(1).CancelError = True
-  CommonDialog2(1).Filter = "Gt30dem.gif files (*.gif)|*.gif|"
+  CommonDialog2(1).Filter = "E020N40.GIF files (*.gif)|*.gif|" '"Gt30dem.gif files (*.gif)|*.gif|"
   CommonDialog2(1).FilterIndex = 1
-  CommonDialog2(1).FileName = worlddtm + ":\Gt30dem.gif"
+  CommonDialog2(1).FileName = worlddtm + ":\E020N40\E020N40.GIF" 'worlddtm + ":\Gt30dem.gif"
   CommonDialog2(1).ShowOpen
 c4error:
   Exit Sub

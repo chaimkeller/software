@@ -661,12 +661,12 @@ mup50:         If impcenter = True Then
                   'go there there on 3D Viewer
                   'check if there is a USGUS EROS CD in the CD-drive
                    On Error GoTo sunrerr
-                   myfile = Dir(worlddtm + ":\Gt30dem.gif")
+                   myfile = Dir(worlddtm + ":\E020N40\E020N40.GIF") 'Dir(worlddtm + ":\Gt30dem.gif")
                    If myfile = sEmpty Then
                       'check if there are stored DTM files in c:\dtm
-                       doclin$ = Dir("c:\dtm\*.BIN")
-                       myfile = Dir("c:\dtm\eros.tm3")
-                       If doclin$ <> sEmpty And myfile <> sEmpty And Dir("c:\dtm\*.BI1") <> sEmpty Then
+                       doclin$ = Dir(drivdtm$ & "*.BIN")
+                       myfile = Dir(drivdtm$ & "eros.tm3")
+                       If doclin$ <> sEmpty And myfile <> sEmpty And Dir(drivdtm$ & "*.BI1") <> sEmpty Then
                          'leave rest of checking for sunrisesunset routine
                           checkdtm = True
                           Call sunrisesunset(1)
