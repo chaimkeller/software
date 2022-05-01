@@ -6621,11 +6621,13 @@ Private Sub MDIform_resize()
 '      init = True
 '      ret = SetWindowPos(Maps.hwnd, HWND_TOP, 0, 0, cx, cy, SWP_SHOWWINDOW)
 '   Else
-      Maps.WindowState = vbNormal 'don't let the window state change
-      Me.Left = -60
-      Me.Top = -60
-      Me.Width = Screen.Width + 120
-      Me.Height = Screen.Height + 120
+'//////////////////////commented out on 05/01/22///////////////////////////////////
+'      Maps.WindowState = vbNormal 'don't let the window state change
+'      Me.Left = -60
+'      Me.Top = -60
+'      Me.Width = Screen.Width + 120
+'      Me.Height = Screen.Height + 120
+'////////////////////////////////////////////////
 '      End If
 999  Exit Sub
 End Sub
