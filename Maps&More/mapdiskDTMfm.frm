@@ -1052,7 +1052,7 @@ Private Sub form_load()
          
       ramdrive = MainDir$
       
-      If WinVer = 5 Or WinVer = 261 Then
+      If WinVer = 5 Then 'Or WinVer = 261 Then
          'Windows 2000 or XP
          ramdrivef = MainDir$
          Drive3(1).Drive = MainDir$
@@ -1104,10 +1104,10 @@ Private Sub form_load()
       If WinVer = 5 Or WinVer = 261 Then
         'Windows 2000 identified, use hard drive i
         'since Ramdrive.sys is not supported in Windows 2000.
-        ramdrive = "e"
+        ramdrive = MainDir$ '"e"
       ElseIf WinVer > 5 Then
         'windows vista,7,8....
-        ramdrive = "c"
+        ramdrive = MainDir$ '"c"
         End If
       Drive3(1).Drive = ramdrive
       Input #mapinfonum%, terradir$

@@ -35,8 +35,8 @@ Sub ExportToExcel(drag1x, drag1y, drag2x, drag2y)
       kmxstep = 25
       kmystep = 25
    Else
-      kmxstep = xdim
-      kmystep = ydim
+      kmxstep = XDIM
+      kmystep = YDIM
       End If
       
    'convert to appropriate grid
@@ -258,7 +258,7 @@ errhand:
     Set ExcelBook = Nothing
     Set ExcelSheet = Nothing
            
-   outfil$ = "c:\jk\dtmpiec2.out"
+   outfil$ = drivjk$ & "dtmpiec2.out"
    filnum% = FreeFile
    Open outfil$ For Output As #filnum%
    kmxstep = 25

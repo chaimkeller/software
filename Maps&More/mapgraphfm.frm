@@ -1541,7 +1541,7 @@ ca300:  If response = vbNo Then
             End If
         ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
         ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-ca320:  resp$ = "c:\progra~1\devstu~1\vb\"
+ca320:  resp$ = MainDir$ & "\" '"c:\progra~1\devstu~1\vb\"
 ca325:  If Dir(resp$ & "Cal Program.exe") = sEmpty Then
            'try another possiblility
            resp$ = "c:\devstu~1\vb\"

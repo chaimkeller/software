@@ -226,7 +226,7 @@ Public SearchVis As Boolean, WinVer As Long, XDIM As Double, YDIM As Double, noV
 Public AutoPress As Boolean, IsraelDTMsource%, OnlyExtractFile As Boolean, EastOnly As Boolean, WestOnly As Boolean
 Public CalculateProfile As Integer, SearchCrossSection As Boolean, SearchCrossObstruct As Boolean
 Public rderos2_use As Boolean, IgnoreTiles%, autoazirange%, NoCDWarning As Boolean, TemperatureModel%
-Public MainDir$, Turbo2cdDir$, USADir$, GEOTOPO30Dir$, D3ASDir$
+Public MainDir$, Turbo2cdDir$, USADir$, GEOTOPO30Dir$, D3ASDir$, SamplesDir$, D3dExplorerDir$, ErosCitiesDir$
 
 '----------------GPS global constants------------------------
 Public Const MAX_PORT = 15 'maximum number of com ports to search
@@ -1528,25 +1528,25 @@ If map50 = True Then
               pic1$(i%) = 700 + (n50x%(i%) - 1) * 100 + (n50y%(i%) - 13)
               End If
            If n50x%(i%) >= 4 Then
-              picf$ = "c:\turbo2cd\Itmv2s\MAP50\CLI" + pic1$(i%) + "." + pic2(i%)
+              picf$ = Turbo2cdDir$ & "Itmv2s\MAP50\CLI" + pic1$(i%) + "." + pic2(i%)
               If picold$(i%) = picf$ Then GoTo ld200
               myfile = Dir(picf$)
               If myfile <> sEmpty Then
                  Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
               Else 'load blank bitmap
-                 picf$ = "c:\turbo2cd\Itmv2s\MAP50\CLI0707.dl"
+                 picf$ = Turbo2cdDir$ & "Itmv2s\MAP50\CLI0707.dl"
                  If picold$(i%) = picf$ Then GoTo ld200
                  Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
                  End If
               picold$(i%) = picf$
            Else
-              picf$ = "c:\turbo2cd\Itmv2s\MAP50\CLI0" + pic1$(i%) + "." + pic2(i%)
+              picf$ = Turbo2cdDir$ & "Itmv2s\MAP50\CLI0" + pic1$(i%) + "." + pic2(i%)
               If picold$(i%) = picf$ Then GoTo ld200
               myfile = Dir(picf$)
               If myfile <> sEmpty Then
                  Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
               Else 'load blank bitmap
-                 picf$ = "c:\turbo2cd\Itmv2s\MAP50\CLI0707.dl"
+                 picf$ = Turbo2cdDir$ & "Itmv2s\MAP50\CLI0707.dl"
                  If picold$(i%) = picf$ Then GoTo ld200
                  Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
                  End If
@@ -1590,13 +1590,13 @@ ld200:
 
        'now load the buffers
         For i% = 1 To 9
-            picf$ = "c:\turbo2cd\Itmv3.1\map50\cli" + LTrim$(pic1$(i%) & ".bmp")
+            picf$ = Turbo2cdDir$ & "Itmv3.1\map50\cli" + LTrim$(pic1$(i%) & ".bmp")
             If picold$(i%) = picf$ Then GoTo ld300
             myfile = Dir(picf$)
             If myfile <> sEmpty Then
                Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
             Else 'load blank bitmap
-               picf$ = "c:\turbo2cd\Itmv3.1\map50\cli0707.bmp"
+               picf$ = Turbo2cdDir$ & "Itmv3.1\map50\cli0707.bmp"
                If picold$(i%) = picf$ Then GoTo ld300
                Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
                End If
@@ -1702,25 +1702,25 @@ ElseIf map400 = True Then
        'DoEvents
        pic1$(i%) = 792 + 8 * (n400y%(i%) - 1) + 800 * (n400x%(i%) - 1)
        If n400x%(i%) >= 2 Then
-          picf$ = "c:\turbo2cd\Itmv2s\MAP400\C4u" + pic1$(i%) + "." + pic2(i%)
+          picf$ = Turbo2cdDir$ & "Itmv2s\MAP400\C4u" + pic1$(i%) + "." + pic2(i%)
           If picold$(i%) = picf$ Then GoTo ld400
           myfile = Dir(picf$)
           If myfile <> sEmpty Then
              Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
           Else 'load blank bitmap
-             picf$ = "c:\turbo2cd\Itmv2s\MAP50\CLI0707.dl"
+             picf$ = Turbo2cdDir$ & "Itmv2s\MAP50\CLI0707.dl"
              If picold$(i%) = picf$ Then GoTo ld400
              Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
              End If
           picold$(i%) = picf$
        Else
-          picf$ = "c:\turbo2cd\Itmv2s\MAP400\C4u0" + pic1$(i%) + "." + pic2(i%)
+          picf$ = Turbo2cdDir$ & "Itmv2s\MAP400\C4u0" + pic1$(i%) + "." + pic2(i%)
           If picold$(i%) = picf$ Then GoTo ld400
           myfile = Dir(picf$)
           If myfile <> sEmpty Then
              Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
           Else 'load blank bitmap
-             picf$ = "c:\turbo2cd\Itmv2s\MAP50\CLI0707.dl"
+             picf$ = Turbo2cdDir$ & "Itmv2s\MAP50\CLI0707.dl"
              If picold$(i%) = picf$ Then GoTo ld400
              Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
              End If
@@ -1867,13 +1867,13 @@ ElseIf world = True Then
        'DoEvents
        pic1$(i%) = LTrim$(RTrim$(Str$(n400x%(i%)))) + LTrim$(RTrim$(Str$(n400y%(i%))))
        If mapimport = False Then
-            picf$ = "c:\turbo2cd\worldl" + pic1$(i%) + "." + pic2(i%)
+            picf$ = Turbo2cdDir$ & "worldl" + pic1$(i%) + "." + pic2(i%)
             If picold$(i%) = picf$ Then GoTo ld600
             myfile = Dir(picf$)
             If myfile <> sEmpty Then
                Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
             Else 'load blank bitmap
-               picf$ = "c:\turbo2cd\worldl33.ur"
+               picf$ = Turbo2cdDir$ & "worldl33.ur"
                If picold$(i%) = picf$ Then GoTo ld600
                Maps.PictureClip1(i% - 1).Picture = LoadPicture(picf$)
                End If
@@ -2419,23 +2419,23 @@ skyt10:
 
        If skyleftjump = False Then
           dx1 = -80
-          If WinVer = 261 Then dx1 = -70
+          If WinVer = 5 Then dx1 = -70
           
           If gotobutton = True Then dx1 = 0 'coming from goto button
           dy1 = 221 '23 '33
-          If WinVer = 261 Then dy1 = 220 '200
+          If WinVer = 5 Then dy1 = 220 '200
           
           If placdblclk = True Then 'coming from dblclick of place window
              dx1 = -245 'position cursor over goto button '<<<!!!>>> fix for XP
              dy1 = 25
-             If WinVer = 261 Then
+             If WinVer = 5 Then
                 dx1 = 0.9 * dx1
                 dy1 = 0.9 * dy1
                 End If
              Call mouse_event(MOUSEEVENTF_MOVE, adx1 * dx1, bdy1 * dy1, 0, 0) 'move mouse to Location item
              dx1 = 5 '-80
              dy1 = 221
-             If WinVer = 261 Then
+             If WinVer = 5 Then
                 dx1 = 0.9 * dx1
                 dy1 = 0.9 * dy1
                 End If
@@ -2447,7 +2447,7 @@ skyt10:
        Else
           dxo = (mapwi2 - Xcoord) / 30 + 30
           dyo = (maphi2 - Ycoord) / 30 - 40
-          If WinVer = 261 Then '<<<!!!>>>
+          If WinVer = 5 Then '<<<!!!>>>
              dxo = 0.9 * dxo
              dyo = 1.025 * dyo '0.9 * dyo
              End If
@@ -2630,7 +2630,7 @@ sky50: Call keybd_event(VK_SHIFT, 0, 0, 0) 'enter SKYx
        'goto to altitude edit box
         dx1 = 10
         dy1 = -10
-        If WinVer = 261 Then
+        If WinVer = 5 Then
            dx1 = 12
            dy1 = -13
            End If
@@ -2676,7 +2676,7 @@ sky50: Call keybd_event(VK_SHIFT, 0, 0, 0) 'enter SKYx
           'return pointer to center of map
           dx1 = -(mapwi2 / 60) - 40 - mapxdif / 30
           dy1 = -(maphi2 / 60) + 50 - mapydif / 30
-          If WinVer = 261 Then
+          If WinVer = 5 Then
              dx1 = -67 '-dxo + 38
              dy1 = -38 '-dyo + 22
              End If
@@ -4518,7 +4518,7 @@ ts5: endflag% = 0
      
      'now run egg if flagged
      If viewer3D = True Then
-        ret = Shell("c:\samples\vc98\sdk\graphics\directx\egg\debug\egg.exe", vbNormalFocus)
+        ret = Shell(SamplesDir$ & "vc98\sdk\graphics\directx\egg\debug\egg.exe", vbNormalFocus)
         GoTo mm600
         End If
      
@@ -4681,7 +4681,9 @@ ms700:
        Screen.MousePointer = vbDefault
        myfile = Dir(drivjk_c$ & "eros.tmp")
        If myfile = sEmpty Then 'if empty then, something is wrong
-          MsgBox "Something wrong with the rderos2 analysis." & vbLf & _
+          MsgBox "Can't find the eros.tmp output file (horizon profile)." & vbLf & _
+                 "This usually means something is wrong with either the" & vclf & _
+                 "newreaddtm or rderos2 analysis." & vbLf & _
                  "Hint: check your longitude and/or latitude ranges.", _
                   vbCritical + vbOKOnly, "Maps & More"
           GoTo mm999

@@ -1317,17 +1317,17 @@ Private Sub importmapfm_Click()
    'then blit map--details of the map are stored in its associated .map file
    'see below for details of the .map file
    On Error GoTo errhand
-   mydir$ = Dir("c:\eroscities\*.*")
+   mydir$ = Dir(ErosCitiesDir$ & "*.*")
    If mydir$ <> sEmpty Then
-      mapdir$ = "c:\eroscities"
+      mapdir$ = ErosCitiesDir$
    Else
-      mapdir$ = "f:\eroscities"
+      mapdir$ = Mid$(MainDir$, 1, 1) & ":\eroscities\"
       End If
    ChDir mapdir$
    CommonDialog1.CancelError = True
    CommonDialog1.Filter = "City maps as bitmaps (*.bmp)|*.bmp|City maps as gif files (*.gif)|*.gif|City maps as jpegs (*.jpg)|*.jpg|"
    CommonDialog1.FilterIndex = 2
-   CommonDialog1.FileName = mapdir$ + "\*.gif"
+   CommonDialog1.FileName = mapdir$ + "*.gif"
    CommonDialog1.ShowOpen
    mapfile$ = CommonDialog1.FileName
    mapinfo$ = Mid$(mapfile$, 1, Len(mapfile$) - 3) + "map"
@@ -1355,7 +1355,7 @@ Private Sub importmapfm_Click()
                End If
            ext$ = doclin$
            Input #mapinfonum%, xpix, ypix
-           blank$ = mapdir$ + "\" + "blank" + LTrim$(RTrim$(Str$(xpix))) + "_" + LTrim$(RTrim$(Str$(ypix))) + "." + ext$
+           blank$ = mapdir$ + "blank" + LTrim$(RTrim$(Str$(xpix))) + "_" + LTrim$(RTrim$(Str$(ypix))) + "." + ext$
            If Dir(blank$) = sEmpty Then
               response = MsgBox("blank picture file: " & blank$ & " not found", vbCritical + vbOKOnly, "Maps & More")
               Exit Sub
@@ -1696,13 +1696,13 @@ Private Sub MDIForm_Load()
    
    MainDir$ = App.Path
    
-   If WinVer = 5 Or WinVer = 261 Then 'Windows 2000 or XP
+   If WinVer = 5 Then 'Or WinVer = 261 Then 'Windows 2000 or XP
       driveletters$ = "cdefghijklmnop" 'include "d" directory in list
    Else
       driveletters$ = "cefghijklmnopq" 'exclude "d" directory
       End If
       
-   s1% = 0: S2% = 0: s3% = 0: s4% = 0: s5% = 0: s6% = 0: s7% = 0: s8% = 0: s9% = 0: s10% = 0: s11% = 0
+   s1% = 0: S2% = 0: s3% = 0: s4% = 0: s5% = 0: s6% = 0: s7% = 0: s8% = 0: s9% = 0: s10% = 0: s11% = 0: s12% = 0
    For i% = 1 To numdriv%
 '   For i% = 4 To numdriv%
       drivlet$ = Mid$(driveletters$, i%, 1)
@@ -1731,27 +1731,33 @@ Private Sub MDIForm_Load()
                '   s4% = 1: drivprom$ = drivlet$ + ":\prom\"
                'ElseIf s5% = 0 And myname = "prof" Then
                '   s5% = 1: drivprof$ = drivlet$ + ":\prof\"
-               ElseIf s6% = 0 And myname = "dtm" Then
+               ElseIf s5% = 0 And myname = "eroscities" Then
+                  s5% = 1: ErosCitiesDir$ = drivlet$ + ":\eroscities\"
+               ElseIf s6% = 0 And myname = "dtm" Or myname = "Dtm" Then
                   s6% = 1: drivdtm$ = drivlet$ + ":\dtm\"
                ElseIf s7% = 0 And myname = "turbo2cd" Then
                   s7% = 1: Turbo2cdDir$ = drivlet$ + ":\turbo2cd\"
                ElseIf s8% = 0 And myname = "usa" Then
                   s8% = 1: USADir$ = drivlet$ + ":\usa\"
-               ElseIf s9% = 0 And myname = "turbo2cd" Then
-                  s9% = 1: Turbo2cdDir$ = drivlet$ + ":\turbo2cd\"
-               ElseIf s10% = 0 And myname = "E020n40" Then
-                  s10% = 1: GEOTOPO30Dir$ = drivlet$ + ":"
-               ElseIf s11% = 0 And myname = "3AS" Then
-                  s11% = 1: D3ASDir$ = drivlet$ + ":\3AS\"
+               ElseIf s9% = 0 And myname = "e020n40" Then
+                  s9% = 1: GEOTOPO30Dir$ = drivlet$ + ":"
+               ElseIf s10% = 0 And myname = "3as" Then
+                  s10% = 1: D3ASDir$ = drivlet$ + ":\3as\"
+               ElseIf s11% = 0 And InStr(myname, "samples") <> 0 Then
+                  s11% = 1: SamplesDir$ = drivlet$ + ":" & myname & "\"
+               ElseIf s12% = 0 And InStr(myname, "3dexplorer") <> 0 Then
+                  s12% = 1: D3dExplorerDir$ = drivlet$ + ":" & myname & "\"
                   End If
                'If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s5% = 1 And s6% = 1 Then GoTo cdc1
-               If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s6% = 1 And s7% = 1 And _
-                  s8% = 0 And s9% = 0 And s10% = 0 And s11% = 0 Then GoTo cdc1
+               If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s5% = 0 And s6% = 1 And s7% = 1 And _
+                  s8% = 1 And s9% = 1 And s10% = 1 And s11% = 1 And s12% = 1 Then
+                  GoTo 5
+                  End If
                End If 'it represents a directory
             End If
          myname = Dir 'Get next entry
       Loop
-   Next i%
+l5:   Next i%
 
 cdc1: If s1% = 0 Then
          drivjk$ = InputBox("Can't find the ""jk"" directory, please give the full path name below " + _
@@ -1813,41 +1819,48 @@ cdc3: If s3% = 0 Then
             End If
          End If
 
-cdc4: 'If s4% = 0 Then
-      '   drivprom$ = InputBox("Can't find the ""prom"" directory, please give the full path name below " + _
-      '            "(e.g., if prom is a subdirectory of c:\program\random\, then input: ""c:\program\random\"" (including the last backslash)")
-      '   If drivprom$ <> sEmpty Then 'check the directory
-      '      myname = Dir(drivcities$, vbDirectory)
-      '      If myname = sEmpty Then
-      '         response = MsgBox("The directory was not found at at the inputed path.  Do you wan't to try inputing it's path again? (inclue the drive letter, as well as the last backslash, e.g., ""c:\program\random\"")", vbCritical + vbYesNo, "Cal Programs")
-      '         If response = vbYes Then
-      '            GoTo cdc4
-      '         Else
-      '            GoTo ce10
-      '            End If
-      '         End If
-      '   ElseIf drivprom$ = sEmpty Then 'user canceled the operation
-      '      GoTo ce10
-      '      End If
-      '   End If
+cdc4: If s4% = 0 Then
+         drivjk_c$ = InputBox("Can't find the ""jk_c"" directory or some essential utilities that reside there " + _
+                    "possibly including one or more of the following: " & vbLf & _
+                    "1. newreaddtm.exe" & vbLf & _
+                    "2. Readlst3.exe" & vbLf & _
+                    "3. rdhalba4.exe" & vbLf & _
+                    "Please give the full path name to the jk_c folder containing these files below " & vbLf & _
+                    "(e.g., if jk_c is a subdirectory of c:\program\random\, then input: ""c:\program\random\"" (including the last backslash)")
+         If drivjk_c$ <> sEmpty Then 'check the directory
+            myname = Dir(drivjk_c$, vbDirectory)
+            If myname = sEmpty Then
+               response = MsgBox("The directory was not found at at the inputed path.  Do you wan't to try inputing it's path again? (inclue the drive letter, as well as the last backslash, e.g., ""c:\program\random\"")", vbCritical + vbYesNo, "Cal Programs")
+               If response = vbYes Then
+                  GoTo cdc4
+               Else
+                  GoTo ce10
+                  End If
+           Else
+             s4% = 1
+             End If
+         ElseIf drivjk_c$ = sEmpty Then 'user canceled the operation
+            GoTo ce10
+            End If
+         End If
 
-cdc5: 'If s5% = 0 Then
-      '   drivprof$ = InputBox("Can't find the ""prof"" directory, please give the full path name below " + _
-      '            "(e.g., if prof is a subdirectory of c:\program\random\, then input: ""c:\program\random\"" (ncluding the last backslash)")
-      '   If drivprof$ <> sEmpty Then 'check the directory
-      '      myname = Dir(drivprof$, vbDirectory)
-      '      If myname = sEmpty Then
-      '         response = MsgBox("The directory was not found at at the inputed path.  Do you wan't to try inputing it's path again? (inclue the drive letter, as well as the last backslash, e.g., ""c:\program\random\"")", vbCritical + vbYesNo, "Cal Programs")
-      '         If response = vbYes Then
-      '            GoTo cdc5
-      '         Else
-      '            GoTo ce10
-      '            End If
-      '         End If
-      '   ElseIf drivprof$ = sEmpty Then 'user canceled the operation
-      '      GoTo ce10
-      '      End If
-      '   End If
+cdc5: If s5% = 0 Then
+         ErosCitiesDir$ = InputBox("Can't find the ""eroscities"" directory, please give the full path name below " + _
+                  "(e.g., if prof is a subdirectory of c:\program\random\, then input: ""c:\program\random\"" (ncluding the last backslash)")
+         If ErosCitiesDir$ <> sEmpty Then 'check the directory
+            myname = Dir(ErosCitiesDir$, vbDirectory)
+            If myname = sEmpty Then
+               response = MsgBox("The directory was not found at at the inputed path.  Do you wan't to try inputing it's path again? (inclue the drive letter, as well as the last backslash, e.g., ""c:\program\random\"")", vbCritical + vbYesNo, "Cal Programs")
+               If response = vbYes Then
+                  GoTo cdc5
+               Else
+                  GoTo ce10
+                  End If
+               End If
+         ElseIf ErosCitiesDir$ = sEmpty Then 'user canceled the operation
+            GoTo ce10
+            End If
+         End If
 
 cdc6: If s6% = 0 Then
          drivdtm$ = InputBox("Can't find the ""dtm"" directory, please give the full path name below " + _
@@ -1882,7 +1895,7 @@ cdc7: If s7% = 0 Then
                   GoTo ce10
                   End If
             Else
-               s6% = 1
+               s7% = 1
                End If
          ElseIf Turbo2cdDir$ = sEmpty Then 'user canceled the operation
             GoTo ce10
@@ -1890,16 +1903,38 @@ cdc7: If s7% = 0 Then
          End If
 
 '      If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s5% = 1 And s6% = 1 Then GoTo 5
-      If s1% = 1 And S2% = 1 And s3% = 1 And s6% = 1 And s7% = 1 Then GoTo 5
+      If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s6% = 1 And s7% = 1 Then GoTo 5
    'if got here, means that couldn't find the cities directory
 ce10: MsgBox "Can't locate necessary directories! ABORTING program...Sorry", vbCritical + vbOKOnly, "Cal Programs"
       Call MDIform_queryunload(i%, j%)
 
    'determine if DTMs are present, and where they are
-5  XDIM = 8.33333333333333E-03 'GTOPO30 is default DTM
+5
+    'check for other exe files that must reside in the jk_c directory
+    'now make sure it contains the relevant exe files, and if not return warning
+    myfile = Dir(drivjk_c$ + "\newreaddtm.exe")
+    If myfile <> sEmpty Then
+      'keep on looking for other exe files
+       myfile = Dir(drivjk_c$ + "\Readlst3.exe")
+       If myfile <> sEmpty Then
+          'keep on looking for other exe files
+          myfile = Dir(drivjk_c$ & "\rdhalba4.exe")
+          If myfile <> sEmpty Then
+             'record as the jk file
+          Else
+             s4% = 0: GoTo cdc4
+             End If
+        Else
+          s4% = 0: GoTo cdc4
+          End If
+    Else
+      s4% = 0: GoTo cdc4
+      End If
+
+   XDIM = 8.33333333333333E-03 'GTOPO30 is default DTM
    YDIM = 8.33333333333333E-03
 
-   myfile = Dir(drivjk$ + "mapcdinfo.sav")
+   myfile = Dir(drivjk_c$ + "mapcdinfo.sav")
    If myfile = sEmpty Then
       'use the searched for inputs
       If drivdtm$ <> sEmpty Then
@@ -1919,6 +1954,7 @@ ce10: MsgBox "Can't locate necessary directories! ABORTING program...Sorry", vbC
       If GEOTOPO30Dir$ <> sEmpty Then
          worlddtmcdf = False
          worlddtmf = GEOTOPO30Dir$
+         worlddtm = worlddtmf
          worldtmcdnuMf = 0
       Else
         worlddtmcdf = True
@@ -1928,7 +1964,7 @@ ce10: MsgBox "Can't locate necessary directories! ABORTING program...Sorry", vbC
         End If
    Else
       mapinfonum% = FreeFile
-      Open drivjk$ + "mapcdinfo.sav" For Input As #mapinfonum%
+      Open drivjk_c$ + "mapcdinfo.sav" For Input As #mapinfonum%
       Input #mapinfonum%, israeldtmf, israeldtmcdnumf
       israeldtm = israeldtmf
       If israeldtmcdnumf = 0 Then
@@ -1957,9 +1993,9 @@ ce10: MsgBox "Can't locate necessary directories! ABORTING program...Sorry", vbC
       Close #mapinfonum%
       End If
 
-  If WinVer = 5 Or WinVer = 261 Then 'Windows 2000 or XP
-     ramdrive = "e"
-     ramdrivef = "e"
+  If WinVer = 5 Then 'Or WinVer = 261 Then 'Windows 2000 or XP
+     ramdrive = MainDir$ '"e"
+     ramdrivef = MainDir$ '"e"
      Timer3.Enabled = False 'don't check system resources
      End If
      
@@ -2256,6 +2292,10 @@ map50:
          kmyc = 1131700
          End If
       Input #filnum%, kmxc, kmyc, hgtpos
+      If kmxc = 0 And kmyc = 0 Then
+         kmxc = 172352
+         kmyc = 1131700
+         End If
       Input #filnum%, lon, lat, hgtworld
       Input #filnum%, maxangf%, diflogf%, diflatf%, fullrangef%, viewmodef%, modevalf
       Input #filnum%, DTMflag
@@ -2268,9 +2308,9 @@ map50:
       Input #filnum%, TemperatureModel%
       Close #filnum%
       
-      If Dir(drivjk$ & "mapSRTMinfo.sav") <> sEmpty Then
+      If Dir(drivjk_c$ & "mapSRTMinfo.sav") <> sEmpty Then
         mapinfonum% = FreeFile
-        Open drivjk$ & "mapSRTMinfo.sav" For Input As #mapinfonum%
+        Open drivjk_c$ & "mapSRTMinfo.sav" For Input As #mapinfonum%
         Input #mapinfonum%, srtmdtm, srtmdtmcdnum
         If srtmdtmcdnum = 1 Then
            srtmdtmcd = True
@@ -2345,6 +2385,8 @@ map50:
    Exit Sub
 
 errorload:
+    num = Err.Number
+    If num = 68 Then GoTo l5
    Unload mapsplash
    If filnum% > 0 Then Close #filnum%
    If Err.Number = 71 Then
@@ -4663,10 +4705,10 @@ d100:   Next i%
                tblbuttons(3) = 1
                Maps.Toolbar1.Buttons(3).value = tbrPressed
                If ExplorerDir = sEmpty Then
-                  If WinVer <> 5 And WinVer <> 261 Then
-                     ExplorerDir = "c:\3dexplorer\"
+                  If WinVer <> 5 Then ' And WinVer <> 261 Then
+                     ExplorerDir = D3dExplorerDir$ '"c:\3dexplorer\"
                   ElseIf WinVer = 5 Or WinVer = 261 Then
-                     ExplorerDir = "e:\3dexplorer\"
+                     ExplorerDir = D3dExplorerDir$ '"e:\3dexplorer\"
                      End If
                   End If
                If Dir(ExplorerDir & "3dxusa.exe") = sEmpty Then
@@ -5551,7 +5593,7 @@ sky200:      Call skyTERRAgoto
              'move pointer back to original position
              dx1 = 70 '-30 '30
              dy1 = -211 '-240 '60
-             If WinVer = 261 Then
+             If WinVer = 5 Then '261 Then
                 dx1 = 35
                 dy1 = -115
                 End If
@@ -6130,7 +6172,7 @@ Private Sub MDIform_queryunload(Cancel As Integer, UnloadMode As Integer)
 
 'now save the world DTM extraction if desired
 fq4: doclin$ = Dir(ramdrive + ":\*.bin")
-   myfile = Dir(drivjk$ + "eros.tm3")
+   myfile = Dir(drivjk_c$ + "eros.tm3")
    myfile2 = Dir(drivdtm$ & "eros.tm3")
    If myfile2 = sEmpty Then GoTo fq02
    If doclin$ <> sEmpty And myfile <> sEmpty And Dir(drivdtm$ & "*.bi1") <> sEmpty Then
@@ -6143,7 +6185,7 @@ fq4: doclin$ = Dir(ramdrive + ":\*.bin")
           Input #filtmp%, beglogch, endlogch, beglatch, endlatch
           Close #filtmp%
           filtmp% = FreeFile
-          Open drivjk$ + "eros.tm3" For Input As #filtmp%
+          Open drivjk_c$ + "eros.tm3" For Input As #filtmp%
           Line Input #filtmp%, filn33$
           Input #filtmp%, l1, l2, hgt, angch, apch, Mode%, modval%
           Input #filtmp%, beglog, endlog, beglat, endlat
@@ -6188,7 +6230,7 @@ fq02: lResult = FindWindow(vbNullString, terranam$)
             GoTo fqq5
             End If
          FileCopy ramdrive + ":\" + doclin$, drivdtm$ & "" + doclin$
-         FileCopy drivjk$ + "eros.tm3", drivdtm$ & "eros.tm3"
+         FileCopy drivjk_c$ + "eros.tm3", drivdtm$ & "eros.tm3"
          If Dir(ramdrive + ":\land.x") <> sEmpty And Dir(ramdrive + ":\land.tm3") <> sEmpty Then
             response = MsgBox("Do you wan't to save the 3D Viewer (*.x) file and (*.tm3) file?", vbQuestion + vbYesNoCancel, "Maps & More")
             If response = vbYes Then
