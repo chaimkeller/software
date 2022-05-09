@@ -58,10 +58,18 @@ END_MESSAGE_MAP()
 
 //////////////////////external modules///////////////////
 short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] );
-
+char *RemoveCRLF( char *str );
+char *fgets_CR( char *str, short strsize, FILE *stream );
+int InStr( short nstart, char * str, char * str2 );
+int InStr( char * str, char * str2 );
 
 /////////////////////////////////////////////////////////////////////////////
 // CNewreadDTMDlg message handlers
+
+///////////////////////////////PLEASE NOTE//////////////////////////////////////////////
+//This program is called by Maps&More VB6 program.
+//The program modules, flag files, and DTM directories must reside either of Windows Disk c or e
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 char worlddtm[]="";
 bool worlddtmcd;
@@ -76,6 +84,18 @@ char tmpfil[81];
 
 //declare function
 int WhichJK();
+int WhichJK_2();
+//declare global variables used with the above functions
+//WhereJK stores the eros.tm3 folder's letter number, WhereJK2 stores the folder's letter number for the mapcdinfo.sav file
+//the numbers are from 0-13 corresponding to the testdrv letters below.
+int WhereJK, WhereJK2;
+char testdrv[13] = "cdefghijklmn";
+char drivlet[2] = "c";
+char bufFileName[255] = "";
+char doclin[255] = ""; //used for fget_CR reading of one line of file
+char seps[]   = " ,\t\n"; //used for strtok parsing the above one line of the file
+
+
 //int Profile( double kmyo,double kmxo, double hgt, double mang, double aprn,double nnetz,double modval, 
 //		double lgo,double endlg, double beglt, double endlt);
 
@@ -93,8 +113,9 @@ BOOL CNewreadDTMDlg::OnInitDialog()
 	char s[81]="";
 	FILE *stream;
 	CString lpszText;
-	int WhereJK;
 	short ier,MinT[12],AvgT[12],MaxT[12],iTK;
+	char *token;
+
 	//bool TimerSet = FALSE;
 
 
@@ -137,59 +158,56 @@ BOOL CNewreadDTMDlg::OnInitDialog()
    worldCD[27] = 4;
    worldCD[28] = 5;
 
-   WhereJK = WhichJK();
-	
-   //check for Windows XP by trying to read something innocuous	
-   if (WhereJK == 1 ) //XP
-		{
-		strncpy( ramdrive, "c", 1);
-		strncpy( worlddtm, "c", 1 );
-		worlddtmcd = FALSE;
-		goto w2000;
-		}
    
-   //else read the directory where the DTM resides
-	//and whether it is a CD or the a hard disk partition
-	//also find out where the ramdrive is
-    if (WhereJK == 2)
+   // read the worddtm file drive contained in the mapcdinfo.sav file
+   //find out where that file resides and open it
+   WhereJK2 = WhichJK_2();
+
+   if (WhereJK2 != 0)
+   {
+	   drivlet[0] = testdrv[WhereJK2 - 1];
+	   drivlet[1] = 0;
+   }
+   else
+   {
+		lpszText = "Can't find the file mapcdinfo.sav!";
+		reply = AfxMessageBox( lpszText, MB_OK | MB_ICONSTOP | MB_APPLMODAL );		
+		OnCancel();
+   }
+
+	sprintf(bufFileName, "%s%s", drivlet, ":\\jk_c\\mapcdinfo.sav");
+	if ( (stream = fopen( bufFileName, "r" )) != NULL )
 	{
-	strcpy(pszFileName,"c:\\jk\\mapcdinfo.sav");
-	if ( (stream = fopen( pszFileName, "r" )) == NULL )
-		{
-		strncpy( worlddtm, "h", 1 );
-		strncpy( ramdrive, "e", 1 );
-		worlddtmcd = TRUE;
-		}
-	else
-		{
-//		strncpy( worlddtm, "c", 1 );
-//		strncpy( ramdrive, "e", 1 );
-//		worlddtmcd = FALSE;
-		fscanf( stream, "%1s, %d\n", &worlddtm, &worlddtmcd);
-		fscanf( stream, "%1s, %d", &worlddtm, &worlddtmcd);
-		fscanf( stream, "%1s", &ramdrive );
+		fgets_CR(doclin, 255, stream);
+		//parse the output
+		token = strtok( doclin, seps );
+		strcpy(worlddtm, token);
+		token = strtok( NULL, seps );
+		worlddtmcd = atoi(token);
+		fgets_CR(doclin, 255, stream);
+		fscanf( stream, "%s\n", &ramdrive );
 		fclose( stream );
-		}
 	}
+
 	
 	//open eros.tm3 file and read beglat,endlat,etc.
 w2000:
-	if (WhereJK == 1)
-		{
-		pszFileName = "c:\\jk_c\\eros.tm3";
-		}
-	else if (WhereJK == 2)
-		{
-		pszFileName = "c:\\jk\\eros.tm3";
-		}
-	else
-		{
+
+   WhereJK = WhichJK();
+   if (WhereJK != 0)
+   {
+	   drivlet[0] = testdrv[WhereJK - 1];
+	   drivlet[1] = 0;
+	   sprintf(bufFileName, "%s%s", drivlet, ":\\jk_c\\eros.tm3");
+   }
+   else
+   {
 		lpszText = "Can't find the file eros.tm3!";
 		reply = AfxMessageBox( lpszText, MB_OK | MB_ICONSTOP | MB_APPLMODAL );		
 		OnCancel();
-		}
+   }
 
-    stream = fopen( pszFileName, "r" );
+    stream = fopen( bufFileName, "r" );
  	fscanf( stream, "%s", st2);
 	fscanf( stream, "%lg,%lg,%lg,%d,%lg,%d,%f\n", &lat0,&lon0,&hgt0,&ang,&aprn,&mode,&modeval );
 	fscanf( stream, "%lg,%lg,%lg,%lg", &beglog,&endlog,&beglat,&endlat );
@@ -201,6 +219,7 @@ w2000:
 		fscanf( stream, "%d\n", &IgnoreMissingTiles);
 		fscanf( stream, "%d\n", &TemperatureModel);
 		fscanf( stream, "%lg\n", &Tground);
+		fscanf( stream, "%lg\n", &treehgt);
 
 		if (Tground == 0) {
 			ier = Temperatures(lat0,lon0,MinT,AvgT,MaxT);
@@ -489,8 +508,6 @@ char lt1ch[2];
 char lch[2];
 char EW[1];
 char NS[1];
-int WhereJK;
-
 
 /////declare functions/////////
 
@@ -534,7 +551,7 @@ int WhichJK_2();
 	double begkmx, endkmx, skipkmx, skipkmy;
 	int nbegkmx, numkmx, i__, i__1, i__2, i__3, i__4, nk;
 	double re, rekm, range, kmx, kmy, dkmy, testazi;
-	float hgt2, treehgt = 0, fudge = 0, xentry;
+	float hgt2, fudge = 0, xentry;
 	double lg2, lt2, x1, x2, y1, y2, z1, z2, d__1, d__2, d__3;
 	double distd, re1, re2, deltd, dist1, dist2, angle, viewang;
 	double d__, x1d, y1d, z1d, azicos, x1s, y1s, z1s, x1p, y1p, z1p, azisin, azi;
@@ -754,18 +771,16 @@ int WhichJK_2();
 		
 		// now extract the file name of the BIN file
 		// to reside on the g: RAMDRIVE
-ret1:   WhereJK = WhichJK();
-		if (WhereJK == 1) 
+ret1:   if (WhereJK != 0) 
 		{
-		pszFileName = "c:\\jk_c\\eros.tm3";
-		}
-		else if (WhereJK == 2)
-		{
-		pszFileName = "c:\\jk\\eros.tm3";
+			drivlet[0] = testdrv[WhereJK - 1];
+			drivlet[1] = 0;
+			bufFileName[0] = 0; //zero string
+			sprintf(bufFileName, "%s%s", drivlet, ":\\jk_c\\eros.tm3" );
 		}
 		else
 		{
-			reply = AfxMessageBox( "Can't find the file c:\\jk\\eros.tm3!", MB_OK | MB_ICONSTOP | MB_APPLMODAL );		
+			reply = AfxMessageBox( "Can't find the file eros.tm3 in the jk_c folder!", MB_OK | MB_ICONSTOP | MB_APPLMODAL );		
 			delete [] lg1chk;
 			delete [] lt1chk;
 			delete [] kmxb1;
@@ -777,7 +792,7 @@ ret1:   WhereJK = WhichJK();
 			delete [] filt1;
 			OnCancel();
 		}
-	    stream = fopen( pszFileName, "r" );
+	    stream = fopen( bufFileName, "r" );
 		fscanf( stream, "%s", st2);
 		fclose( stream );
 
@@ -1447,10 +1462,11 @@ endProfiles:
 skipdx:  ;
 		/* write flag to disk to tell VB program that computations
 		   have ended successfully*/
-        if (WhereJK == 1)  
-		    stream2 = fopen( "c:\\jk_c\\newreaddtm.end", "w" );
-        if (WhereJK == 2)  
-		    stream2 = fopen( "c:\\jk\\newreaddtm.end", "w" );
+		drivlet[0] = testdrv[WhereJK - 1];
+        drivlet[1] = 0;
+		bufFileName[0] = 0;
+		sprintf(bufFileName, "%s%s", drivlet, ":\\jk_c\\newreaddtm.end" );
+	    stream2 = fopen( bufFileName, "w" );
 		fprintf( stream2, "%d", 0 );
 		fclose( stream2 );
 		fcloseall();
@@ -2162,29 +2178,28 @@ Profiles:
 /*          if range >= 40 km and SRTM-1, then reduce step size to ~ 60m */
 			if (range >= 40. && DTMflag == 1) {
 				numskip = 2;
-			
-				if (range >= 40. && range < 60) {
-					numskip = 2; }
-				else if (range >= 60 && range < 80) {
-					numskip = 3; }
-				else if (range >= 80 && range < 120) {
-					numskip = 4; }
-				else if (range >= 120 && range < 160) {
-					numskip = 5; }
-				else if (range >= 160 && range < 200) {
-					numskip = 6; }
-				else if (range >= 200 && range < 220) {
-					numskip = 8; }
-				else if (range >= 220 && range < 240) {
-					numskip = 9; }
-				else if (range >= 240 && range < 260) {
-					numskip = 10; }
-				else if (range >= 260 && range < 280) {
-					numskip = 11; }
-				else if (range >= 280 && range < 300) {
-					numskip = 12;}
-				else if (range >= 300) {
-					numskip = 13;}			
+			if (range >= 40. && range < 60) {
+				numskip = 2; }
+			else if (range >= 60 && range < 80) {
+				numskip = 3; }
+			else if (range >= 80 && range < 120) {
+				numskip = 4; }
+			else if (range >= 120 && range < 160) {
+				numskip = 5; }
+			else if (range >= 160 && range < 200) {
+				numskip = 6; }
+			else if (range >= 200 && range < 220) {
+				numskip = 8; }
+			else if (range >= 220 && range < 240) {
+				numskip = 9; }
+			else if (range >= 240 && range < 260) {
+				numskip = 10; }
+			else if (range >= 260 && range < 280) {
+				numskip = 11; }
+			else if (range >= 280 && range < 300) {
+				numskip = 12;}
+			else if (range >= 300) {
+				numskip = 13;}			
 			
 			}
 		} else if (nnetz == 0) {
@@ -2469,29 +2484,37 @@ L550:
 
 	char Header[255] = "";
 
-	if ( f =fopen("c:/jk_c/eros.tmp", "w" ) ) 
+	if (WhereJK != 0)
 	{
-		if (TemperatureModel == 1) { //new Wikipedia version of TR added, record the temprature used to calculate TR
-			sprintf( Header, "%s,%6.2f","Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy", Tground );
-			fprintf( f, "%s\n", Header );
-			//fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,1" );
-		}else if (TemperatureModel == -1) { //old version
-			fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR" );
-		}else if (TemperatureModel == 0 || TemperatureModel == 2) { //no added terrestrial refraction, or TR removed
-			fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0" );
+		drivlet[0] = testdrv[WhereJK - 1];
+		drivlet[1] = 0;
+		bufFileName[0] = 0;
+		sprintf(bufFileName, "%s%s", drivlet, ":\\jk_c\\eros.tmp"); 
+
+		if ( f =fopen(bufFileName, "w" ) ) 
+		{
+			if (TemperatureModel == 1) { //new Wikipedia version of TR added, record the temprature used to calculate TR
+				sprintf( Header, "%s,%6.2f","Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy", Tground );
+				fprintf( f, "%s\n", Header );
+				//fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,1" );
+			}else if (TemperatureModel == -1) { //old version
+				fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR" );
+			}else if (TemperatureModel == 0 || TemperatureModel == 2) { //no added terrestrial refraction, or TR removed
+				fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0" );
+			}
+			//fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR" );
+
+			////////////////////////////edit 101520/////////////////////////////////////////////////
+			//record the height used for the calculation = hgt, and not the original ground height hgt0
+			////////////////////////////////////////////////////////////////////////////////////////////
+			fprintf( f, "%f,%f,%lg,%lg,%lg,%lg,%lg,%lg\n", lat0, -lon0, hgt, -startkmx, -sofkmx, dstpointx, dstpointy, apprnr);
+			///////////////////////////////////end edit//////////////////////////////////////////////////////
 		}
-		//fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR" );
+		else
+		{
+			reply = AfxMessageBox( "Can't open the profile file: c:/jk_c/eros.tmp!", MB_OK | MB_ICONSTOP | MB_APPLMODAL );		
 
-		////////////////////////////edit 101520/////////////////////////////////////////////////
-		//record the height used for the calculation = hgt, and not the original ground height hgt0
-		////////////////////////////////////////////////////////////////////////////////////////////
-		fprintf( f, "%f,%f,%lg,%lg,%lg,%lg,%lg,%lg\n", lat0, -lon0, hgt, -startkmx, -sofkmx, dstpointx, dstpointy, apprnr);
-		///////////////////////////////////end edit//////////////////////////////////////////////////////
-	}
-	else
-	{
-		reply = AfxMessageBox( "Can't open the profile file: c:/jk_c/eros.tmp!", MB_OK | MB_ICONSTOP | MB_APPLMODAL );		
-
+		}
 	}
 
 /* 260     FORMAT(F9.4,2X,F9.4,2X,F8.2,4(3X,F8.3),3X,F5.3) */
@@ -2593,41 +2616,19 @@ void CNewreadDTMDlg::OnCancel()
 
 	//now write ending file for Maps and More
 	char st2[] = "c:\\E130S30.BIN";
-	int numclosed, WhereJK;
+	int numclosed;
 
 	numclosed = fcloseall(); //closed all opened files
 	//look for jk or jk_c by looking for eros.tm3
-	WhereJK = WhichJK();
-	char *jkdir,*enddir;
 
-	if (WhereJK == 1)
-	{
-		jkdir = "c:\\jk_c\\eros.tm3";
-		enddir = "c:\\jk_c\\newreaddtm.end";
-	}
-	else if (WhereJK == 2)
-	{
-		jkdir = "c:\\jk\\eros.tm3";
-		enddir = "c:\\jk\\newreaddtm.end";
-	}
-	else //never found eros.tm3, so look for mapcdinfo.sav
-	{
-		WhereJK = WhichJK_2();
-		if (WhereJK == 1)
-		{
-			enddir = "c:\\jk_c\\newreaddtm.end";
-			goto opca100;
-		}
-		else if (WhereJK == 2)
-		{
-			enddir = "c:\\jk\\newreaddtm.end";
-			goto opca100;
-		}
-		else //give up with non zero err number
-		{
-		exit( 1 );
-		}
-	}
+	drivlet[0] = testdrv[WhereJK - 1];
+	drivlet[1] = 0;
+
+	char *jkdir,*enddir;
+	strcpy(jkdir, drivlet);
+	strcat(jkdir, ":\\jk_c\\eros.tm3");
+	strcpy(enddir, drivlet);
+	strcat(enddir, ":\\jk_c\\newreaddtm.end");
 
     if ( (stream = fopen( jkdir, "r" )) == NULL )
 		{
@@ -2703,15 +2704,31 @@ int Nint(double x)
 int WhichJK()
 {
 	FILE *stream;
+	char drivlet[2] = "c";
+	char jkdir[255] = "";
+	int i;
+	for (i=1; i<= strlen(testdrv); i++)
+	{
+		drivlet[0] = testdrv[i - 1];
+		drivlet[1] = 0;
+		strcpy(jkdir, (const char *)drivlet);
+		strcat(jkdir, ":\\jk_c\\eros.tm3" );
+		if ( (stream = fopen( jkdir, "r" )) != NULL )
+		{
+		   fclose(stream);
+		   return i;
+		}
+	}
+	/*
 	char *jkdir;
 	jkdir = "c:\\jk_c\\eros.tm3";
 	if ( (stream = fopen( jkdir, "r" )) != NULL )
 	   return 1;
-	jkdir = "c:\\jk\\eros.tm3";
+	jkdir = "e:\\jk_c\\eros.tm3";
 	if ( (stream = fopen( jkdir, "r" )) != NULL )
 	   return 2;
-
-	return 0; //didn't find anything
+	*/
+	return 0; //return 0 if didn't find anything
 }
 ////////////////////////////////////////////////////////////
 
@@ -2719,14 +2736,31 @@ int WhichJK()
 int WhichJK_2()
 {
 	FILE *stream;
+	char testdrv[13] = "cdefghijklmn";
+	char drivlet[2] = "c";
+	char jkdir[255] = "";
+	int i;
+	for (i=1; i<= strlen(testdrv); i++)
+	{
+		drivlet[0] = testdrv[i - 1];
+		drivlet[1] = 0;
+		strcpy(jkdir, (const char *)drivlet);
+		strcat(jkdir, ":\\jk_c\\mapcdinfo.sav" );
+		if ( (stream = fopen( jkdir, "r" )) != NULL )
+		{
+		   fclose(stream);
+		   return i;
+		}
+	}
+	/*
 	char *jkdir;
 	jkdir = "c:\\jk_c\\mapcdinfo.sav";
 	if ( (stream = fopen( jkdir, "r" )) != NULL )
 	   return 1;
-	jkdir = "c:\\jk\\mapcdinfo.sav";
+	jkdir = "e:\\jk_c\\mapcdinfo.sav";
 	if ( (stream = fopen( jkdir, "r" )) != NULL )
 	   return 2;
-
+	*/
 	return 0; //didn't find anything
 }
 //////////////////////////////////////////////////////////////
@@ -2874,3 +2908,66 @@ T50:
 
 	return 0;
 }
+
+///////////////RemoveCRLF/////////////////
+char *RemoveCRLF( char *str )
+///////////////////////////////////////
+//remove the carriage return and line feed that typically end DOS files
+///////////////////////////////////////////////
+{
+	short pos = 0;
+	pos = InStr( str, "\r" );
+	if (pos)
+	{
+	     str[pos - 1] = 0; //terminate the string at "\r"
+	}
+
+	pos = InStr( str, "\n" );
+	if (pos)
+	{
+	     str[pos - 1] = 0; //terminate the string at "\r"
+	}
+
+	return str;
+}
+
+//////////////fgets_CR////////////////////////
+char *fgets_CR( char *str, short strsize, FILE *stream )
+///////////////////////////////////////////////
+//fgets_CR for reading MS text lines (removes the CR)
+///////////////////////////////////////////
+{
+	fgets(str, strsize, stream); //read in line of text
+	RemoveCRLF( str );
+	//Replace( str, '\r', '\0' ); //replace the CR with a character termination
+	//RemoveCRLF( str ); //remove CR and LF at end of MS line
+	return str;
+}
+
+///////////////////emulation of InStr(3 parameters)////////////////////
+int InStr( short nstart, char * str, char * str2 )
+{
+	//emulates VB, i.e., substrings begin at position 1 and NOT at 0
+	//so if found at beginning of string, returns 1 instead of 0
+
+	char *pch;
+
+	pch = strstr( str + nstart - 1, str2 ); //first occurance of str2 after nstart characters
+
+	if (pch != NULL )
+	{
+		return pch-str+1; //returns value of position according to 1 = beginning
+	}
+	else
+	{
+		return 0; //return 0 for not being found
+	}
+}
+
+//////////////////emulation of InStr(2 parameters) /////////////////////
+int InStr( char * str, char * str2 )
+{
+	//works like VB, i.e., substrings begin at position 1 and NOT at 0
+	return InStr( 1, str, str2 );
+}
+

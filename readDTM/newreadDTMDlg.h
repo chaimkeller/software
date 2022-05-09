@@ -55,6 +55,7 @@ public:
 	double Tground; //mean ground temperature, inputed in Celsisu, converted to Kelvin
 	int DTMflag; //= 0 for 1 km GTOPO, 1 for 30 m NED DEM or SRTM, 2 for 90m SRTM
 	double TRpart; //conserved portion of terrestrial refraction calculation
+	double treehgt; //for 02/15/21 version, treehgt is inputed via the eros.tm3 file
 	BOOL directx;
 
 // Implementation
