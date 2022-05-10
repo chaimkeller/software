@@ -814,8 +814,10 @@ int WhichJKC()
 		strcpy(jkdir, (const char *)drivlet);
 		strcat(jkdir, ":\\jk_c\\mapcdinfo.sav" );
 		if ( (stream = fopen( jkdir, "r" )) != NULL )
+		{
 		   fclose(stream);
 		   return i;
+		}
 	}
 	return 0; //return 0 if didn't find anything
 }
@@ -836,8 +838,10 @@ int WhichDTM()
 		strcpy(jkdir, (const char *)drivlet);
 		strcat(jkdir, ":\\DTM\\DTM-MAP.LOC" );
 		if ( (stream = fopen( jkdir, "r" )) != NULL )
+		{
 		   fclose(stream);
 		   return i;
+		}
 	}
 	return 0; //return 0 if didn't find anything
 }
