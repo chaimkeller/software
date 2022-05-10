@@ -1690,8 +1690,10 @@ int WhichJKC()
 		strcpy(jkdir, (const char *)drivlet);
 		strcat(jkdir, ":\\jk_c\\mapcdinfo.sav" );
 		if ( (stream = fopen( jkdir, "r" )) != NULL )
+		{
 		   fclose(stream);
 		   return i;
+		}
 	}
 	return 0; //return 0 if didn't find anything
 }
@@ -1714,8 +1716,10 @@ int WhichVB()
 		strcpy(Climdir, (const char *)drivlet);
 		strcat(Climdir, ":\\devstudio\\vb\\WorldClim_bil\\avg_Apr.bil" );
 		if ( (stream = fopen( Climdir, "r" )) != NULL )
+		{
 		   fclose(stream);
 		   return i;
+		}
 	}
 	return 0; //return 0 if didn't find anything
 }
