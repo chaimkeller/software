@@ -8,7 +8,7 @@ Begin VB.MDIForm Maps
    ClientHeight    =   12930
    ClientLeft      =   60
    ClientTop       =   525
-   ClientWidth     =   17295
+   ClientWidth     =   14160
    Icon            =   "Maps.frx":0000
    LinkTopic       =   "MDIForm1"
    LockControls    =   -1  'True
@@ -273,8 +273,8 @@ Begin VB.MDIForm Maps
       Left            =   0
       TabIndex        =   0
       Top             =   0
-      Width           =   17295
-      _ExtentX        =   30506
+      Width           =   14160
+      _ExtentX        =   24977
       _ExtentY        =   900
       ButtonWidth     =   820
       ButtonHeight    =   741
@@ -282,7 +282,7 @@ Begin VB.MDIForm Maps
       ImageList       =   "ImageList1"
       _Version        =   393216
       BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
-         NumButtons      =   29
+         NumButtons      =   30
          BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "DTMbut"
             Object.ToolTipText     =   "Read  DTM CD-ROM for determining heights"
@@ -447,6 +447,11 @@ Begin VB.MDIForm Maps
             Object.ToolTipText     =   "Average Temperatures"
             ImageIndex      =   60
          EndProperty
+         BeginProperty Button30 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Key             =   "Googlebut"
+            Object.ToolTipText     =   "Google Map Interface"
+            ImageIndex      =   47
+         EndProperty
       EndProperty
       BorderStyle     =   1
       Begin VB.ComboBox Combo1 
@@ -476,8 +481,8 @@ Begin VB.MDIForm Maps
       Left            =   0
       TabIndex        =   20
       Top             =   12555
-      Width           =   17295
-      _ExtentX        =   30506
+      Width           =   14160
+      _ExtentX        =   24977
       _ExtentY        =   661
       _Version        =   393216
       BeginProperty Panels {8E3867A5-8586-11D1-B16A-00C0F0283628} 
@@ -519,10 +524,10 @@ Begin VB.MDIForm Maps
       Height          =   11955
       Left            =   0
       ScaleHeight     =   11895
-      ScaleWidth      =   17235
+      ScaleWidth      =   14100
       TabIndex        =   1
       Top             =   510
-      Width           =   17295
+      Width           =   14160
       Begin VB.DriveListBox Drive1 
          Height          =   315
          Left            =   5340
@@ -1317,6 +1322,7 @@ Private Sub importmapfm_Click()
    'then blit map--details of the map are stored in its associated .map file
    'see below for details of the .map file
    On Error GoTo errhand
+   
    mydir$ = Dir(ErosCitiesDir$ & "*.*")
    If mydir$ <> sEmpty Then
       mapdir$ = ErosCitiesDir$
@@ -1442,22 +1448,33 @@ Private Sub importmapfm_Click()
    Ra = 6378.136
    Rb = 6356.751
    Re = Sqr(1# / ((Cos(itmy * cd) / Ra) ^ 2 + (Sin(itmy * cd) / Rb) ^ 2))
-   deglog = (CDbl(xpix) / CDbl(pixkm)) / (Re * cd * Cos(itmy * cd))
-   deglat = (CDbl(ypix) / CDbl(pixkm)) / (Re * cd)
+   deglog = 1.5 * (CDbl(xpix) / CDbl(pixkm)) / (Re * cd * Cos(itmy * cd)) 'picture's x dimension in degrees
+   deglat = 1.5 * (CDbl(ypix) / CDbl(pixkm)) / (Re * cd) 'picture's y dimension in degrees
+   
    lon = Maps.Text5.Text
    lat = Maps.Text6.Text
-   woxorigin = CDbl(itmx) - (CDbl(xc) / CDbl(xpix)) * deglog
-   woyorigin = CDbl(itmy) - (1# - (CDbl(yc) / CDbl(ypix))) * deglat
-
+   woxorigin = CDbl(itmx) - (CDbl(xc) / CDbl(xpix)) * deglog 'this is longitude at x=0, i.e., left border of picture
+   woyorigin = CDbl(itmy) - (1# - (CDbl(yc) / CDbl(ypix))) * deglat 'this is latitude at y=0, i.e., bottom border of picture
+   'calculate xorigin ??? add fudx to it?
    mapimport = True
+   
+   'since the map's geoids are unknown, there deglog, deglat are not accuracte and need to be fudged.
    
    fudx = 0
    fudy = 0
    If pixkm = 4.75 And xpix = 656 And ypix = 554 Then
      'standard www.expedia.com world topo maps
      'so set it's center point
-     fudx = 6.38508961403232E-02
-     fudy = 0.041708027733435
+     fudx = 0.071 '0.1086 '6.38508961403232E-02
+     fudy = 0.038 ' 0.065 '0.059 '0.041708027733435
+    'By direct measurement for LakewoodEx.jpg: deglog = xpix / 409  pixels/deg in x direction
+     deglog = xpix / 404
+    'by direct measurement for LakewoodEx.jpg deglat = 2# * 265 / ypix in y direction
+     deglat = 2# * 265 / ypix
+    
+     woxorigin = CDbl(itmx) - (CDbl(xc) / CDbl(xpix)) * deglog 'this is longitude at x=0, i.e., left border of picture
+     woyorigin = CDbl(itmy) - (1# - (CDbl(yc) / CDbl(ypix))) * deglat 'this is latitude at y=0, i.e., bottom border of picture
+     
    ElseIf pixkm = 98.360656 And xpix = 1440 And ypix = 855 Then
      fudx = 0.059
      fudy = -0.0136
@@ -1477,7 +1494,7 @@ Private Sub importmapfm_Click()
       fudx = 0.972605   '-0.0338 '0#  '0.9643837835
       fudy = -0.467 '0.0137 '0#  '0.44781015049
       End If
-      
+   
    pixwwi = xpix '+ 10
    pixwhi = ypix '+ 10
    printeroffset = 70 'a printer offset- find the source of it!!!!
@@ -1487,9 +1504,10 @@ Private Sub importmapfm_Click()
 '   mapPictureform.mapPicture.Width = sizewx
 '   mapPictureform.Height = sizewy + 60
 '   mapPictureform.mapPicture.Height = sizewy
-
+   mapPictureform.mapPicture.Width = mapPictureform.Width
+   mapPictureform.mapPicture.Height = mapPictureform.Height
    If mapwi2 > sizewx + 60 Then
-      mapPictureform.Width = sizewx + 60 '60 is the size (pixels) of the borders
+      mapPictureform.Width = sizewx '+ 60 '60 is the size (pixels) of the borders
       mapPictureform.mapPicture.Width = sizewx
       mapwi = mapPictureform.Width
       mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width
@@ -1500,8 +1518,8 @@ Private Sub importmapfm_Click()
       mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height
       End If
    If world = True Then
-      mapxdif = mapxdif + 35
-      mapydif = mapydif + 35
+      mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width 'mapxdif + 35
+      mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height 'mapydif + 35
       End If
    'If mapPictureform.Width > Screen.Width Then
    '   mapPictureform.Width = Screen.Width - 60
@@ -1618,22 +1636,26 @@ Private Sub map1200fm_Click()
    km50y = 10000# / sizey   '=5000/8850
    kmwx = 360# / sizewx
    kmwy = 180# / sizewy
-   mapPictureform.Width = sizex + 60 '60 is the size (pixels) of the borders
-   mapPictureform.Height = sizey + 60
+   
+   mapPictureform.mapPicture.Height = mapPictureform.Height
+   mapPictureform.mapPicture.Width = mapPictureform.Width
+   
+   mapPictureform.Width = sizex '+ 60 '60 is the size (pixels) of the borders
+   mapPictureform.Height = sizey '+ 60
    mapPictureform.mapPicture.Width = sizex
    mapPictureform.mapPicture.Height = sizey
    If mapPictureform.Width > Screen.Width Then
-      mapPictureform.Width = Screen.Width - 60
+      mapPictureform.Width = Screen.Width '- 60
       End If
    If mapPictureform.Height > Screen.Height Then
-      mapPictureform.Height = Screen.Height - 1900
+      mapPictureform.Height = Screen.Height '- 1900
       End If
    mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width
    mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height
-   If world = True Then
-      mapxdif = mapxdif + 35
-      mapydif = mapydif + 35
-      End If
+'   If world = True Then
+'      mapxdif = mapxdif + 35
+'      mapydif = mapydif + 35
+'      End If
    mapwi = mapPictureform.Width
    maphi = mapPictureform.Height
    kmxc = kmxc + 5785 * km50x '***********
@@ -1668,16 +1690,20 @@ Private Sub map600fm_Click()
    km50y = 5000# / sizey   '=5000/8850
    kmwx = 360# / sizewx
    kmwy = 180# / sizewy
-   mapPictureform.Width = sizex + 60 '60 is the size (pixels) of the borders
-   mapPictureform.Height = sizey + 60
+   
+   mapPictureform.mapPicture.Height = mapPictureform.Height
+   mapPictureform.mapPicture.Width = mapPictureform.Width
+   
+   mapPictureform.Width = sizex '+ 60 '60 is the size (pixels) of the borders
+   mapPictureform.Height = sizey '+ 60
    mapPictureform.mapPicture.Width = sizex
    mapPictureform.mapPicture.Height = sizey
    mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width
    mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height
-   If world = True Then
-      mapxdif = mapxdif + 35
-      mapydif = mapydif + 35
-      End If
+'   If world = True Then
+'      mapxdif = mapxdif + 35
+'      mapydif = mapydif + 35
+'      End If
    mapwi = mapPictureform.Width
    maphi = mapPictureform.Height
   Call map50butsub
@@ -2151,16 +2177,20 @@ map50:
    km50y = 5000# / sizey   '=5000/8850
    kmwx = 360# / sizewx
    kmwy = 180# / sizewy
-   mapPictureform.Width = sizex + 60 '60 is the size (pixels) of the borders
-   mapPictureform.Height = sizey + 60
+   
+   mapPictureform.mapPicture.Height = mapPictureform.Height
+   mapPictureform.mapPicture.Width = mapPictureform.Width
+   
+   mapPictureform.Width = sizex '+ 60 '60 is the size (pixels) of the borders
+   mapPictureform.Height = sizey '+ 60
    mapPictureform.mapPicture.Width = sizex
    mapPictureform.mapPicture.Height = sizey
    mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width
    mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height
-   If world = True Then
-      mapxdif = mapxdif + 35
-      mapydif = mapydif + 35
-      End If
+'   If world = True Then
+'      mapxdif = mapxdif + 35
+'      mapydif = mapydif + 35
+'      End If
    coordmode% = 1
    speed = 80
    speedmodify = False
@@ -2386,7 +2416,11 @@ map50:
 
 errorload:
     num = Err.Number
-    If num = 68 Then GoTo l5
+    If num = 68 Then
+      Err.Clear
+      i = i + 1
+      GoTo l5
+      End If
    Unload mapsplash
    If filnum% > 0 Then Close #filnum%
    If Err.Number = 71 Then
@@ -4967,16 +5001,20 @@ obserrhandler:
              Maps.Toolbar1.Buttons(3).value = tbrUnpressed
              Maps.Toolbar1.Buttons(3).Enabled = False
              Toolbar1.Buttons(8).value = tbrUnpressed
-             mapPictureform.Width = sizex + 60 '60 is the size (pixels) of the borders
-             mapPictureform.Height = sizey + 60
+             
+            mapPictureform.mapPicture.Height = mapPictureform.Height
+            mapPictureform.mapPicture.Width = mapPictureform.Width
+             
+             mapPictureform.Width = sizex '+ 60 '60 is the size (pixels) of the borders
+             mapPictureform.Height = sizey '+ 60
              mapPictureform.mapPicture.Width = sizex
              mapPictureform.mapPicture.Height = sizey
              mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width
              mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height
-             If world = True Then
-                mapxdif = mapxdif + 35
-                mapydif = mapydif + 35
-                End If
+'             If world = True Then
+'                mapxdif = mapxdif + 35
+'                mapydif = mapydif + 35
+'                End If
              mapwi = mapPictureform.Width
              maphi = mapPictureform.Height
              If mapEROSDTMwarn.Visible = True Then
@@ -5192,16 +5230,20 @@ obserrhandler:
           sizey = Screen.TwipsPerPixelY * pixhi '=8850/2
           sizewx = Screen.TwipsPerPixelX * pixwwi '# twips in half of picture=8850/2
           sizewy = Screen.TwipsPerPixelY * pixwhi '=8850/2
-          mapPictureform.Width = sizewx + 60 '60 is the size (pixels) of the borders
-          mapPictureform.Height = sizewy + 60
+          
+            mapPictureform.mapPicture.Height = mapPictureform.Height
+            mapPictureform.mapPicture.Width = mapPictureform.Width
+          
+          mapPictureform.Width = sizewx '+ 60 '60 is the size (pixels) of the borders
+          mapPictureform.Height = sizewy '+ 60
           mapPictureform.mapPicture.Width = sizewx
           mapPictureform.mapPicture.Height = sizewy
           mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width
           mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height
-          If world = True Then
-             mapxdif = mapxdif + 35
-             mapydif = mapydif + 35
-             End If
+'          If world = True Then
+'             mapxdif = mapxdif + 35
+'             mapydif = mapydif + 35
+'             End If
           mapwi = mapPictureform.Width
           maphi = mapPictureform.Height
           mapwi = mapPictureform.Width
@@ -5279,16 +5321,20 @@ obserrhandler:
              Unload mapEROSDTMwarn
              End If
           mapPictureform.Visible = False
-          mapPictureform.Width = sizex + 60 '60 is the size (pixels) of the borders
-          mapPictureform.Height = sizey + 60
+          
+        mapPictureform.mapPicture.Height = mapPictureform.Height
+        mapPictureform.mapPicture.Width = mapPictureform.Width
+          
+          mapPictureform.Width = sizex '+ 60 '60 is the size (pixels) of the borders
+          mapPictureform.Height = sizey '+ 60
           mapPictureform.mapPicture.Width = sizex
           mapPictureform.mapPicture.Height = sizey
           mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width
           mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height
-          If world = True Then
-             mapxdif = mapxdif + 35
-             mapydif = mapydif + 35
-             End If
+'          If world = True Then
+'             mapxdif = mapxdif + 35
+'             mapydif = mapydif + 35
+'             End If
           mapwi = mapPictureform.Width
           maphi = mapPictureform.Height
           Toolbar1.Buttons(8).value = tbrUnpressed
@@ -6048,6 +6094,13 @@ to550:  If world = True And showroute = True Then
         Else
            ret = SetWindowPos(mapTempfrm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
            End If
+     Case "Googlebut"
+        If frmMap.Visible = False Then
+           frmMap.Visible = True
+           End If
+     
+        Call BringWindowToTop(frmMap.hWnd)
+
      Case Else
    End Select
    
@@ -6519,16 +6572,20 @@ Private Sub map50butsub()
           If world = True Then
              world = False
              mapPictureform.Visible = False
-             mapPictureform.Width = sizex + 60 '60 is the size (pixels) of the borders
-             mapPictureform.Height = sizey + 60
+             
+            mapPictureform.mapPicture.Height = mapPictureform.Height
+            mapPictureform.mapPicture.Width = mapPictureform.Width
+             
+             mapPictureform.Width = sizex '+ 60 '60 is the size (pixels) of the borders
+             mapPictureform.Height = sizey '+ 60
              mapPictureform.mapPicture.Width = sizex
              mapPictureform.mapPicture.Height = sizey
              mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width
              mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height
-             If world = True Then
-               mapxdif = mapxdif + 35
-               mapydif = mapydif + 35
-               End If
+'             If world = True Then
+'               mapxdif = mapxdif + 35
+'               mapydif = mapydif + 35
+'               End If
              mapwi = mapPictureform.Width
              maphi = mapPictureform.Height
              tblbuttons(3) = 0

@@ -108,8 +108,8 @@ ma50: Select Case coordmode%
        Case 2 'GEO
           If world = True Then
              If mag > 1 Then
-               lonc = lon
-               latc = lat
+               lonc = lon '+ fudx / mag
+               latc = lat '+ fudy / mag
                'xo = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                'yo = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                'lono = xo + (drag1x + x * magx) * (180# / (sizewx * mag))  'mapdif accounts for size of frame around picture
@@ -188,8 +188,8 @@ ma50: Select Case coordmode%
           'kmycd = kmyc
           If world = True Then
              If mag > 1 Then
-               lonc = lon
-               latc = lat
+               lonc = lon '+ fudx / mag
+               latc = lat '+ fudy / mag
                'xo = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                'yo = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                'lono = xo + (drag1x + x * magx) * (180# / (sizewx * mag))  'mapdif accounts for size of frame around picture
@@ -298,7 +298,7 @@ Private Sub MAGpicture_MouseUp(Button As Integer, _
          maprightform.SetFocus
       End Select
    End Sub
-Private Sub form_Resize()
+Private Sub Form_Resize()
   If mapMAGfm.Visible = True And magbox = True Then
       'Height = MAGpicture.Height + (mapMAGfm.Height - ht1)
       'Width = MAGpicture.Width + (mapMAGfm.Width - wt1)
@@ -357,8 +357,8 @@ Private Sub form_KeyDown(KeyCode As Integer, Shift As Integer)
                   'kmycd = kmyc
                 If world = True Then
                    If mag > 1 Then
-                     lonc = lon
-                     latc = lat
+                     lonc = lon '+ fudx / mag
+                     latc = lat '+ fudy / mag
                      'xo = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                      'yo = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                      'lono = xo + (drag1x + Xcoord * magx) * (180# / (sizewx * mag))  'mapdif accounts for size of frame around picture
@@ -458,8 +458,8 @@ Private Sub form_KeyDown(KeyCode As Integer, Shift As Integer)
                'kmycd = kmyc
                 If world = True Then
                    If mag > 1 Then
-                     lonc = lon
-                     latc = lat
+                     lonc = lon '+ fudx / mag
+                     latc = lat '+ fudy / mag
                      'xo = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                      'yo = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                      'lono = xo + (drag1x + Xcoord * magx) * (180# / (sizewx * mag))  'mapdif accounts for size of frame around picture

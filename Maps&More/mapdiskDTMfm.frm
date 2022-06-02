@@ -27,11 +27,12 @@ Begin VB.Form mapdiskDTMfm
       _ExtentY        =   4260
       _Version        =   393216
       Tabs            =   8
+      Tab             =   6
       TabsPerRow      =   4
       TabHeight       =   520
       TabCaption(0)   =   "Israel DTM"
       TabPicture(0)   =   "mapdiskDTMfm.frx":0442
-      Tab(0).ControlEnabled=   -1  'True
+      Tab(0).ControlEnabled=   0   'False
       Tab(0).Control(0)=   "Frame1(1)"
       Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "frmSource"
@@ -59,6 +60,7 @@ Begin VB.Form mapdiskDTMfm
       TabPicture(4)   =   "mapdiskDTMfm.frx":04B2
       Tab(4).ControlEnabled=   0   'False
       Tab(4).Control(0)=   "Frame3(1)"
+      Tab(4).Control(0).Enabled=   0   'False
       Tab(4).ControlCount=   1
       TabCaption(5)   =   "mouse movements"
       TabPicture(5)   =   "mapdiskDTMfm.frx":04CE
@@ -68,8 +70,9 @@ Begin VB.Form mapdiskDTMfm
       Tab(5).ControlCount=   1
       TabCaption(6)   =   "enabled Window calculations"
       TabPicture(6)   =   "mapdiskDTMfm.frx":04EA
-      Tab(6).ControlEnabled=   0   'False
+      Tab(6).ControlEnabled=   -1  'True
       Tab(6).Control(0)=   "Frame6(1)"
+      Tab(6).Control(0).Enabled=   0   'False
       Tab(6).ControlCount=   1
       TabCaption(7)   =   "SRTM30"
       TabPicture(7)   =   "mapdiskDTMfm.frx":0506
@@ -90,7 +93,7 @@ Begin VB.Form mapdiskDTMfm
          EndProperty
          ForeColor       =   &H00C00000&
          Height          =   495
-         Left            =   960
+         Left            =   -74040
          TabIndex        =   48
          Top             =   1740
          Width           =   4335
@@ -216,7 +219,7 @@ Begin VB.Form mapdiskDTMfm
          ForeColor       =   &H00C00000&
          Height          =   735
          Index           =   1
-         Left            =   -73920
+         Left            =   1080
          TabIndex        =   38
          Top             =   960
          Width           =   4335
@@ -703,7 +706,7 @@ Begin VB.Form mapdiskDTMfm
          ForeColor       =   &H00C00000&
          Height          =   1095
          Index           =   1
-         Left            =   960
+         Left            =   -74040
          TabIndex        =   3
          Top             =   650
          Width           =   4335
@@ -1014,7 +1017,7 @@ Drive4_Change_Error:
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Drive4_Change of Form mapdiskDTMfm"
 End Sub
 
-Private Sub form_load()
+Private Sub Form_Load()
    On Error GoTo errhand
    
    myfile = Dir(drivjk_c$ + "mapcdinfo.sav")

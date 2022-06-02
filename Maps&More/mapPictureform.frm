@@ -3,7 +3,7 @@ Begin VB.Form mapPictureform
    ClientHeight    =   13995
    ClientLeft      =   60
    ClientTop       =   -315
-   ClientWidth     =   14820
+   ClientWidth     =   14160
    ClipControls    =   0   'False
    ControlBox      =   0   'False
    Icon            =   "mapPictureform.frx":0000
@@ -13,7 +13,7 @@ Begin VB.Form mapPictureform
    Moveable        =   0   'False
    ScaleHeight     =   13995
    ScaleMode       =   0  'User
-   ScaleWidth      =   14820
+   ScaleWidth      =   14160
    ShowInTaskbar   =   0   'False
    Begin VB.PictureBox mapPicture 
       AutoRedraw      =   -1  'True
@@ -53,8 +53,8 @@ Private Sub form_KeyDown(KeyCode As Integer, Shift As Integer)
                   Maps.Text1.ToolTipText = "Distance (km) from goto coordinates"
                   Maps.Text2.ToolTipText = "Azimuth (degrees) w.r.t. goto coordinates"
                   If mag > 1 Then
-                     lonc = lon
-                     latc = lat
+                     lonc = lon '+ fudx / mag
+                     latc = lat '+ fudy / mag
                      'xo = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                      'yo = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                      'lono = xo + Xcoord * (180# / (sizewx * mag))  'mapdif accounts for size of frame around picture
@@ -159,8 +159,8 @@ Private Sub form_KeyDown(KeyCode As Integer, Shift As Integer)
                'kmycd = kmyc
                 If world = True Then
                    If mag > 1 Then
-                     lonc = lon
-                     latc = lat
+                     lonc = lon '+ fudx / mag
+                     latc = lat '+ fudy / mag
                      'xo = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                      'yo = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                      'lono = xo + Xcoord * (180# / (sizewx * mag))  'mapdif accounts for size of frame around picture
@@ -308,7 +308,9 @@ Private Sub form_load()
    MapOn = True
 End Sub
 
-Private Sub form_Resize()
+Private Sub Form_Resize()
+   On Error GoTo Form_Resize_Error
+
   On Error GoTo f999
   If resizes = True Then GoTo f999
   resizes = True
@@ -334,12 +336,43 @@ Private Sub form_Resize()
        mapPictureform.Height = Screen.Height - 1900
        End If
   ElseIf world = True Then
+    If mapimport Then
+        pixwwi = xpix '+ 10
+        pixwhi = ypix '+ 10
+        sizewx = Screen.TwipsPerPixelX * pixwwi '# twips in half of picture=8850/2
+        sizewy = Screen.TwipsPerPixelY * pixwhi '=8850/2
+        mapPictureform.mapPicture.Width = mapPictureform.Width
+        mapPictureform.mapPicture.Height = mapPictureform.Height
+        If mapwi2 > sizewx + 60 Then
+           mapPictureform.Width = sizewx '+ 60 '60 is the size (pixels) of the borders
+           mapPictureform.mapPicture.Width = sizewx
+           mapwi = mapPictureform.Width
+           mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width
+           End If
+        If maphi2 > sizewy + 60 Then
+           mapPictureform.mapPicture.Height = sizewy
+           maphi = mapPictureform.Height
+           mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height
+           End If
+        If world = True Then
+           mapxdif = mapPictureform.Width - mapPictureform.mapPicture.Width 'mapxdif + 35
+           mapydif = mapPictureform.Height - mapPictureform.mapPicture.Height 'mapydif + 35
+           End If
+        kmwx = 2 * deglog / sizewx
+        kmwy = deglat / sizewy
+
+        Call loadpictures  'load appropriate map tiles into off-screen buffers
+        Call blitpictures   'blit desired portions of the off-screen buffers to the screen
+       End If
+       
     If mapPictureform.Width > sizewx + 60 Then
        mapPictureform.Width = sizewx + 60
+       Call blitpictures
        Exit Sub
        End If
     If mapPictureform.Height > sizewy + 60 Then
        mapPictureform.Height = sizewy + 60
+       Call blitpictures
        Exit Sub
        End If
      End If
@@ -355,6 +388,13 @@ Private Sub form_Resize()
 f999:
    resizes = False
    Exit Sub
+
+   On Error GoTo 0
+   Exit Sub
+
+Form_Resize_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Form_Resize of Form mapPictureform"
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -435,8 +475,8 @@ m10: Select Case coordmode%
        Case 2 'GEO
           If world = True Then
              If mag > 1 Then
-               lonc = lon
-               latc = lat
+               lonc = lon '+ fudx / mag
+               latc = lat '+ fudy / mag
                'xo = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                'yo = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                'lono = xo + x * (180# / (sizewx * mag))  'mapdif accounts for size of frame around picture
@@ -516,8 +556,8 @@ m10: Select Case coordmode%
           'kmycd = kmyc
           If world = True Then
              If mag > 1 Then
-               lonc = lon
-               latc = lat
+               lonc = lon '+ fudx / mag
+               latc = lat '+ fudy / mag
                'xo = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                'yo = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                'lono = xo + x * (180# / (sizewx * mag))  'mapdif accounts for size of frame around picture
@@ -633,6 +673,7 @@ Private Sub mappicture_MouseUp(Button As Integer, _
                   txt3$ = Maps.Label1.Caption
                   txt4$ = Maps.Label2.Caption
                   End If
+
                Maps.Text5.Text = Format(lono, "###0.0#####") '-180# + X * 360# / mappictureform.mappicture.Width
                Maps.Text6.Text = Format(lato, "##0.0#####") '90# - Y * 180# / mappictureform.mappicture.Height
                Maps.Label5.Caption = "long."
@@ -647,10 +688,18 @@ mup50:         If impcenter = True Then
                   If fudx = 0 And fudy = 0 Then
                      fudx = lono - lon '- 0.01275
                      fudy = lato - lat '+ 0.003
-'                  Else
-'                     fudx = fudx + (lono - lon)
-'                     fudy = fudy + (lato - lat)
-                     End If
+'                     fudx = lonc / lon 'fudx = lono - lon '- 0.01275
+'                     fudy = latc / lat 'fudy = lato - lat '+ 0.003
+'                     deglat = fudy * deglat
+'                     deglog = fudx * deglog
+                  Else
+                      fudx = fudx + (lono - lon)
+                      fudy = fudy + (lato - lat)
+'                     fudy = latc / lat 'lato - lat '+ 0.003
+'                     fudx = lonc / lon
+'                     deglat = fudy * deglat
+'                     deglog = fudx * deglog
+                      End If
                   'mapPictureform.mapPicture.Circle (Xcoord, Ycoord), 20, 255
                   'impcenter = False
                   End If

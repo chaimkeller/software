@@ -175,7 +175,7 @@ Public leftim%, pic1$(9), pic2(9) As String * 2, skyleftjump As Boolean
 Public map400 As Boolean, map50 As Boolean, sunmode%, hChild As Long, Skynum%
 'Public n400%(4, 7), n50%(19, 45), terwt As Boolean, cir50 As Boolean, cir400 As Boolean
 Public n400x%(9), n400y%(9), n50x%(9), n50y%(9), Skycoord%, OverhWnd As Long
-Public kmxoo, kmyoo, filnumg%, hgt, hgtpos, picf$
+Public kmxoo, kmyoo, filnumg%, hgt, hgtpos, picf$, sgnfudx, xpix As Integer, ypix As Integer
 'Public CHMAP(14, 26) As String * 2, CHMNE As String * 2, CHMNEO As String * 2, SF As String * 2
 Public coordmode%, dragx, dragy, kmxc, kmyc, nplac%, Tdxname As String
 Public X50c As Single, Y50c As Single, kmx50c, kmy50c, hgt50c, TdxhWnd As Long
@@ -209,7 +209,7 @@ Public dojump As Boolean, Ccontinue As Boolean, C10 As String, C20 As String
 Public israeldtm As String * 1, israeldtmcd As Boolean, topotype%, AutoNum&, IntOld2%, cal1%
 Public israeldtmf As String * 1, israeldtmcdf As Boolean, mapSearchVis As Boolean
 Public worlddtm As String * 1, worlddtmcd As Boolean, ExplorerDir As String, plotfile$
-Public worlddtmf As String * 1, worlddtmcdf As Boolean, searchhgt As Single
+Public worlddtmf As String * 1, worlddtmcdf As Boolean, searchhgt As Single, treehgtStored As Double
 Public srtmdtm As String * 1, srtmdtmcd As Boolean, srtmdtmf As String * 1, srtmdtmcdf As Boolean
 Public ramdrive As String * 1, ramdrivef As String * 1, viewsearch As Boolean
 Public terradir$, terradirf$, impcenter As Boolean, resetorigin As Boolean, ObstructionCheck As Boolean
@@ -221,7 +221,7 @@ Public greatcircle As Boolean, ObsHeight As Boolean, GoCrossSection As Boolean, 
 Public ggpscorrection As Boolean, FileView As Boolean, FileViewName As String, FileViewError As Boolean
 Public FileViewFileName() As String, AbrevDir$, AutoScanlist As Boolean, MapOn As Boolean
 Public FileViewDir$, FileViewFileType() As Integer, UniqueRoots%, fileo$, setflag%, coordAnalyze(2) As Double
-Public OutFile$, bAirPath As Boolean, kmxTrig, kmyTrig, hgtTrig, DTMflag As Integer
+Public OutFile$, bAirPath As Boolean, kmxTrig, kmyTrig, hgtTrig, DTMflag As Integer, GoogleMapVis As Boolean
 Public SearchVis As Boolean, WinVer As Long, XDIM As Double, YDIM As Double, noVoidflag As Integer
 Public AutoPress As Boolean, IsraelDTMsource%, OnlyExtractFile As Boolean, EastOnly As Boolean, WestOnly As Boolean
 Public CalculateProfile As Integer, SearchCrossSection As Boolean, SearchCrossObstruct As Boolean
@@ -1397,13 +1397,13 @@ ElseIf world = True Then
        deglat = 180
        End If
     If mag > 1 Then
-       lonc = lon
+       lonc = lon '+ fudx / mag
        latc = lat '+ fudy / mag
     Else
        'lonc = lon + (180 / sizewx) * (mapwi - mapwi2 + mapxdif) / 2
        'latc = lat - (180 / sizewy) * (maphi - maphi2 + mapydif) / 2
-       lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx   '+ 0.166
-       latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy  '+ 0.204
+       lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx    '+ 0.166
+       latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy   '+ 0.204
        End If
     End If
 
@@ -1608,6 +1608,7 @@ ld300:
        End If
 
 ElseIf map400 = True Then
+
     n400x%(1) = Int((kmxcc - 80000) / 80000) + 1
     s11 = n400x%(1) - 1
     kmx400origin = 80000 + s11 * 80000
@@ -1728,7 +1729,9 @@ ElseIf map400 = True Then
           End If
 ld400:
    Next i%
-ElseIf world = True Then
+   
+ElseIf world = True Then '''''''<<<<<<<<<<<world tiles and imported maps>>>>>>>>>>>>>>>>>>>>>>
+
    If mapimport = False Then
       n400x%(1) = Int((lonc + 900) / 360) + 1
       s11 = n400x%(1) - 1
@@ -1946,6 +1949,12 @@ Public Sub blitpictures()
 '   End If
 
 If world = False Then
+    'keep EY topo maps within EY boundaries
+    If kmxc > 250000 Then kmxc = 73000
+    If kmxc < 73000 Then kmxc = 250000
+    If kmyc > 1240000 Then kmyc = 83000
+    If kmyc < 83000 Then kmyc = 1240000
+    
     If mag > 1 Then
        kmxcc = kmxc
        kmycc = kmyc
@@ -1977,13 +1986,46 @@ ElseIf world = True Then
        deglat = 180
        End If
     If mag > 1 Then
-       lonc = lon
-       latc = lat '+ fudy / mag
+       If impcenter Then
+            lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx  '+ 0.166
+            latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy  '+ 0.204
+       Else
+          If lonc = lon And latc = lat Then
+             lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx  '+ 0.166
+             latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy  '+ 0.204
+         Else
+             lonc = lon '+ fudx / mag
+             latc = lat '+ fudy / mag
+             End If
+          End If
+       If Not mapimport Then
+            If lon > 180 Then lon = lon - 360
+            If lon < -180 Then lon = lon + 360
+            If lat > 90 Then lat = lat - 180
+            If lat < -90 Then lat = lat + 180
+       Else
+            If lon > woxorigin + deglog Then lon = lon - deglog
+            If lon < woxorigin Then lon = lon + woxorigin
+            If lat > woyorigin + deglat Then lat = lat - deglat
+            If lat < woyorigin Then lat = lat + deglat
+            End If
     Else
        'lonc = lon + (180 / sizewx) * (mapwi - mapwi2 + mapxdif) / 2
        'latc = lat - (180 / sizewy) * (maphi - maphi2 + mapydif) / 2
-       lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx '+ 0.166
-       latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy '+ 0.204
+       'keep lon and lat aways in boundaries of world
+       If Not mapimport Then
+            If lon > 180 Then lon = lon - 360
+            If lon < -180 Then lon = lon + 360
+            If lat > 90 Then lat = lat - 180
+            If lat < -90 Then lat = lat + 180
+       Else
+            If lon > woxorigin + deglog Then lon = lon - deglog
+            If lon < woxorigin Then lon = lon + deglog
+            If lat > woyorigin + deglat Then lat = lat - deglat
+            If lat < woyorigin Then lat = lat + deglat
+            End If
+       lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx  '+ 0.166
+       latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy  '+ 0.204
        End If
     End If
 
@@ -2079,7 +2121,7 @@ bl10:   If map50 = True Then
         bufwi(2, 1) = bufwi(1, 1) / mag
         bufhi(1, 1) = yorigin * mag
         bufhi(2, 1) = bufhi(1, 1) / mag
-        bufx(1, 1) = xorigin - (mag - 1) * (kmxcc - kmxn) / kmm 'origin to blit too on screen
+        bufx(1, 1) = xorigin - (mag - 1) * (kmxcc - kmxn) / kmm 'origin to blit to on screen
         bufx(2, 1) = 0 'origin of blit in buffer
         bufy(1, 1) = yorigin * (1 - mag) + (mag - 1) * (kmycc - kmyn) / kmm - sgny * sizey * (mag - 1)
         bufy(2, 1) = sizey - yorigin
@@ -2110,14 +2152,17 @@ bl10:   If map50 = True Then
         bufy(2, 4) = 0
         bufhi(1, 4) = bufhi(1, 3)
         bufhi(2, 4) = bufhi(1, 3) / mag
+        
 ElseIf world = True Then
+
        sgny = 0
        'determine the clipping regions
        'Defining Wi=sizex,Hi=sizey, then
        'kmxc,kmyc are located at X=Wi/2,Y=Hi/2 when kmxorigin,kmyorigin
        'are at Wi/2-(kmxc-kmxorigin)*/km50x,Hi/2+(kmyc-kmyorigin)/km50y
-bl100: xorigin = sizewx / 2# - (lonc - worldxorigin) / (deglog / sizewx)
-       yorigin = sizewy / 2# + (latc - worldyorigin) / (deglat / sizewy)
+
+bl100: xorigin = sizewx / 2# - (lonc + (mag - 1) * fudx - worldxorigin) / (deglog / sizewx) '<??must stay constant
+       yorigin = sizewy / 2# + (latc + (mag - 1) * fudy - worldyorigin) / (deglat / sizewy)
        kmm = (deglat / sizewy)
        
 '       kmm = (180 / sizewy)
@@ -2136,11 +2181,13 @@ bl100: xorigin = sizewx / 2# - (lonc - worldxorigin) / (deglog / sizewx)
                  Exit Sub
                  End If
               End If
+              
 
            Call loadpictures  'load appropriate map tiles into off-screen buffers
            GoTo bl100
            End If
-       If xorigin >= 0 And yorigin <= sizewy Then
+       
+       If xorigin >= 0 And yorigin <= sizewy / mag Then
            'blit pieces of back buffers 1,7,8,9 to the screen (front buffer)
            kmxn = worldxorigin
            kmyn = worldyorigin
@@ -2148,31 +2195,45 @@ bl100: xorigin = sizewx / 2# - (lonc - worldxorigin) / (deglog / sizewx)
            bn%(2) = 8  'NW
            bn%(3) = 6  'SE
            bn%(4) = 7  'SW
-       ElseIf xorigin >= 0 And yorigin > sizewy Then
+       ElseIf xorigin >= 0 And yorigin > sizewy / mag Then
           'blit pieces of back buffers 1,2,3,9 to the screen (front buffer)
-           yorigin = yorigin - sizewy
-           kmxn = worldxorigin
-           kmyn = worldyorigin + 180
-           bn%(1) = 2
-           bn%(2) = 1
-           bn%(3) = 0
-           bn%(4) = 8
-       ElseIf xorigin < 0 And yorigin > sizewy Then
+           If Not mapimport Then
+                yorigin = yorigin - sizewy
+                kmxn = worldxorigin
+                kmyn = worldyorigin + deglog
+                If mapimport = True Then
+                   End If
+                bn%(1) = 2
+                bn%(2) = 1
+                bn%(3) = 0
+                bn%(4) = 8
+            Else
+                yorigin = yorigin - sizewy
+                xorigin = xorigin + sizewx
+                kmxn = worldxorigin + deglog
+                kmyn = worldyorigin
+                sgny = 1
+                bn%(1) = 3
+                bn%(2) = 2
+                bn%(3) = 4
+                bn%(4) = 0
+                End If
+       ElseIf xorigin < 0 And yorigin > sizewy / mag Then
           'blit pieces of back buffers 1,3,4,5 to the screen (front buffer)
            yorigin = yorigin - sizewy
            xorigin = xorigin + sizewx
-           kmxn = worldxorigin + 180
+           kmxn = worldxorigin + deglog
            kmyn = worldyorigin
            sgny = 1
            bn%(1) = 3
            bn%(2) = 2
            bn%(3) = 4
            bn%(4) = 0
-      ElseIf xorigin < 0 And yorigin <= sizewy Then
+      ElseIf xorigin < 0 And yorigin <= sizewy / mag Then
           'blit pieces of back buffers 1,5,6,7 to the screen (front buffer)
            xorigin = xorigin + sizewx
-           kmxn = worldxorigin + 180
-           kmyn = worldyorigin + 180
+           kmxn = worldxorigin + deglog
+           kmyn = worldyorigin + deglat
            sgny = -1
            bn%(1) = 4
            bn%(2) = 0
@@ -2184,7 +2245,7 @@ bl100: xorigin = sizewx / 2# - (lonc - worldxorigin) / (deglog / sizewx)
         bufwi(2, 1) = bufwi(1, 1) / mag
         bufhi(1, 1) = yorigin * mag
         bufhi(2, 1) = bufhi(1, 1) / mag
-        bufx(1, 1) = xorigin - (mag - 1) * (lonc - kmxn) / kmm 'origin to blit too on screen
+        bufx(1, 1) = xorigin - (mag - 1) * (lonc - kmxn) / kmm 'origin to blit to on screen
         bufx(2, 1) = 0 'origin of blit in buffer
         bufy(1, 1) = yorigin * (1 - mag) + (mag - 1) * (latc - kmyn) / kmm - sgny * sizewy * (mag - 1)
         bufy(2, 1) = sizewy - yorigin
@@ -2264,13 +2325,17 @@ bl100: xorigin = sizewx / 2# - (lonc - worldxorigin) / (deglog / sizewx)
          mapPictureform.mapPicture.PaintPicture Maps.PictureClip1(bn%(i%)).Picture, bufx(1, i%), bufy(1, i%), bufwi(1, i%), bufhi(1, i%), bufx(2, i%), bufy(2, i%), bufwi(2, i%), bufhi(2, i%)
 bl500: Next i%
        newblit = True
-       If topotype% = 0 Then
-          mapxdifn = mapxdif
-          mapydifn = mapydif
-       ElseIf topotype% = 1 Then
-          mapxdifn = 60
-          mapydifn = 70
-          End If
+'       If topotype% = 0 Then
+'          mapxdifn = mapxdif
+'          mapydifn = mapydif
+'       ElseIf topotype% = 1 Then
+'          mapxdifn = 60
+'          mapydifn = 70
+'          End If
+
+          mapxdifn = 0
+          mapydifn = 0
+
        If obstflag = False Then
           mapPictureform.mapPicture.DrawWidth = 1 '1 * mag
           mapPictureform.mapPicture.Circle (CSng(mapPictureform.Width / 2 - mapxdifn), CSng(mapPictureform.Height / 2 - mapydifn)), 100, 255 '100 * mag, 255
@@ -2882,8 +2947,8 @@ go10:   If Maps.Label5.Caption <> "ITMx" Or skymove = True Or worldmove = True O
                      kmxoo = kmxcc: kmyoo = kmycc
                     If world = True Then
                        If mag > 1 Then
-                         lonc = lon
-                         latc = lat
+                         lonc = lon '+ fudx / mag
+                         latc = lat '+ fudy / mag
                          'xo = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                          'yo = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                          'lono = xo + Xcoord * (180# / (sizewx * mag))  'mapdif accounts for size of frame around picture
@@ -3070,8 +3135,8 @@ Public Sub showcoord()
           'kmycd = Maps.Text6.Text
           If world = True Then
              If mag > 1 Then
-               lonc = lon
-               latc = lat
+               lonc = lon '+ fudx / mag
+               latc = lat '+ fudy / mag
                'xo = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                'yo = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                'lono = xo + Xcoord * (180# / (sizewx * mag))  'mapdif accounts for size of frame around picture
@@ -3261,8 +3326,8 @@ o50: Next i%
    ElseIf world = True Then
    
        If mag > 1 Then
-         lonc = lon + fudx / mag
-         latc = lat + fudy / mag
+         lonc = lon '+ fudx / mag
+         latc = lat '+ fudy / mag
          'wxorigin = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
          'wyorigin = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
          wxorigin = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
@@ -3784,8 +3849,8 @@ o945:      xpno = Xpnt: ypno = Ypnt
          End If
 
       If mag > 1 Then
-         lonc = lon + fudx / mag
-         latc = lat + fudy / mag
+         lonc = lon '+ fudx / mag
+         latc = lat '+ fudy / mag
          'wxorigin = lonc - (180 / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
          'wyorigin = latc + (180 / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
          wxorigin = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
@@ -4006,8 +4071,13 @@ out50: Err.Clear
          End If
  
      'query user for treehgt
-     treehgtStr$ = InputBox("Enter tree height" & vbCrLf & "(leave zero if nothing to add)", "Add ''tree'' height to all DTM heights", 0)
-     treehgt = Val(treehgtStr$)
+     If Not AutoProf Or (AutoProf And AutoNum& = 0) Then
+        treehgtStored = 0
+        treehgtStr$ = InputBox("Enter tree height" & vbCrLf & "(leave zero if nothing to add)", "Add ''tree'' height to all DTM heights", 0)
+        treehgt = Val(treehgtStr$)
+     ElseIf AutoProf And AutoNum& > 0 Then
+        treehgt = treehgtStored
+        End If
      
 50   'build data and header files of USGS EROS tile
      manytiles = False
@@ -6400,8 +6470,8 @@ m10:     Select Case coordmode%
            Case 2 'GEO
               If world = True Then
                  If mag > 1 Then
-                   lonc = lon
-                   latc = lat
+                   lonc = lon '+ fudx / mag
+                   latc = lat '+ fudy / mag
                    xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                    yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                    kmxDrag = xo + X * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
@@ -6475,8 +6545,8 @@ m100:     Select Case coordmode%
            Case 2 'GEO
               If world = True Then
                  If mag > 1 Then
-                   lonc = lon
-                   latc = lat
+                   lonc = lon '+ fudx / mag
+                   latc = lat '+ fudy / mag
                    xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                    yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
                    X = (kmxDrag - xo) * (sizewx * mag / deglog)

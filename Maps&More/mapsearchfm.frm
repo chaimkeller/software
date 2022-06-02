@@ -18,6 +18,16 @@ Begin VB.Form mapsearchfm
    MinButton       =   0   'False
    ScaleHeight     =   8055
    ScaleWidth      =   5400
+   Begin VB.CommandButton cmdGoogleMap 
+      Height          =   495
+      Left            =   2040
+      Picture         =   "mapsearchfm.frx":0442
+      Style           =   1  'Graphical
+      TabIndex        =   64
+      ToolTipText     =   "Load coordinates of google map form"
+      Top             =   720
+      Width           =   615
+   End
    Begin MSComctlLib.StatusBar StatusBarProg 
       Align           =   2  'Align Bottom
       Height          =   375
@@ -104,7 +114,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton Command16 
          Height          =   315
          Left            =   3720
-         Picture         =   "mapsearchfm.frx":0442
+         Picture         =   "mapsearchfm.frx":1284
          Style           =   1  'Graphical
          TabIndex        =   35
          ToolTipText     =   "save new city(area) name"
@@ -146,9 +156,10 @@ Begin VB.Form mapsearchfm
       _Version        =   393216
    End
    Begin VB.CommandButton Command7 
+      Enabled         =   0   'False
       Height          =   495
-      Left            =   1560
-      Picture         =   "mapsearchfm.frx":0544
+      Left            =   1200
+      Picture         =   "mapsearchfm.frx":1386
       Style           =   1  'Graphical
       TabIndex        =   20
       ToolTipText     =   "Load in the current 3D Explorer coordinates"
@@ -166,8 +177,8 @@ Begin VB.Form mapsearchfm
          Strikethrough   =   0   'False
       EndProperty
       Height          =   495
-      Left            =   2400
-      Picture         =   "mapsearchfm.frx":084E
+      Left            =   2600
+      Picture         =   "mapsearchfm.frx":1690
       Style           =   1  'Graphical
       TabIndex        =   12
       ToolTipText     =   "Load the Map & More center coordinates"
@@ -216,7 +227,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton cmdSaveAll 
          Height          =   375
          Left            =   480
-         Picture         =   "mapsearchfm.frx":0C90
+         Picture         =   "mapsearchfm.frx":1AD2
          Style           =   1  'Graphical
          TabIndex        =   51
          ToolTipText     =   "Save all the points"
@@ -226,7 +237,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton cmdReLoad 
          Height          =   375
          Left            =   130
-         Picture         =   "mapsearchfm.frx":10D2
+         Picture         =   "mapsearchfm.frx":1F14
          Style           =   1  'Graphical
          TabIndex        =   47
          ToolTipText     =   "Reload saved points and begin analysis"
@@ -236,7 +247,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton cmdPlotSearchPnts 
          Height          =   375
          Left            =   2520
-         Picture         =   "mapsearchfm.frx":1604
+         Picture         =   "mapsearchfm.frx":2446
          Style           =   1  'Graphical
          TabIndex        =   45
          ToolTipText     =   "Plot all the search results"
@@ -246,7 +257,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton Command14 
          Height          =   375
          Left            =   1320
-         Picture         =   "mapsearchfm.frx":190E
+         Picture         =   "mapsearchfm.frx":2750
          Style           =   1  'Graphical
          TabIndex        =   28
          ToolTipText     =   "Load places in *.bat city file"
@@ -265,7 +276,7 @@ Begin VB.Form mapsearchfm
          EndProperty
          Height          =   375
          Left            =   1680
-         Picture         =   "mapsearchfm.frx":1E40
+         Picture         =   "mapsearchfm.frx":2C82
          Style           =   1  'Graphical
          TabIndex        =   26
          ToolTipText     =   "Set Map&More's center coordinates to coordinates of highlighted point"
@@ -275,17 +286,17 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton Command8 
          Height          =   375
          Left            =   2160
-         Picture         =   "mapsearchfm.frx":2282
+         Picture         =   "mapsearchfm.frx":30C4
          Style           =   1  'Graphical
          TabIndex        =   22
-         ToolTipText     =   "Move 3D Explorer back to Maps & More center coordinates"
+         ToolTipText     =   "Move active map interface (3D Explorer or Google Mazps) back to Maps & More center coordinates"
          Top             =   2040
          Width           =   375
       End
       Begin VB.CommandButton Command6 
          Height          =   375
          Left            =   3750
-         Picture         =   "mapsearchfm.frx":23D4
+         Picture         =   "mapsearchfm.frx":3216
          Style           =   1  'Graphical
          TabIndex        =   19
          ToolTipText     =   "View sunset horizon for selected point"
@@ -295,7 +306,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton Command5 
          Height          =   375
          Left            =   3370
-         Picture         =   "mapsearchfm.frx":2816
+         Picture         =   "mapsearchfm.frx":3658
          Style           =   1  'Graphical
          TabIndex        =   18
          ToolTipText     =   "view sunrise horizon of selected point"
@@ -305,7 +316,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton cmdClear 
          Height          =   375
          Left            =   960
-         Picture         =   "mapsearchfm.frx":2C58
+         Picture         =   "mapsearchfm.frx":3A9A
          Style           =   1  'Graphical
          TabIndex        =   16
          ToolTipText     =   "Discard search results and save buffers"
@@ -315,7 +326,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton cmdSave 
          Height          =   375
          Left            =   2980
-         Picture         =   "mapsearchfm.frx":2D5A
+         Picture         =   "mapsearchfm.frx":3B9C
          Style           =   1  'Graphical
          TabIndex        =   13
          ToolTipText     =   "Save search results"
@@ -615,7 +626,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   20
          BuddyControl    =   "Text4"
-         BuddyDispid     =   196646
+         BuddyDispid     =   196647
          OrigLeft        =   3420
          OrigTop         =   300
          OrigRight       =   3660
@@ -637,7 +648,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   15
          BuddyControl    =   "Text3"
-         BuddyDispid     =   196648
+         BuddyDispid     =   196649
          OrigLeft        =   2100
          OrigTop         =   240
          OrigRight       =   2340
@@ -677,7 +688,7 @@ Begin VB.Form mapsearchfm
          EndProperty
          Height          =   495
          Left            =   1040
-         Picture         =   "mapsearchfm.frx":2E5C
+         Picture         =   "mapsearchfm.frx":3C9E
          Style           =   1  'Graphical
          TabIndex        =   7
          ToolTipText     =   "Begin search"
@@ -800,6 +811,16 @@ Begin VB.Form mapsearchfm
       TabIndex        =   0
       Top             =   1200
       Width           =   4275
+      Begin VB.CommandButton cmdMoveGoogleMap 
+         Height          =   375
+         Left            =   1250
+         Picture         =   "mapsearchfm.frx":40E0
+         Style           =   1  'Graphical
+         TabIndex        =   65
+         ToolTipText     =   "Position Google Maps to center coordinates"
+         Top             =   900
+         Width           =   375
+      End
       Begin VB.ComboBox Combo1 
          Height          =   315
          Left            =   900
@@ -811,7 +832,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton Command15 
          Height          =   315
          Left            =   3720
-         Picture         =   "mapsearchfm.frx":329E
+         Picture         =   "mapsearchfm.frx":4F22
          Style           =   1  'Graphical
          TabIndex        =   29
          ToolTipText     =   "Add the center coordinates and name to city file"
@@ -829,8 +850,8 @@ Begin VB.Form mapsearchfm
             Strikethrough   =   0   'False
          EndProperty
          Height          =   375
-         Left            =   1140
-         Picture         =   "mapsearchfm.frx":33A0
+         Left            =   720
+         Picture         =   "mapsearchfm.frx":5024
          Style           =   1  'Graphical
          TabIndex        =   27
          ToolTipText     =   "Set Map&More's center coordinates to search center coordinates"
@@ -838,9 +859,10 @@ Begin VB.Form mapsearchfm
          Width           =   495
       End
       Begin VB.CommandButton Command11 
+         Enabled         =   0   'False
          Height          =   375
          Left            =   1620
-         Picture         =   "mapsearchfm.frx":37E2
+         Picture         =   "mapsearchfm.frx":5466
          Style           =   1  'Graphical
          TabIndex        =   25
          ToolTipText     =   "Position 3D Explorer to the center point"
@@ -850,7 +872,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton Command10 
          Height          =   375
          Left            =   2760
-         Picture         =   "mapsearchfm.frx":3C24
+         Picture         =   "mapsearchfm.frx":58A8
          Style           =   1  'Graphical
          TabIndex        =   24
          ToolTipText     =   "View sunset horizon for center point"
@@ -860,7 +882,7 @@ Begin VB.Form mapsearchfm
       Begin VB.CommandButton Command9 
          Height          =   375
          Left            =   2220
-         Picture         =   "mapsearchfm.frx":4066
+         Picture         =   "mapsearchfm.frx":5CEA
          Style           =   1  'Graphical
          TabIndex        =   23
          ToolTipText     =   "view sunrise horizon for center point"
@@ -1269,6 +1291,35 @@ cmdCheckSkipped_Click_Error:
     cmdCheckSkipped.Enabled = True
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdCheckSkipped_Click of Form mapsearchfm"
     
+End Sub
+
+Private Sub cmdGoogleMap_Click()
+  If GoogleMapVis Then
+  Else
+     frmMap.Visible = True
+     End If
+  
+  If frmMap.txtLat.Text <> sEmpty Or frmMap.txtLong.Text <> sEmpty Then
+     Text1.Text = frmMap.txtLat.Text
+     Text2.Text = frmMap.txtLong.Text
+  Else
+     MsgBox "Coordinates in the Google Map form are empty" & vbCrLf & "Nowhere to move to!", vbOKOnly, "Google Map error"
+     
+     End If
+End Sub
+
+Private Sub cmdMoveGoogleMap_Click()
+   If GoogleMapVis = True Then
+      frmMap.txtLat.Text = Text1.Text
+      frmMap.txtLong.Text = Text2.Text
+      frmMap.Command2.value = True
+   Else
+      frmMap.Visible = True
+      Call BringWindowToTop(frmMap.hWnd)
+      frmMap.txtLat.Text = Text1.Text
+      frmMap.txtLong.Text = Text2.Text
+      frmMap.Command2.value = True
+      End If
 End Sub
 
 Private Sub cmdPlotSearchPnts_Click()
@@ -2447,6 +2498,7 @@ Private Sub Command7_Click()
 End Sub
 
 Private Sub Command8_Click()
+   If D3dExplorerDir$ <> sEmpty And Not GoogleMapVis Then
      If tblbuttons(3) = 1 Then
         lResult = FindWindow(vbNullString, "Overview")
         If lResult <> 0 Then
@@ -2489,6 +2541,26 @@ Private Sub Command8_Click()
                End If
             End If
          End If
+    Else
+       If GoogleMapVis Then
+       Else
+          frmMap.Visible = True
+          End If
+          
+        If sky2.row <> 0 Then
+           nplachos& = sky2.row
+           frmMap.txtLat.Text = sky2.TextArray(skyp2(nplachos&, 1))
+           frmMap.txtLong.Text = sky2.TextArray(skyp2(nplachos&, 2))
+           frmMap.Command2.value = True
+           
+           Call goto_click
+           Call BringWindowToTop(mapsearchfm.hWnd)
+           OverhWnd = FindWindow(vbNullString, "Google Map")
+           If OverhWnd <> 0 Then ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+           End If
+           
+       End If
+       
 End Sub
 
 Private Sub Command9_Click()
@@ -2516,13 +2588,18 @@ End Sub
 ' Purpose   :
 '---------------------------------------------------------------------------------------
 '
-Private Sub form_load()
+Private Sub Form_Load()
    On Error GoTo form_load_Error
 
    mapsearchfm.Width = 4770
    CancelSearch = False
    mapSearchVis = True
    HeightSort = True
+   
+   If D3dExplorerDir$ <> sEmpty Then
+      Command7.Enabled = True
+      Command11.Enabled = True
+      End If
    
    myfile = Dir(drivcities$ + "eros\eroscity.sav")
    If myfile <> sEmpty Then
