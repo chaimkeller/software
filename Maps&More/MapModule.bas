@@ -1,34 +1,34 @@
 Attribute VB_Name = "MapModule"
 '*****************Windows API functions, subroutines and constants*********
-Declare Function DefWindowProc Lib "USER32" Alias "DefWindowProcA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 Public Const WM_GETTEXT = &HD
-Declare Function GetSystemMetrics Lib "USER32" (ByVal nIndex As Long) As Long
+Declare Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
 Public Const SM_CXSCREEN = 0
 Public Const SM_CYSCREEN = 1
 Public Const SWP_SHOWWINDOW = &H40
-Declare Function ExitWindowsEx Lib "USER32" (ByVal uFlags As Long, ByVal dwReserved As Long) As Long
+Declare Function ExitWindowsEx Lib "user32" (ByVal uFlags As Long, ByVal dwReserved As Long) As Long
 Public Const EWX_FORCE = 4
 Public Const EWX_LOGOFF = 0
 Public Const EWX_REBOOT = 2
 Public Const EWX_SHUTDOWN = 1
 Public Const WM_COMMAND = &H111
 Public Const WM_SETFOCUS = &H7
-Declare Function EnumWindows Lib "USER32" (ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
-Declare Function PostMessage Lib "USER32" Alias "PostMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-Declare Function SendMessage Lib "USER32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+Declare Function EnumWindows Lib "user32" (ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
+Declare Function PostMessage Lib "user32" Alias "PostMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
 'Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
 'Declare Function GetWindow Lib "user32" (ByVal hwnd As Long, ByVal wCmd As Long) As Long
 'Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (ByVal hwnd As Long, ByVal lpString As String) As Long
-Declare Function SetWindowPos Lib "USER32" (ByVal hWnd As Long, ByVal hWndInsertAfter As Long, ByVal X As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
-Declare Function EnumChildWindows Lib "USER32" (ByVal hWndParent As Long, ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
-Declare Function GetWindowText Lib "USER32" Alias "GetWindowTextA" (ByVal hWnd As Long, ByVal lpString As String, ByVal cch As Long) As Long
-Declare Function FindWindow Lib "USER32" Alias "FindWindowA" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
-Declare Function MoveWindow Lib "USER32" (ByVal hWnd As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
-Declare Function BringWindowToTop Lib "USER32" (ByVal hWnd As Long) As Long
-Declare Sub keybd_event Lib "USER32" (ByVal bVk As Byte, ByVal bScan As Byte, ByVal dwFlags As Long, ByVal dwExtraInfo As Long)
-Declare Sub mouse_event Lib "USER32" (ByVal dwFlags As Long, ByVal dX As Long, ByVal dY As Long, ByVal cButtons As Long, ByVal dwExtraInfo As Long)
-Declare Function CloseClipboard Lib "USER32" () As Long
-Declare Function ShowWindow Lib "USER32" (ByVal hWnd As Long, ByVal nCmdShow As Long) As Long
+Declare Function SetWindowPos Lib "user32" (ByVal hWnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
+Declare Function EnumChildWindows Lib "user32" (ByVal hWndParent As Long, ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
+Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hWnd As Long, ByVal lpString As String, ByVal cch As Long) As Long
+Declare Function FindWindow Lib "user32" Alias "FindWindowA" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
+Declare Function MoveWindow Lib "user32" (ByVal hWnd As Long, ByVal x As Long, ByVal y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
+Declare Function BringWindowToTop Lib "user32" (ByVal hWnd As Long) As Long
+Declare Sub keybd_event Lib "user32" (ByVal bVk As Byte, ByVal bScan As Byte, ByVal dwFlags As Long, ByVal dwExtraInfo As Long)
+Declare Sub mouse_event Lib "user32" (ByVal dwFlags As Long, ByVal dX As Long, ByVal dY As Long, ByVal cButtons As Long, ByVal dwExtraInfo As Long)
+Declare Function CloseClipboard Lib "user32" () As Long
+Declare Function ShowWindow Lib "user32" (ByVal hWnd As Long, ByVal nCmdShow As Long) As Long
 Declare Function GetVersion Lib "Kernel32" () As Long
 Declare Function WinExec Lib "Kernel32" (ByVal lpCmdLine As String, ByVal nCmdShow As Long) As Long
 'Declare Function GetDiskFreeSpace Lib "kernel32" Alias "GetDiskFreeSpaceA" (ByVal lpRootPathName As String, lpSectorsPerCluster As Long, lpBytesPerSector As Long, lpNumberOfFreeClusters As Long, lpTtoalNumberOfClusters As Long) As Long
@@ -171,19 +171,19 @@ Public Const traveltimerinteral = 3000
 
 '*******************public variables and arrays************************************************
 Public km400x, km400y, km50x, km50y, kmwx, kmwy, sizex, sizey, sizewx, sizewy
-Public leftim%, pic1$(9), pic2(9) As String * 2, skyleftjump As Boolean
+Public leftim%, pic1$(9), pic2(9) As String * 2, skyleftjump As Boolean, TempFormVis As Boolean
 Public map400 As Boolean, map50 As Boolean, sunmode%, hChild As Long, Skynum%
 'Public n400%(4, 7), n50%(19, 45), terwt As Boolean, cir50 As Boolean, cir400 As Boolean
 Public n400x%(9), n400y%(9), n50x%(9), n50y%(9), Skycoord%, OverhWnd As Long
 Public kmxoo, kmyoo, filnumg%, hgt, hgtpos, picf$, sgnfudx, xpix As Integer, ypix As Integer
 'Public CHMAP(14, 26) As String * 2, CHMNE As String * 2, CHMNEO As String * 2, SF As String * 2
-Public coordmode%, dragx, dragy, kmxc, kmyc, nplac%, Tdxname As String
+Public coordmode%, dragx, dragy, kmxc, kmyc, nplac%, Tdxname As String, MapLatCenter As Long, MapLonCenter As Long
 Public X50c As Single, Y50c As Single, kmx50c, kmy50c, hgt50c, TdxhWnd As Long
 Public X400c As Single, Y400c As Single, kmx400c, kmy400c, hgt400c, bn%(4)
 Public kmxorigin, kmyorigin, picold$(9), bufx(2, 4), bufy(2, 4), bufwi(2, 4), bufhi(2, 4)
 Public maphi, mapwi, maphi2, mapwi2, nhwnd As Long, tblbuttons%(30), FileEdit As Boolean
 Public gotojump As Boolean, coordmode2%, mapxdif, mapydif, kmxcd, kmycd, newRootNum As Integer
-Public scrolling2 As Boolean, noheights As Boolean, dragbox As Boolean
+Public scrolling2 As Boolean, noheights As Boolean, dragbox As Boolean, MapFormatVis As Boolean
 Public drag1x As Single, drag1y As Single, drag2x As Single, drag2y As Single
 Public drag3x As Single, drag3y As Single, magx As Single, magy As Single, mag As Single
 Public dragbegin As Boolean, drawbox As Boolean, magclose As Boolean, Delay%
@@ -289,6 +289,27 @@ Private Declare Function SHBrowseForFolder Lib "shell32" _
    
 Private Declare Function SHGetPathFromIDList Lib "shell32" _
    (ByVal pidList As Long, ByVal lpBuffer As String) As Long
+   
+'variables that define the imported map picture file
+Private Type MapInfos
+   name As String 'root name of the map picture file (i.e., without the path and extension)
+   type As Integer  'bmp = 0, gif = 1, jpg = 2
+   xsize As Integer 'pixel x size of map
+   ysize As Integer 'pixel y size of map
+   pixcx As Integer 'pixel value of cosen center in x direction (chosen center is usually an intersection of lines of latitude and longitude)
+   pixcy As Integer 'pixel value of chosen center in y direction
+   pixkm As Double 'pixels per kilmoters
+   pixlon As Integer 'pixels for one degree of longitude
+   pixlat As Integer 'pixels for one degree of latitude
+   loncenter As Integer 'longitude of the chosen center of the picture (e.g., the intersection of lines of lat and lon.)
+   latcenter As Integer 'latitude of the chosen center of the picture
+End Type
+
+Public MapInfo As MapInfos
+   
+   
+   
+   
    
 
 Public Function BrowseForFolder(ByVal lngHwnd As Long, ByVal strPrompt As String) As String
@@ -1151,24 +1172,24 @@ Public Function DACOS(XX As Double) As Double
       DACOS = -Atn(XX / Sqr(-XX * XX + 1)) + pi / 2
       End If
 End Function
-Public Function atan2(ByVal Y As Double, ByVal X As Double) _
+Public Function atan2(ByVal y As Double, ByVal x As Double) _
     As Double
     'keeps angle within -180 to 180
   Dim theta As Double
 
-  If (Abs(X) < 0.0000001) Then
-    If (Abs(Y) < 0.0000001) Then
+  If (Abs(x) < 0.0000001) Then
+    If (Abs(y) < 0.0000001) Then
       theta = 0#
-    ElseIf (Y > 0#) Then
+    ElseIf (y > 0#) Then
       theta = 1.5707963267949
     Else
       theta = -1.5707963267949
     End If
   Else
-    theta = Atn(Y / X)
+    theta = Atn(y / x)
   
-    If (X < 0) Then
-      If (Y >= 0#) Then
+    If (x < 0) Then
+      If (y >= 0#) Then
         theta = 3.14159265358979 + theta
       Else
         theta = theta - 3.14159265358979
@@ -1179,23 +1200,23 @@ Public Function atan2(ByVal Y As Double, ByVal X As Double) _
   atan2 = theta
 
 End Function
-Public Function datan2(ByVal Y As Double, ByVal X As Double) _
+Public Function datan2(ByVal y As Double, ByVal x As Double) _
     As Double
   Dim theta As Double
 
-  If (Abs(X) < 0.0000001) Then
-    If (Abs(Y) < 0.0000001) Then
+  If (Abs(x) < 0.0000001) Then
+    If (Abs(y) < 0.0000001) Then
       theta = 0#
-    ElseIf (Y > 0#) Then
+    ElseIf (y > 0#) Then
       theta = 1.5707963267949
     Else
       theta = -1.5707963267949
     End If
   Else
-    theta = Atn(Y / X)
+    theta = Atn(y / x)
   
-    If (X < 0) Then
-      If (Y >= 0#) Then
+    If (x < 0) Then
+      If (y >= 0#) Then
         theta = 3.14159265358979 + theta
       Else
         theta = theta - 3.14159265358979
@@ -5859,13 +5880,13 @@ mapCrossSections_Error:
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure mapCrossSections of Module MapModule"
 '    Resume
 End Sub
-Function MinArray(X() As Double, NumArray As Integer) As Integer
+Function MinArray(x() As Double, NumArray As Integer) As Integer
    'returns smallest member of array x() having NumArray members
    MinArray = 1
-   xmin = X(1)
+   xmin = x(1)
    For i% = 2 To NumArray
-      If X(i%) < xmin Then
-         xmin = X(i%)
+      If x(i%) < xmin Then
+         xmin = x(i%)
          MinArray = i%
          End If
    Next i%
@@ -6425,8 +6446,8 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
   
   If Mode% = 1 Then 'convert (dragCoordX,dragCoordY) -> (kmxDrag,kmyDrag)
 
-      X = dragCoordX
-      Y = dragCoordY
+      x = dragCoordX
+      y = dragCoordY
       If world = True Then GoTo m10
       If map400 = True Then
          If mag > 1 Then
@@ -6434,8 +6455,8 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
             kmycc = kmyc
             xo = kmxcc - (km400x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km400y / mag) * (maphi2 - mapydif) * 0.5
-            kmxDrag0 = Fix(xo + X * km400x / mag) 'mapdif accounts for size of frame around picture
-            kmyDrag0 = Fix(yo - Y * km400y / mag)
+            kmxDrag0 = Fix(xo + x * km400x / mag) 'mapdif accounts for size of frame around picture
+            kmyDrag0 = Fix(yo - y * km400y / mag)
          Else
             kmxcc = kmxc + (km400x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km400y) * (maphi - maphi2 + mapydif) / 2
@@ -6443,8 +6464,8 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
             'so topleft corner=origin corresponds to:
             xo = kmxcc - km400x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km400y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            kmxDrag0 = Fix(xo + X * km400x)   'mapdif accounts for size of frame around picture
-            kmyDrag0 = Fix(yo - Y * km400y)
+            kmxDrag0 = Fix(xo + x * km400x)   'mapdif accounts for size of frame around picture
+            kmyDrag0 = Fix(yo - y * km400y)
             End If
        ElseIf map50 = True Then
          If mag > 1 Then
@@ -6452,15 +6473,15 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
             kmycc = kmyc
             xo = kmxcc - (km50x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km50y / mag) * (maphi2 - mapydif) * 0.5
-            kmxDrag0 = Fix(xo + X * km50x / mag) 'mapdif accounts for size of frame around picture
-            kmyDrag0 = Fix(yo - Y * km50y / mag)
+            kmxDrag0 = Fix(xo + x * km50x / mag) 'mapdif accounts for size of frame around picture
+            kmyDrag0 = Fix(yo - y * km50y / mag)
          Else
             kmxcc = kmxc + (km50x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km50y) * (maphi - maphi2 + mapydif) / 2
             xo = kmxcc - km50x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km50y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            kmxDrag0 = Fix(xo + X * km50x)
-            kmyDrag0 = Fix(yo - Y * km50y)
+            kmxDrag0 = Fix(xo + x * km50x)
+            kmyDrag0 = Fix(yo - y * km50y)
             End If
          End If
 m10:     Select Case coordmode%
@@ -6474,15 +6495,15 @@ m10:     Select Case coordmode%
                    latc = lat '+ fudy / mag
                    xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                    yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
-                   kmxDrag = xo + X * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
-                   kmyDrag = yo - Y * (deglat / (sizewy * mag))
+                   kmxDrag = xo + x * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
+                   kmyDrag = yo - y * (deglat / (sizewy * mag))
                  Else
                    lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx
                    latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy
                    xo = lonc - deglog / 2
                    yo = latc + deglat / 2
-                   kmxDrag = xo + X * (deglog / sizewx)
-                   kmyDrag = yo - Y * (deglat / sizewy)
+                   kmxDrag = xo + x * (deglog / sizewx)
+                   kmyDrag = yo - y * (deglat / sizewy)
                    If sizewx = Screen.TwipsPerPixelX * 10201 And sizewy = Screen.TwipsPerPixelY * 5489 Then
                        'fudge factor for inaccuracy of linear degree approx for large size map
                        kmxDrag = kmxDrag - 0.006906
@@ -6509,8 +6530,8 @@ m10:     Select Case coordmode%
             kmycc = kmyc
             xo = kmxcc - (km400x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km400y / mag) * (maphi2 - mapydif) * 0.5
-            X = mag * (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
-            Y = mag * (yo - kmyDrag0) / km400y
+            x = mag * (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
+            y = mag * (yo - kmyDrag0) / km400y
          Else
             kmxcc = kmxc + (km400x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km400y) * (maphi - maphi2 + mapydif) / 2
@@ -6518,8 +6539,8 @@ m10:     Select Case coordmode%
             'so topleft corner=origin corresponds to:
             xo = kmxcc - km400x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km400y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            X = (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
-            Y = (yo - kmyDrag0) / km400y
+            x = (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
+            y = (yo - kmyDrag0) / km400y
             End If
        ElseIf map50 = True Then
          If mag > 1 Then
@@ -6527,21 +6548,21 @@ m10:     Select Case coordmode%
             kmycc = kmyc
             xo = kmxcc - (km50x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km50y / mag) * (maphi2 - mapydif) * 0.5
-            X = mag * (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
-            Y = mag * (yo - kmyDrag0) / km50y
+            x = mag * (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
+            y = mag * (yo - kmyDrag0) / km50y
          Else
             kmxcc = kmxc + (km50x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km50y) * (maphi - maphi2 + mapydif) / 2
             xo = kmxcc - km50x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km50y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            X = (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
-            Y = (yo - kmyDrag0) / km50y
+            x = (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
+            y = (yo - kmyDrag0) / km50y
             End If
          End If
 m100:     Select Case coordmode%
            Case 1 'ITM
-              dragCoordX = X
-              dragCoordY = Y
+              dragCoordX = x
+              dragCoordY = y
            Case 2 'GEO
               If world = True Then
                  If mag > 1 Then
@@ -6549,23 +6570,23 @@ m100:     Select Case coordmode%
                    latc = lat '+ fudy / mag
                    xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                    yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
-                   X = (kmxDrag - xo) * (sizewx * mag / deglog)
-                   Y = (yo - kmyDrag) * (sizewy * mag / deglat)
+                   x = (kmxDrag - xo) * (sizewx * mag / deglog)
+                   y = (yo - kmyDrag) * (sizewy * mag / deglat)
                  Else
                    lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx
                    latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy
                    
                    xo = lonc - deglog / 2
                    yo = latc + deglat / 2
-                   X = (kmxDrag - xo) * (sizewx / deglog)
-                   Y = (yo - kmyDrag) * (sizewy / deglat)
+                   x = (kmxDrag - xo) * (sizewx / deglog)
+                   y = (yo - kmyDrag) * (sizewy / deglat)
                    End If
-                dragCoordX = X
-                dragCoordY = Y
+                dragCoordX = x
+                dragCoordY = y
                 End If
              Case Else 'option not supported yet
-                dragCoordX = X
-                dragCoordY = Y
+                dragCoordX = x
+                dragCoordY = y
           End Select
   
   End If
@@ -6578,7 +6599,7 @@ End Sub
 
 
 
-Sub FindSearchResult(X As Single, Y As Single)
+Sub FindSearchResult(x As Single, y As Single)
    'finds nearest search result to right clicked point
    'and moves the position of the Search Result DataGrid to that point
    
@@ -6587,7 +6608,7 @@ Sub FindSearchResult(X As Single, Y As Single)
    On Error GoTo errhand
    
    'convert screen coordinates to kmx,kmy, or to lon,lat
-   Call ScreenToGeo(X, Y, GeoX0, GeoY0, 1, ier%)
+   Call ScreenToGeo(x, y, GeoX0, GeoY0, 1, ier%)
    If ier% < 0 Then Exit Sub
    
    'now search through the DataGrid for the nearest point
@@ -6658,14 +6679,14 @@ End Sub
 Public Sub sCenterForm(tmpF As Form)
 'centers a form in the middle of the program's main form
 
-Dim X As Integer, Y As Integer
+Dim x As Integer, y As Integer
 
 On Error GoTo sCenterForm_Error
 
-    X = Maps.Left + 0.5 * Maps.Width - 0.5 * tmpF.Width
-    Y = Maps.Top + 0.5 * Maps.Height - 0.5 * tmpF.Height
+    x = Maps.Left + 0.5 * Maps.Width - 0.5 * tmpF.Width
+    y = Maps.Top + 0.5 * Maps.Height - 0.5 * tmpF.Height
     
-    tmpF.Move X, Y
+    tmpF.Move x, y
     
     On Error GoTo 0
     Exit Sub
@@ -6770,11 +6791,11 @@ T50:
        filein% = FreeFile
        Open FileNameBil For Binary As #filein%
    
-        Y = lat
-        X = lon
+        y = lat
+        x = lon
         
-        IKMY& = CLng((ULYMAP - Y) / YDIM) + 1
-        IKMX& = CLng((X - ULXMAP) / XDIM) + 1
+        IKMY& = CLng((ULYMAP - y) / YDIM) + 1
+        IKMX& = CLng((x - ULXMAP) / XDIM) + 1
         tncols = NCOLS
         numrec& = (IKMY& - 1) * tncols + IKMX&
         Get #filein%, (numrec& - 1) * 2 + 1, IO%

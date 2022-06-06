@@ -46,7 +46,7 @@ Begin VB.Form frmMap
       Height          =   375
       Left            =   7200
       TabIndex        =   14
-      ToolTipText     =   "Show google map for inputed coordinates"
+      ToolTipText     =   "move google map to the  inputed coordinates"
       Top             =   1200
       Width           =   1215
    End
@@ -55,7 +55,7 @@ Begin VB.Form frmMap
       Height          =   375
       Left            =   5950
       TabIndex        =   13
-      ToolTipText     =   "Show Google Map at inputed address"
+      ToolTipText     =   "Move Google map to the inputed street address"
       Top             =   1200
       Width           =   1215
    End
@@ -93,6 +93,7 @@ Begin VB.Form frmMap
       Height          =   285
       Left            =   960
       TabIndex        =   8
+      ToolTipText     =   "Enter City Name"
       Top             =   600
       Width           =   4215
    End
@@ -100,6 +101,7 @@ Begin VB.Form frmMap
       Height          =   285
       Left            =   960
       TabIndex        =   7
+      ToolTipText     =   "Enter street address"
       Top             =   120
       Width           =   4215
    End
@@ -153,12 +155,13 @@ Begin VB.Form frmMap
       Width           =   1215
    End
    Begin VB.Label Label3 
-      Caption         =   "State"
-      Height          =   255
+      Caption         =   "State (Country)"
+      Height          =   495
       Left            =   120
       TabIndex        =   3
+      ToolTipText     =   "Enter state (or country if no state applies)"
       Top             =   1080
-      Width           =   1215
+      Width           =   735
    End
    Begin VB.Label Label2 
       Caption         =   "City"
@@ -228,23 +231,50 @@ Private Sub cmdHelp_Click()
   MsgBox "To retrieve coordinates on the google map," & vbCrLf & _
   "right click on the point of interest," & vbCrLf & _
   "then click on the coordinates." & vbCrLf & _
-  "The coordinates will be saved to the clipboard." & vbCrLf & _
+  "The Google map will confirm that the coordinates have been saved to the clipboard." & vbCrLf & vbCrLf & _
   "Now you can send those coordinates to the main program via the bullseye button.", vbOKOnly + vbInformation, "Google Map Help"
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : cmdMoveMaps_Click
+' Author    : chaim
+' Date      : 6/3/2022
+' Purpose   : Read clipboard where coordintaes should be stored and moves the program map
+'---------------------------------------------------------------------------------------
+'
 Private Sub cmdMoveMaps_Click()
     Dim StrTxt() As String
+   On Error GoTo cmdMoveMaps_Click_Error
+
     textcoord$ = Clipboard.GetText
     If textcoord = sEmpty Then
-       MsgBox "Right Click on the map and copy the coordinates, and try again"
+       MsgBox "No coordinates found!  Try again" & vbCrLf & vbCrLf & _
+       "Click the ""Help"" button for further information.", vbInformation + vbOKOnly, _
+       "No coordinates stored to the clipboard!"
        Exit Sub
        End If
+       
     StrTxt = Split(textcoord$, ",")
+    
+    If UBound(StrTxt) < 1 Then
+       MsgBox "No coordinates found!  Try again" & vbCrLf & vbCrLf & _
+       "Click the ""Help"" button for further information.", vbInformation + vbOKOnly, _
+       "No coordinates stored to the clipboard!"
+       Exit Sub
+       End If
+       
     txtLat.Text = StrTxt(0)
     txtLong.Text = StrTxt(1)
     Maps.Text6.Text = txtLat.Text
     Maps.Text5.Text = txtLong.Text
     Call goto_click
+
+   On Error GoTo 0
+   Exit Sub
+
+cmdMoveMaps_Click_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdMoveMaps_Click of Form frmMap"
 
 End Sub
 
@@ -258,11 +288,19 @@ queryAddress = "http://maps.google.com/maps?q="
 ' build street part of query string
 If txtStreet.Text <> "" Then
     street = txtStreet.Text
+    If Trim$(street) = sEmpty Then
+       Call MsgBox("Enter a valid street address in the box provided!", vbInformation, "Google Map Interface")
+       Exit Sub
+       End If
     queryAddress = queryAddress & street + "," & "+"
 End If
 ' build city part of query string
 If txtCity.Text <> "" Then
     city = txtCity.Text
+    If Trim$(city) = sEmpty Then
+       Call MsgBox("Enter a valid city in the box provided!", vbInformation, "Google Map Interface")
+       Exit Sub
+       End If
     queryAddress = queryAddress & city + "," & "+"
 End If
 ' build state part of query string
@@ -347,6 +385,8 @@ End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
   GoogleMapVis = False
+  tblbuttons(30) = 0
+  Maps.Toolbar1.Buttons(30).value = tbrUnpressed
   Set frmMap = Nothing
 End Sub
 

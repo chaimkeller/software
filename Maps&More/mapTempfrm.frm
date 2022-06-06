@@ -129,7 +129,7 @@ cmdLoadTK_Click_Error:
     
 End Sub
 
-Private Sub form_load()
+Private Sub Form_Load()
    With msFlxGrdTK
       .ColAlignment(0) = 1
       .TextMatrix(1, 0) = "January"
@@ -150,5 +150,21 @@ Private Sub form_load()
    End With
    
    cmdLoadTK_Click
+   TempFormVis = True
    
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+   On Error GoTo Form_Unload_Error
+
+   TempFormVis = False
+   tblbuttons(29) = 0
+   Maps.Toolbar1.Buttons(29).value = tbrUnpressed
+   Set mapTempfrm = Nothing
+
+   On Error GoTo 0
+   Exit Sub
+
+Form_Unload_Error:
+   Resume Next
 End Sub

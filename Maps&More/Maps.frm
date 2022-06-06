@@ -1163,6 +1163,10 @@ Begin VB.MDIForm Maps
          Caption         =   "&Center Point"
          Enabled         =   0   'False
       End
+      Begin VB.Menu mnushowmapinfo 
+         Caption         =   "Show Map Info"
+         Enabled         =   0   'False
+      End
    End
    Begin VB.Menu searchfm 
       Caption         =   "&Search"
@@ -1321,6 +1325,11 @@ Private Sub importmapfm_Click()
    'ask user where and which map to import (default imports are contained in f:/eroscities)
    'then blit map--details of the map are stored in its associated .map file
    'see below for details of the .map file
+   Dim logdeg As Integer, latdeg As Integer
+   Dim pixdeglog As Integer, pixeldeglat As Integer
+   Dim foundMapCenter%, foundPixelDeg%, MapInfoFile$
+   logdeg = 0
+   latdeg = 0
    On Error GoTo errhand
    
    mydir$ = Dir(ErosCitiesDir$ & "*.*")
@@ -1336,21 +1345,42 @@ Private Sub importmapfm_Click()
    CommonDialog1.FileName = mapdir$ + "*.gif"
    CommonDialog1.ShowOpen
    mapfile$ = CommonDialog1.FileName
-   mapinfo$ = Mid$(mapfile$, 1, Len(mapfile$) - 3) + "map"
+   MapInfoFile$ = Mid$(mapfile$, 1, Len(mapfile$) - 3) + "map"
    ext$ = Mid$(mapfile$, Len(mapfile$) - 2, 3)
    For i% = Len(mapfile$) - 4 To 1 Step -1
       CH$ = Mid$(mapfile$, i%, 1)
       If CH$ = "\" Then
-         rootname$ = Mid$(mapinfo$, i% + 1, Len(mapfile$) - 4 - i%)
+         rootname$ = Mid$(MapInfoFile$, i% + 1, Len(mapfile$) - 4 - i%)
          Exit For
          End If
    Next i%
-   myfile$ = Dir(mapinfo$)
+   
+   MapInfo.name = rootname$
+   mnushowmapinfo.Enabled = True
+   
+'   name As String 'root name of the map picture file (i.e., without the path and extension)
+'   type As Integer  'bmp = 0, gif = 1, jpg = 2
+'   xsize As Integer 'pixel x size of map
+'   ysize As Integer 'pixel y size of map
+'   pixcx As Integer 'pixel value of cosen center in x direction (chosen center is usually an intersection of lines of latitude and longitude)
+'   pixcy As Integer 'pixel value of chosen center in y direction
+'   pixkm As Double 'pixels per kilmoters
+'   pixlon As Integer 'pixels for one degree of longitude
+'   pixlat As Integer 'pixels for one degree of latitude
+'   loncenter As Integer 'longitude of the chosen center of the picture (e.g., the intersection of lines of lat and lon.)
+'   latcenter As Integer 'latitude of the chosen center of the picture
+   
+   
+mapinfobegin:
+   foundCoordCenter% = 0
+   foundMap% = 0
+   myfile$ = Dir(MapInfoFile$)
    If myfile$ <> sEmpty Then
       'open it and read map information
+      foundMap% = 1
       mapinfonum% = FreeFile
       Item% = 0
-      Open mapinfo$ For Input As #mapinfonum%
+      Open MapInfoFile$ For Input As #mapinfonum%
       Do Until EOF(mapinfonum%)
          Line Input #mapinfonum%, doclin$
          If doclin$ = "[Format]" Or doclin$ = "[format]" Then
@@ -1360,85 +1390,180 @@ Private Sub importmapfm_Click()
                If response = vbCancel Then Exit Sub
                End If
            ext$ = doclin$
+           Select Case ext$
+              Case "bmp"
+                 MapInfo.type = 0
+              Case "gif"
+                 MapInfo.type = 1
+              Case "jpg"
+                 MapInfo.type = 2
+           End Select
            Input #mapinfonum%, xpix, ypix
            blank$ = mapdir$ + "blank" + LTrim$(RTrim$(Str$(xpix))) + "_" + LTrim$(RTrim$(Str$(ypix))) + "." + ext$
            If Dir(blank$) = sEmpty Then
-              response = MsgBox("blank picture file: " & blank$ & " not found", vbCritical + vbOKOnly, "Maps & More")
+              foundMap% = 0
+'              response = MsgBox("blank picture file: " & blank$ & " not found", vbCritical + vbOKOnly, "Maps & More")
               Exit Sub
               End If
+           MapInfo.xsize = xpix
+           MapInfo.ysize = ypix
+           
            Item% = Item% + 1
-           If Item% = 3 Then Exit Do
+           If Item% = 5 Then Exit Do
          ElseIf doclin$ = "[capital]" Or doclin$ = "[Capital]" Then
            Input #mapinfonum%, xc, yc
+           MapInfo.pixcx = xc
+           MapInfo.pixcy = yc
+           
            Item% = Item% + 1
-           If Item% = 3 Then Exit Do
+           If Item% = 5 Then Exit Do
          ElseIf doclin$ = "[pixel/km]" Or doclin$ = "[Pixel/km]" Then
            Input #mapinfonum%, pixkm
+           MapInfo.pixkm = pixkm
+           
            Item% = Item% + 1
-           If Item% = 3 Then Exit Do
+           If Item% = 5 Then Exit Do
+         ElseIf doclin$ = "[pixels for deg. lon. and lat.]" Then
+           Input #mapinfonum%, pixdeglon, pixdeglat
+           MapInfo.pixlon = pixdeglon
+           MapInfo.pixlat = pixdeglat
+           
+           foundPixelDeg% = 1
+           Item% = Item% + 1
+           'calculate size of map in degrees of longitude and latitude
+           deglog = xpix / pixdeglon
+           deglat = ypix / pixdeglat
+           
+           If Item% = 5 Then Exit Do
+         ElseIf doclin$ = "[MapCenter, deg lon, deg lat]" Then
+           Input #mapinfonum%, MapLonCenter, MapLatCenter
+           MapInfo.loncenter = MapLonCenter
+           MapInfo.latcenter = MapLatCenter
+           
+           foundMapCenter% = 1
+           Item% = Item% + 1
+           If Item% = 5 Then Exit Do
            End If
       Loop
       Close #mapinfonum%
-      If Item% < 3 Then
-         response = MsgBox("The .map file: " & mapinfo$ & " seems to be missing information.  Check it!", vbCritical + vbOKOnly, "Maps & More")
-         Exit Sub
-         End If
+'      If Item% < 4 Then
+'         response = MsgBox("The .map file: " & mapinfo$ & " seems to be missing information." & vbCrLf & _
+'                           "Please fill in the missing information and save it.", vbInformation + vbOKOnly, "Maps & More")
+'         Exit Sub
+'         End If
    Else
-      response = MsgBox("No map information file (.map) is associated with this file. " _
-                        & "Please create such a file then try again.  The content of this file is: " _
-                        & "'[Format]'(c.r.)bmp(c.r.)xpixelsize,ypixelsize(c.r.)(c.r.)'[capital]'(c.r.) " _
-                        & "x pixel coord of capital, y pixel coord(c.r.)(c.r.)'[pixel/km]'(c.r.)pixels/km," _
-                        & vbCritical + vbOKOnly, "Maps & More")
+'      response = MsgBox("No map information file (.map) is associated with this file. " _
+'                        & "Please create such a file then try again.  The content of this file is: " _
+'                        & "'[Format]'(c.r.)bmp(c.r.)xpixelsize,ypixelsize(c.r.)(c.r.)'[capital]'(c.r.) " _
+'                        & "x pixel coord of capital, y pixel coord(c.r.)(c.r.)'[pixel/km]'(c.r.)pixels/km," _
+'                        & vbCritical + vbOKOnly, "Maps & More")
+
       'this file has the following format (headers must be present, but in any order):
 
-      '[Format]
-      'bmp
-      '517,574
-      '
-      '[capital]
-      '269,218
-      '
-      '[pixel/km]
-      '10
+        '[Format]
+        'jpg
+        '656,554
+        '
+        '[capital]
+        '418,313
+        '
+        '[pixel/km]
+        '4.75
+        '
+        '[pixels for deg. lon. and lat.]
+        '404,530
+        '
+        '[MapCenter, deg lon, deg lat]
+        '-74,40
 
       Exit Sub
       End If
-   'now look for city name in skyworld.sav and read it's coordinates
-   filsav% = FreeFile
-   found% = 0
-   placnam$ = "start"
-   Open drivjk_c$ + "skyworld.sav" For Input As #filsav%
-   Do Until EOF(filsav%)
-      oldplacnam$ = placnam$
-      Input #filsav%, placnam$, itmx, itmy, itmhgt
-      If InStr("abcdefghijklmnopqrstuvwxyz", LCase(Mid$(placnam$, 1, 1))) = 0 Then
-         response = MsgBox("Error in skyworld.sav detected after entry: " + oldplacnam$, vbCritical + vbOKOnly, "Maps & More")
-         Close #filsav%
-         Exit Sub
-         End If
-      If placnam$ = "Collins House" Then
-         ccc = 1
-         End If
-      If UCase(Mid$(placnam$, 1, Len(rootname$))) = UCase(rootname$) Then
-         l2 = itmx
-         l1 = itmy
-         Maps.Text6.Text = itmy 'latitude
-         Maps.Text5.Text = itmx 'longitude
-         Call goto_click
-         response = MsgBox("Is this a map for the city: " & placnam$ & "? Check the location on the map.", vbQuestion + vbYesNoCancel, "Maps & More")
-         If response = vbCancel Then
-            Close #filsav%
-            Exit Sub
-         ElseIf response = vbYes Then
-            found% = 1
-            Exit Do
-            End If
-         End If
-   Loop
-   Close #filsav%
-   If found% = 0 Then
-      response = MsgBox("City not found in skyworld.sav. Check the spelling or, if necessary, record it's name and coordinates of the map's reference point in skyworld.sav!", vbCritical, "Maps & More")
-      End If
+   'now look for city name in skyworld.sav and read it's coordinates if necessary
+   If foundMapCenter% = 0 Then
+      'look for saved center coordinates
+      
+        filsav% = FreeFile
+        found% = 0
+        placnam$ = "start"
+        mapplacefound% = 0
+        Open drivjk_c$ + "skyworld.sav" For Input As #filsav%
+        Do Until EOF(filsav%)
+           oldplacnam$ = placnam$
+           Input #filsav%, placnam$, itmx, itmy, itmhgt
+           If InStr("abcdefghijklmnopqrstuvwxyz", LCase(Mid$(placnam$, 1, 1))) = 0 Then
+              response = MsgBox("Error in skyworld.sav detected after entry: " + oldplacnam$, vbCritical + vbOKOnly, "Maps & More")
+              Close #filsav%
+              Exit Sub
+              End If
+           If placnam$ = "Collins House" Then
+              ccc = 1
+              End If
+           If UCase(Mid$(placnam$, 1, Len(rootname$))) = UCase(rootname$) Then
+              mapplacefound% = 1
+              MapLonCenter = itmx
+              MapLatCenter = itmy
+              MapInfo.loncenter = MapLonCenter
+              MapInfo.latcenter = MapLatCenter
+              
+              foundMapCenter% = 1
+              Exit Do
+              End If
+        Loop
+        Close #filsav%
+        End If
+'         Maps.Text6.Text = itmy 'latitude
+'         Maps.Text5.Text = itmx 'longitude
+'         Call goto_click
+'         response = MsgBox("Is this a map for the city: " & placnam$ & "? Check the location on the map.", vbQuestion + vbYesNoCancel, "Maps & More")
+'         If response = vbCancel Then
+'            Close #filsav%
+'            Exit Sub
+'         ElseIf response = vbYes Then
+'            found% = 1
+'            Exit Do
+'            End If
+'         End If
+'   Loop
+'   Close #filsav%
+   
+   'now fill in missing inoformation if necessary
+   If foundMap% = 0 Or foundMapCenter = 0 Or foundPixelDeg% = 0 Or Item% < 5 Then
+      response = MsgBox("Missing or no map information file (.map) is associated with this file. " _
+                        & "Please fill in the necessary information.", _
+                        vbInformation + vbOKOnly, "Maps & More")
+     mapMapInfo.Visible = True
+     ret = SetWindowPos(mapMapInfo.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+
+     mnushowmapinfo.Checked = True
+
+     Do Until MapFormatVis = False
+        DoEvents
+     Loop
+     Select Case MsgBox("Do you want to try to read the map info again?", vbYesNoCancel Or vbQuestion Or vbDefaultButton1, "Map Information File Processing")
+     
+        Case vbYes
+             GoTo mapinfobegin
+        Case vbNo
+             Exit Sub
+        Case vbCancel
+             Exit Sub
+     End Select
+   Else
+        Maps.Text6.Text = MapInfo.latcenter 'latitude
+        Maps.Text5.Text = MapInfo.loncenter 'longitude
+        Call goto_click
+        response = MsgBox("Is this a map for the city: " & placnam$ & "? Check the location on the map.", vbQuestion + vbYesNoCancel, "Maps & More")
+        If response = vbCancel Then
+           Exit Sub
+        ElseIf response = vbYes Then
+           found% = 1
+           End If
+        End If
+      
+   
+'   If found% = 0 Then
+'      response = MsgBox("City not found in skyworld.sav. Check the spelling or, if necessary, record it's name and coordinates of the map's reference point in skyworld.sav!", vbCritical, "Maps & More")
+'      End If
 
    'now calculate all the information needed to blit the file
    'in place of the world map
@@ -1447,15 +1572,26 @@ Private Sub importmapfm_Click()
    'first find the radius of the ellipsoid of rotation, Re, at that latitude
    Ra = 6378.136
    Rb = 6356.751
-   Re = Sqr(1# / ((Cos(itmy * cd) / Ra) ^ 2 + (Sin(itmy * cd) / Rb) ^ 2))
-   deglog = 1.5 * (CDbl(xpix) / CDbl(pixkm)) / (Re * cd * Cos(itmy * cd)) 'picture's x dimension in degrees
-   deglat = 1.5 * (CDbl(ypix) / CDbl(pixkm)) / (Re * cd) 'picture's y dimension in degrees
+   Re = Sqr(1# / ((Cos(MapInfo.latcenter * cd) / Ra) ^ 2 + (Sin(MapInfo.latcenter * cd) / Rb) ^ 2))
+   deglog = 1.5 * (CDbl(MapInfo.xsize) / CDbl(MapInfo.pixkm)) / (Re * cd * Cos(MapInfo.latcenter * cd)) 'picture's x dimension in degrees
+   deglat = 1.5 * (CDbl(MapInfo.ysize) / CDbl(MapInfo.pixkm)) / (Re * cd) 'picture's y dimension in degrees
    
    lon = Maps.Text5.Text
    lat = Maps.Text6.Text
-   woxorigin = CDbl(itmx) - (CDbl(xc) / CDbl(xpix)) * deglog 'this is longitude at x=0, i.e., left border of picture
-   woyorigin = CDbl(itmy) - (1# - (CDbl(yc) / CDbl(ypix))) * deglat 'this is latitude at y=0, i.e., bottom border of picture
+   woxorigin = CDbl(MapInfo.loncenter) - (CDbl(MapInfo.pixcx) / CDbl(MapInfo.xsize)) * deglog 'this is longitude at x=0, i.e., left border of picture
+   woyorigin = CDbl(MapInfo.latcenter) - (1# - (CDbl(MapInfo.pixcy) / CDbl(MapInfo.ysize))) * deglat 'this is latitude at y=0, i.e., bottom border of picture
    'calculate xorigin ??? add fudx to it?
+      
+   'improved way using the measured pixel distance between lines of latitude and longitude
+    'By direct measurement for LakewoodEx.jpg: deglog = xpix / 409  pixels/deg in x direction
+     deglog = MapInfo.xsize / MapInfo.pixlon
+    'by direct measurement for LakewoodEx.jpg deglat = 2# * 265 / ypix in y direction
+     deglat = MapInfo.ysize / MapInfo.pixlat
+    
+     woxorigin = CDbl(MapInfo.loncenter) - (CDbl(MapInfo.pixcx) / CDbl(MapInfo.xsize)) * deglog 'this is longitude at x=0, i.e., left border of picture
+     woyorigin = CDbl(MapInfo.latcenter) - (1# - (CDbl(MapInfo.pixcy) / CDbl(MapInfo.ysize))) * deglat 'this is latitude at y=0, i.e., bottom border of picture
+
+   
    mapimport = True
    
    'since the map's geoids are unknown, there deglog, deglat are not accuracte and need to be fudged.
@@ -1465,15 +1601,15 @@ Private Sub importmapfm_Click()
    If pixkm = 4.75 And xpix = 656 And ypix = 554 Then
      'standard www.expedia.com world topo maps
      'so set it's center point
-     fudx = 0.071 '0.1086 '6.38508961403232E-02
-     fudy = 0.038 ' 0.065 '0.059 '0.041708027733435
+     fudx = 0.047 '71 '0.1086 '6.38508961403232E-02
+     fudy = 0.043  '.038 ' 0.065 '0.059 '0.041708027733435
     'By direct measurement for LakewoodEx.jpg: deglog = xpix / 409  pixels/deg in x direction
-     deglog = xpix / 404
-    'by direct measurement for LakewoodEx.jpg deglat = 2# * 265 / ypix in y direction
-     deglat = 2# * 265 / ypix
-    
-     woxorigin = CDbl(itmx) - (CDbl(xc) / CDbl(xpix)) * deglog 'this is longitude at x=0, i.e., left border of picture
-     woyorigin = CDbl(itmy) - (1# - (CDbl(yc) / CDbl(ypix))) * deglat 'this is latitude at y=0, i.e., bottom border of picture
+'     deglog = xpix / 404
+'    'by direct measurement for LakewoodEx.jpg deglat = 2# * 265 / ypix in y direction
+'     deglat = 2# * 265 / ypix
+'
+'     woxorigin = CDbl(MapInfo.loncenter) - (CDbl(MapInfo.pixcx) / CDbl(MapInfo.xsize)) * deglog 'this is longitude at x=0, i.e., left border of picture
+'     woyorigin = CDbl(MapInfo.latcenter) - (1# - (CDbl(MapInfo.pixcy) / CDbl(MapInfo.ysize))) * deglat 'this is latitude at y=0, i.e., bottom border of picture
      
    ElseIf pixkm = 98.360656 And xpix = 1440 And ypix = 855 Then
      fudx = 0.059
@@ -3168,6 +3304,15 @@ Private Sub mnuSecondPoint_Click()
    End Select
 End Sub
 
+Private Sub mnushowmapinfo_Click()
+   If Not MapFormatVis Then
+      mapMapInfo.Visible = True
+      ret = SetWindowPos(mapMapInfo.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+      
+      mnushowmapinfo.Checked = True
+      End If
+End Sub
+
 Private Sub mnuTrigDrag_Click()
    'enable dragging to add Trig points to DTM
    mnuDragDisable.Checked = False
@@ -3240,8 +3385,8 @@ Private Sub originfm_Click()
        Maps.Text6.Text = Format(lato, "##0.0#####") '90# - Y * 180# / mappictureform.mappicture.Height
        Maps.Label5.Caption = "long."
        Maps.Label6.Caption = "latit."
-       Xworld = X
-       Yworld = Y
+       Xworld = x
+       Yworld = y
        cirworld = True
        hgtworld = hgt
        lon = lono
@@ -3264,7 +3409,7 @@ Private Sub originfm_Click()
        Exit Sub
        End If
     If map400 = True Then
-       X400c = X: Y400c = Y
+       X400c = x: Y400c = y
        kmx400c = kmxoo: kmy400c = kmyoo
        kmxc = kmx400c: kmyc = kmy400c
        hgt400c = hgt
@@ -3277,7 +3422,7 @@ Private Sub originfm_Click()
 '          End If
     ElseIf map50 = True Then
        'cir50 = True
-       X50c = X: Y50c = Y
+       X50c = x: Y50c = y
        kmx50c = kmxoo: kmy50c = kmyoo
        kmxc = kmx50c: kmyc = kmy50c
        hgt50c = hgt
@@ -4244,7 +4389,7 @@ positerror:
        Exit Sub
        End If
 End Sub
-Private Sub text1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    If Button = 1 And Maps.Timer2.Enabled = True Then Exit Sub
    If coordmode% <> 5 Then
       Maps.StatusBar1.Panels(2) = "X coordinate (change the coordinate system using RETURN key)"
@@ -4252,7 +4397,7 @@ Private Sub text1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y 
       Maps.StatusBar1.Panels(2) = "Distance from goto coordinates in kilometers"
       End If
 End Sub
-Private Sub text2_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text2_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    If Button = 1 And Maps.Timer2.Enabled = True Then Exit Sub
    If coordmode% <> 5 Then
       Maps.StatusBar1.Panels(2) = "Y coordinate (change the coordinate system using RETURN key)"
@@ -4260,7 +4405,7 @@ Private Sub text2_MouseMove(Button As Integer, Shift As Integer, X As Single, Y 
       Maps.StatusBar1.Panels(2) = "Azimut with respect to goto coordinates in degrees"
       End If
 End Sub
-Private Sub text3_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text3_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    If Button = 1 And Maps.Timer2.Enabled = True Then Exit Sub
    If tblbuttons(1) = 0 Then
       Maps.StatusBar1.Panels(2) = "To activate the height option please place the DTM CD in the CD-ROM reader"
@@ -4268,30 +4413,30 @@ Private Sub text3_MouseMove(Button As Integer, Shift As Integer, X As Single, Y 
       Maps.StatusBar1.Panels(2) = "Height in meters"
       End If
 End Sub
-Private Sub text4_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text4_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    If Text4.Visible = False Then
       Maps.StatusBar1.Panels(2) = sEmpty
    Else
       Maps.StatusBar1.Panels(2) = "Dip angle (degrees) with respect to the goto coordinates"
       End If
 End Sub
-Private Sub picture4_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub picture4_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = sEmpty
 End Sub
-Private Sub text6_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text6_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = "(Input) Y goto coordinate (change coordinate system using PGUP key)"
 End Sub
-Private Sub text5_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text5_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = "(Input) X goto coordinate (change coordinate system using PGUP key)"
 End Sub
-Private Sub text7_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text7_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = "Height in meters at goto coordinates (when DTM is activated)"
 End Sub
-Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = sEmpty
 End Sub
-Private Sub statusbar1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
-   If X >= StatusBar1.Panels(1).Width + StatusBar1.Panels(2).Width Then
+Private Sub statusbar1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+   If x >= StatusBar1.Panels(1).Width + StatusBar1.Panels(2).Width Then
       Maps.StatusBar1.Panels(2) = "Average of the remaining system and user resources"
       End If
 End Sub
@@ -4429,11 +4574,11 @@ Private Sub Timer3_Timer()
       End If
 End Sub
 
-Private Sub toolbar1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub toolbar1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    X1 = 0: X2 = 0
    For i% = 1 To Toolbar1.Buttons.count
        X2 = X2 + Toolbar1.Buttons(i%).Width
-       If X > X1 And X < X2 And Y > 0 And Y < Toolbar1.Height Then
+       If x > X1 And x < X2 And y > 0 And y < Toolbar1.Height Then
          Maps.StatusBar1.Panels(2).Text = Toolbar1.Buttons(i%).ToolTipText
          If i% <= 5 Then
             exit3 = True
@@ -5308,6 +5453,8 @@ obserrhandler:
           importmapfm.Enabled = False
           importcenterfm.Enabled = False
           resetoriginfm.Enabled = False
+          mnushowmapinfo.Checked = False
+          mnushowmapinfo.Enabled = False
           If Not bAirPath Then
             mnuCrossSection.Enabled = False
             mnuFirstPoint.Enabled = False
@@ -6088,15 +6235,25 @@ to550:  If world = True And showroute = True Then
         End If
         
      Case "Tempbut"
-        If mapTempfrm.Visible = False Then
+        If Not TempFormVis Then
            mapTempfrm.Visible = True
            ret = SetWindowPos(mapTempfrm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+           tblbuttons(29) = 1
+           Toolbar1.Buttons(29).value = tbrPressed
         Else
-           ret = SetWindowPos(mapTempfrm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+           Unload mapTempfrm
+           tblbuttons(29) = 0
+           Toolbar1.Buttons(29).value = tbrUnpressed
            End If
      Case "Googlebut"
-        If frmMap.Visible = False Then
+        If Not GoogleMapVis Then
            frmMap.Visible = True
+           tblbuttons(30) = 1
+           Toolbar1.Buttons(30).value = tbrPressed
+        Else
+           Unload frmMap
+           tblbuttons(30) = 0
+           Toolbar1.Buttons(30).value = tbrUnpressed
            End If
      
         Call BringWindowToTop(frmMap.hWnd)
