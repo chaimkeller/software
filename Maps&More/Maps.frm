@@ -1483,9 +1483,8 @@ mapinfobegin:
       'look for saved center coordinates
       
         filsav% = FreeFile
-        found% = 0
         placnam$ = "start"
-        mapplacefound% = 0
+        foundentry% = 0
         Open drivjk_c$ + "skyworld.sav" For Input As #filsav%
         Do Until EOF(filsav%)
            oldplacnam$ = placnam$
@@ -1495,36 +1494,21 @@ mapinfobegin:
               Close #filsav%
               Exit Sub
               End If
-           If placnam$ = "Collins House" Then
-              ccc = 1
-              End If
+'           If placnam$ = "Collins House" Then
+'              ccc = 1
+'              End If
            If UCase(Mid$(placnam$, 1, Len(rootname$))) = UCase(rootname$) Then
-              mapplacefound% = 1
               MapLonCenter = itmx
               MapLatCenter = itmy
               MapInfo.loncenter = MapLonCenter
               MapInfo.latcenter = MapLatCenter
-              
+              foundentry% = 1
               foundMapCenter% = 1
               Exit Do
               End If
         Loop
         Close #filsav%
         End If
-'         Maps.Text6.Text = itmy 'latitude
-'         Maps.Text5.Text = itmx 'longitude
-'         Call goto_click
-'         response = MsgBox("Is this a map for the city: " & placnam$ & "? Check the location on the map.", vbQuestion + vbYesNoCancel, "Maps & More")
-'         If response = vbCancel Then
-'            Close #filsav%
-'            Exit Sub
-'         ElseIf response = vbYes Then
-'            found% = 1
-'            Exit Do
-'            End If
-'         End If
-'   Loop
-'   Close #filsav%
    
    'now fill in missing inoformation if necessary
    If foundMap% = 0 Or foundMapCenter = 0 Or foundPixelDeg% = 0 Or Item% < 5 Then
@@ -1553,20 +1537,65 @@ mapinfobegin:
         Maps.Text5.Text = MapInfo.loncenter 'longitude
         Call goto_click
         response = MsgBox("Is this a map for the city: " & placnam$ & "? Check the location on the map.", vbQuestion + vbYesNoCancel, "Maps & More")
-        If response = vbCancel Then
+        If response = vbCancel Or response = vbNo Then
            Exit Sub
-        ElseIf response = vbYes Then
-           found% = 1
            End If
+           
+        If foundentry% = 0 Then
+            Select Case MsgBox("Do you want to add this map's name and center coordinates to the list of stored places?" _
+                               & vbCrLf & "" _
+                               & vbCrLf & "(If it hasn't already been added....)" _
+                               , vbYesNoCancel Or vbQuestion Or vbDefaultButton2, "Add center coordinates to list of places")
+            
+                Case vbYes
+                
+                   'first check if place already added.  If not, then append it to the list.
+                    filsav% = FreeFile
+                    placnam$ = "start"
+                    mapplacefound% = 0
+                    Open drivjk_c$ + "skyworld.sav" For Input As #filsav%
+                    Do Until EOF(filsav%)
+                       oldplacnam$ = placnam$
+                       Input #filsav%, placnam$, itmx, itmy, itmhgt
+                       If InStr("abcdefghijklmnopqrstuvwxyz", LCase(Mid$(placnam$, 1, 1))) = 0 Then
+                          response = MsgBox("Error in skyworld.sav detected after entry: " + oldplacnam$, vbCritical + vbOKOnly, "Maps & More")
+                          Close #filsav%
+                          Exit Sub
+                          End If
+                       If UCase(Mid$(placnam$, 1, Len(rootname$))) = UCase(rootname$) Then
+                          mapplacefound% = 1
+                          Exit Do
+                          End If
+                    Loop
+                    Close #filsav%
+                    If mapplacefound% = 0 Then
+                       'append the placename
+                        filsav% = FreeFile
+                        Open drivjk_c$ + "skyworld.sav" For Append As #filsav%
+                       'find the height at the center coordinates
+                        Call worldheights(-MapInfo.loncenter, MapInfo.latcenter, newhgt)
+                        If newhgt = -9999 Then newhgt = 0
+                        Write #filsav%, MapInfo.name, CSng(MapInfo.loncenter), CSng(MapInfo.latcenter), CSng(newhgt)
+                        Close #filsav%
+                       End If
+            
+                Case vbNo
+            
+                Case vbCancel
+            
+            End Select
+            End If
         End If
-      
    
-'   If found% = 0 Then
-'      response = MsgBox("City not found in skyworld.sav. Check the spelling or, if necessary, record it's name and coordinates of the map's reference point in skyworld.sav!", vbCritical, "Maps & More")
-'      End If
-
    'now calculate all the information needed to blit the file
    'in place of the world map
+   
+   '///////////////////////////////////////////////////////////////////////
+   'IMPORTANT
+   'imported maps typically use unknown map projections that require complicated
+   'conversions from kilometers to geographic coordinates
+   'this program can only deal with with them approximately with a first order linear approximation
+   '/////////////////////////////////////////////////////////////////////////////
 
    'find extent of file in degrees in the x,y directions
    'first find the radius of the ellipsoid of rotation, Re, at that latitude
@@ -6248,6 +6277,7 @@ to550:  If world = True And showroute = True Then
      Case "Googlebut"
         If Not GoogleMapVis Then
            frmMap.Visible = True
+           ret = SetWindowPos(frmMap.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
            tblbuttons(30) = 1
            Toolbar1.Buttons(30).value = tbrPressed
         Else

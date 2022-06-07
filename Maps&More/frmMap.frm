@@ -232,7 +232,8 @@ Private Sub cmdHelp_Click()
   "right click on the point of interest," & vbCrLf & _
   "then click on the coordinates." & vbCrLf & _
   "The Google map will confirm that the coordinates have been saved to the clipboard." & vbCrLf & vbCrLf & _
-  "Now you can send those coordinates to the main program via the bullseye button.", vbOKOnly + vbInformation, "Google Map Help"
+  "Now you can send those coordinates to the main program via the bullseye button." & vbCrLf & vbCrLf & _
+  "(N.b., the position that will be shon the imported maps is only approximate)", vbOKOnly + vbInformation, "Google Map Help"
 End Sub
 
 '---------------------------------------------------------------------------------------

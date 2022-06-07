@@ -484,18 +484,19 @@ End Sub
 
 Private Sub comHelp_Click()
 Call MsgBox("The Map information file contains information that allows Maps & More to use the inputed map file." _
-            & vbCrLf & "Note that Expedia map files are not Mercadian projections so they have non linear scales that can only be approximately handled by this program." _
+            & vbCrLf & vbCrLf & _
+            "(Note: Imported map files usually use unknown non-Mercadian map projections. As a consequence, map positions can only be approximated.  Use the Google Map interface when accuracy is needed.)" _
             & vbCrLf & "" _
-            & vbCrLf & "The following are the inputs required to describe the map:" _
+            & vbCrLf & "The following are required information.  Use a graphics program like ""Paint"" to determine them:" _
             & vbCrLf & "Map Format: Choose either: bmp,gif,jpg (other formats are not supported)" _
             & vbCrLf & "" _
-            & vbCrLf & "Map Pixel size:  Enter the horizontal and vertical pixel sizes.  This information can often be obtained from right clicking on the picture and displaying the properties.  Otherwise, use a program like ""Paint""." _
+            & vbCrLf & "Map Pixel size:  Enter the horizontal and vertical sizes in pixels." _
             & vbCrLf & "" _
-            & vbCrLf & "Center Point Pixel Coordinates:  This can be any point in the map that you have a way to read off its geographic coordinates.  Those coordinates and map name must be stored." _
+            & vbCrLf & "Center Point Pixel Coordinates:  This can be any point in the map that you have a way to read off its geographic coordinates." _
             & vbCrLf & "" _
-            & vbCrLf & "Number of pixels for each km:  Read this off the legend using a graphics program like ""Paint""." _
+            & vbCrLf & "Number of pixels for each km:  (Calculate this from the legend using a graphics program like ""Paint"")." _
             & vbCrLf & "" _
-            & vbCrLf & "Number of pixels corresponding to one degree of longitude and latitude.  Use a graphics program like ""Paint"" to determine this from the longitude and latitude lines drawn on the map" _
+            & vbCrLf & "Number of pixels corresponding to one degree of longitude and one degree of latitude." _
             , vbInformation, "Map Information File Help")
 
 End Sub

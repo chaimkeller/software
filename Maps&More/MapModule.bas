@@ -2182,8 +2182,8 @@ ElseIf world = True Then
        'kmxc,kmyc are located at X=Wi/2,Y=Hi/2 when kmxorigin,kmyorigin
        'are at Wi/2-(kmxc-kmxorigin)*/km50x,Hi/2+(kmyc-kmyorigin)/km50y
 
-bl100: xorigin = sizewx / 2# - (lonc + (mag - 1) * fudx - worldxorigin) / (deglog / sizewx) '<??must stay constant
-       yorigin = sizewy / 2# + (latc + (mag - 1) * fudy - worldyorigin) / (deglat / sizewy)
+bl100: xorigin = sizewx / 2# - (lonc + (mag - 1) * fudx / mag - worldxorigin) / (deglog / sizewx) '<??must stay constant
+       yorigin = sizewy / 2# + (latc + (mag - 1) * fudy / mag - worldyorigin) / (deglat / sizewy)
        kmm = (deglat / sizewy)
        
 '       kmm = (180 / sizewy)
