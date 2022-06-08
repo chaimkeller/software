@@ -1894,6 +1894,7 @@ Private Sub MDIForm_Load()
       End If
       
    s1% = 0: S2% = 0: s3% = 0: s4% = 0: s5% = 0: s6% = 0: s7% = 0: s8% = 0: s9% = 0: s10% = 0: s11% = 0: s12% = 0
+   
    For i% = 1 To numdriv%
 '   For i% = 4 To numdriv%
       drivlet$ = Mid$(driveletters$, i%, 1)
@@ -1936,7 +1937,7 @@ Private Sub MDIForm_Load()
                   s10% = 1: D3ASDir$ = drivlet$ + ":\3as\"
                ElseIf s11% = 0 And InStr(myname, "samples") <> 0 Then
                   s11% = 1: SamplesDir$ = drivlet$ + ":" & myname & "\"
-               ElseIf s12% = 0 And InStr(myname, "3dexplorer") <> 0 Then
+               ElseIf s12% = 0 And s13% = 0 And s14% = 0 And InStr(myname, "3dexplorer") <> 0 Then
                   s12% = 1: D3dExplorerDir$ = drivlet$ + ":" & myname & "\"
                   End If
                'If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s5% = 1 And s6% = 1 Then GoTo cdc1
@@ -2098,9 +2099,71 @@ cdc7: If s7% = 0 Then
    'if got here, means that couldn't find the cities directory
 ce10: MsgBox "Can't locate necessary directories! ABORTING program...Sorry", vbCritical + vbOKOnly, "Cal Programs"
       Call MDIform_queryunload(i%, j%)
+      
+5:
+      'now look for 3dExplorer in program files directory
+   If s12% = 0 Then
+       s13% = 0
+       For i% = 1 To numdriv%
+    '   For i% = 4 To numdriv%
+          drivlet$ = Mid$(driveletters$, i%, 1)
+          ChDrive drivlet$
+          mypath = drivlet$ + ":\" ' Set the path.
+          myname = LCase(Dir(mypath, vbDirectory))   ' Retrieve the first entry.
+          Do While myname <> sEmpty   ' Start the loop.
+             'Ignore the current directory and the encompassing directory.
+             If myname <> "." And myname <> ".." Then
+                'Use bitwise comparison to make sure MyName is a directory.
+                If (GetAttr(mypath & myname) And vbDirectory) = vbDirectory Then
+                   myname = LCase(myname)
+    
+                   If s12% = 0 And s13% = 0 And InStr(LCase(myname), "program files") <> 0 Then
+                      myfile = Dir(drivlet$ + ":\" & myname & "\3dExplorer\", vbDirectory)
+                      If myfile <> sEmpty Then
+                         s13% = 1: D3dExplorerDir$ = drivlet$ + ":\" & myname & "\3dExplorer\"
+                         Exit For
+                         End If
+                      End If
+                      
+                   End If
+                End If
+             myname = Dir 'Get next entry
+          Loop
+       Next i%
+   End If
+   
+   If s12% = 0 And s13% = 0 Then
+       s14% = 0
+       For i% = 1 To numdriv%
+    '   For i% = 4 To numdriv%
+          drivlet$ = Mid$(driveletters$, i%, 1)
+          ChDrive drivlet$
+          mypath = drivlet$ + ":\" ' Set the path.
+          myname = LCase(Dir(mypath, vbDirectory))   ' Retrieve the first entry.
+          Do While myname <> sEmpty   ' Start the loop.
+             'Ignore the current directory and the encompassing directory.
+             If myname <> "." And myname <> ".." Then
+                'Use bitwise comparison to make sure MyName is a directory.
+                If (GetAttr(mypath & myname) And vbDirectory) = vbDirectory Then
+                   myname = LCase(myname)
+    
+                   If s12% = 0 And s13% = 0 And s14% = 0 And InStr(LCase(myname), "program files (x86)") <> 0 Then
+                      myfile = Dir(drivlet$ + ":\" & myname & "\3dExplorer\", vbDirectory)
+                      If myfile <> sEmpty Then
+                         s14% = 1: D3dExplorerDir$ = drivlet$ + ":\" & myname & "\3dExplorer\"
+                         Exit For
+                         End If
+                      End If
+                      
+                   End If
+                End If
+             myname = Dir 'Get next entry
+          Loop
+       Next i%
+       End If
 
    'determine if DTMs are present, and where they are
-5
+
     'check for other exe files that must reside in the jk_c directory
     'now make sure it contains the relevant exe files, and if not return warning
     myfile = Dir(drivjk_c$ + "\newreaddtm.exe")
