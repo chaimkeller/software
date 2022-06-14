@@ -1877,6 +1877,7 @@ End Sub
 
 Private Sub MDIForm_Load()
    Dim lTaskBar As Long
+
    On Error GoTo errorload
    
    'find Windows version
@@ -2582,6 +2583,17 @@ map50:
            tblbuttons%(1) = 1
            Toolbar1.Buttons(1).value = tbrPressed
            End If
+   
+        USADirtmp$ = sEmpty
+        Input #mapinfonum%, USADirtmp$
+        If Dir(srtmdtm & ":\" & USADirtmp$, vbDirectory) <> sEmpty Then
+           USADir$ = srtmdtm & ":\" & USADirtmp$ & "\"
+           world = True
+           noheights = False
+           tblbuttons%(1) = 1
+           Toolbar1.Buttons(1).value = tbrPressed
+           End If
+        Close #mapinfonum%
         End If
 
 '      If hgtpos = sEmpty Then hgtpos = 0
@@ -2645,9 +2657,10 @@ map50:
 errorload:
     num = Err.Number
     If num = 68 Then
-      Err.Clear
-      i = i + 1
-      GoTo l5
+      Resume Next
+'      Err.Clear
+'      i = i + 1
+'      GoTo l5
       End If
    Unload mapsplash
    If filnum% > 0 Then Close #filnum%
@@ -2673,8 +2686,14 @@ errorload:
     ElseIf Err.Number = 13 Then
        'bad mapposition.sav file--use defaults
        Resume Next
+   ElseIf Err.Number = 62 Then
+       Resume Next
        End If
        c = Err.Number
+
+   On Error GoTo 0
+   Exit Sub
+
 End Sub
 'Private Sub Form1_MouseUp(Button As Integer, _
 '   Shift As Integer, X As Single, Y As Single)
@@ -6333,9 +6352,10 @@ to550:  If world = True And showroute = True Then
            tblbuttons(29) = 1
            Toolbar1.Buttons(29).value = tbrPressed
         Else
-           Unload mapTempfrm
-           tblbuttons(29) = 0
-           Toolbar1.Buttons(29).value = tbrUnpressed
+           Call BringWindowToTop(mapTempfrm.hWnd)
+'           Unload mapTempfrm
+'           tblbuttons(29) = 0
+'           Toolbar1.Buttons(29).value = tbrUnpressed
            End If
      Case "Googlebut"
         If Not GoogleMapVis Then
@@ -6344,9 +6364,10 @@ to550:  If world = True And showroute = True Then
            tblbuttons(30) = 1
            Toolbar1.Buttons(30).value = tbrPressed
         Else
-           Unload frmMap
-           tblbuttons(30) = 0
-           Toolbar1.Buttons(30).value = tbrUnpressed
+           Call BringWindowToTop(frmMap.hWnd)
+'           Unload frmMap
+'           tblbuttons(30) = 0
+'           Toolbar1.Buttons(30).value = tbrUnpressed
            End If
      
         Call BringWindowToTop(frmMap.hWnd)

@@ -1348,12 +1348,12 @@ Private Sub cmdPlotSearchPnts_Click()
             skyy = sky2.TextArray(skyp2(nplachos&, 2))
             If skyx = "0" And skyy = "0" Then GoTo p500
             'convert kmx,kmy to screen coordinates
-            Call ScreenToGeo(X, Y, skyx, skyy, 2, ier%)
+            Call ScreenToGeo(x, y, skyx, skyy, 2, ier%)
          ElseIf InStr(sky2.FormatString, "latitude") <> 0 Then
             lati = sky2.TextArray(skyp2(nplachos&, 1))
             lons = sky2.TextArray(skyp2(nplachos&, 2))
             'convert lon,lat to screen coordinates
-            Call ScreenToGeo(X, Y, lons, lati, 2, ier%)
+            Call ScreenToGeo(x, y, lons, lati, 2, ier%)
             End If
         End If
       
@@ -1361,12 +1361,12 @@ Private Sub cmdPlotSearchPnts_Click()
          lons = sky2.TextArray(skyp2(nplachos&, 2))
          lati = sky2.TextArray(skyp2(nplachos&, 1))
          'convert lon,lat to screen coordinates
-         Call ScreenToGeo(X, Y, lons, lati, 2, ier%)
+         Call ScreenToGeo(x, y, lons, lati, 2, ier%)
          End If
     
       'plot the points
       mapPictureform.mapPicture.DrawWidth = 2 '2 * mag
-      mapPictureform.mapPicture.Circle (X, Y), 20, 255 '20 * mag, 255
+      mapPictureform.mapPicture.Circle (x, y), 20, 255 '20 * mag, 255
       mapPictureform.mapPicture.DrawWidth = 1 '1 * mag
     
 p500:
@@ -1544,51 +1544,96 @@ Private Sub cmdSaveAll_Click()
    
    savfil% = FreeFile
    
-   Select Case MsgBox(" Do you want to append these points to the former list?" _
-                      & vbCrLf & "" _
-                      & vbCrLf & "Answer:" _
-                      & vbCrLf & "" _
-                      & vbCrLf & "       Yes -- to append" _
-                      & vbCrLf & "       No -- to save/clear the buffer and start a new list" _
-                      & vbCrLf & "" _
-                      & vbCrLf & "       Cancel - to exit this routine" _
-                      , vbYesNoCancel Or vbQuestion Or vbDefaultButton1, "Saving search results")
+'   Select Case MsgBox("Do you want to append these points to the former list?" _
+'                      & vbCrLf & "" _
+'                      & vbCrLf & "Answer:" _
+'                      & vbCrLf & "" _
+'                      & vbCrLf & "       Yes -- to append" _
+'                      & vbCrLf & "       No -- to save/clear the buffer and start a new list" _
+'                      & vbCrLf & "" _
+'                      & vbCrLf & "       Cancel - to exit this routine" _
+'                      , vbYesNoCancel Or vbQuestion Or vbDefaultButton1, "Saving search results")
+'
+'    Case vbYes
+'        Open drivjk_c$ & "mappoints.sav" For Append As #savfil%
+'
+'    Case vbNo
+'        Select Case MsgBox("This operation will clear the last search bufer unless you save it." _
+'                           & vbCrLf & "" _
+'                           & vbCrLf & "Do you want to save the last mappoints.sav list as a ""bak"" file with the currentt date added to the name?" _
+'                           , vbYesNo Or vbInformation Or vbDefaultButton1, "Saving search results")
+'
+'            Case vbYes
+'                bufout = FreeFile
+'                BufOutName$ = drivjk_c$ & "mappoints_" & Format(Trim$(Month(Now)), "00") & Format(Trim$(Day(Now)), "00") & Format(Year(Now), "00") & ".sav"
+'                FileCopy drivjk_c$ & "mappoints.sav", BufOutName$
+'            Case vbNo
+'
+'        End Select
+'        cmdClear.value = True
+'        Open drivjk_c$ & "mappoints.sav" For Output As #savfil%
+'
+'    Case vbCancel
+'        Close
+'        Exit Sub
+'
+'   End Select
+'
+'   response = MsgBox("Do you want to verify each point?" & vbLf & vbLf & _
+'                     "Answer: " & vbLf & _
+'                     "Yes -- to verify each point" & vbLf & _
+'                     "No  -- to store all the points w/o verification", _
+'                     vbYesNoCancel + vbQuestion, "Maps & More")
+'   Select Case response
+'     Case vbYes
+'       VerifyMode = True
+'     Case Else
+'       VerifyMode = False
+'   End Select
    
-    Case vbYes
-        Open drivjk_c$ & "mappoints.sav" For Append As #savfil%
+   'new interface 061422 //////////////////////////////////////////////
    
-    Case vbNo
-        Select Case MsgBox("This operation will clear the last search bufer unless you save it." _
-                           & vbCrLf & "" _
-                           & vbCrLf & "Do you want to save the last mappoints.sav list as a ""bak"" file with the currentt date added to the name?" _
-                           , vbYesNo Or vbInformation Or vbDefaultButton1, "Saving search results")
+   ret = SetWindowPos(mapsearchfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+
+   frmMsgBox.MsgCstm "Do you want to append these points to the former list?", "Saving search results", mbQuestion, 1, False, _
+                     "Yes, append", "No, start a new list", "Cancel"
+   Select Case frmMsgBox.g_lBtnClicked
+       Case 1 'the 1st button in your list was clicked
+            Open drivjk_c$ & "mappoints.sav" For Append As #savfil%
+
+       Case 2 'the 2nd button in your list was clicked
+            Select Case MsgBox("This operation will clear the last search bufer unless you save it." _
+                               & vbCrLf & "" _
+                               & vbCrLf & "Do you want to save the last mappoints.sav list as a ""bak"" file with the currentt date added to the name?" _
+                               , vbYesNo Or vbInformation Or vbDefaultButton1, "Saving search results")
+            
+                Case vbYes
+                    bufout = FreeFile
+                    BufOutName$ = drivjk_c$ & "mappoints_" & Format(Trim$(Month(Now)), "00") & Format(Trim$(Day(Now)), "00") & Format(Year(Now), "00") & ".sav"
+                    FileCopy drivjk_c$ & "mappoints.sav", BufOutName$
+                Case vbNo
+            
+            End Select
+            cmdClear.value = True
+            Open drivjk_c$ & "mappoints.sav" For Output As #savfil%
         
-            Case vbYes
-                bufout = FreeFile
-                BufOutName$ = drivjk_c$ & "mappoints_" & Format(Trim$(Month(Now)), "00") & Format(Trim$(Day(Now)), "00") & Format(Year(Now), "00") & ".sav"
-                FileCopy drivjk_c$ & "mappoints.sav", BufOutName$
-            Case vbNo
-        
-        End Select
-        cmdClear.value = True
-        Open drivjk_c$ & "mappoints.sav" For Output As #savfil%
-   
-    Case vbCancel
-        Close
-        Exit Sub
-   
+      Case 0, 3 'cancel.
+            Close
+            Exit Sub
    End Select
    
-   response = MsgBox("Do you want to verify each point?" & vbLf & vbLf & _
-                     "Answer: " & vbLf & _
-                     "Yes -- to verify each point" & vbLf & _
-                     "No  -- to store all the points w/o verification", _
-                     vbYesNoCancel + vbQuestion, "Maps & More")
-   Select Case response
-     Case vbYes
-       VerifyMode = True
-     Case Else
-       VerifyMode = False
+   frmMsgBox.MsgCstm "Do you want to verify each point?", "Verify?", mbQuestion, 1, False, _
+                     "Yes, verify", "No, store all the points without verifcation", "Cancel"
+   Select Case frmMsgBox.g_lBtnClicked
+       Case 1 'the 1st button in your list was clicked
+            VerifyMode = True
+
+       Case 2 'the 2nd button in your list was clicked
+            VerifyMode = False
+        
+      Case 0, 3 'cancel.
+            Close
+            Exit Sub
    End Select
 
    For i& = 1 To sky2.Rows - 1
@@ -2640,7 +2685,7 @@ form_load_Error:
    
 End Sub
 
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     Dim lResult As Long
     Unload mapsearchfm
     Set mapsearchfm = Nothing
@@ -2827,20 +2872,36 @@ Sub RunOnAutomatic()
    AutoProf = True 'run profile analysis automatically
    AutoVer = True 'automatically increment the version number
    
-   Select Case MsgBox("Sunrise profiles?" _
-                      & vbCrLf & "" _
-                      & vbCrLf & "Answer:" _
-                      & vbCrLf & "   Yes -- for sunrise profiles" _
-                      & vbCrLf & "   No --- for sunset profiles" _
-                      & vbCrLf & "" _
-                      , vbYesNoCancel + vbQuestion + vbSystemModal + vbDefaultButton1, App.Title)
+'   Select Case MsgBox("Sunrise profiles?" _
+'                      & vbCrLf & "" _
+'                      & vbCrLf & "Answer:" _
+'                      & vbCrLf & "   Yes -- for sunrise profiles" _
+'                      & vbCrLf & "   No --- for sunset profiles" _
+'                      & vbCrLf & "" _
+'                      , vbYesNoCancel + vbQuestion + vbSystemModal + vbDefaultButton1, App.Title)
+'
+'    Case vbYes
+'       sunmode% = 1
+'    Case vbNo
+'       sunmode% = 0
+'    Case vbCancel
+'       Exit Sub
+'   End Select
+
+   'New interface
+   ret = SetWindowPos(mapsearchfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    
-    Case vbYes
-       sunmode% = 1
-    Case vbNo
-       sunmode% = 0
-    Case vbCancel
-       Exit Sub
+   frmMsgBox.MsgCstm "Click sunrise or sunset horizon profile buttons:", "Horizon calculations", mbInformation, 1, False, _
+                     "Sunrise profiles", "Sunset profiles", "Cancel"
+   Select Case frmMsgBox.g_lBtnClicked
+       Case 1 'the 1st button in your list was clicked
+          sunmode% = 1
+       Case 2 'the 2nd button in your list was clicked
+          sunmode% = 0
+       Case 0, 3 'cancel.
+          Exit Sub
+       Case Else
+          Exit Sub
    End Select
    
    starting& = 0
@@ -2852,20 +2913,34 @@ Sub RunOnAutomatic()
          Input #statfil%, statnum&
       Loop
       Close #statfil%
-      Select Case MsgBox("Start at point #:" & Str$(statnum&) _
-                         & vbCrLf & "" _
-                         & vbCrLf & "Answer:" _
-                         & vbCrLf & "    Yes -- to start at the above number" _
-                         & vbCrLf & "    No  -- to start from the beginning" _
-                         , vbYesNoCancel + vbQuestion + vbDefaultButton1, App.Title)
       
-        Case vbYes
+'      Select Case MsgBox("Start at point #:" & Str$(statnum&) _
+'                         & vbCrLf & "" _
+'                         & vbCrLf & "Answer:" _
+'                         & vbCrLf & "    Yes -- to start at the above number" _
+'                         & vbCrLf & "    No  -- to start from the beginning" _
+'                         , vbYesNoCancel + vbQuestion + vbDefaultButton1, App.Title)
+'
+'        Case vbYes
+'           starting& = statnum&
+'        Case vbNo
+'           starting& = 0
+'        Case vbCancel
+'           Exit Sub
+'
+'      End Select
+      
+      frmMsgBox.MsgCstm "Start at point #:" & Str$(statnum&) & " ?", "Start at?", mbQuestion, 2, False, _
+                      "Yes -- start at above number", "Start from beginning", "Cancel"
+      Select Case frmMsgBox.g_lBtnClicked
+        Case 1 'the 1st button in your list was clicked
            starting& = statnum&
-        Case vbNo
+        Case 2 'the 2nd button in your list was clicked
            starting& = 0
-        Case vbCancel
+        Case 0, 3 'cancel.
            Exit Sub
-       
+        Case Else
+           Exit Sub
       End Select
       End If
       

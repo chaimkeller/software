@@ -307,10 +307,6 @@ End Type
 
 Public MapInfo As MapInfos
    
-   
-   
-   
-   
 
 Public Function BrowseForFolder(ByVal lngHwnd As Long, ByVal strPrompt As String) As String
 
@@ -846,7 +842,8 @@ Public Sub worldheights(lg, lt, hgt)
    
       
    'check if have correct CD in the drive, if not present error message
-   If (world = False And IsraelDTMsource% = 1) Or (DTMflag > 0 And (lt >= -60 And lt <= 61)) Then 'SRTM
+   '//changes 061222 - added northern range to N70 for Alaska DEM and EU-dem files
+   If (world = False And IsraelDTMsource% = 1) Or (DTMflag > 0 And (lt >= -60 And lt <= 70)) Then 'SRTM
       
       If world = False And IsraelDTMsource% = 1 Then
          'use 90-m SRTM of Eretz Yisroel
@@ -4823,7 +4820,7 @@ mm500: mapgraphfm.Visible = True
           ElseIf Delay% < 15 Then
             If firstime% = 1 Then waiting% = Delay% + 5 'add five seconds to see the profile and give time to skip it
             End If
-          Delay% = Val(mapgraphfm.txtDelay)
+          If Not killpicture Then Delay% = Val(mapgraphfm.txtDelay)
           If firstime% = 0 Then waiting% = Delay% ' 45
           
           If AutoProf Then 'automatic pilot for calculating profiles

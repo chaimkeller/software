@@ -1576,7 +1576,7 @@ ca999:
        
       If calpress% = 2 And AutoScanlist Or AutoProf Then
           'unload this form
-          Call form_queryunload(0, 0)
+          Call Form_QueryUnload(0, 0)
           Exit Sub
           End If
       
@@ -1615,7 +1615,7 @@ Private Sub chkObstruction_Click()
 End Sub
 
 Private Sub cmdExit_Click()
-   Call form_queryunload(0, 0)
+   Call Form_QueryUnload(0, 0)
 End Sub
 
 Private Sub Combo2_Click()
@@ -1810,7 +1810,7 @@ Private Sub dirsavecheck_Click()
       End If
 End Sub
 
-Private Sub form_load()
+Private Sub Form_Load()
 
    If world Then
       Text3.Text = 6
@@ -2032,7 +2032,7 @@ End Sub
 
 
 
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
    Unload mapgraphfm
    Set mapgraphfm = Nothing
    graphwind = False
@@ -2047,25 +2047,25 @@ Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
 End Sub
 
 
-Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
       On Error GoTo errhand
       Label9.Visible = True
       Shape1.Visible = True
       Line1.Refresh
       MSFlexGrid1.Enabled = True
-      Label9.Top = Y - 100
-      Shape1.Top = Y - 100
-      If X + 100 + Label9.Width < mapgraphfm.Picture1.Width Then
-         Label9.Left = X + 200
-         Shape1.Left = X + 200
+      Label9.Top = y - 100
+      Shape1.Top = y - 100
+      If x + 100 + Label9.Width < mapgraphfm.Picture1.Width Then
+         Label9.Left = x + 200
+         Shape1.Left = x + 200
       Else
-         Label9.Left = X - 100 - Label9.Width
-         Shape1.Left = X - 100 - Shape1.Width
+         Label9.Left = x - 100 - Label9.Width
+         Shape1.Left = x - 100 - Shape1.Width
          End If
       If crosssection = False Then
-        Label9.Caption = "azi = " + Format(((X / mapgraphfm.Picture1.Width) * (xmax - xmin) + xmin), "##0.0") + _
-                         ", va = " + Format(((Y / mapgraphfm.Picture1.Height) - 1) * (ymin - ymax) + ymin, "#0.0#")
-        Combo1.ListIndex = ((X / mapgraphfm.Picture1.Width) * (xmax - xmin) + xmin - xmino) * 10
+        Label9.Caption = "azi = " + Format(((x / mapgraphfm.Picture1.Width) * (xmax - xmin) + xmin), "##0.0") + _
+                         ", va = " + Format(((y / mapgraphfm.Picture1.Height) - 1) * (ymin - ymax) + ymin, "#0.0#")
+        Combo1.ListIndex = ((x / mapgraphfm.Picture1.Width) * (xmax - xmin) + xmin - xmino) * 10
         'If world = True Then
         '   Combo1.ListIndex = ((x / mapgraphfm.Picture1.Width) * (xmax - xmin) + xmin + 80) * 10
         'Else
@@ -2074,9 +2074,9 @@ Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, X As Single,
       Else
         Label9.Width = 2400
         Shape1.Width = Label9.Width
-        Label9.Caption = "dis = " + Format(((X / mapgraphfm.Picture1.Width) * (xmax - xmin) + xmin), "####0.000") + _
-                         ", hgt = " + Format(((Y / mapgraphfm.Picture1.Height) - 1) * (ymin - ymax) + ymin, "###0.0")
-        Combo1.ListIndex = ((X / mapgraphfm.Picture1.Width)) * ((xmax - xmin) / (xmaxo - xmino)) * sectnumpnt& + ((xmin - xmino) / (xmaxo - xmino)) * sectnumpnt&
+        Label9.Caption = "dis = " + Format(((x / mapgraphfm.Picture1.Width) * (xmax - xmin) + xmin), "####0.000") + _
+                         ", hgt = " + Format(((y / mapgraphfm.Picture1.Height) - 1) * (ymin - ymax) + ymin, "###0.0")
+        Combo1.ListIndex = ((x / mapgraphfm.Picture1.Width)) * ((xmax - xmin) / (xmaxo - xmino)) * sectnumpnt& + ((xmin - xmino) / (xmaxo - xmino)) * sectnumpnt&
         End If
       
       'If crosssection = False And world = True Then
@@ -2123,16 +2123,16 @@ Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, X As Single,
          mapgraphfm.Picture1.DrawStyle = vbDot
          mapgraphfm.Picture1.DrawWidth = 1
          mapgraphfm.Picture1.Line (drag1x, drag1y)-(drag2x, drag2y), QBColor(15), B
-         mapgraphfm.Picture1.Line (drag1x, drag1y)-(X, Y), QBColor(15), B
-         drag2x = X
-         drag2y = Y
+         mapgraphfm.Picture1.Line (drag1x, drag1y)-(x, y), QBColor(15), B
+         drag2x = x
+         drag2y = y
          End If
          
 Exit Sub
 errhand:
    Resume Next
 End Sub
-Private Sub form_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub form_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Label9.Visible = False
    Shape1.Visible = False
    Line1.Refresh
@@ -2249,22 +2249,22 @@ Private Sub TimeZonebut_Click()
 '   Call mouse_event(VK_RIGHT, 0, 0, 0, 0)
 End Sub
 Private Sub picture1_mousedown(Button As Integer, _
-   Shift As Integer, X As Single, Y As Single)
+   Shift As Integer, x As Single, y As Single)
    If Button = 1 Then 'maybe beginning of drag operation
-      drag1x = X
-      drag1y = Y
+      drag1x = x
+      drag1y = y
       dragbegin = True
       drag2x = drag1x
       drag2y = drag1y
       End If
    End Sub
 Private Sub picture1_mouseup(Button As Integer, _
-   Shift As Integer, X As Single, Y As Single)
+   Shift As Integer, x As Single, y As Single)
    On Error GoTo errhand
    If Button = 1 And (drag1x <> drag2x Or drag1y <> drag2y) Then
       dragbegin = False
-      drag2x = X
-      drag2y = Y
+      drag2x = x
+      drag2y = y
       'erase final line and refresh graph with new limits
       mapgraphfm.Picture1.Line (drag1x, drag1y)-(drag2x, drag2y), QBColor(15), B
       

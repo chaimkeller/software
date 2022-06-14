@@ -27,59 +27,89 @@ Begin VB.Form mapdiskDTMfm
       _ExtentY        =   4260
       _Version        =   393216
       Tabs            =   8
-      Tab             =   6
+      Tab             =   2
       TabsPerRow      =   4
       TabHeight       =   520
       TabCaption(0)   =   "Israel DTM"
       TabPicture(0)   =   "mapdiskDTMfm.frx":0442
       Tab(0).ControlEnabled=   0   'False
       Tab(0).Control(0)=   "Frame1(1)"
-      Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "frmSource"
-      Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "GTOPO30"
       TabPicture(1)   =   "mapdiskDTMfm.frx":045E
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Frame2(1)"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "SRTM-1/2"
       TabPicture(2)   =   "mapdiskDTMfm.frx":047A
-      Tab(2).ControlEnabled=   0   'False
+      Tab(2).ControlEnabled=   -1  'True
       Tab(2).Control(0)=   "Frame7(1)"
       Tab(2).Control(0).Enabled=   0   'False
-      Tab(2).ControlCount=   1
+      Tab(2).Control(1)=   "frmUSA"
+      Tab(2).Control(1).Enabled=   0   'False
+      Tab(2).ControlCount=   2
       TabCaption(3)   =   "TerraExplorer"
       TabPicture(3)   =   "mapdiskDTMfm.frx":0496
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "Frame4(1)"
-      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).ControlCount=   1
       TabCaption(4)   =   "calculation drive"
       TabPicture(4)   =   "mapdiskDTMfm.frx":04B2
       Tab(4).ControlEnabled=   0   'False
       Tab(4).Control(0)=   "Frame3(1)"
-      Tab(4).Control(0).Enabled=   0   'False
       Tab(4).ControlCount=   1
       TabCaption(5)   =   "mouse movements"
       TabPicture(5)   =   "mapdiskDTMfm.frx":04CE
       Tab(5).ControlEnabled=   0   'False
       Tab(5).Control(0)=   "Frame5(1)"
-      Tab(5).Control(0).Enabled=   0   'False
       Tab(5).ControlCount=   1
       TabCaption(6)   =   "enabled Window calculations"
       TabPicture(6)   =   "mapdiskDTMfm.frx":04EA
-      Tab(6).ControlEnabled=   -1  'True
+      Tab(6).ControlEnabled=   0   'False
       Tab(6).Control(0)=   "Frame6(1)"
-      Tab(6).Control(0).Enabled=   0   'False
       Tab(6).ControlCount=   1
       TabCaption(7)   =   "SRTM30"
       TabPicture(7)   =   "mapdiskDTMfm.frx":0506
       Tab(7).ControlEnabled=   0   'False
       Tab(7).Control(0)=   "Frame7(0)"
-      Tab(7).Control(0).Enabled=   0   'False
       Tab(7).ControlCount=   1
+      Begin VB.Frame frmUSA 
+         Caption         =   "SRTM=1 Folder"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   177
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ForeColor       =   &H00800000&
+         Height          =   1095
+         Left            =   4680
+         TabIndex        =   51
+         Top             =   840
+         Width           =   1455
+         Begin VB.CommandButton cmdBrowseUSA 
+            Caption         =   "Browse"
+            Height          =   260
+            Left            =   240
+            TabIndex        =   53
+            Top             =   640
+            Width           =   975
+         End
+         Begin VB.TextBox txtUSA 
+            Alignment       =   2  'Center
+            Height          =   285
+            Left            =   120
+            TabIndex        =   52
+            Text            =   "USA"
+            ToolTipText     =   "SRTM 1 arcsecond directory"
+            Top             =   360
+            Width           =   1215
+         End
+      End
       Begin VB.Frame frmSource 
          Caption         =   "DTM source"
          BeginProperty Font 
@@ -219,7 +249,7 @@ Begin VB.Form mapdiskDTMfm
          ForeColor       =   &H00C00000&
          Height          =   735
          Index           =   1
-         Left            =   1080
+         Left            =   -73920
          TabIndex        =   38
          Top             =   960
          Width           =   4335
@@ -301,7 +331,7 @@ Begin VB.Form mapdiskDTMfm
             _Version        =   393216
             Value           =   1
             BuddyControl    =   "Text2(1)"
-            BuddyDispid     =   196625
+            BuddyDispid     =   196623
             BuddyIndex      =   1
             OrigLeft        =   3600
             OrigTop         =   360
@@ -324,7 +354,7 @@ Begin VB.Form mapdiskDTMfm
             _Version        =   393216
             Value           =   1
             BuddyControl    =   "Text1(1)"
-            BuddyDispid     =   196624
+            BuddyDispid     =   196622
             BuddyIndex      =   1
             OrigLeft        =   1740
             OrigTop         =   360
@@ -536,7 +566,7 @@ Begin VB.Form mapdiskDTMfm
          ForeColor       =   &H00C00000&
          Height          =   1095
          Index           =   1
-         Left            =   -74040
+         Left            =   240
          TabIndex        =   15
          Top             =   840
          Width           =   4335
@@ -846,6 +876,22 @@ Private Sub chkSRTM30_Click()
 
 End Sub
 
+Private Sub cmdBrowseUSA_Click()
+Dim DirPath$
+
+        DirPath$ = BrowseForFolder(mapdiskDTMfm.hWnd, "Choose Directory")
+        If Dir(DirPath$, vbDirectory) <> "" Then
+           USADir$ = DirPath$ & "\"
+           txtUSA = Mid$(USADir$, 4, Len(USADir$) - 4)
+        Else
+           ier = -1
+           Exit Sub
+           End If
+'first extract minimum temperatures
+
+
+End Sub
+
 Private Sub Command1_Click()
       israeldtm = Drive1(1).Drive
       If chkSRTM30.value = vbChecked Then
@@ -874,7 +920,7 @@ Private Sub Command1_Click()
          End If
       adx1 = Val(Text1(1).Text)
       bdy1 = Val(Text2(1).Text)
-      Call form_queryunload(i%, j%)
+      Call Form_QueryUnload(i%, j%)
 End Sub
 
 Private Sub Command2_Click()
@@ -931,9 +977,10 @@ Private Sub Command2_Click()
       mapinfonum% = FreeFile
       Open drivjk_c$ & "mapSRTMinfo.sav" For Output As #mapinfonum%
       Print #mapinfonum%, srtmdtm; ","; srtmdtmcdnum
+      Print #mapinfonum%, txtUSA
       Close mapinfonum%
       
-      Call form_queryunload(i%, j%)
+      Call Form_QueryUnload(i%, j%)
 
 End Sub
 
@@ -1015,6 +1062,14 @@ Private Sub Drive4_Change(Index As Integer)
 Drive4_Change_Error:
 
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Drive4_Change of Form mapdiskDTMfm"
+End Sub
+
+Private Sub Drive5_Change(Index As Integer)
+   If Dir(Drive5(1).Drive & "\usa", vbDirectory) <> sEmpty Then
+      txtUSA.Text = "USA"
+   Else
+      txtUSA.Text = sEmpty
+      End If
 End Sub
 
 Private Sub Form_Load()
@@ -1157,7 +1212,15 @@ Private Sub Form_Load()
            srtmdtmcd = True
            Option6(1).value = True
            End If
-         
+         Input #mapinfonum%, USADirtmp$
+         If USADirtmp$ <> sEmpty Then
+            USADir$ = srtmdtm & ":\" & USADirtmp$ & "\"
+            txtUSA.Text = Mid$(USADir$, 4, Len(USADir$) - 4)
+         Else
+            If Dir(USADir$, vbDirectory) <> sEmpty Then
+               txtUSA = Mid$(USADir$, 4, Len(USADir$) - 4)
+               End If
+            End If
          Close #mapinfonum%
       Else
          Drive5(1).Drive = "d" 'default SRTM data drive"
@@ -1191,7 +1254,7 @@ End Sub
 Private Sub Option4_Click(Index As Integer)
   worlddtmcd = False
 End Sub
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
    Unload Me
 End Sub
 
