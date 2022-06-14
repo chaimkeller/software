@@ -71,9 +71,10 @@ int InStr( char * str, char * str2 );
 //The program modules, flag files, and DTM directories must reside either of Windows Disk c or e
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-char worlddtm[]="";
+char worlddtm[]="";  //drive letter where SRTM files are stored
 bool worlddtmcd;
 char ramdrive[]="";
+char usadrive[255]="";  //folder where SRTM files are stored
 char tmpfil[81];
 //int DTMflag = 0; //default DTM = SRTM30
 //bool IgnoreMissingTiles = false;
@@ -85,10 +86,11 @@ char tmpfil[81];
 //declare function
 int WhichJK();
 int WhichJK_2();
+int WhichJK_3();
 //declare global variables used with the above functions
 //WhereJK stores the eros.tm3 folder's letter number, WhereJK2 stores the folder's letter number for the mapcdinfo.sav file
 //the numbers are from 0-13 corresponding to the testdrv letters below.
-int WhereJK, WhereJK2;
+int WhereJK, WhereJK2, WhereJK3;
 char testdrv[13] = "cdefghijklmn";
 char drivlet[2] = "c";
 char bufFileName[255] = "";
@@ -188,6 +190,37 @@ BOOL CNewreadDTMDlg::OnInitDialog()
 		fscanf( stream, "%s\n", &ramdrive );
 		fclose( stream );
 	}
+
+	//read the /jk_c/mapSRTMinfo.sav file for location of the DEM-SRTM tiles
+   WhereJK3 = WhichJK_3();
+
+   if (WhereJK3 != 0)
+   {
+	   drivlet[0] = testdrv[WhereJK2 - 1];
+	   drivlet[1] = 0;
+   }
+   else
+   {
+		lpszText = "Can't find the file mapSRTMinfo.sav!";
+		reply = AfxMessageBox( lpszText, MB_OK | MB_ICONSTOP | MB_APPLMODAL );		
+		OnCancel();
+   }
+
+	sprintf(bufFileName, "%s%s", drivlet, ":\\jk_c\\mapSRTMinfo.sav");
+	if ( (stream = fopen( bufFileName, "r" )) != NULL )
+	{
+		fgets_CR(doclin, 255, stream);
+		//parse the output
+		token = strtok( doclin, seps );
+		strcpy(worlddtm, token);
+		token = strtok( NULL, seps );
+		worlddtmcd = atoi(token);
+		fgets_CR(doclin, 255, stream);
+		fclose( stream );
+	}
+
+	sprintf(usadrive, "%s%s%s%s", worlddtm, ":\\", doclin, "\\" );
+    //usadrive contains full path to the DEM-SRTM files which can now be any folder: EK 061322
 
 	
 	//open eros.tm3 file and read beglat,endlat,etc.
@@ -499,10 +532,10 @@ char buffer[5];
 char CDbuffer[1];
 char filt[8];
 char filtmp[8];
-char filn[18];
-char filnn[18];
+char filn[255] = "";  //EK 061322  instead of fixed length of 18, can now be any folder of any string length
+char filnn[255] = "";
 char binfil[18];
-char DTMfile[23];
+char DTMfile[255] = "";
 char lg1ch[3];
 char lt1ch[2];
 char lch[2];
@@ -969,8 +1002,10 @@ ret2:	;
 			}
 			else //SRTM data
 			{
-			strncpy( filt, (const char *)filt1[iter], 7 );
-			strncpy( filn + 7, (const char *)filt1[iter], 7);
+				filn[0] = 0;
+				strncpy( filt, (const char *)filt1[iter], 7 );
+				sprintf( filn, "%s%s", usadrive, filt );
+				//strncpy( filn + 7, (const char *)filt1[iter], 7);
 			}
 
 			gototag = 2;
@@ -1783,9 +1818,11 @@ else if (DTMflag > 0) //SRTM data, determine number of tiles
 			{
 				nrows = 3601;
 				ncols = 3601; 
-				strncpy( filnn + 3, "USA", 3 );
-				strncpy( filnn + 6, "\\", 1 );
-				strncpy( filnn + 7, (const char *)filt1[itnum], 7 );
+				strcpy( filnn, usadrive );
+				//strncpy( filnn + 3, "USA", 3 );
+				//strncpy( filnn + 6, "\\", 1 );
+				strncat( filnn, (const char *)filt1[itnum], 7 );
+				//strncpy( filnn + 7, (const char *)filt1[itnum], 7 );
 			}
 			else if (DTMflag == 2) //100 meter
 			{
@@ -1814,7 +1851,14 @@ else if (DTMflag > 0) //SRTM data, determine number of tiles
 			//record tile name in filn buffer
 			if ( itnum == 0 )
 				{
-				strncpy( filn, filnn, 14 );
+				if (DTMflag == 1) // 30 meter
+				{
+					sprintf( filn, "%s", filnn);
+				}
+				else
+				{
+					strncpy( filn, filnn, 14 );
+				}
 				}
 
 			maxranget += numstepkmyt[itnum] * numstepkmxt[itnum];
@@ -1842,15 +1886,17 @@ dtmfiles:
 	{
 		if (DTMflag == 0) //GTOPO30
 		{
-		strncpy( DTMfile, filn, 18 );
-		strncpy( DTMfile + 18, ".DEM", 4 );
-		strncpy( DTMfile + 22, "\0", 1);
+			strncpy( DTMfile, filn, 18 );
+			strncpy( DTMfile + 18, ".DEM", 4 );
+			strncpy( DTMfile + 22, "\0", 1);
 		}
 		else //SRTM DTM data
 		{
-			strncpy( DTMfile, filn, 14 );
-			strncpy( DTMfile + 14, ".hgt", 4 );
-			strncpy( DTMfile + 18, "\0", 1);
+			DTMfile[0] = 0;
+			sprintf( DTMfile, "%s%s", filn, ".hgt"); //EK 061322
+			//strncpy( DTMfile, filn, 14 );
+			//strncpy( DTMfile + 14, ".hgt", 4 );
+			//strncpy( DTMfile + 18, "\0", 1);
 		}
 
 retry:	if ( (stream = fopen( (const char *)DTMfile, "rb" )) == NULL)
@@ -1888,11 +1934,12 @@ retry:	if ( (stream = fopen( (const char *)DTMfile, "rb" )) == NULL)
 				{ 
 				if (IgnoreMissingTiles == 0)
 					{
-					strncpy( quest, "Can't find the SRTM tile: ", 26 );
-					strncpy( quest + 26, (const char *)DTMfile, 18 );
-					strncpy( quest + 44, "\n", 1);
-					strncpy( quest + 45, "Do you wan't to use an empty tile instead?", 42);
-					strncpy( quest + 87, "\0", 1);
+					//strncpy( quest, "Can't find the SRTM tile: ", 26 );
+					//strncpy( quest + 26, (const char *)DTMfile, 18 );
+					//strncpy( quest + 44, "\n", 1);
+					//strncpy( quest + 45, "Do you wan't to use an empty tile instead?", 42);
+					//strncpy( quest + 87, "\0", 1);
+					sprintf( quest, "%s%s\n%s", "Can't find the SRTM tile: ", DTMfile, "Do you wan't to use an empty tile instead?" );
 					reply = AfxMessageBox( (const char *)quest, MB_YESNOCANCEL | MB_ICONINFORMATION | MB_APPLMODAL );		
 					}
 				else if (IgnoreMissingTiles == 1) //automatically use default empty tile
@@ -1905,8 +1952,9 @@ retry:	if ( (stream = fopen( (const char *)DTMfile, "rb" )) == NULL)
 					//goto retry;
 						if (DTMflag == 1)
 						{
-						strncpy( DTMfile, (const char *)worlddtm, 1);
-    					strncpy( DTMfile + 1, ":\\USA\\Z000000.hgt\0", 18);
+						//strncpy( DTMfile, (const char *)worlddtm, 1);
+    					//strncpy( DTMfile + 1, ":\\USA\\Z000000.hgt\0", 18);
+						sprintf( DTMfile, "%s%s", usadrive, "Z000000.hgt" );
 						goto retry;
 						}
 						else if (DTMflag == 2)
@@ -2700,7 +2748,7 @@ int Nint(double x)
 }
 
 //////////////////////////////////////////////////
-//function determine if using jk or jk_c by looking for eros.tm3
+//function determine which drive contains /jk_c/eros.tm3
 int WhichJK()
 {
 	FILE *stream;
@@ -2732,7 +2780,7 @@ int WhichJK()
 }
 ////////////////////////////////////////////////////////////
 
-//determine if using jk or jk_c by looking for mapcdinfo.sav
+//determine which drive contains /jk_c/mapcdinfo.sav
 int WhichJK_2()
 {
 	FILE *stream;
@@ -2746,6 +2794,39 @@ int WhichJK_2()
 		drivlet[1] = 0;
 		strcpy(jkdir, (const char *)drivlet);
 		strcat(jkdir, ":\\jk_c\\mapcdinfo.sav" );
+		if ( (stream = fopen( jkdir, "r" )) != NULL )
+		{
+		   fclose(stream);
+		   return i;
+		}
+	}
+	/*
+	char *jkdir;
+	jkdir = "c:\\jk_c\\mapcdinfo.sav";
+	if ( (stream = fopen( jkdir, "r" )) != NULL )
+	   return 1;
+	jkdir = "e:\\jk_c\\mapcdinfo.sav";
+	if ( (stream = fopen( jkdir, "r" )) != NULL )
+	   return 2;
+	*/
+	return 0; //didn't find anything
+}
+//////////////////////////////////////////////////////////////EK 061322
+
+//determine which drive contains /jk_c/mapSRTMinfo.sav
+int WhichJK_3()
+{
+	FILE *stream;
+	char testdrv[13] = "cdefghijklmn";
+	char drivlet[2] = "c";
+	char jkdir[255] = "";
+	int i;
+	for (i=1; i<= strlen(testdrv); i++)
+	{
+		drivlet[0] = testdrv[i - 1];
+		drivlet[1] = 0;
+		strcpy(jkdir, (const char *)drivlet);
+		strcat(jkdir, ":\\jk_c\\mapSRTMinfo.sav" );
 		if ( (stream = fopen( jkdir, "r" )) != NULL )
 		{
 		   fclose(stream);

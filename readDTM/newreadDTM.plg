@@ -9,11 +9,13 @@
 Creating command line "link.exe /nologo /subsystem:windows /incremental:yes /pdb:"Debug/newreadDTM.pdb" /debug /machine:I386 /out:"Debug/newreadDTM.exe" /pdbtype:sept  ".\Debug\newreadDTM.obj" ".\Debug\newreadDTMDlg.obj" ".\Debug\StdAfx.obj" ".\Debug\newreadDTM.res" "
 <h3>Output Window</h3>
 Linking...
+LINK : fatal error LNK1168: cannot open Debug/newreadDTM.exe for writing
+Error executing link.exe.
 
 
 
 <h3>Results</h3>
-newreadDTM.exe - 0 error(s), 0 warning(s)
+newreadDTM.exe - 1 error(s), 0 warning(s)
 </pre>
 </body>
 </html>
