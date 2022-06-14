@@ -2567,17 +2567,21 @@ map50:
       Input #filnum%, TemperatureModel%
       Close #filnum%
       
+      Dim srtmdtmcdtmp As Boolean
+      
       If Dir(drivjk_c$ & "mapSRTMinfo.sav") <> sEmpty Then
         mapinfonum% = FreeFile
         Open drivjk_c$ & "mapSRTMinfo.sav" For Input As #mapinfonum%
-        Input #mapinfonum%, srtmdtm, srtmdtmcdnum
-        If srtmdtmcdnum = 1 Then
-           srtmdtmcd = True
+        Input #mapinfonum%, srtmdtmtmp, srtmdtmcdnumtmp
+        If srtmdtmcdnumtmp = 1 Then
+           srtmdtmcdtmp = True
         Else
-           srtmdtmcd = False
+           srtmdtmcdtmp = False
            End If
-        If Dir(srtmdtm & ":\3AS\", vbDirectory) <> sEmpty Or _
-           Dir(srtmdtm & ":\USA\", vbDirectory) <> sEmpty Then
+        If Dir(USADir$, vbDirectory) <> sEmpty Or _
+           Dir(D3ASDir$, vbDirectory) <> sEmpty Then
+           srtmdtm = Mid$(USADir$, 1, 1)
+           worddtm = srtmdtm
            world = True
            noheights = False
            tblbuttons%(1) = 1
@@ -2586,7 +2590,10 @@ map50:
    
         USADirtmp$ = sEmpty
         Input #mapinfonum%, USADirtmp$
-        If Dir(srtmdtm & ":\" & USADirtmp$, vbDirectory) <> sEmpty Then
+        If Dir(srtmdtmtmp & ":\" & USADirtmp$, vbDirectory) <> sEmpty Then
+           srtmdtm = srtmdtmtmp
+           srtmdtmcd = srtmdtmcdtmp
+           worddtm = srtmdtm
            USADir$ = srtmdtm & ":\" & USADirtmp$ & "\"
            world = True
            noheights = False
