@@ -1614,7 +1614,7 @@ Private Sub cmdSaveAll_Click()
                 Case vbNo
             
             End Select
-            cmdClear.value = True
+'            cmdClear.value = True
             Open drivjk_c$ & "mappoints.sav" For Output As #savfil%
         
       Case 0, 3 'cancel.
@@ -2418,9 +2418,20 @@ Private Sub Command16_Click()
       Do Until EOF(erosfil%)
          Line Input #erosfil%, doclin$
          If Combo2.Text = doclin$ Then
-            Close #erosfil%
-            response = MsgBox("City area of the same name already recorded!", vbCritical + vbOKOnly, "Maps & More")
-            Exit Sub
+            Select Case MsgBox("A city area of the same name is already recorded!" _
+                               & vbCrLf & "" _
+                               & vbCrLf & "Do you ant to nontheless record this place in the ""sav"" file?" _
+                               & vbCrLf & "" _
+                               & vbCrLf & "(Hint: if you answer ""Yes"", you should edit out the duplication.)" _
+                               , vbYesNoCancel Or vbInformation Or vbDefaultButton1, "Duplicate city area or neighborhood")
+            
+                Case vbYes
+            
+                Case vbNo, vbCancel
+                   Close #erosfil%
+                   Exit Sub
+            
+            End Select
             End If
       Loop
       Close #erosfil%
@@ -2633,7 +2644,7 @@ End Sub
 ' Purpose   :
 '---------------------------------------------------------------------------------------
 '
-Private Sub Form_Load()
+Private Sub form_load()
    On Error GoTo form_load_Error
 
    mapsearchfm.Width = 4770
@@ -3070,6 +3081,7 @@ ComparePoints:
        tmpfile$ = drivjk_c$ & "mappoints_tmp_skiy.sav"
        End If
 
+    Close 'close any open files
     maplistnum% = FreeFile
     Open drivjk_c$ + "mappoints.sav" For Input As #maplistnum%
     tmpnum% = FreeFile

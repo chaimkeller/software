@@ -4076,15 +4076,23 @@ out50: Err.Clear
         End If
         
       If autoazirange% = 1 Then
-         maxdecl = (66.5 - Abs(l1)) + 23.5 'approximate formula for maximum declination as function of latitude (l1)
-         'source: chart of declination range vs latitude from http://en.wikipedia.org/wiki/Declination
-         maxangss% = CInt((Abs(DASIN(Cos(maxdecl * cd))) / cd)) 'approximate formula for half maximum angle range as function of declination
-         'source: http://en.wikipedia.org/wiki/Solar_azimuth_angle
-         'add another few degrees on either side for a cushion for latitudes greater than 60
-         If Abs(l1) >= 60 And Abs(l1) < 62 Then
-            maxangss% = maxangss% + 3
-         ElseIf Abs(l1) >= 62 Then
-            maxangss% = maxangss% + 10
+         'automatic determination of azimuth range
+         maxangss% = MaxHalfAzimuthRange(l1)
+         'finally, don't let the minimum be less than 45 degrees for uniformity purpose when
+         'calculating most places in the world
+         If maxangss% < 45 Then maxangss% = 45
+      Else
+         'check if recorded azimuth range is sufficient for the calculations
+         maxangtmp% = MaxHalfAzimuthRange(l1)
+         If maxangtmp% > maxangss% Then
+            Call MsgBox("The recorded azimuth range may be too small for visible zemanim calculations at your chosen latitude!" _
+                        & vbCrLf & "" _
+                        & vbCrLf & "The recorded value is: " & Str$(maxangss%) _
+                        & vbCrLf & "The recomended value is: " & Str$(maxangtmp%) _
+                        & vbCrLf & "" _
+                        & vbCrLf & "(Hint: you can turn on automatic azimuth ranges by checking the check box in the DTM limits dialog.)" _
+                        , vbInformation Or vbDefaultButton1, "Maximum azimuth range")
+            Exit Sub
             End If
          End If
  
@@ -6827,3 +6835,23 @@ T50:
 
 End Sub
 
+Public Function MaxHalfAzimuthRange(latitude) As Integer
+   Dim maxdecl As Double, l1 As Double
+   
+   'make sure latitude parameter is number
+   l1 = CDbl(latitude)
+   
+   'calculate approximate half azimuth range
+    maxdecl = (66.5 - Abs(l1)) + 23.5 'approximate formula for maximum declination as function of latitude (l1)
+    'source: chart of declination range vs latitude from http://en.wikipedia.org/wiki/Declination
+    MaxHalfAzimuthRange = CInt((Abs(DASIN(Cos(maxdecl * cd))) / cd)) 'approximate formula for half maximum angle range as function of declination
+    'source: http://en.wikipedia.org/wiki/Solar_azimuth_angle
+    
+   'add additional range for case of high terrain that needs added azimuth range for visible calculations
+    If Abs(l1) >= 60 And Abs(latitude) < 62 Then
+       MaxHalfAzimuthRange = MaxHalfAzimuthRange + 3
+    ElseIf Abs(l1) >= 62 Then
+       MaxHalfAzimuthRange = MaxHalfAzimuthRange + 10
+       End If
+
+End Function

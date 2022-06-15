@@ -1319,11 +1319,26 @@ ca81:
                   For i% = 0 To Forms.count - 1
                      ret = SetWindowPos(Forms(i%).hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                   Next i%
-                  If Not AutoProf Then response = MsgBox("You have already recorded a place with these coordinates and elevations!", vbOKOnly + vbExclamation, "Maps & More")
-                  For i% = 0 To Forms.count - 1
-                    ret = SetWindowPos(Forms(i%).hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-                  Next i%
-                  GoTo ca999
+                  If Not AutoProf Then
+                        Select Case MsgBox("You have already recorded a place with the same coordinates!" _
+                                           & vbCrLf & "" _
+                                           & vbCrLf & "Do you want to record this place anyways?" _
+                                           & vbCrLf & "" _
+                                           & vbCrLf & "(If you answer ""Yes"", You should edit the bat file to remove the duplicate entry.)" _
+                                           , vbYesNoCancel Or vbInformation Or vbDefaultButton2, "Place already recorded!")
+                        
+                          Case vbYes
+                              'do nothing
+                          Case vbNo, vbCancel
+                              For i% = 0 To Forms.count - 1
+                                ret = SetWindowPos(Forms(i%).hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+                              Next i%
+                              GoTo ca999
+                        
+                          Case vbCancel
+                        
+                        End Select
+                        End If
                   End If
             Loop
             Close #batfile%
@@ -1810,7 +1825,7 @@ Private Sub dirsavecheck_Click()
       End If
 End Sub
 
-Private Sub Form_Load()
+Private Sub form_load()
 
    If world Then
       Text3.Text = 6
