@@ -359,20 +359,20 @@ Private Sub Form_Load()
        erosstatenum = 0
        GoSub organize
 
-       'tvwDB.Sorted = True
-       'ecfilnum% = FreeFile
-       'Open ecdir$ & "eroscity.sav" For Input As #ecfilnum
-       'tvwDB.LabelEdit = False
-       'Set mNode = tvwDB.Nodes.Add()
-       'mNode.Sorted = True
-       'tvwDB.LabelEdit = False
-       'mNode.Text = "Russia"
-       'country$ = "Russia"
-       'namesize% = Len(country$)
-       'mNode.Image = "Russiaimage"
-       'countryindex = mNode.Index
-       'erosstatenum = 0
-       'GoSub organize
+       tvwDB.Sorted = True
+       ecfilnum% = FreeFile
+       Open ecdir$ & "eroscity.sav" For Input As #ecfilnum
+       tvwDB.LabelEdit = False
+       Set mNode = tvwDB.Nodes.Add()
+       mNode.Sorted = True
+       tvwDB.LabelEdit = False
+       mNode.Text = "Russia"
+       country$ = "Russia"
+       namesize% = Len(country$)
+       mNode.Image = "Russiaimage"
+       countryindex = mNode.Index
+       erosstatenum = 0
+       GoSub organize
     
        tvwDB.Sorted = True
        ecfilnum% = FreeFile
@@ -570,9 +570,11 @@ organize:
              ec2filnum% = FreeFile
              Open ecdir$ & ecnam$ & ".sav" For Input As #ec2filnum%
           Else
-             response = MsgBox("Can't find " & ecnam$ & "'s .sav file!", vbCritical + vbOKOnly, "Maps & More")
-             Close
-             Exit Sub
+             If Trim$(ecnam$) <> sEmpty Then 'ignore empty lines
+                response = MsgBox("Can't find " & ecnam$ & "'s .sav file!", vbCritical + vbOKOnly, "Maps & More")
+                Close
+                Exit Sub
+                End If
              End If
           'parse eroscity name into city area, state, country
           If Mid$(ecnam$, Len(ecnam$) - namesize%, namesize% + 1) = "_" & country$ Then

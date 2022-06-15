@@ -2135,13 +2135,19 @@ Dim DSThour As Integer
    
 Dim DSTadd As Boolean
 
+Dim DSTPerpetualIsrael As Boolean
+Dim DSTPerpetualUSA As Boolean
+
+'set to true when these countries adopt universal DST
+DSTPerpetualIsrael = False
+DSTPerpetualUSA = False
+
 If CalMDIform.mnuDST.Checked = True Then
    DSTadd = True
    End If
   
 If DSTadd Then
 
-   'open DST_EY.txt file and determine the daynumber of the beginning and end of DST in EY
    stryrDST% = yrheb% + RefCivilYear% - RefHebYear% '(yrheb% - 5758) + 1997
    endyrDST% = yrheb% + RefCivilYear% - RefHebYear% + 1 '(yrheb% - 5758) + 1998
    
@@ -2156,11 +2162,22 @@ If DSTadd Then
           strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
           enddaynum(0) = DayNumber(YearLength%, 10, OctoberDate)
           
+          If DSTPerpetualIsrael Then
+             strdaynum(0) = 1
+             enddaynum(0) = YearLength%
+             End If
+             
           MarchDate = (31 - (Fix(endyrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
           OctoberDate = (31 - (Fix(endyrDST% * 5 / 4) + 1) Mod 7)
           YearLength% = DaysinYear(endyrDST%)
           strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
           enddaynum(1) = DayNumber(YearLength%, 10, OctoberDate)
+
+          If DSTPerpetualIsrael Then
+             strdaynum(1) = 1
+             enddaynum(1) = YearLength%
+             End If
+        
       
       Case "USA" 'English {USA DST rules}
       
@@ -2170,12 +2187,22 @@ If DSTadd Then
           strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
           enddaynum(0) = DayNumber(YearLength%, 11, NovemberDate)
           
+          If DSTPerpetualUSA Then
+             strdaynum(0) = 1
+             enddaynum(0) = YearLength%
+             End If
+             
           MarchDate = 14 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
           NovemberDate = 7 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
           YearLength% = DaysinYear(endyrDST%)
           strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
           enddaynum(1) = DayNumber(YearLength%, 11, NovemberDate)
           
+          If DSTPerpetualUSA Then
+             strdaynum(1) = 1
+             enddaynum(1) = YearLength%
+             End If
+             
       Case Else 'not implemented yet for other countries
          DSTadd = False
       

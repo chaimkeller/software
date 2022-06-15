@@ -1079,10 +1079,10 @@ Private Sub OKbut0_Click()
       
     'now read sponsorship information
     SponsorLine$ = sEmpty
-    myfile = Dir("c:\inetpub\webpub\SponsorLogo.txt")
+    myfile = Dir(Mid$(App.Path, 1, 1) & ":\inetpub\webpub\SponsorLogo.txt")
     If myfile <> sEmpty Then
        filtmp% = FreeFile
-       Open "c:\inetpub\webpub\SponsorLogo.txt" For Input As #filtmp%
+       Open Mid$(App.Path, 1, 1) & ":\inetpub\webpub\SponsorLogo.txt" For Input As #filtmp%
        Do Until EOF(filtmp%)
           Input #filtmp%, doclin$
           doclin$ = Trim$(doclin$)
@@ -4099,7 +4099,7 @@ unloaderr2:
             response = MsgBox("Netzski6 doesn't seem to be advancing." & vbLf & vbLf & _
                               "This may mean that the azimuthal range was" & vbLf & _
                               "insufficient to calculate the solar ephemerals." & vbLf & _
-                              "You can test this by running c:\jk\netzski3/6.exe and looking for error messages." & vbLf & _
+                              "You can test this by running " & dirjk$ & "netzski3/6.exe and looking for error messages." & vbLf & _
                               "In the meantime do you want to abort?", vbCritical + vbOKCancel, "Cal Program")
             If response = vbOK Then
                Close

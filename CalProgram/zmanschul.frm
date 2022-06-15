@@ -1506,6 +1506,13 @@ Private Sub Command3_Click()
    Dim NovemberDate As Integer
    Dim YearLength As Integer
    
+   Dim DSTPerpetualIsrael As Boolean
+   Dim DSTPerpetualUSA As Boolean
+   
+   'set to true when these countries adopt perpetual daylight saving time
+   DSTPerpetualIsrael = False
+   DSTPerpetualUSA = False
+   
    Dim RemovedUnderlined As Boolean
 
    Dim ier As Integer
@@ -1528,32 +1535,52 @@ Private Sub Command3_Click()
      Select Case eroscountry$
      
         Case "Israel", "" 'EY eros or cities using 2017 DST rules
-        
+               
             MarchDate = (31 - (Fix(stryrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
             OctoberDate = (31 - (Fix(stryrDST% * 5 / 4) + 1) Mod 7)
             YearLength% = DaysinYear(stryrDST%)
             strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
             enddaynum(0) = DayNumber(YearLength%, 10, OctoberDate)
             
+            If (DSTPerpetualIsrael) Then
+               strdaynum(0) = 1
+               enddaynum(0) = YearLength%
+               End If
+               
             MarchDate = (31 - (Fix(endyrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
             OctoberDate = (31 - (Fix(endyrDST% * 5 / 4) + 1) Mod 7)
             YearLength% = DaysinYear(endyrDST%)
             strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
             enddaynum(1) = DayNumber(YearLength%, 10, OctoberDate)
-        
+            
+            If (DSTPerpetualIsrael) Then
+               strdaynum(1) = 1
+               enddaynum(1) = YearLength%
+               End If
+               
         Case "USA" 'English {USA DST rules}
-        
+            
             MarchDate = 14 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
             NovemberDate = 7 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
             YearLength% = DaysinYear(stryrDST%)
             strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
             enddaynum(0) = DayNumber(YearLength%, 11, NovemberDate)
             
+            If (DSTPerpetualUSA) Then
+               strdaynum(0) = 1
+               enddaynum(0) = YearLength%
+               End If
+            
             MarchDate = 14 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
             NovemberDate = 7 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
             YearLength% = DaysinYear(endyrDST%)
             strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
             enddaynum(1) = DayNumber(YearLength%, 11, NovemberDate)
+            
+            If (DSTPerpetualUSA) Then
+               strdaynum(1) = 1
+               enddaynum(1) = YearLength%
+               End If
             
         Case Else 'not implemented yet for other countries
         

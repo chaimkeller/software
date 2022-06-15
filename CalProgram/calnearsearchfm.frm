@@ -22,6 +22,7 @@ Begin VB.Form calnearsearchfm
       List            =   "calnearsearchfm.frx":044F
       Style           =   2  'Dropdown List
       TabIndex        =   17
+      ToolTipText     =   "Choose map layer"
       Top             =   6240
       Visible         =   0   'False
       Width           =   1215
@@ -31,6 +32,7 @@ Begin VB.Form calnearsearchfm
       Height          =   255
       Left            =   3600
       TabIndex        =   16
+      ToolTipText     =   "Uncheck all results"
       Top             =   5940
       Width           =   1095
    End
@@ -39,6 +41,7 @@ Begin VB.Form calnearsearchfm
       Height          =   255
       Left            =   3600
       TabIndex        =   15
+      ToolTipText     =   "Check all results"
       Top             =   5680
       Width           =   1095
    End
@@ -82,6 +85,7 @@ Begin VB.Form calnearsearchfm
          Left            =   120
          Style           =   1  'Checkbox
          TabIndex        =   12
+         ToolTipText     =   "double click to locate search result on map"
          Top             =   240
          Width           =   4875
       End
@@ -100,6 +104,7 @@ Begin VB.Form calnearsearchfm
       Height          =   495
       Left            =   720
       TabIndex        =   1
+      ToolTipText     =   "Accept results and proceed to calculation"
       Top             =   5700
       Width           =   1215
    End
@@ -123,6 +128,7 @@ Begin VB.Form calnearsearchfm
          Left            =   2880
          TabIndex        =   14
          Text            =   "sunrise"
+         ToolTipText     =   "Choose horizon to search"
          Top             =   1200
          Width           =   1035
       End
@@ -140,6 +146,7 @@ Begin VB.Form calnearsearchfm
          Height          =   375
          Left            =   1440
          TabIndex        =   11
+         ToolTipText     =   "Press to search"
          Top             =   1740
          Width           =   1755
       End
@@ -155,7 +162,7 @@ Begin VB.Form calnearsearchfm
          Value           =   1
          AutoBuddy       =   -1  'True
          BuddyControl    =   "Text3"
-         BuddyDispid     =   196618
+         BuddyDispid     =   196619
          OrigLeft        =   2040
          OrigTop         =   1440
          OrigRight       =   2280
@@ -180,6 +187,7 @@ Begin VB.Form calnearsearchfm
          Left            =   1860
          TabIndex        =   7
          Text            =   "7"
+         ToolTipText     =   "Search radius (km)"
          Top             =   1200
          Width           =   615
       End
@@ -197,7 +205,7 @@ Begin VB.Form calnearsearchfm
          Height          =   375
          Left            =   1980
          TabIndex        =   4
-         Text            =   "0"
+         Text            =   "longitude +/- degrees for E/W longitude."
          Top             =   720
          Width           =   1815
       End
@@ -215,7 +223,7 @@ Begin VB.Form calnearsearchfm
          Height          =   375
          Left            =   1980
          TabIndex        =   3
-         Text            =   "0"
+         Text            =   "latitude in degrees of center of search"
          Top             =   240
          Width           =   1815
       End
@@ -850,7 +858,7 @@ ret50:
             dist = Sqr((lon - CDbl(eroslatitude)) ^ 2 + (lat - CDbl(eroslongitude)) ^ 2)
             End If
          If dist <= Val(calnearsearchfm.Text3) + 0.001 Then
-            calnearsearchfm.List1.AddItem Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "+###.00000") & "," & Format(lat, "+###.00000") & "," & Format(hgt, "+###0.0") & ", dist = " & Format(dist, "#0.0")
+            calnearsearchfm.List1.AddItem Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "####.00000") & "," & Format(lat, "###.00000") & "," & Format(hgt, "###0.0") & ", dist = " & Format(dist, "#0.0")
             calnearsearchfm.List1.Selected(nn%) = True
             nn% = nn% + 1
             End If
@@ -998,7 +1006,7 @@ ret1500: 'search both netz and skiy directories
             dist = Sqr((lon - CDbl(eroslatitude)) ^ 2 + (lat - CDbl(eroslongitude)) ^ 2)
             End If
          If dist <= Val(calnearsearchfm.Text3) + 0.001 Then
-            calnearsearchfm.List1.AddItem "netz: " & Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "+###.00000") & "," & Format(lat, "+###.00000") & "," & Format(hgt, "+###0.0") & ", dist = " & Format(dist, "#0.0")
+            calnearsearchfm.List1.AddItem "netz: " & Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "####.00000") & "," & Format(lat, "###.00000") & "," & Format(hgt, "###0.0") & ", dist = " & Format(dist, "#0.0")
             calnearsearchfm.List1.Selected(nn%) = True
             nn% = nn% + 1
             End If
@@ -1040,7 +1048,7 @@ ret1500: 'search both netz and skiy directories
             dist = Sqr((lon - CDbl(eroslatitude)) ^ 2 + (lat - CDbl(eroslongitude)) ^ 2)
             End If
          If dist <= Val(calnearsearchfm.Text3) + 0.001 Then
-            calnearsearchfm.List1.AddItem "skiy: " & Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "+###.00000") & "," & Format(lat, "+###.00000") & "," & Format(hgt, "+###0.0") & ", dist = " & Format(dist, "#0.0")
+            calnearsearchfm.List1.AddItem "skiy: " & Mid$(citnam$, 16, Len(citnam$) - 15) & "," & Format(lon, "####.00000") & "," & Format(lat, "###.00000") & "," & Format(hgt, "###0.0") & ", dist = " & Format(dist, "#0.0")
             calnearsearchfm.List1.Selected(nn%) = True
             nn% = nn% + 1
             End If

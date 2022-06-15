@@ -36,7 +36,7 @@ Begin VB.Form calAirfm
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   9.75
-            Charset         =   0
+            Charset         =   177
             Weight          =   400
             Underline       =   0   'False
             Italic          =   0   'False
@@ -83,7 +83,7 @@ Begin VB.Form calAirfm
             Strikethrough   =   0   'False
          EndProperty
          CustomFormat    =   "hh:mm"
-         Format          =   119275522
+         Format          =   114884610
          CurrentDate     =   37292
       End
       Begin MSComCtl2.DTPicker dtDateArrival 
@@ -106,7 +106,7 @@ Begin VB.Form calAirfm
          EndProperty
          CalendarTitleBackColor=   192
          CalendarTitleForeColor=   16777215
-         Format          =   119275521
+         Format          =   114884609
          CurrentDate     =   37292
       End
       Begin VB.Label lblArrivalDate 
@@ -196,7 +196,7 @@ Begin VB.Form calAirfm
             Strikethrough   =   0   'False
          EndProperty
          CustomFormat    =   "hh:mm"
-         Format          =   119275522
+         Format          =   114884610
          CurrentDate     =   37292
       End
       Begin MSComCtl2.DTPicker dtDateDeparture 
@@ -219,7 +219,7 @@ Begin VB.Form calAirfm
          EndProperty
          CalendarTitleBackColor=   12582912
          CalendarTitleForeColor=   16777215
-         Format          =   119275521
+         Format          =   114884609
          CurrentDate     =   37292
       End
       Begin VB.CheckBox chkDeparture 
@@ -376,18 +376,18 @@ Private Sub cmdView_Click()
    ret = SetWindowPos(calAirfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    ret = SetWindowPos(CalMDIform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    currentdir$ = drivjk$
-   If Dir("e:\progra~1\intern~1\iexplore.exe") <> sEmpty Then
+   If Dir(Mid$(App.Path, 1, 1) & ":\progra~1\intern~1\iexplore.exe") <> sEmpty Then
       'Windows XP, Pentium IV
-      ret = Shell("e:\progra~1\intern~1\iexplore " & currentdir$ & "AirTimes.html", vbMaximizedFocus)
+      ret = Shell(Mid$(App.Path, 1, 1) & ":\progra~1\intern~1\iexplore " & currentdir$ & "AirTimes.html", vbMaximizedFocus)
    ElseIf Dir("f:\progra~1\intern~1\iexplore.exe") <> sEmpty Then
       'Windows XP, Pentium III
       ret = Shell("f:\progra~1\intern~1\iexplore " & currentdir$ & "AirTimes.html", vbMaximizedFocus)
-   ElseIf Dir("c:\progra~1\plus!\micros~1\iexplore.exe") <> sEmpty Then
+   ElseIf Dir(Mid$(App.Path, 1, 1) & ":\progra~1\plus!\micros~1\iexplore.exe") <> sEmpty Then
       'Pentium I at Kollel
-      ret = Shell("c:\progra~1\plus!\micros~1\iexplore " & currentdir$ & "AirTimes.html", vbMaximizedFocus)
+      ret = Shell(Mid$(App.Path, 1, 1) & ":\progra~1\plus!\micros~1\iexplore " & currentdir$ & "AirTimes.html", vbMaximizedFocus)
    ElseIf Dir("c:\progra~1\intern~1\iexplore.exe") <> sEmpty Then
       'Windows 98, Pentium III,IV
-      ret = Shell("c:\progra~1\intern~1\iexplore " & currentdir$ & "AirTimes.html", vbMaximizedFocus)
+      ret = Shell(Mid$(App.Path, 1, 1) & ":\progra~1\intern~1\iexplore " & currentdir$ & "AirTimes.html", vbMaximizedFocus)
       End If
 End Sub
 
