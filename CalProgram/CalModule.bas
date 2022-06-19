@@ -3023,10 +3023,9 @@ For k% = 1 To 2
          InStr(tims$, "**:00:00") Or _
          InStr(tims$, "99:00:00") Or _
          InStr(tims$, "55:00:00") Then
-         tim$(k% - 1, i%) = sEmpty
-         
-         'that day was not calculated successfully, so, reflect it in table with "NA"
-         tim$(k% + 1, i%) = Mid$(tims$, 1, 11)
+         'tim$(k% - 1, i%) = sEmpty
+         caldate$ = Mid$(tims$, 1, 11)
+         tims$ = "NA"
          GoTo 365
          End If
          
@@ -3120,7 +3119,7 @@ For k% = 1 To 2
             End If
          End If
       'If setflag% = -1 Then Mid$(tims$, 1, 2) = " " + LTrim$(RTrim$(Str$(Val(Mid$(tims$, 1, 2)) - 12)))
-
+365:
       tim$(k% - 1, i%) = tims$
       tim$(k% + 1, i%) = caldate$
       If azim% = 1 Then
@@ -3130,7 +3129,7 @@ For k% = 1 To 2
             tim$(k% - 1, i%) = "#:##:##"
             End If
          End If
-365:
+   
    Next i%
 380   Close #filplc%
 Next k%
@@ -3252,7 +3251,7 @@ For i% = 1 To endyr%
              End If
           
           '//////////////added 082921--DST support//////////////
-          If DSTadd Then
+          If DSTadd And tims$ <> "NA" Then
              DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
              'add hour for DST
              If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
@@ -3367,7 +3366,7 @@ For i% = 1 To endyr%
              End If
           
           '//////////////added 082921--DST support//////////////
-          If DSTadd Then
+          If DSTadd And tims$ <> "NA" Then
              DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
              'add hour for DST
              If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
@@ -3562,7 +3561,7 @@ End If
              End If
           
           '//////////////added 082921--DST support//////////////
-          If DSTadd Then
+          If DSTadd And tims$ <> "NA" Then
              DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
              'add hour for DST
              If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
@@ -3775,7 +3774,7 @@ tab5: fil100% = FreeFile
           InStr(doclin$, "**:00:00") Or _
           InStr(doclin$, "99:00:00") Or _
           InStr(doclin$, "55:00:00") Then
-          timss$ = sEmpty
+          timss$ = "NA"
           GoTo 440 'skip all the time manipulation
        Else
           timss$ = Mid$(doclin$, posit% - 1 - nadd1%, 7 + nadd1%)
