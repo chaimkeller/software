@@ -3015,6 +3015,21 @@ For k% = 1 To 2
 '   For i% = 1 To 365 + leapyr%
    For i% = yrstrt%(k% - 1) To yrend%(k% - 1)
       Input #filplc%, tims$
+      
+      'look for error flags in the line
+      If InStr(tims$, ">max azi") Or _
+         InStr(tims$, "NoSunris") Or _
+         InStr(tims$, "NoSunset") Or _
+         InStr(tims$, "**:00:00") Or _
+         InStr(tims$, "99:00:00") Or _
+         InStr(tims$, "55:00:00") Then
+         tim$(k% - 1, i%) = sEmpty
+         
+         'that day was not calculated successfully, so, reflect it in table with "NA"
+         tim$(k% + 1, i%) = Mid$(tims$, 1, 11)
+         GoTo 365
+         End If
+         
       caldate$ = Mid$(tims$, 1, 11)
       nadd1% = nadd%
       posit% = InStr(12, tims$, ":")
@@ -3115,6 +3130,7 @@ For k% = 1 To 2
             tim$(k% - 1, i%) = "#:##:##"
             End If
          End If
+365:
    Next i%
 380   Close #filplc%
 Next k%
@@ -3744,13 +3760,26 @@ tab5: fil100% = FreeFile
 '    For i% = 1 To 365 + leapyr%
     For i% = yrstrt%(0) To yrend%(0)
        Input #fil100%, doclin$
+
        dat$ = RTrim$(Mid$(doclin$, 1, 11))
        nadd1% = nadd%
        posit% = InStr(1, doclin$, ":")
        If skiya = False Then
           If posit% > 15 Then nadd1% = 1
           End If
-       timss$ = Mid$(doclin$, posit% - 1 - nadd1%, 7 + nadd1%)
+          
+       
+       If InStr(doclin$, ">max azi") Or _
+          InStr(doclin$, "NoSunris") Or _
+          InStr(doclin$, "NoSunset") Or _
+          InStr(doclin$, "**:00:00") Or _
+          InStr(doclin$, "99:00:00") Or _
+          InStr(doclin$, "55:00:00") Then
+          timss$ = sEmpty
+          GoTo 440 'skip all the time manipulation
+       Else
+          timss$ = Mid$(doclin$, posit% - 1 - nadd1%, 7 + nadd1%)
+          End If
        
       azim% = 0
       dobs = Val(Mid$(doclin$, Len(doclin$) - 5, 6))
@@ -3836,7 +3865,9 @@ tab5: fil100% = FreeFile
              End If
           End If
        If Abs(rdflag%) = 1 Then GoSub round
+440:
        If setflag% = -1 Then '***** new changes (check round and nadd1%)
+          If timss$ = sEmpty Then GoTo 442
           If Mid$(timss$, 1, 2) < 22 Then
              Mid$(timss$, 1, 2) = " " + Trim$(Str$(Val(Mid$(timss$, 1, 2)) - 12))
           Else
@@ -3850,7 +3881,7 @@ tab5: fil100% = FreeFile
             timss$ = "#:##:##"
             End If
          End If
-         
+442:
          If Not PrinterFlag Then previewfm.Visible = True
 '   Next i%
 '*************set fonts for main text**********************
@@ -3924,6 +3955,9 @@ GoSub mainfont
        stortim$(tmpsetflg% - 1, j% - 1, k% - 1) = timss$
 470 Next i%
 textwi = Dev.TextWidth(timss$)
+If textwi = 0 Then 'if last entry is empy, e.g., for Arctic regions for the sunset and using a civil calendar
+   textwi = 12 'need to redefine the text width for the non-empty entries
+   End If
 texthi = Dev.TextHeight(timss$)
 Close #fil100%
 

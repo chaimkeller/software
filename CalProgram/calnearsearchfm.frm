@@ -1121,7 +1121,19 @@ End Sub
 Private Sub List1_DblClick()
 
    On Error GoTo List1_DblClick_Error
+   
+   
+Select Case MsgBox("Do you want to locate this place on a Google Map?" _
+                   & vbCrLf & "" _
+                   & vbCrLf & "(Hint: you can also change the type of map layer in the combo box below)" _
+                   , vbYesNo Or vbQuestion Or vbDefaultButton2, "Location on map")
 
+    Case vbYes
+
+    Case vbNo
+       Exit Sub
+
+End Select
 ' The basic map URL without the address information.
 Const URL_BASE As String = "http://maps.google.com/maps?f=q&hl=en&geocode=&time=&date=&ttype=&q=@ADDR@&ie=UTF8&t=@TYPE@"
 
