@@ -154,6 +154,7 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static integer nyd, nyf, nyl, nyr;
     static doublereal tss, al1o, alt1, azi1, azi2;
     static char ts1c[8], ts2c[9], ext1[4*2*100], ext3[4*2*100];
+	char buff[50] = "";
     static integer nyr1;
     static doublereal defb;
     static char chd62[62];
@@ -239,6 +240,8 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static integer nleapyr, nzskflg;
 	static doublereal hgt0;
 	static doublereal hgtobs = 1.8; //maximum height of the observer
+	double check = 0;
+
 
 	double MaxMinTemp = -999999;
 	short WinTemp = 0;
@@ -285,6 +288,8 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
 	static doublereal AddedTime = 0;
 	static doublereal accobs = 0;
 	static integer CushionAmount = 0;
+
+	int ErrorCode = 0;  //EK added 061922
 
 	//doublereal Min_Temp_adjust = 0.9;//range (1 - 0) adjust minimum temperature to be average minimum temperature
 	//for the total atmospheric refraction, use pt
@@ -1936,8 +1941,27 @@ L700:
 		    decl_(&dy1, &mp, &mc, &ap, &ac, &ms, &aas, &es, &ob, &d__)
 			    ;
 		    air += (1 - cos(aas) * .0167) * .2667 * cd;
-		    sr1 = acos(-tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
-			    cos(d__))) * ch;
+
+			//////////changes EK 061922/////////////////////////////////
+			//check for perpetual day/night
+			check = tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
+			    cos(d__));
+
+			if (fabs(check) > 1)
+			{
+				//perpetual day/night, no sunset, print out error and write flags for Cal Program
+				//then skip to next day
+				ErrorCode = -2;
+				goto ErrorHandler;
+			}
+			else
+			{
+				sr1 = acos(check) * ch;
+			}
+		    //sr1 = acos(-tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
+			//    cos(d__))) * ch;
+			/////////////////////////////////////////////////////////////////
+
 		    sr = sr1 * hr;
 /*              hour angle in minutes */
 		    t3 = (t6 - ndirec * sr) / hr;
@@ -2052,8 +2076,26 @@ L700:
 			    ;
 		    air += (1 - cos(aas) * .0167) * .2667 * cd;
 /*              calculate sunset */
-		    sr2 = acos(-tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
-			    cos(d__))) * ch;
+
+			//////////////changes EK 061922///////////////////////////
+			//check for perpetual night or day
+			check = -tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
+			    cos(d__));
+
+			if (fabs(check) > 1)
+			{
+				//no sunrise, print out error messages and write flags and goto next day
+				ErrorCode = -1;
+				goto ErrorHandler;
+			}
+			else
+			{
+				sr2 = acos(check) * ch;
+			}
+		    //sr2 = acos(-tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
+			//    cos(d__))) * ch;
+			///////////////////////////////////////////////////
+
 		    sr2 *= hr;
 		    tss = (t6 + sr2) / hr;
 /*              sunset in hours.fraction of hours */
@@ -2061,8 +2103,24 @@ L700:
 /*              calculate sunrise */
 		    decl_(&dy1, &mp, &mc, &ap, &ac, &ms, &aas, &es, &ob, &d__)
 			    ;
-		    sr1 = acos(-tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
-			    cos(d__))) * ch;
+			//////////////////chages EK 061922//////////////////////////////////////
+			//check for perpetual night or day
+			check = -tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
+			    cos(d__));
+			if (fabs(check) > 1) 
+			{
+				//no sunrsie, perpertual day/night?
+				ErrorCode = -1;
+				goto ErrorHandler;
+			}
+			else
+			{
+				sr1 = acos(check) * ch;
+			}
+		    //sr1 = acos(-tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
+			//    cos(d__))) * ch;
+			///////////////////////////////////////////////////////
+
 		    sr = sr1 * hr;
 /*              hour angle in minutes */
 		    t3 = (t6 - sr) / hr;
@@ -2201,24 +2259,23 @@ L692:
 		    if (azi < 0.) {
 			azi1 = -(azi + 90.);
 		    }
+
+			//////////////changes EK 061922/////////////////////////////
 		    if (abs(azi1) > maxang && nointernet) {
-			s_wsle(&io___206);
-			do_lio(&c__9, &c__1, "!!!passed max calculated azi,", 
-				(ftnlen)29);
-			do_lio(&c__5, &c__1, (char *)&maxang, (ftnlen)sizeof(
-				doublereal));
-			do_lio(&c__9, &c__1, "!!!", (ftnlen)3);
-			e_wsle();
-			s_wsle(&io___207);
-			do_lio(&c__9, &c__1, "for file: ", (ftnlen)10);
-			do_lio(&c__9, &c__1, fileo, (ftnlen)27);
-			e_wsle();
-			s_wsle(&io___208);
-			do_lio(&c__9, &c__1, "              ***ABORT***", (
-				ftnlen)25);
-			e_wsle();
-			goto L9999;
+				//passed maximum azimuth of profile file,
+				//print error message, write flags, and go to next day
+				ErrorCode = -3;
+				goto ErrorHandler;
 		    }
+			///////////////////////////////////////////////////////
+
+
+			//*******************************************************************************
+			//032722 --- here is where to start loop to check for sunrise occuring first on a part of the sun
+			//other than the upper limb -- loop in azi by width of sun, and corresponding non-refracted altitude
+			//for each step need to determine the refraction altitude and to check if at that azimuth the sun can be seen
+			//over the terrain -- step in 3 steps on either side of sun
+			//*********************************************************************
 		    azi1 = ndirec * azi1;
 			/////////////////////visible sunset////////////////////////////////////////
 		    if (nsetflag == 1) {
@@ -2911,7 +2968,7 @@ L920:
 			}
 		    }
 		}
-/* L925: */
+L925:;
 	    }
 /* L975: */
 	}
@@ -3208,6 +3265,135 @@ L2700:
     f_clos(&cl__1);
 L9999:
     return 0;
+
+/////////////////////////changes EK 061922 ////////////////////////////////////////////
+//inline errorhandler
+ErrorHandler:
+;
+	//convert day and year to calendar date in civil calendar
+	t1750_(&dy, &nyl, &nyr);
+
+	azi1 = 0;
+	dobs = 0;
+
+	switch (ErrorCode)
+	{
+	case -1://perpetual day/night no sunrise
+		//set flags for Cal Program
+		t3sub = -99;
+		viewangle = 0;
+		strcpy(tssc, "NoSunrise", 8);
+		strcpy(ts1c, "    NA   ", 8);
+		strcpy(ts2c, "    NA   ", 8);
+		nac = 1;
+
+		buff[0] = 0;
+		if (nointernet) {
+			sprintf(buff, " %s %s\n", t3s_1.caldayc, "No sunrise. Probably perpetual day or night");
+			printf(buff);}
+		break; 
+	case -2://perpetual day/night no sunset
+		//set flags for Cal Program
+		t3sub = 99;
+		viewangle = 0;
+		strcpy(tssc, "NoSunset", 8);
+		strcpy(ts1c, "    NA   ", 8);
+		strcpy(ts2c, "    NA   ", 8);
+		nac = 2;
+
+		buff[0] = 0;
+		if (nointernet) {
+			sprintf(buff, " %s %s\n", t3s_1.caldayc, "No sunset. Probably perpetual day or night");
+			printf(buff);}
+		break;
+	case -3://passed azimuth range of profile file
+		//set flags for Cal Program
+		t3sub = 55;
+		viewangle = 0;
+		strcpy(tssc, ">max azi", 8);
+		strcpy(ts1c, "    NA   ", 8);
+		strcpy(ts2c, "    NA   ", 8);
+		nac = 3;
+
+		buff[0] = 0;
+		if (nointernet) {
+			sprintf(buff, " %s %s%5.1f %s\n", t3s_1.caldayc, "Maximum Azimuth: +/-", maxang, "passed!");
+			printf(buff);}
+		break;
+	}
+
+	s_wsfe(&io___228);
+	//display the results on the console and write to the time difference and pl place file for this particular place
+	do_fio(&c__1, t3s_1.caldayc, (ftnlen)11);
+	do_fio(&c__1, tssc, (ftnlen)8);
+	do_fio(&c__1, ts1c, (ftnlen)8);
+	do_fio(&c__1, ts2c, (ftnlen)9);
+	do_fio(&c__1, (char *)&nac, (ftnlen)sizeof(
+		integer));
+	e_wsfe();
+
+	if (nointernet && ! nofiles) {
+
+		//write to pl and 
+		s_wsfe(&io___229);
+		do_fio(&c__1, t3s_1.caldayc, (ftnlen)11);
+		do_fio(&c__1, tssc, (ftnlen)8);
+		do_fio(&c__1, ts1c, (ftnlen)8);
+		do_fio(&c__1, ts2c, (ftnlen)9);
+		e_wsfe();
+		s_wsfe(&io___230);
+		do_fio(&c__1, t3s_1.caldayc, (ftnlen)11);
+		do_fio(&c__1, tssc, (ftnlen)8);
+		do_fio(&c__1, comentss, (ftnlen)12);
+		do_fio(&c__1, (char *)&azi1, (ftnlen)sizeof(
+			doublereal));
+		/////////////added 081021 -- record viewangle at sunrise/sunset/////
+		do_fio(&c__1, (char *)&viewangle, (ftnlen)sizeof(
+			doublereal));
+		/////////////////////////////////////////////
+		do_fio(&c__1, (char *)&dobs, (ftnlen)sizeof(
+			doublereal));
+		e_wsfe();
+		}
+
+
+		//if this is the first place in a seriers of places, add fake information so it will be skipped
+		//when determing the earliest sunrise and the latest sunset
+		if (nfil == 1) {
+
+			tsscs[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
+				t3sub;
+			s_copy(coments + (nsetflag + 1 + (nyrstp + (ndystp << 1) 
+				<< 1) - 7) * 12, comentss, (ftnlen)12, (ftnlen)12)
+				;
+			azils[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
+				azi1;
+			dobss[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
+				dobs;
+			viewang[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] =
+				viewangle;
+		}
+
+		//reset loop parameters
+		nfound = -1;
+		azi1 = 0;
+		if (nsetflag == 0) {
+			nloop = 72;
+			// start search 2 minutes above astronomical horizon */
+			nlpend = 2000;
+		} else if (nsetflag == 1) {
+			// sunset
+			nloop = 370;
+			if (nplaceflg == 0) {
+			nloop = 75;
+			}
+			nlpend = -10;
+		}
+
+	//skip to next day
+	goto L925;
+//////////////////end inline ErrorHandler//////////////////////////////////////////
+
 } /* MAIN__ */
 
 /* Subroutine */ int decl_(doublereal *dy1, doublereal *mp, doublereal *mc, 
