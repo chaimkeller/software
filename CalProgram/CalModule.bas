@@ -3015,21 +3015,59 @@ For k% = 1 To 2
 '   For i% = 1 To 365 + leapyr%
    For i% = yrstrt%(k% - 1) To yrend%(k% - 1)
       Input #filplc%, tims$
+      caldate$ = Mid$(tims$, 1, 11)
+      dobs = Val(Mid$(tims$, Len(tims$) - 5, 6))
       
+      
+      '////////////////////////EK 062022 Arctic Circle handling///////////////////////////////////////
       'look for error flags in the line
-      If InStr(tims$, ">max azi") Or _
-         InStr(tims$, "NoSunris") Or _
-         InStr(tims$, "NoSunset") Or _
-         InStr(tims$, "**:00:00") Or _
-         InStr(tims$, "99:00:00") Or _
-         InStr(tims$, "55:00:00") Then
-         'tim$(k% - 1, i%) = sEmpty
-         caldate$ = Mid$(tims$, 1, 11)
-         tims$ = "NA"
+      If InStr(tims$, ">max azi") Or InStr(tims$, "55:00:00") Then
+         tims$ = "?" 'since there might be a visible sunrise or sunset, just don't have all the info to calculate it
+         dobs = 999 'dobs unknown, so print it in black
+         
+         azim% = 0
+         If tmpsetflg% = 1 And nearnez = True Then  'test for near obstructions
+           If dobs <= distlim Then
+              azim% = 1
+              NearWarning(0) = True
+              End If
+         ElseIf tmpsetflg% = 2 And nearski = True Then
+           If dobs <= distlim Then
+              azim% = 1
+              NearWarning(1) = True
+              End If
+            End If
+        
          GoTo 365
          End If
+      If InStr(tims$, "NoSunris") Or _
+         InStr(tims$, "NoSunset") Or _
+         InStr(tims$, "**:00:00") Or _
+         InStr(tims$, "99:00:00") Then
+         'perpetual day/night
+         If optionheb Then
+            tims$ = heb2$(17)
+         Else
+            tims$ = "none"
+            End If
+         dobs = 999 'dobs unknown, so print it in black
+         azim% = 0
+         If tmpsetflg% = 1 And nearnez = True Then  'test for near obstructions
+           If dobs <= distlim Then
+              azim% = 1
+              NearWarning(0) = True
+              End If
+         ElseIf tmpsetflg% = 2 And nearski = True Then
+           If dobs <= distlim Then
+              azim% = 1
+              NearWarning(1) = True
+              End If
+            End If
          
-      caldate$ = Mid$(tims$, 1, 11)
+         GoTo 365
+         End If
+      '//////////////////////////////////////////////////////////////
+         
       nadd1% = nadd%
       posit% = InStr(12, tims$, ":")
       If skiya = False Then
@@ -3037,7 +3075,6 @@ For k% = 1 To 2
          End If
          
       azim% = 0
-      dobs = Val(Mid$(tims$, Len(tims$) - 5, 6))
       If tmpsetflg% = 1 And nearnez = True Then  'test for near obstructions
          If dobs <= distlim Then
             azim% = 1
@@ -3767,21 +3804,43 @@ tab5: fil100% = FreeFile
           If posit% > 15 Then nadd1% = 1
           End If
           
+       dobs = Val(Mid$(doclin$, Len(doclin$) - 5, 6))
        
-       If InStr(doclin$, ">max azi") Or _
-          InStr(doclin$, "NoSunris") Or _
+       '///////////////////EK 062022 Arctic Circle handling///////////////////////////////////
+       
+       If InStr(doclin$, ">max azi") Or InStr(doclin$, "55:00:00") Then
+          timss$ = "?"
+          dobs = 999 'dobs unknown, so print it in black
+          azim% = 0
+          If tmpsetflg% = 1 And nearnez = True Then  'test for near obstructions
+             If dobs <= distlim Then azim% = 1
+          ElseIf tmpsetflg% = 2 And nearski = True Then
+             If dobs <= distlim Then azim% = 1
+             End If
+          GoTo 440
+       ElseIf InStr(doclin$, "NoSunris") Or _
           InStr(doclin$, "NoSunset") Or _
           InStr(doclin$, "**:00:00") Or _
-          InStr(doclin$, "99:00:00") Or _
-          InStr(doclin$, "55:00:00") Then
-          timss$ = "NA"
+          InStr(doclin$, "99:00:00") Then
+          If optionheb Then
+             timss$ = heb2$(17)
+          Else
+             timss$ = "none"
+             End If
+          dobs = 999 'dobs unknown so print it in black
+          azim% = 0
+          If tmpsetflg% = 1 And nearnez = True Then  'test for near obstructions
+             If dobs <= distlim Then azim% = 1
+          ElseIf tmpsetflg% = 2 And nearski = True Then
+             If dobs <= distlim Then azim% = 1
+             End If
           GoTo 440 'skip all the time manipulation
        Else
           timss$ = Mid$(doclin$, posit% - 1 - nadd1%, 7 + nadd1%)
           End If
+     '///////////////////////////////////////////////////////////
        
       azim% = 0
-      dobs = Val(Mid$(doclin$, Len(doclin$) - 5, 6))
       If tmpsetflg% = 1 And nearnez = True Then  'test for near obstructions
          If dobs <= distlim Then azim% = 1
       ElseIf tmpsetflg% = 2 And nearski = True Then

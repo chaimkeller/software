@@ -144,7 +144,7 @@ Begin VB.Form SunriseSunset
       Value           =   5
       AutoBuddy       =   -1  'True
       BuddyControl    =   "Text2"
-      BuddyDispid     =   196614
+      BuddyDispid     =   196615
       OrigLeft        =   1680
       OrigTop         =   3360
       OrigRight       =   1920
@@ -185,7 +185,7 @@ Begin VB.Form SunriseSunset
       Value           =   5
       AutoBuddy       =   -1  'True
       BuddyControl    =   "Text1"
-      BuddyDispid     =   196615
+      BuddyDispid     =   196616
       OrigLeft        =   1680
       OrigTop         =   3120
       OrigRight       =   1920
