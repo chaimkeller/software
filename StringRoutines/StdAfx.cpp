@@ -32,7 +32,6 @@
 
 
 //////////////////////global array bounds///////////////////////////////////////
-#define MAXANGRANGE 80 //maximum degrees assuming 0.1 degrees steps
 #define MAXCGIVARS 37 //maximum number of cgi variables
 #define MAXDBLSIZE 100 //maximum character size of data elements to be read using ParseString
 #define WIDTHFIELD 0 //0 for false - use predeter__mind html cell widths, = 1 for letting program deter__min it
@@ -166,7 +165,7 @@ void AstroNoon( double *jdn, double *td, double *dy1, double *mp, double *mc, do
 		   double *d__, double *tf, short *nyear, short *mday, short *mon, int *nyl, double *t6);
 
 ///////////Astronomical/Mishor sunset///////////////////////////////////////////////////////////
-void AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6,
+short AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6,
 			 double *mp, double *mc, double *ap, double *ac, double *ms, double *aas,
 			 double *es, double *ob, double *d__, double *air, double *sr1,
 			 short *nweather, short *ns3, short *ns4, bool *adhocset, double *t3,
@@ -174,7 +173,7 @@ void AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6,
 			 short *nyear, int *nyl, double *td, short mint[], double *WinTemp,
 			 bool *FindWinter, bool *EnableSunsetInv);
 ///////////Astronomical/Mishor sunrise///////////////////////////////////////////////////////////
-void AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6,
+short AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6,
 			 double *mp, double *mc, double *ap, double *ac, double *ms, double *aas,
 			 double *es, double *ob, double *d__, double *air, double *sr1,
 			 short *nweather, short *ns3, short *ns4, bool *adhocrise, double *t3,
@@ -346,20 +345,19 @@ char c_zmantimes[50][9];  //contains sorted zemanim as time strings
 double zmantimes[50];     //unsorted zemanim as fractional hours
 short zmannumber[2][50];
 
-
-//dynamic array that contains DTM data
-//union elevat
-//{
-//	double vert[3];
-//} elevat_tmp[1];
-
-//union elevat *elev;
-
-typedef struct _structElev
+//define class that contains the elevation  ///added 062122///////////////////
+struct _structElev
 {
   double vert[4];
-} structElev;
-structElev elev[20 * MAXANGRANGE + 2]; //<--array size = MAXANGRANGE
+} elev_tmp[1];
+
+//elev contains the data read from the horizonal profiles such as azimuth, viewangle, distance, height
+struct _structElev *elev; //sufficient memory will be reallocated dynamically later based on need in subroutine ReadDTM
+/////////////////////////////////////////////////////////////////////////////
+
+double maxangElev = 0;//contains the current value of the maximum azimuth that memory was allocated for the elev array
+
+//structElev elev[20 * MAXANGRANGE + 2]; //<--old way of allocating memory
 
 /////////buffer of places to calculate times////////
 short nplac[2] = {0, 0};
@@ -914,12 +912,16 @@ The values set for debugging the program are simply the cgi arguments that are p
 31 added user control over adhocrise, adhocset
 32 added DST support for Israel, USA, Canada, Mexico, and Europe
 33 fixed AddCushion bug for some of the options that set CushionAmount = 0 - 011222
+34:added dynamic memory reallocation to the elev array to handle very large azimuth ranges, e.g., for Arctic areas
+   also added error checking for no sunrise or sunset in those regions, which now returns value of times array that
+   flags the program of perpetual day 06/21/22.
+   Can now attempt calculations for any laitude and longitude.
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 10.0f;
+float vernum = 11.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -1136,7 +1138,7 @@ __asm{
 		///////////////////////////DST support switch/////////////////////////////
 
 		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "false") )
-           DSTcheck = false; //add cushions for thermal inversion region for simsets
+           DSTcheck = false; //use "Standard" times
 
 		//////////////////////////////////////////////////////////////////////////
 
@@ -1147,7 +1149,7 @@ __asm{
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
 		strcpy( MetroArea, "Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
@@ -1184,8 +1186,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -1450,7 +1452,7 @@ __asm{
 	}
 	else //can't find version file, use default
 	{
-		datavernum = 16;
+		datavernum = 17;
 	}
 
 ///////////////////////////////end of input parameters/////////////////////////
@@ -3609,8 +3611,8 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 	fprintf( stdout, "%s\n", &buff1[0]);
 
 	//version number
-	itoa( datavernum, l_datavernum, 10); //netzski6 version
-	itoa( progvernum, l_progvernum, 10); //batfile version (version of profile collection)
+	itoa( datavernum, l_datavernum, 11); //netzski6 version
+	itoa( progvernum, l_progvernum, 11); //batfile version (version of profile collection)
 	if (! optionheb )
 	{
         sprintf( address, "%s%s%s%s%s", "&#169;", " Luchos Chai, info@chaitables.com; Tel/Fax: +972-2-5713765. Version: ", l_datavernum, ".", l_progvernum );
@@ -5436,7 +5438,7 @@ void ErrorHandler( short mode, short ier )
 						fprintf(stdout,"\t\t%s\n", "<td><font size=\"4\" color=\"red\"><strong>A problem has been detected with the coordinates or timezone you have entered</strong></font></td>");
 						fprintf(stdout,"\t%s\n", "</tr>");
 						fprintf(stdout,"\t%s\n", "<tr>");
-						fprintf(stdout,"\t\t%s\n", "<td><font size=\"4\" color=\"red\"><strong>The latitude must be greater than -66 degrees and less than 66 degrees</strong></font></td>");
+						fprintf(stdout,"\t\t%s\n", "<td><font size=\"4\" color=\"red\"><strong>The latitude must be greater than -90 degrees and less than 90 degrees</strong></font></td>");
 						fprintf(stdout,"\t%s\n", "</tr>");
 						fprintf(stdout,"\t%s\n", "<tr>");
 						fprintf(stdout,"\t\t%s\n", "<td><font size=\"4\" color=\"red\"><strong>The longitude must be between -180 and 180 degrees</strong></font></td>");
@@ -7238,12 +7240,17 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 		{
 			maxang = maxang + 3;
 		}
-		else if (fabs(lt) >= 62)
+		else if (fabs(lt) >= 62 && fabs(lt) < 65)
 		{
 			maxang = maxang + 10;
 		}
+		else if (fabs(lt) >= 65)
+		{
+			maxang = maxang + 20;
+		}
 
-		if (maxang < 45) maxang = 45.; //set minimum maxang
+
+		if (maxang < 30) maxang = 30.; //set minimum maxang
 
 		//maxang = MAX_ANGULAR_RANGE;
 
@@ -8685,7 +8692,7 @@ short CheckInputs(char *strlat, char *strlon, char *strhgt)
 /////////////////////////////////////////////////////////////////////////////
 //checks if inputed coordinates are numerical and are within the permissable range
 //
-//eroslatitude must be > -66 and < 66 (below the polar circles)
+//eroslatitude must be > -70 and < 70 (below the polar circles)
 //eroslongitude must be >= -180 and <= 180 (range of longitudes on the globe)
 //eroshgt must be > -700 (larger than the lowest elevation on the earth)
 //geotz if 0 < longitude < 180 then geotz must be negative
@@ -8738,7 +8745,7 @@ short CheckInputs(char *strlat, char *strlon, char *strhgt)
 	//else
 	//{
 
-	if (lat + 66 < 0 || lat - 66 > 0 ) return -1;
+	if (lat + 90 < 0 || lat - 90 > 0 ) return -1;
 	if (lon + 180 < 0 || lat - 180 > 0 ) return -1;
 
 	if ( strcmp( TableType, "Chai") == 0 ) //Chai Tables
@@ -9734,14 +9741,21 @@ char *round( double tim, short stepps, short accurr, short sp, short *DST, char 
 	double t1, ssec;
 	char ch[3] = "";
 
-	if ( fabs(tim) == 99999 )
+	if ( fabs(tim) > 5000 && fabs(tim) < 8000 )
 	{
         sprintf( t3subb, "%s", "?" ); //can't calculate visible time due to insufficient azimuth range in profile 
 	    return t3subb;
 	}
-	else if ( tim == -9999 )
+	else if ( fabs(tim) > 9000 )
 	{
-        sprintf( t3subb, "%s", "none" ); //no applicable time string found
+		if (optionheb)
+		{
+			sprintf( t3subb, "%s", heb2[27] ); //no applicable time string found
+		}
+		else
+		{
+			sprintf( t3subb, "%s", "none" ); //no applicable time string found
+		}
 	    return t3subb;
     }
 	else if ( tim == 0.0 )
@@ -11159,14 +11173,20 @@ alem */
 		maxang = (int)(fabs(asin(cos(maxdecl * cd)))/cd); //approximate formula for half maximum angle range as function of declination
 		//source: http://en.wikipedia.org/wiki/Solar_azimuth_angle
 		//add another few degrees on either side for a cushion for latitudes greater than 60
+
 		if (fabs(lt) >= 60 && fabs(lt) < 62 )
 		{
 			maxang = maxang + 3;
 		}
-		else if (fabs(lt) >= 62)
+		else if (fabs(lt) >= 62 && fabs(lt) < 65)
 		{
 			maxang = maxang + 10;
 		}
+		else if (fabs(lt) >= 65)
+		{
+			maxang = maxang + 20;
+		}
+
 
 		if (maxang < 30) maxang = 30.; //set minimum maxang
 
@@ -11315,11 +11335,17 @@ alem */
 				//calculate astron./mishor sunsets
 				//Nsetflag = 1 or Nsetflag = 3 OR Nsetflag = 5 */
 				///////////Astronomical/Mishor sunset///////////////////////////////////////////////////////////
-            AstronSunset(&ndirec, &dy, &lr, &lt, &t6, &mp, &mc, &ap, &ac, &ms, &aas, &es,
+            ier = AstronSunset(&ndirec, &dy, &lr, &lt, &t6, &mp, &mc, &ap, &ac, &ms, &aas, &es,
 						&ob, &d__, &air, &sr1, nweather, ns3, ns4, adhocset, &t3,
 						&astro, &azi1, &jdn, &mday, &mon, &nyear, &nyl, &td,
 						mint, WinTemp, &FindWinter, &EnableSunsetInv);
 				///////////////////////////////////////////////////////////////////////////////////////////////
+
+			if (ier < 0)
+			{
+				//sunset not available due to perptual day/nigyht, set flag
+				t3 = -9999 - nacurr/3600.0;
+			}
 
 		//write astronomical sunset times to file and loop in days
 		if (astro || nsetflag == 5) //astro == true is same as nsetflag == 3
@@ -11336,12 +11362,12 @@ alem */
 
 				if (nfil == 0)
 				{
-					tims[nyrstp - 1][5][ndystp - 1] = t3;
+					tims[nyrstp - 1][5][ndystp - 1] = t3 + nacurr/3600.0;
 				}
 				else
 				{
 					if (t3 > tims[nyrstp - 1][5][ndystp - 1] )
-						tims[nyrstp - 1][5][ndystp - 1] = t3;
+						tims[nyrstp - 1][5][ndystp - 1] = t3 + nacurr/3600.0;
 				}
 				////////////////////////////////////////////////
 			}
@@ -11407,12 +11433,19 @@ alem */
 //Nsetflag = 0 or Nsetflag = 2 OR Nsetflag = 4
 //    calculate astron./mishor sunrise
 		///////////Astronomical/Mishor sunrise///////////////////////////////////////////////////////////
-      AstronSunrise(&ndirec, &dy, &lr, &lt, &t6, &mp, &mc, &ap, &ac, &ms, &aas,
+      ier = AstronSunrise(&ndirec, &dy, &lr, &lt, &t6, &mp, &mc, &ap, &ac, &ms, &aas,
 						&es, &ob, &d__, &air, &sr1, nweather, ns3, ns4, adhocrise,
 						&t3, &astro, &azi1, &jdn, &mday, &mon, &nyear, &nyl, &td,
 						mint, WinTemp, &FindWinter, &EnableSunriseInv);
-		///////////////////////////////////////////////////////////////////////////////////////////////
 
+	  if (ier < 0) 
+	  {
+		  //Sunrise not determinable in part of the year due to perpetual day/night
+		  //set flag
+		  t3 = 9999 - nacurr/3600.0;
+	  }
+
+		///////////////////////////////////////////////////////////////////////////////////////////////
 		//write astronomical sunrise time to file and loop in days
 		//record chazos
 		//write astronomical sunrise times to file and loop in days
@@ -11542,19 +11575,19 @@ L692:
 				}
 				if (fabs(azi1) > maxang)
 				{
-					if (IgnoreInsuffAzimuthRange)
+					if (IgnoreInsuffAzimuthRange)  //set flag and go on to next day
 					{
 						if (nsetflag == 0) //sunrise
 						{
-							tims[nyrstp - 1][nsetflag][ndystp - 1] = 99999;
-							azils[nyrstp - 1][nsetflag][ndystp - 1] = -9999;
-							dobs[nyrstp - 1][nsetflag][ndystp - 1] = -9999;
+							tims[nyrstp - 1][nsetflag][ndystp - 1] = 5555;
+							azils[nyrstp - 1][nsetflag][ndystp - 1] = 0;
+							dobs[nyrstp - 1][nsetflag][ndystp - 1] = 0;
 						}
 						else if (nsetflag == 1) //sunset
 						{
-							tims[nyrstp - 1][nsetflag][ndystp - 1] = -99999;
-							azils[nyrstp - 1][nsetflag][ndystp - 1] = -9999;
-							dobs[nyrstp - 1][nsetflag][ndystp - 1] = -9999;
+							tims[nyrstp - 1][nsetflag][ndystp - 1] = -5555;
+							azils[nyrstp - 1][nsetflag][ndystp - 1] = 0;
+							dobs[nyrstp - 1][nsetflag][ndystp - 1] = 0;
 						}
 						nfound = 1;
 						break; //go on to next day
@@ -14023,9 +14056,29 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 		return -1; //can't read data
 	}
 
-	//*maxang = (short)fabs(atof( &strarr[0][0]));
 	*maxang = (short)fabs(tmp1);
-	if (*maxang > MAXANGRANGE) return -3; //array size too big
+
+	//reallocate memory dynamically according to need
+
+	if (maxangElev == 0)  //first time allocating memory for the elve array
+	{
+		
+		elev = (struct _structElev *) malloc( (20 * *maxang + 2) * sizeof(struct _structElev) );
+
+		if (elev == NULL) return -3; //memory allocation failed
+
+	}
+	else if (maxangElev != 0 && *maxang > maxangElev)
+	{
+
+		elev = (struct _structElev *) realloc( elev, (20 * *maxang + 2) * sizeof(struct _structElev) );
+		
+		if (elev = NULL) return -3; //remory reallocation failed
+
+	}
+
+	//record the maximum azimuth for future reallocations of dynamic memory
+	maxangElev = *maxang;
 
 
 	//now remove the terrestrial refraction value of this first line of data
@@ -14238,7 +14291,7 @@ void AstroNoon( double *jdn, double *td, double *dy1, double *mp, double *mc, do
 
 
 ///////////Astronomical/Mishor sunset///////////////////////////////////////////////////////////
-void AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6,
+short AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6,
 			 double *mp, double *mc, double *ap, double *ac, double *ms, double *aas,
 			 double *es, double *ob, double *d__, double *air, double *sr1,
 			 short *nweather, short *ns3, short *ns4, bool *adhocset, double *t3,
@@ -14250,13 +14303,24 @@ void AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6,
 	/*              calculate astron./mishor sunsets */
 	/*              Nsetflag = 1 or Nsetflag = 3 OR Nsetflag = 5 */
 
-	double fdy, dy1, sr, azi2, azio, hrs, ra;
+	double fdy, dy1, sr, azi2, azio, hrs, ra, check;
 	short nacurr = 0, kTemp, mTemp;
 	double DayLength = 12.0;
 
 	*ndirec = -1;
+	
+	////////////////////added 062022//////////////////////////////
+	check = -tan(*d__) * tan(*lr);
+	if (fabs(check) > 1) {
+		//can't be larger than 1, and is larger due to inaccuracies
+		fdy = 0;
+	}
+	else
+	{
+		fdy = acos(check) * ch / 24.;
+	}
+	//////////////////////////////////////////////////////////
 
-	fdy = acos(-tan(*d__) * tan(*lr)) * ch / 24.;
 	dy1 = *dy - *ndirec * fdy;
 	/*              calculate sunset/sunrise */
 	if (*nyear >= BEG_SUN_APPROX && *nyear <= END_SUN_APPROX)
@@ -14271,7 +14335,21 @@ void AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6,
 	//add solar semidiamter to depression angle, *air, and compensate for variable
 	//semidiameter as a function of the anomaly to first approx (based on AA-1996 C24)
 	*air = *air + (1. + cos(*aas) * .0167) * .2666 * cd;
-	*sr1 = acos(-tan(*lr) * tan(*d__) + cos(*air) / (cos(*lr) * cos(*d__))) * ch;
+
+	///////////////////EK added 061922 /////////////////////////////////////
+	check = -tan(*lr) * tan(*d__) + cos(*air) / (cos(*lr) * cos(*d__));
+	
+	if (fabs(check) > 1 ) //perpertual day
+	{
+		return -1;
+	}
+	else
+	{
+		*sr1 = acos(check) * ch;
+	}
+	///////////////////////////////////////////////////////////////////
+
+	//*sr1 = acos(-tan(*lr) * tan(*d__) + cos(*air) / (cos(*lr) * cos(*d__))) * ch;
 	sr = *sr1 * hr;
 	/*              hour angle in minutes */
 	*t3 = (*t6 - *ndirec * sr) / hr;
@@ -14338,11 +14416,13 @@ void AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6,
 		}
 	}
 	//-----------------------------------------------------
+
+	return 0;
 }
 
 
 ///////////Astronomical/Mishor sunrise///////////////////////////////////////////////////////////
-void AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6,
+short AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6,
 			 double *mp, double *mc, double *ap, double *ac, double *ms, double *aas,
 			 double *es, double *ob, double *d__, double *air, double *sr1,
 			 short *nweather, short *ns3, short *ns4, bool *adhocrise, double *t3,
@@ -14351,13 +14431,24 @@ void AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6
 			 bool *FindWinter, bool *EnableSunriseInv)
 ///////////////////////////////////////////////////////////////////////////////////////////////
 {
-	double fdy, dy1, sr2, sr, azi2, azio, tss, hrs, ra;
+	double fdy, dy1, sr2, sr, azi2, azio, tss, hrs, ra, check;
 	double DayLength = 12.0;
 	short nacurr = 0, kTemp, mTemp;
 
 	*ndirec = 1;
 
-	fdy = acos(-tan(*d__) * tan(*lr)) * ch / 24.;
+	////////////////////added 062022//////////////////////////////
+	check = -tan(*d__) * tan(*lr);
+	if (fabs(check) > 1) {
+		//can't be larger than 1, and is larger due to inaccuracies
+		fdy = 0;
+	}
+	else
+	{
+		fdy = acos(check) * ch / 24.;
+	}
+	//////////////////////////////////////////////////////////
+
 	//first calculate sunset
 	dy1 = *dy + fdy;
 	if (*nyear >= BEG_SUN_APPROX && *nyear <= END_SUN_APPROX)
@@ -14372,8 +14463,21 @@ void AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6
 	//add solar semidiamter to depression angle, *air, and compensate for variable
 	//semidiameter as a function of the anomaly to first approx (based on AA-1996 C24)
 	*air += (1. + cos(*aas) * .0167) * .2667 * cd;
+
 	/*              calculate sunset */
-	sr2 = acos(-tan(*lr) * tan(*d__) + cos(*air) / (cos(*lr) * cos(*d__))) * ch;
+	////////////////EK change 061922 - check for perpetual day///////////////////
+	check = -tan(*lr) * tan(*d__) + cos(*air) / (cos(*lr) * cos(*d__));
+	if (fabs(check) > 1) //no sunset, perpetual day
+	{
+		return -1;
+	}
+	else
+	{
+		sr2 = acos(check) * ch;
+	}
+	///////////////////////////////////////////////////////////////////////////
+
+	//sr2 = acos(-tan(*lr) * tan(*d__) + cos(*air) / (cos(*lr) * cos(*d__))) * ch;
 	sr2 *= hr;
 	tss = (*t6 + sr2) / hr;
 	/*              sunset in hours.fraction of hours */
@@ -14388,7 +14492,20 @@ void AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6
 		hrs = 12.0 - *ndirec * fdy * 24.0;
 		*d__ = Decl3(jdn, &hrs, dy, td, mday, mon, nyear, nyl, ms, aas, ob, &ra, es, 1);
 	}
-	*sr1 = acos(-tan(*lr) * tan(*d__) + cos(*air) / (cos(*lr) * cos(*d__))) * ch;
+
+	/////////////////EK change 061922 - check for perpetual day /////////////////////
+	check = -tan(*lr) * tan(*d__) + cos(*air) / (cos(*lr) * cos(*d__));
+	if (fabs(check) > 1 ) //no sunrise, perpetual day
+	{
+		return -1;
+	}
+	else
+	{
+		*sr1 = acos(check) * ch;
+	}
+	////////////////////////////////////////////////////////////////////////////
+
+	//*sr1 = acos(-tan(*lr) * tan(*d__) + cos(*air) / (cos(*lr) * cos(*d__))) * ch;
 	sr = *sr1 * hr;
 	/*              hour angle in minutes */
 	*t3 = (*t6 - sr) / hr;
@@ -14454,6 +14571,8 @@ void AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t6
 		*azi1 = -(azio / cd + 90.);
 		}
 	}
+
+	return 0;
 }
 
 ////////////////////PrintMultiColTable//////////////////////////////////
@@ -14753,7 +14872,7 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 	double hrs;
 	double WinTemp = 0.0;
 	double vdwsf = 1.0, vdwrefr = 1.0, vbweps = 1.0;
-	double t, p;
+	double t, p, check;
 	bool SingleDayModel = false; //use the WorldClim model for zemanim
 
 	if (*yr != *yro) //initialize
@@ -14866,7 +14985,19 @@ short cal(double *ZA, double *air, double *lr, double *tf, double *dyo, double *
 		}
 
 		//calculate sunrise
-        *fdy = acos(-tan(d__) * tan(*lr)) * ch / 24;
+		////////////////////added 062022//////////////////////////////
+		check = -tan(d__) * tan(*lr);
+		if (fabs(check) > 1)
+		{
+			//can't be larger than 1, and is larger due to inaccuracies
+			*fdy = 0;
+		}
+		else
+		{
+			*fdy = acos(check) * ch / 24.;
+		}
+		//////////////////////////////////////////////////////////
+
 		if (nyr >= BEG_SUN_APPROX && nyr <= END_SUN_APPROX)
 		{
 			dy1 = *dy - *fdy;
@@ -16473,6 +16604,32 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
    worldCD[27] = 4;
    worldCD[28] = 5;
 
+   ////////////////////////added dynamic memory allocation for elev array on 062122//////////////////
+
+	//reallocate memory dynamically according to need
+
+	if (maxangElev == 0)  //first time allocating memory for the elve array
+	{
+		
+		elev = (struct _structElev *) malloc( (20 * *kmaxang + 2) * sizeof(struct _structElev) );
+
+		if (elev == NULL) return -3; //memory allocation failed
+
+	}
+	else if (maxangElev != 0 && *kmaxang > maxangElev)
+	{
+
+		elev = (struct _structElev *) realloc( elev, (20 * *kmaxang + 2) * sizeof(struct _structElev) );
+		
+		if (elev = NULL) return -3; //remory reallocation failed
+
+	}
+
+	//record the maximum azimuth for future reallocations of dynamic memory
+	maxangElev = *kmaxang;
+	////////////////////////////////////////////////////////////////////////////////////////
+
+
    //pass over addressses and convert to local values
    lat0 = *kkmyo * 1.f;
    lon0 = *kkmxo * -1.f;
@@ -16811,11 +16968,13 @@ ret4:		;	//manytiles = TRUE;
 	        //                  beglog,endlog,beglat,endlat );
 			//allocate memory for prof array
 			free( prof ); //free the memory allocated before for prof, and reallocate
-			prof = (union profile *) malloc((2 * ang * invAzimuthStep + 10) * sizeof(union profile));
+			prof = (union profile *) malloc((2 * ang * invAzimuthStep + 100) * sizeof(union profile));
 
 			//allocate memory for dtms array
 			free( dtms ); //free the memory allocated before for dtms, and reallocate
-			dtms = (union dtm *) malloc((14000) * sizeof(union dtm));
+			dtms = (union dtm *) malloc((2 * ang * invAzimuthStep * 10) * sizeof(union dtm)); //14000
+			//dtms needs a lot more memory since the profile generation process creats a lot
+			//of azimuiths with values that are at least 10 times more than the invAzimuthStep
 
 			//check that memory was properly allocated to all the arrays
 			if ( prof == NULL || dtms == NULL )
@@ -17551,8 +17710,8 @@ Profiles:
     if (mang != 0.) {
 	maxang = mang;
     }
-    if (maxang > 80.) {
-	maxang = 80.;
+    if (maxang > 90.) { //changed on 062122 from 80 to be able to handle Arctic regions
+	maxang = 90.;
     }
     if (maxang < 24.) {
 	maxang = 24.;
