@@ -6850,8 +6850,10 @@ Public Function MaxHalfAzimuthRange(latitude) As Integer
    'add additional range for case of high terrain that needs added azimuth range for visible calculations
     If Abs(l1) >= 60 And Abs(latitude) < 62 Then
        MaxHalfAzimuthRange = MaxHalfAzimuthRange + 3
-    ElseIf Abs(l1) >= 62 Then
+    ElseIf Abs(l1) >= 62 And Abs(l1) < 65 Then
        MaxHalfAzimuthRange = MaxHalfAzimuthRange + 10
+    ElseIf Abs(l1) >= 65 Then
+       MaxHalfAzimuthRange = MaxHalfAzimuthRange + 20
        End If
 
 End Function

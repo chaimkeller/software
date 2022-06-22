@@ -3062,7 +3062,7 @@ ComparePoints:
     mapsearchfm.cmdCheckSkipped.Visible = False
     mapsearchfm.ProgressBarProfs.Visible = True
 
-    Close
+    Close 'close any open file
     If world Then
         AddPath$ = "eros\"
     Else
@@ -3081,7 +3081,6 @@ ComparePoints:
        tmpfile$ = drivjk_c$ & "mappoints_tmp_skiy.sav"
        End If
 
-    Close 'close any open files
     maplistnum% = FreeFile
     Open drivjk_c$ + "mappoints.sav" For Input As #maplistnum%
     tmpnum% = FreeFile
@@ -3122,6 +3121,7 @@ ComparePoints:
      Close #batnum%
     Loop
     Close #tmpnum%
+    CloseErrors% = 1
 
     If nummissing% > 0 Then
        Close
@@ -3152,8 +3152,10 @@ ComparePoints:
 
 RunOnAutomatic_Error:
     Close
-       
+   
     mapsearchfm.cmdCheckSkipped.Enabled = True
+    
+    If CloseErrors% = 1 Then Resume Next
 
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure RunOnAutomatic of Form mapsearchfm"
 

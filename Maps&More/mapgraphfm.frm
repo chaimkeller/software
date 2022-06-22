@@ -1314,7 +1314,6 @@ ca81:
             Do Until EOF(batfile%)
                Input #batfile%, doclin$, kmyeroscheck, kmxeroscheck, hgteroscheck
                If kmyeros = kmyeroscheck And kmxeros = -kmxeroscheck And hgteroscheck = hgteros Then
-                  Close #batfile%
                   Screen.MousePointer = vbDefault
                   For i% = 0 To Forms.count - 1
                      ret = SetWindowPos(Forms(i%).hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
@@ -1330,6 +1329,7 @@ ca81:
                           Case vbYes
                               'do nothing
                           Case vbNo, vbCancel
+                              Close #batfile%
                               For i% = 0 To Forms.count - 1
                                 ret = SetWindowPos(Forms(i%).hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                               Next i%
