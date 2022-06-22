@@ -3925,7 +3925,7 @@ tab5: fil100% = FreeFile
        If Abs(rdflag%) = 1 Then GoSub round
 440:
        If setflag% = -1 Then '***** new changes (check round and nadd1%)
-          If timss$ = sEmpty Then GoTo 442
+          If timss$ = sEmpty Or timss$ = "none" Then GoTo 442
           If Mid$(timss$, 1, 2) < 22 Then
              Mid$(timss$, 1, 2) = " " + Trim$(Str$(Val(Mid$(timss$, 1, 2)) - 12))
           Else
@@ -4013,7 +4013,7 @@ GoSub mainfont
        stortim$(tmpsetflg% - 1, j% - 1, k% - 1) = timss$
 470 Next i%
 textwi = Dev.TextWidth(timss$)
-If textwi = 0 Then 'if last entry is empy, e.g., for Arctic regions for the sunset and using a civil calendar
+If textwi < 12 Then 'if last entry is empty, e.g., for Arctic regions for the sunset and using a civil calendar
    textwi = 12 'need to redefine the text width for the non-empty entries
    End If
 texthi = Dev.TextHeight(timss$)
@@ -4210,6 +4210,7 @@ nhe50:
     End
 tableerror:
    Screen.MousePointer = vbDefault
+   Resume
    If Err.Number >= 52 And Err.Number <= 63 Then
       MsgBox "Newhebcalfm requests that you PLEASE wait until the NETZSKI3 button on the Menu bar is cleared.", vbInformation, "Cal Program"
       waiterror = True

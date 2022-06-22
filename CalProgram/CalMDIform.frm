@@ -985,6 +985,15 @@ Private Sub mnuChaiAir_Click()
    calAirfm.Visible = True
 End Sub
 
+Private Sub mnuDST_Click()
+    If mnuDST.Checked Then
+          
+       mnuDST.Checked = False
+    Else
+       mnuDST.Checked = True
+       End If
+End Sub
+
 Private Sub mnuStndRef_Click()
     If mnuStndRef.Checked Then
     Else
