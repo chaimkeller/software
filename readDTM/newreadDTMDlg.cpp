@@ -2127,8 +2127,8 @@ Profiles:
     if (mang != 0.) {
 	maxang = mang;
     }
-    if (maxang > 80.) {
-	maxang = 80.;
+    if (maxang > 180.) {
+	maxang = 180.;
     }
     if (maxang < 30.) {
 	maxang = 30.;
