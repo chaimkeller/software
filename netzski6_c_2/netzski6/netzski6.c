@@ -18,6 +18,7 @@
 //#include <conio.h> //uncomment for getch() debugging
 #include "f2c.h"
 #include <conio.h>
+#include <malloc.h>
 
 /* Common Block Declarations */
 
@@ -169,7 +170,8 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static doublereal dobs;
     static integer nfil;
     static doublereal hran;
-    static real elev[6404]	/* was [4][1601] */;
+    //static real elev[6404]	/* was [4][1601] */;
+	real *elev;
     static integer ndtm;
     static doublereal dist, azio;
     static integer nazn;
@@ -208,7 +210,7 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static doublereal hgtdif;
     static char plcfil[27];
     static integer nabove;
-    static doublereal maxang;
+    static doublereal maxang, maxang0;
     static integer nlpend, nmenat;
     static char coment[8];
     static doublereal rearth;
@@ -1250,16 +1252,82 @@ ns) */
 	    nazn = 0;
 L40:
 	    ++nazn;
+
 /*       stuff elev array with:  azi,vang,kmx,kmy,dist,hgt */
 	    i__3 = s_rsle(&io___101);
 	    if (i__3 != 0) {
 		goto L50;
 	    }
-	    i__3 = do_lio(&c__4, &c__1, (char *)&elev[(nazn << 2) - 4], (
-		    ftnlen)sizeof(real));
-	    if (i__3 != 0) {
-		goto L50;
-	    }
+
+		if (nazn == 1)
+		{
+			//read in first azimuth and determine the angular range and reallocate memory for it
+			real elevazi = 0;
+			i__3 = do_lio(&c__4, &c__1, (char *)&elevazi, (
+				ftnlen)sizeof(real));
+			if (i__3 != 0) {
+			goto L50;
+			}
+
+			//determine the maximum azimuth range from the first read azimuth value
+			maxang = (doublereal)fabs(elevazi);
+
+			if (maxang0 == 0) 
+			{
+				//first allocation of memory
+
+				elev = (real *) calloc(80 * maxang + 1, sizeof(real));
+
+				if (elev == NULL) //memory allocation failes
+				{
+					printf("Memory allocation failed, aborting....\n");
+					return -1;
+				}
+				else
+				{
+					//record the azimuth range
+
+					maxang0 = maxang;
+				}
+
+			}
+			else
+			{
+
+				if (maxang != maxang0)  //reallocate the memory
+				{
+
+					free(elev); //release the allocated memory for elev and reallocate
+
+					elev = (real *) calloc(80 * maxang + 1, sizeof(real));
+
+					if (elev == NULL) //memory allocation failes
+					{
+						printf("Memory reallocation failed, aborting....\n");
+						return -1;
+					}
+					else
+					{
+						//record the new azimuth range
+
+						maxang0 = maxang;
+					}
+
+				}
+			}
+
+			//transfer the azimuth value already read to the allocated array
+			elev[(nazn << 2) - 4] = elevazi;
+
+		}
+		else
+		{
+			i__3 = do_lio(&c__4, &c__1, (char *)&elev[(nazn << 2) - 4], (
+				ftnlen)sizeof(real));
+			if (i__3 != 0) {
+			goto L50;
+			}
+		}
 	    i__3 = do_lio(&c__4, &c__1, (char *)&elev[(nazn << 2) - 3], (
 		    ftnlen)sizeof(real));
 	    if (i__3 != 0) {
@@ -1368,9 +1436,9 @@ L40:
 			elev[(nazn << 2) - 3] -= TRfudge * trrbasis * pow_dd(&pathlength, &exponent);
 	    }
 
-	    if (nazn == 1) {
-		maxang = (r__1 = elev[(nazn << 2) - 4], dabs(r__1));
-	    }
+	    //if (nazn == 1) {
+		//maxang = (r__1 = elev[(nazn << 2) - 4], dabs(r__1));
+	    //}
 	    goto L40;
 L50:
 	    --nazn;
@@ -1594,6 +1662,12 @@ L670:
 	    d__1 = (doublereal) yrend[nyear - nstrtyr];
 	    for (dy = (doublereal) yrst[nyear - nstrtyr]; dy <= d__1; dy += 
 		    1.) {
+
+			if (dy == 341)
+			{
+				int cc;
+				cc = 1;
+			}
 /* 		    determine the minimum and average temperature for this day for current place */
 /* 			use Meeus's forumula p. 66 to convert daynumber to month, */
 /* 			no need to interpolate between temepratures -- that is overkill */
@@ -1873,7 +1947,15 @@ L687:
 /*          equation of time (minutes) */
 		t6 = tf + 720. - et;
 /*          astronomical noon in minutes */
-		fdy = acos(-tan(d__) * tan(lr)) * ch / 24.;
+		check = -tan(d__) * tan(lr);
+		if (fabs(check) > 1)
+		{
+			fdy = 0;
+		}
+		else
+		{
+			fdy = acos(-tan(d__) * tan(lr)) * ch / 24.;
+		}
 /*          astronomical refraction calculations, hgt in meters */
 		ref = 0.;
 		eps = 0.;
@@ -3286,6 +3368,9 @@ ErrorHandler:
 		strcpy(ts1c, "    NA   ", 8);
 		strcpy(ts2c, "    NA   ", 8);
 		nac = 1;
+		azi1 = maxang;
+		viewangle = 0.0;
+		dobs = 0.0;
 
 		buff[0] = 0;
 		if (nointernet) {
@@ -3300,6 +3385,9 @@ ErrorHandler:
 		strcpy(ts1c, "    NA   ", 8);
 		strcpy(ts2c, "    NA   ", 8);
 		nac = 2;
+		azi1 = maxang;
+		viewangle = 0.0;
+		dobs = 0.0;
 
 		buff[0] = 0;
 		if (nointernet) {
@@ -3314,6 +3402,9 @@ ErrorHandler:
 		strcpy(ts1c, "    NA   ", 8);
 		strcpy(ts2c, "    NA   ", 8);
 		nac = 3;
+		azi1 = maxang;
+		viewangle = 0.0;
+		dobs = 0.0;
 
 		buff[0] = 0;
 		if (nointernet) {
@@ -3357,38 +3448,38 @@ ErrorHandler:
 		}
 
 
-		//if this is the first place in a seriers of places, add fake information so it will be skipped
-		//when determing the earliest sunrise and the latest sunset
-		if (nfil == 1) {
+	//if this is the first place in a seriers of places, add fake information so it will be skipped
+	//when determing the earliest sunrise and the latest sunset
+	if (nfil == 1) {
 
-			tsscs[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
-				t3sub;
-			s_copy(coments + (nsetflag + 1 + (nyrstp + (ndystp << 1) 
-				<< 1) - 7) * 12, comentss, (ftnlen)12, (ftnlen)12)
-				;
-			azils[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
-				azi1;
-			dobss[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
-				dobs;
-			viewang[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] =
-				viewangle;
-		}
+		tsscs[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
+			t3sub;
+		s_copy(coments + (nsetflag + 1 + (nyrstp + (ndystp << 1) 
+			<< 1) - 7) * 12, comentss, (ftnlen)12, (ftnlen)12)
+			;
+		azils[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
+			azi1;
+		dobss[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] = 
+			dobs;
+		viewang[nsetflag + 1 + (nyrstp + (ndystp << 1) << 1) - 7] =
+			viewangle;
+	}
 
-		//reset loop parameters
-		nfound = -1;
-		azi1 = 0;
-		if (nsetflag == 0) {
-			nloop = 72;
-			// start search 2 minutes above astronomical horizon */
-			nlpend = 2000;
-		} else if (nsetflag == 1) {
-			// sunset
-			nloop = 370;
-			if (nplaceflg == 0) {
-			nloop = 75;
-			}
-			nlpend = -10;
+	//reset loop parameters
+	nfound = -1;
+	azi1 = 0;
+	if (nsetflag == 0) {
+		nloop = 72;
+		// start search 2 minutes above astronomical horizon */
+		nlpend = 2000;
+	} else if (nsetflag == 1) {
+		// sunset
+		nloop = 370;
+		if (nplaceflg == 0) {
+		nloop = 75;
 		}
+		nlpend = -10;
+	}
 
 	//skip to next day
 	goto L925;
