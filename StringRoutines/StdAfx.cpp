@@ -42,6 +42,7 @@
 #define END_SUN_APPROX 2050 //last year to use simpliefied ephem of sun
 #define MinGoldenDist 1 //minimum distance to Golden Horizon point to enable calculations
 #define MaxGoldenViewAng 50 //maximum view angle to allow Golden Horizon calculations
+#define MAXNUMPLACES 1000 //maximum number of places to process.
 
 //#define MAX_ANGULAR_RANGE 45 //maximum azimuth range from -MAX_ANGULAR_RANGE to MAX_ANGULAR_RANGE
 
@@ -361,10 +362,10 @@ double maxangElev = 0;//contains the current value of the maximum azimuth that m
 
 /////////buffer of places to calculate times////////
 short nplac[2] = {0, 0};
-char fileo[2][200][255];
-double latbat[2][200];
-double lonbat[2][200];
-double hgtbat[2][200];
+char fileo[2][MAXNUMPLACES][255];
+double latbat[2][MAXNUMPLACES];
+double lonbat[2][MAXNUMPLACES];
+double hgtbat[2][MAXNUMPLACES];
 double avekmx[2];
 double avekmy[2];
 double avehgt[2];
@@ -915,13 +916,16 @@ The values set for debugging the program are simply the cgi arguments that are p
 34:added dynamic memory reallocation to the elev array to handle very large azimuth ranges, e.g., for Arctic areas
    also added error checking for no sunrise or sunset in those regions, which now returns value of times array that
    flags the program of perpetual day 06/21/22.
-   Can now attempt calculations for any laitude and longitude.
+   Can now attempt calculations for any laitude and longitude
+35 fixed bug that allowed program to overwrite memory when nplac > MAXNUMPLACES, which was defined before as 200 places
+   for some cities with large search radii, this is easily exceeded
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 11.0f;
+float vernum = 12.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -5690,6 +5694,43 @@ void ErrorHandler( short mode, short ier )
 				errornum = 23;
 				strcpy (errorstr, "Can't parse the eros city's bat file in routine calnearsearch" );
 			}
+			else if ( ier == 4)
+			{
+				//exceeded maximum number of array size MAXNUMPLACES, means that search radius is too big
+
+				fprintf(stdout,"\t%s\n", "<tr>");
+
+				if (!HebrewInterface)
+				{
+					fprintf(stdout,"\t\t%s\n", "<td><font size=\"4\" color=\"red\"><strong>Your search radius returned too many results!</font></td>");
+					fprintf(stdout,"\t%s\n", "</tr>");
+					fprintf(stdout,"\t%s\n", "<tr>");
+					fprintf(stdout,"\t\t%s\n", "<td><font size=\"4\" color=\"red\"><strong>Please reduce the search radius and try again</strong></font></td>");
+					fprintf(stdout,"\t%s\n", "</tr>");
+				}
+				else
+				{
+					fprintf(stdout,"\t\t%s%s%s\n", "<td><font size=\"4\" color=\"red\"><strong>", &heb8[20][0], "</font></td>");
+					fprintf(stdout,"\t%s\n", "</tr>");
+					fprintf(stdout,"\t%s\n", "<tr>");
+					fprintf(stdout,"\t\t%s%s%s\n", "<td><font size=\"4\" color=\"red\"><strong>", &heb8[21][0], "</font></td>");
+					fprintf(stdout,"\t%s\n", "</tr>");
+				}
+
+				fprintf(stdout,"\t%s\n", "</tr>");
+				fprintf(stdout,"%s\n", "</table>");
+
+				fprintf(stdout,"%s\n", "<hr/>");
+				fprintf(stdout,"%s\n", "<p></p>" );
+
+				if (!HebrewInterface)
+				{
+					fprintf(stdout,"%s\n", "<font size=\"4\" color=\"black\">(To try again, use the return button of your browser)</font>" );
+				}
+				else //Hebrew Interface
+				{
+					fprintf(stdout,"%s%s%s\n", "<font size=\"4\" color=\"black\">", &heb8[1][0], "</font>" );
+				}			}
 			break;
 		case 7: //netzskiy
 			if (ier == 1)
@@ -5702,6 +5743,44 @@ void ErrorHandler( short mode, short ier )
 			else if (ier == 2)
 			{
 				//didn't find vantage point in Israel neighborhood within search radius
+			}
+			else if ( ier == 3)
+			{
+				//exceeded maximum number of array size MAXNUMPLACES, means that search radius is too big
+
+				fprintf(stdout,"\t%s\n", "<tr>");
+
+				if (!HebrewInterface)
+				{
+					fprintf(stdout,"\t\t%s\n", "<td><font size=\"4\" color=\"red\"><strong>Your search radius returned too many results!</font></td>");
+					fprintf(stdout,"\t%s\n", "</tr>");
+					fprintf(stdout,"\t%s\n", "<tr>");
+					fprintf(stdout,"\t\t%s\n", "<td><font size=\"4\" color=\"red\"><strong>Please reduce the search radius and try again</strong></font></td>");
+					fprintf(stdout,"\t%s\n", "</tr>");
+				}
+				else
+				{
+					fprintf(stdout,"\t\t%s%s%s\n", "<td><font size=\"4\" color=\"red\"><strong>", &heb8[20][0], "</font></td>");
+					fprintf(stdout,"\t%s\n", "</tr>");
+					fprintf(stdout,"\t%s\n", "<tr>");
+					fprintf(stdout,"\t\t%s%s%s\n", "<td><font size=\"4\" color=\"red\"><strong>", &heb8[21][0], "</font></td>");
+					fprintf(stdout,"\t%s\n", "</tr>");
+				}
+
+				fprintf(stdout,"\t%s\n", "</tr>");
+				fprintf(stdout,"%s\n", "</table>");
+
+				fprintf(stdout,"%s\n", "<hr/>");
+				fprintf(stdout,"%s\n", "<p></p>" );
+
+				if (!HebrewInterface)
+				{
+					fprintf(stdout,"%s\n", "<font size=\"4\" color=\"black\">(To try again, use the return button of your browser)</font>" );
+				}
+				else //Hebrew Interface
+				{
+					fprintf(stdout,"%s%s%s\n", "<font size=\"4\" color=\"black\">", &heb8[1][0], "</font>" );
+				}	
 			}
 			break;
 		case 8: //CreateHeaders
@@ -6427,6 +6506,11 @@ cn500:
 			{
 
 				nplac[0]++;
+				if (nplac[0] > MAXNUMPLACES) //reached maximum number of allowed places, return error
+				{
+					ErrorHandler(6, 4);
+					return -1;
+				}
 				strcpy( &fileo[0][nplac[0] - 1][0], citnam );
 				latbat[0][nplac[0] - 1] = lat;
 				lonbat[0][nplac[0] - 1] = lon;
@@ -6441,6 +6525,11 @@ cn500:
 			{
 
 				nplac[1]++;
+				if (nplac[1] > MAXNUMPLACES) //reached maximum number of allowed places, return error
+				{
+					ErrorHandler(6, 4);
+					return -1;
+				}
 				strcpy( &fileo[1][nplac[1] - 1][0], citnam );
 				latbat[1][nplac[1] - 1] = lat;
 				lonbat[1][nplac[1] - 1] = lon;
@@ -6635,6 +6724,11 @@ ny500:
 		{
 
 			nplac[0]++;
+			if (nplac[0] > MAXNUMPLACES) //reached maximum number of allowed places, return error
+			{
+				ErrorHandler(7, 3);
+				return -1;
+			}
 			strcpy( &fileo[0][nplac[0] - 1][0], myfile );
 			latbat[0][nplac[0] - 1] = kmy;
 			lonbat[0][nplac[0] - 1] = kmx;
@@ -6651,6 +6745,11 @@ ny500:
 		{
 
 			nplac[1]++;
+			if (nplac[1] > MAXNUMPLACES) //reached maximum number of allowed places, return error
+			{
+				ErrorHandler(7, 3);
+				return -1;
+			}
 			strcpy( &fileo[1][nplac[1] - 1][0], myfile );
 			latbat[1][nplac[1] - 1] = kmy;
 			lonbat[1][nplac[1] - 1] = kmx;
