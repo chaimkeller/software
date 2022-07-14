@@ -28,6 +28,7 @@ struct {
 
 #define t3s_1 t3s_
 #define MAXDBLSIZE 100 //maximum character size of data elements to be read using ParseString
+#define MAXNUMPLACES 999 //added 071422 maximum number of places that can be manipulated
 
 /* Table of constant values */
 
@@ -154,7 +155,7 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static doublereal eps;
     static integer nyd, nyf, nyl, nyr;
     static doublereal tss, al1o, alt1, azi1, azi2;
-    static char ts1c[8], ts2c[9], ext1[4*2*100], ext3[4*2*100];
+    static char ts1c[8], ts2c[9];
 	char buff[50] = "";
     static integer nyr1;
     static doublereal defb;
@@ -183,8 +184,17 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static char place[8*2];
     static integer negch;
     static doublereal deltd;
-    static char placn[30*2*100];
-    static integer nplac[2];
+
+	/////////////////////dynamic arrays/////////////////////////071422//////////////////
+    //static char placn[30*2*MAXNUMPLACES];  //maximum of 1000 files both sunrise and sunset with 27 characters, c:/fordtm/netz/xxxxxxxx.ext, use 30 for safety
+    static char *placn; //allocate dynamically when numfil known /////////////071322//////
+	//static char ext1[4*2*MAXNUMPLACES], ext3[4*2*MAXNUMPLACES];
+	static char *ext1; //allocate dynamically when numfil known
+	static char *ext3; 
+	////////////////////////////////////////////////////
+
+
+	static integer nplac[2];
     static char fileo[27];
     static doublereal dobsf, geotd, avref,viewangf; //////viewangf added 081021 ///////////////
     static char namet[23];
@@ -624,6 +634,13 @@ L7:
     do_fio(&c__1, locname, (ftnlen)40);
     e_rsfe();
 
+	///////////dynamic allocation of placn memory -- no limit to number of files 071322///////////
+	//now allocate memory for placn array
+	placn = (char *)malloc(placn, 2 * 27 * numfil * sizeof(char));
+	ext1 = (char *)malloc(ext1, 4 * 2 * numfil * sizeof(char));
+	ext3 = (char *)malloc(ext3, 4 * 2 * numfil * sizeof(char));
+	/////////////////////////////////////////////////////////////////////////////////////////
+
 	/*
 	if (strstr(locname, 'eros'))
 	{
@@ -832,8 +849,8 @@ L7:
 	    }
 	}
 	if (nsetflag == 0) {
-	    ++nplac[0];                     
-	    if (nplac[0] > 100) {
+	    ++nplac[0];  
+	    if (nplac[0] > MAXNUMPLACES) {
 		if (nointernet && ! nofiles) {
 		    s_wsle(&io___55);
 		    do_lio(&c__9, &c__1, " ERROR--exceeded max. num. of plac"
@@ -849,36 +866,51 @@ L7:
 			fileo + 15, (ftnlen)30, (ftnlen)8);
 /*                names used for COMPARE for versions <= 14 */
 		 if (nplac[0] < 10) {
+			/*
 		    s_wsfi(&io___58);
 		    do_fio(&c__1, (char *)&nplac[0], (ftnlen)sizeof(integer));
 		    e_wsfi();
+			*/
+			sprintf(ext1 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), "%s%s%s", ".pl", ch1, "\0");
+			/*
 		    s_copy(ext1 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), 
 			    ".pl", (ftnlen)3, (ftnlen)3);
 		    *(unsigned char *)&ext1[(nsetflag + 1 + (nplac[0] << 1) - 
 			    3 << 2) + 3] = *(unsigned char *)ch1;
+			*/
 		} else if (nplac[0] >= 10 && nplac[0] <= 99) {
+			/*
 		    s_wsfi(&io___61);
 		    do_fio(&c__1, (char *)&nplac[0], (ftnlen)sizeof(integer));
 		    e_wsfi();
+			*/
+			sprintf(ext1 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), "%s%s%s", ".p", ch2, "\0");
+			/*
 		    s_copy(ext1 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), 
 			    ".p", (ftnlen)2, (ftnlen)2);
 		    s_copy(ext1 + ((nsetflag + 1 + (nplac[0] << 1) - 3 << 2) 
 			    + 2), ch2, (ftnlen)2, (ftnlen)2);
+			*/
 		} else if (nplac[0] >= 100) {
+			/*
 		    s_wsfi(&io___63);
 		    do_fio(&c__1, (char *)&nplac[0], (ftnlen)sizeof(integer));
 		    e_wsfi();
+			*/
+			sprintf(ext1 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), "%s%s%s", ".", ch3, "\0");
+			/*
 		    *(unsigned char *)&ext1[(nsetflag + 1 + (nplac[0] << 1) - 
 			    3) * 4] = '.';
-		    s_copy(ext1 + ((nsetflag + 1 + (nplac[0] << 1) - 3 << 2) 
-			    + 1), ch3, (ftnlen)3, (ftnlen)3);
+		    s_copy(ext1 + ((nsetflag + 1 + (nplac[0] << 1) - 3 << 2) + 1),
+				ch3, (ftnlen)3, (ftnlen)3);
+			*/
 		}
 		s_copy(ext3 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), 
 			fileo + 23, (ftnlen)4, (ftnlen)4);
 	    }
 	} else if (nsetflag == 1) {
 	    ++nplac[1];
-	    if (nplac[1] > 100) {
+	    if (nplac[1] > MAXNUMPLACES) {
 		if (! nofiles && nointernet) {
 		    s_wsle(&io___65);
 		    do_lio(&c__9, &c__1, " ERROR--exceeded max. num. of plac"
@@ -894,29 +926,44 @@ L7:
 			fileo + 15, (ftnlen)30, (ftnlen)8);
 /*                names used for COMPARE */
 		if (nplac[1] < 10) {
+			/*
 		    s_wsfi(&io___66);
 		    do_fio(&c__1, (char *)&nplac[1], (ftnlen)sizeof(integer));
 		    e_wsfi();
+			*/
+			sprintf(ext1 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), "%s%s%s", ".pl", ch1, "\0");
+			/*
 		    s_copy(ext1 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), 
 			    ".pl", (ftnlen)3, (ftnlen)3);
 		    *(unsigned char *)&ext1[(nsetflag + 1 + (nplac[1] << 1) - 
 			    3 << 2) + 3] = *(unsigned char *)ch1;
+			*/
 		} else if (nplac[1] >= 10 && nplac[1] <= 99) {
+			/*
 		    s_wsfi(&io___67);
 		    do_fio(&c__1, (char *)&nplac[1], (ftnlen)sizeof(integer));
 		    e_wsfi();
+			*/
+			sprintf(ext1 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), "%s%s%s", ".p", ch2, "\0");
+			/*
 		    s_copy(ext1 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), 
 			    ".p", (ftnlen)2, (ftnlen)2);
 		    s_copy(ext1 + ((nsetflag + 1 + (nplac[1] << 1) - 3 << 2) 
 			    + 2), ch2, (ftnlen)2, (ftnlen)2);
+			*/
 		} else if (nplac[1] >= 100) {
+			/*
 		    s_wsfi(&io___68);
-		    do_fio(&c__1, (char *)&nplac[0], (ftnlen)sizeof(integer));
+		    do_fio(&c__1, (char *)&nplac[1], (ftnlen)sizeof(integer));
 		    e_wsfi();
+			*/
+			sprintf(ext1 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), "%s%s%s", ".", ch3, "\0");
+			/*
 		    *(unsigned char *)&ext1[(nsetflag + 1 + (nplac[1] << 1) - 
 			    3) * 4] = '.';
-		    s_copy(ext1 + ((nsetflag + 1 + (nplac[1] << 1) - 3 << 2) 
-			    + 1), ch3, (ftnlen)3, (ftnlen)3);
+		    s_copy(ext1 + ((nsetflag + 1 + (nplac[1] << 1) - 3 << 2) + 1),
+				ch3, (ftnlen)3, (ftnlen)3);
+			*/
 		}
 		s_copy(ext3 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), 
 			fileo + 23, (ftnlen)4, (ftnlen)4);
@@ -1663,11 +1710,6 @@ L670:
 	    for (dy = (doublereal) yrst[nyear - nstrtyr]; dy <= d__1; dy += 
 		    1.) {
 
-			if (dy == 341)
-			{
-				int cc;
-				cc = 1;
-			}
 /* 		    determine the minimum and average temperature for this day for current place */
 /* 			use Meeus's forumula p. 66 to convert daynumber to month, */
 /* 			no need to interpolate between temepratures -- that is overkill */
@@ -2026,7 +2068,7 @@ L700:
 
 			//////////changes EK 061922/////////////////////////////////
 			//check for perpetual day/night
-			check = tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
+			check = -tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
 			    cos(d__));
 
 			if (fabs(check) > 1)
@@ -2299,6 +2341,7 @@ L700:
 			    do_fio(&c__1, (char *)&azi1, (ftnlen)sizeof(
 				    doublereal));
 				//////////////081021/////////add viewangle//////
+				//needed for prjBruttonAtmRef calculatiosns of the refraction at the 
 				viewangle = 0.0;
 			    do_fio(&c__1, (char *)&viewangle, (ftnlen)sizeof(
 				    doublereal));
@@ -2584,6 +2627,7 @@ L695:
 				do_fio(&c__1, (char *)&azi1, (ftnlen)sizeof(
 					doublereal));
 				///////////////081021 add viewangle ////////////
+				//needed for prjBruttonAtmRef calculatiosns of the refraction at the 
 				do_fio(&c__1, (char *)&viewangle, (ftnlen)sizeof(
 					doublereal));
 				/////////////////////////////////////////////////
@@ -2786,6 +2830,7 @@ L760:
 				    - 4]) + elev[(ne << 2) - 2];
 /*                 sunrise */
 				/////////////////added 081021///record viewangle at sunrise/////////
+				//needed for prjBruttonAtmRef calculatiosns of the refraction at the 
 				viewangle = alt1;
 				////////////////////////////////////////////////
 
@@ -2912,6 +2957,8 @@ L760:
 				do_fio(&c__1, (char *)&azi1, (ftnlen)sizeof(
 					doublereal));
 				/////////////added 081021 -- record viewangle at sunrise/sunset/////
+				//needed for prjBruttonAtmRef calculatiosns of the refraction at the 
+				//azimuth that sunrise occurs
 				do_fio(&c__1, (char *)&viewangle, (ftnlen)sizeof(
 					doublereal));
 				/////////////////////////////////////////////
@@ -3074,7 +3121,7 @@ L1000:
     cl__1.cerr = 0;
     cl__1.cunit = 10;
     cl__1.csta = 0;
-    f_clos(&cl__1);
+    //f_clos(&cl__1);  //<----------caused an asertion fault???
 /*       PROGRAM COMPARE --finds earliest/latest times of nplac .PLC files */
 /*       number of places to search */
     s_copy(filout + 15, placn + 4, (ftnlen)4, (ftnlen)4);
@@ -3346,7 +3393,9 @@ L2700:
     cl__1.csta = 0;
     f_clos(&cl__1);
 L9999:
-    return 0;
+	exit(0);
+    //return 0;
+	
 
 /////////////////////////changes EK 061922 ////////////////////////////////////////////
 //inline errorhandler
@@ -3364,9 +3413,12 @@ ErrorHandler:
 		//set flags for Cal Program
 		t3sub = -99;
 		viewangle = 0;
-		strcpy(tssc, "NoSunrise", 8);
-		strcpy(ts1c, "    NA   ", 8);
-		strcpy(ts2c, "    NA   ", 8);
+		s_copy(tssc, "NoSunrise", (ftnlen)8, (ftnlen)8);
+		//strcpy(tssc, "NoSunrise", 8);
+		s_copy(ts1c, "    NA   ", (ftnlen)8, (ftnlen)8);
+		//strcpy(ts1c, "    NA   ", 8);
+		s_copy(ts2c, "    NA   ", (ftnlen)8, (ftnlen)8);
+		//strcpy(ts2c, "    NA   ", 8);
 		nac = 1;
 		azi1 = maxang;
 		viewangle = 0.0;
@@ -3381,9 +3433,12 @@ ErrorHandler:
 		//set flags for Cal Program
 		t3sub = 99;
 		viewangle = 0;
-		strcpy(tssc, "NoSunset", 8);
-		strcpy(ts1c, "    NA   ", 8);
-		strcpy(ts2c, "    NA   ", 8);
+		s_copy(tssc, "NoSunset", (ftnlen)8, (ftnlen)8);
+		//strcpy(tssc, "NoSunset", 8);
+		s_copy(ts1c, "    NA   ", (ftnlen)8, (ftnlen)8);
+		//strcpy(ts1c, "    NA   ", 8);
+		s_copy(ts2c, "    NA   ", (ftnlen)8, (ftnlen)8);
+		//strcpy(ts2c, "    NA   ", 8);
 		nac = 2;
 		azi1 = maxang;
 		viewangle = 0.0;
@@ -3398,9 +3453,12 @@ ErrorHandler:
 		//set flags for Cal Program
 		t3sub = 55;
 		viewangle = 0;
-		strcpy(tssc, ">max azi", 8);
-		strcpy(ts1c, "    NA   ", 8);
-		strcpy(ts2c, "    NA   ", 8);
+		s_copy(tssc, ">max azi", (ftnlen)8, (ftnlen)8);
+		//strcpy(tssc, ">max azi", 8);
+		s_copy(ts1c, "    NA   ", (ftnlen)8, (ftnlen)8);
+		//strcpy(ts1c, "    NA   ", 8);
+		s_copy(ts2c, "    NA   ", (ftnlen)8, (ftnlen)8);
+		//strcpy(ts2c, "    NA   ", 8);
 		nac = 3;
 		azi1 = maxang;
 		viewangle = 0.0;
@@ -3485,7 +3543,7 @@ ErrorHandler:
 	goto L925;
 //////////////////end inline ErrorHandler//////////////////////////////////////////
 
-} /* MAIN__ */
+} /* MAIN__ */  //end of main
 
 /* Subroutine */ int decl_(doublereal *dy1, doublereal *mp, doublereal *mc, 
 	doublereal *ap, doublereal *ac, doublereal *ms, doublereal *aas, 
