@@ -19,11 +19,14 @@
 short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] );
 int WhichJKC();
 int WhichVB();
+int WhichDTM();
 
 //globals
 char testdrv[13] = "cdefghijklmn";
 char drivlet[2] = "c";
-int WhereJKC,WhereWorldClim;
+char dtmfile[255] = "";
+
+int WhereJKC,WhereWorldClim,WhereDTM;
 
 
 /* Table of constant values */
@@ -84,14 +87,14 @@ static integer c__512 = 512;
 	    14000] */;
     static integer ikmx, ikmy;
     extern /* Subroutine */ int getz_(integer *, integer *, doublereal *, 
-	    integer *);
+	    integer *, char *);
     static doublereal kmxo, kmyo;
     static logical netz;
     static doublereal kmxp, kmyp;
     static integer nrow;
     static doublereal vang1, vang2, dist1, dist2;
     static integer nkmx1, ndela;
-    static char fnam32[32], fnam33[33], fnam34[34], fnam35[35], fnam36[36];
+    //static char fnam32[32], fnam33[33], fnam34[34], fnam35[35], fnam36[36];
     static doublereal fudge, deltd, angle, avref, kmycc, distd;
     static logical found;
     static integer nntil, nloop;
@@ -104,7 +107,8 @@ static integer c__512 = 512;
     static char placen[36];
     static integer nocean;
     static doublereal azibeg, delazi, aziend, maxang, begkmx, kmybeg;
-    static integer nlenfn, nkmycc;
+    //static integer nlenfn, 
+	static integer nkmycc;
     static doublereal delkmy, hgtobs, endkmx, kmyend, azicos, azisin, apprnr;
     static integer numazi, numdtm;
     static doublereal sofkmx;
@@ -118,6 +122,7 @@ static integer c__512 = 512;
     static doublereal skipkmx, skipkmy;
     static integer numskip;
     static doublereal proftmp;
+	char buff[255] = "";
 
 	short MinT[12],AvgT[12],MaxT[12],ier = 0, iTK;
 	float MeanTemp = 0;
@@ -130,6 +135,8 @@ static integer c__512 = 512;
 	static integer TemperatureModel = 1;  // flag for terrestrial refraction type written to end of each
 										  // scanlist.txt line by Maps & MOre /////added 061120///////////
 	char Header[255] = "";
+
+	FILE *stream, *stream2;
 
     /* Fortran I/O blocks */
     static cilist io___16 = { 0, 1, 0, 0, 0 };
@@ -251,9 +258,11 @@ L8:
     o__1.oerr = 0;
     o__1.ounit = 1;
     o__1.ofnmlen = 18;
-	strcpy(o__1.ofnm, drivlet[0]);
-	strcat(o__1.ofnm, ":\\jk_c\\STATUS.TXT" );
-    //o__1.ofnm = "C:\\jk_c\\STATUS.TXT";
+	//strcpy(o__1.ofnm, drivlet[0]);
+	//strcat(o__1.ofnm, ":\\jk_c\\STATUS.TXT" );
+	buff[0] = 0;
+	sprintf(buff,"%s%s", drivlet, ":\\jk_c\\STATUS.TXT" );
+    o__1.ofnm = buff; //"C:\\jk_c\\STATUS.TXT";
     o__1.orl = 0;
     o__1.osta = "OLD";
     o__1.oacc = 0;
@@ -277,9 +286,11 @@ L8:
     o__1.oerr = 0;
     o__1.ounit = 1;
     o__1.ofnmlen = 20;
-    //o__1.ofnm = "C:\\jk_c\\SCANLIST.TXT";
-	strcpy(o__1.ofnm, drivlet[0]);
-	strcat(o__1.ofnm, ":\\jk_c\\SCANLIST.TXT" );
+	buff[0] = 0;
+	sprintf(buff, "%s%s", drivlet, ":\\jk_c\\SCANLIST.TXT" );
+    o__1.ofnm = buff; // "C:\\jk_c\\SCANLIST.TXT";
+	//strcpy(o__1.ofnm, drivlet[0]);
+	//strcat(o__1.ofnm, ":\\jk_c\\SCANLIST.TXT" );
     o__1.orl = 0;
     o__1.osta = "OLD";
     o__1.oacc = 0;
@@ -367,6 +378,7 @@ L8:
 	}
 /* L29: */
     }
+	/*
     nlenfn = 36;
     for (i__ = 1; i__ <= 36; ++i__) {
 	if (i__ <= 32) {
@@ -402,13 +414,38 @@ L8:
 	    }
 	    goto L32;
 	}
-/* L30: */
+// L30: 
     }
+	*/
 L32:
+	/* 
     s_wsle(&io___40);
     do_lio(&c__9, &c__1, "SCAN: ", (ftnlen)6);
     do_lio(&c__9, &c__1, placen, (ftnlen)36);
     e_wsle();
+	*/
+	//determine drive information for dtm files
+	//this can be searched for using wheredtm or read from the mapcd file
+	//use both
+	//first mapcd
+	//mapcdfile[0] = 0;
+	//sprintf(mapcdfile, drivlet, ":\\jk_c\\mapcdinfo.sav" );
+	//char *drivemapcd;
+	//int drivnum = 0;
+	/*
+	if ( (stream2 = fopen( mapcdfile, "r" )) != NULL )
+	{
+		fscanf(stream2, "%s,%d/n", drivemapcd, &drivnum);
+		fclose(stream2);
+	}
+	*/
+
+	WhereDTM = WhichDTM();
+	drivlet[0] = testdrv[WhereDTM - 1];
+	drivlet[1] = 0;
+	dtmfile[0] = 0;
+	sprintf(dtmfile, "%s%s", drivlet, ":/DTM/DTM-MAP.LOC" );
+
     kmyoo = kmyo;
     kmxoo = kmxo;
     if (gridcd) {
@@ -561,7 +598,7 @@ L40:
 /*             this subroutine reads J.K. Hall's DTM at any (kmy,kmx) and returns the altitude */
 	nrow = ikmy;
 	ncol = ikmx;
-	getz_(&ikmy, &ikmx, &hgt2, &nntil);
+	getz_(&ikmy, &ikmx, &hgt2, &nntil, dtmfile);
 /*             ignore ocean depths for sunset calculations */
 	if (hgt2 < 0. && (kmx < 160. || kmy >= 260.)) {
 	    if (! netz) {
@@ -768,6 +805,7 @@ L180:
     if (i__ <= numkmx) {
 	goto L40;
     }
+	/*
     if (nlenfn == 32) {
 	ioin__1.inerr = 0;
 	ioin__1.infilen = 32;
@@ -979,8 +1017,24 @@ L180:
 	    f_open(&o__1);
 	}
     }
+	*/
 
-    s_wsfe(&io___133);
+   /* Open for write */
+   if( (stream = fopen( placen, "w+" )) == NULL )
+   {
+	   buff[0] = 0;
+	   sprintf(buff, "%s%s%s", "couldn't open the file: ", placen, " aborting..." );
+	   printf(buff);
+	   exit(-1);
+   }
+   else
+   {
+	   buff[0] = 0;
+	   sprintf(buff, "%s%s%s", "Opened profile file: ", placen, " for writing..." );
+	   printf(buff);
+   }
+
+    //s_wsfe(&io___133);
 
 	/////////////////////////////////////comment 101520/////////////////////////////////////
 	//			rdhalba4 correctly records the calculation hgt and not the ground height
@@ -988,24 +1042,29 @@ L180:
 
 	if (TerrestrialRefraction) {
 		if (TROld_Type) { //old version of refraction
-		    do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR", (ftnlen)46);
+		    //do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR", (ftnlen)46);
+			fprintf(stream, "%s\n", "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR" );
 		}else{ //new Wikipedia version
 			if (TemperatureModel == 0 || TemperatureModel == 2) {
-				do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0", (ftnlen)48);
+				//do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0", (ftnlen)48);
+				fprintf(stream, "%s\n", "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0" );
 			} else if (TemperatureModel == 1) {
 				sprintf( Header, "%s,%6.2f","kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy", MeanTemp );
-				do_fio(&c__1, Header, (ftnlen)46 );
+				//do_fio(&c__1, Header, (ftnlen)46 );
+				fprintf(stream, "%s\n", Header );
 			}
 		}
 	}else{ //no terrestrial refraction added
-		    do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0", (ftnlen)48);
+		    //do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0", (ftnlen)48);
+			fprintf(stream, "%s\n", "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0" );
 	}
 
-    e_wsfe();
+    //e_wsfe();
     d1 = dstpointx;
     d2 = dstpointy;
     s1 = startkmx;
     s2 = sofkmx;
+	/*
     s_wsfe(&io___138);
     do_fio(&c__1, (char *)&kmxo, (ftnlen)sizeof(doublereal));
     do_fio(&c__1, (char *)&kmyo, (ftnlen)sizeof(doublereal));
@@ -1016,6 +1075,10 @@ L180:
     do_fio(&c__1, (char *)&d2, (ftnlen)sizeof(doublereal));
     do_fio(&c__1, (char *)&apprnr, (ftnlen)sizeof(doublereal));
     e_wsfe();
+	*/
+	buff[0] = 0; //zero the buffer
+	sprintf(buff, "%7.3f,%7.3f,%6.1f,%7.3f,%7.3f,%7.3f,%7.3f,%7.3f", kmxo,kmyo,hgt,s1,s2,d1,d2,apprnr);
+	fprintf(stream, "%s\n", buff );
     i__2 = nomentr;
     for (nk = 1; nk <= i__2; ++nk) {
 	xentry = -mang + (nk - 1) / 10.f;
@@ -1026,7 +1089,7 @@ L180:
 	ikmy = (integer) ((380 - kmyp) * 40) + 1;
 	nrow = ikmy;
 	ncol = ikmx;
-	getz_(&ikmy, &ikmx, &hgt2, &nntil);
+	getz_(&ikmy, &ikmx, &hgt2, &nntil, dtmfile);
 	if (hgt2 < 0. && (kmxp < 185. || kmyp >= 260.)) {
 	    if (! netz) {
 		hgt2 = 0.f;
@@ -1034,9 +1097,9 @@ L180:
 	}
 	if (hgt2 < 0. && netz) {
 	    i__1 = ikmy - 1;
-	    getz_(&i__1, &ikmx, &hgt21, &nntil);
+	    getz_(&i__1, &ikmx, &hgt21, &nntil, dtmfile);
 	    i__1 = ikmy + 1;
-	    getz_(&i__1, &ikmx, &hgt22, &nntil);
+	    getz_(&i__1, &ikmx, &hgt22, &nntil, dtmfile);
 	    hgt2 = (hgt21 + hgt22) / 2;
 	}
 /* Computing 2nd power */
@@ -1058,6 +1121,7 @@ L180:
 		prof[nk * 3 - 3] -= avref;
 	}
 
+	/*
 	s_wsfe(&io___146);
 	do_fio(&c__1, (char *)&xentry, (ftnlen)sizeof(doublereal));
 	do_fio(&c__1, (char *)&prof[nk * 3 - 3], (ftnlen)sizeof(real));
@@ -1066,24 +1130,50 @@ L180:
 	do_fio(&c__1, (char *)&dist, (ftnlen)sizeof(doublereal));
 	do_fio(&c__1, (char *)&hgt2, (ftnlen)sizeof(doublereal));
 	e_wsfe();
+	*/
+	buff[0] = 0; //zero the buffer
+	sprintf(buff, "%9.4f,%8.4f,%7.3f,%7.3f,%7.2f,%6.1f",xentry,prof[nk * 3 - 3],prof[nk * 3 - 2],prof[nk * 3 - 1],dist,hgt2);
+	fprintf(stream,"%s\n", buff); 
 /* L300: */
     }
+	/*
     cl__1.cerr = 0;
     cl__1.cunit = 3;
     cl__1.csta = 0;
     f_clos(&cl__1);
+	*/
+	fclose(stream);
+
+	/*
     s_wsle(&io___147);
     do_lio(&c__9, &c__1, " profile copied to permanent file: ", (ftnlen)35);
     do_lio(&c__9, &c__1, placen, (ftnlen)36);
     e_wsle();
+	*/
+	buff[0] = 0;
+	sprintf(buff, "%s%s\n", "profile copied to permanent file: ", placen );
+	printf(buff);
 /*       Update STATUS.TXT file */
 L500:
     o__1.oerr = 0;
     o__1.ounit = 1;
     o__1.ofnmlen = 18;
-	strcpy(o__1.ofnm, drivlet[0]);
-	strcat(o__1.ofnm, ":\\jk_c\\STATUS.TXT" );
-    //o__1.ofnm = "C:\\jk_c\\STATUS.TXT";
+	//strcpy(o__1.ofnm, drivlet[0]);
+	//strcat(o__1.ofnm, ":\\jk_c\\STATUS.TXT" );
+	WhereJKC = WhichJKC();
+	if (WhereJKC == 0)
+	{
+		printf("Can't find the jk_c directory, aborting...");
+		exit(1);
+	}
+	else
+	{
+		drivlet[0] = testdrv[WhereJKC - 1];
+		drivlet[1] = 0;
+	}
+	buff[0] = 0;
+	sprintf(buff, "%s%s", drivlet, ":\\jk_c\\STATUS.TXT" );
+    o__1.ofnm = buff; //"C:\\jk_c\\STATUS.TXT";
     o__1.orl = 0;
     o__1.osta = "OLD";
     o__1.oacc = 0;
@@ -1110,7 +1200,7 @@ L999:
 } /* MAIN__ */
 
 /* Subroutine */ int getz_(integer *nrow, integer *ncol, doublereal *zm, 
-	integer *nntil)
+	integer *nntil, char *dtmfn)
 {
     /* Initialized data */
 
@@ -1153,7 +1243,9 @@ L999:
     static integer nn1, nn2, ifn, ios, nrec;
     //extern doublereal hfix_(integer *);
     //extern integer jfix_(integer *);
-    static char chmap[2*14*26], chmne[2], dtmfn[18], doclin[78], dtmdrv[4];
+    static char chmap[2*14*26], chmne[2];
+	//static char dtmfn[18];
+	static char doclin[78], dtmdrv[4];
     static logical exists;
 
     /* Fortran I/O blocks */
@@ -1170,8 +1262,10 @@ L999:
 	goto L15;
     }
 /*       PULL IN THE DTM TILE SCHEMATIC */
+
+	/*
     s_copy(dtmfn + 1, ":\\dtm\\dtm-map.loc", (ftnlen)17, (ftnlen)17);
-/*       Its location should be in c:\jk_c\mapcdi~1.sav */
+//       Its location should be in c:\jk_c\mapcdi~1.sav 
     ioin__1.inerr = 0;
     ioin__1.infilen = 20;
     ioin__1.infile = "C:\\jk_c\\MAPCDI~1.SAV";
@@ -1211,7 +1305,7 @@ L999:
 	cl__1.csta = 0;
 	f_clos(&cl__1);
     } else {
-/*          search for it (assumes contiguous acessible drives) */
+//          search for it (assumes contiguous acessible drives) 
 	s_copy(testdriv, "cdefghijkl", (ftnlen)10, (ftnlen)10);
 	for (i__ = 1; i__ <= 10; ++i__) {
 	    *(unsigned char *)dtmfn = *(unsigned char *)&testdriv[i__ - 1];
@@ -1235,12 +1329,13 @@ L999:
 	    ioin__1.inblank = 0;
 	    f_inqu(&ioin__1);
 	    if (exists) {
-/*                found default drive */
+//                found default drive 
 		goto L3;
 	    }
-/* L2: */
+// L2: 
 	}
     }
+	*/
 L3:
     o__1.oerr = 0;
     o__1.ounit = 5;
@@ -1547,7 +1642,7 @@ short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short
 	{
 		drivlet[1] = testdrv[WhereWorldClim - 1];
 		drivlet[2] = 0;
-		strcpy(FilePathBil, drivlet[0]);
+		strcpy(FilePathBil, (const char *)drivlet);
 		strcat(FilePathBil,":\\DevStudio\\Vb\\WorldClim_bil");
 	}
 	else
@@ -1707,15 +1802,38 @@ int WhichVB()
 	FILE *stream;
 	char drivlet[2] = "c";
 	char climdir[255] = "";
-	char *Climdir;
 	int i;
 	for (i=1; i<= strlen(testdrv); i++)
 	{
 		drivlet[0] = testdrv[i - 1];
 		drivlet[1] = 0;
-		strcpy(Climdir, (const char *)drivlet);
-		strcat(Climdir, ":\\devstudio\\vb\\WorldClim_bil\\avg_Apr.bil" );
-		if ( (stream = fopen( Climdir, "r" )) != NULL )
+		strcpy(climdir, (const char *)drivlet);
+		strcat(climdir, ":\\devstudio\\vb\\WorldClim_bil\\avg_Apr.bil" );
+		if ( (stream = fopen( climdir, "r" )) != NULL )
+		{
+		   fclose(stream);
+		   return i;
+		}
+	}
+	return 0; //return 0 if didn't find anything
+}
+////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+//function determine on which drive letter jk_c directory resides
+int WhichDTM()
+{
+	FILE *stream;
+	char drivlet[2] = "c";
+	char jkdir[255] = "";
+	int i;
+	for (i=1; i<= strlen(testdrv); i++)
+	{
+		drivlet[0] = testdrv[i - 1];
+		drivlet[1] = 0;
+		strcpy(jkdir, (const char *)drivlet);
+		strcat(jkdir, ":\\DTM\\DTM-MAP.LOC" );
+		if ( (stream = fopen( jkdir, "r" )) != NULL )
 		{
 		   fclose(stream);
 		   return i;
