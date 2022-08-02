@@ -1766,6 +1766,15 @@ Begin VB.Form prjAtmRefMainfm
             TabIndex        =   68
             Top             =   1440
             Width           =   3975
+            Begin VB.OptionButton opt11 
+               Caption         =   "REF2017 atmosphere using  Tground"
+               Height          =   255
+               Left            =   240
+               TabIndex        =   251
+               ToolTipText     =   "use REF2017 temp profile with Tground, Pressure is standard atmosphere"
+               Top             =   3740
+               Width           =   3495
+            End
             Begin VB.OptionButton OptionZero 
                Caption         =   "Clear"
                Height          =   195
@@ -1789,7 +1798,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   195
                Left            =   240
                TabIndex        =   245
-               Top             =   2120
+               Top             =   2070
                Width           =   3135
             End
             Begin VB.OptionButton opt3 
@@ -1797,7 +1806,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   195
                Left            =   240
                TabIndex        =   244
-               Top             =   1820
+               Top             =   1800
                Width           =   3255
             End
             Begin VB.CheckBox chkHgtProfile 
@@ -1837,7 +1846,7 @@ Begin VB.Form prjAtmRefMainfm
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtHumid"
-               BuddyDispid     =   196761
+               BuddyDispid     =   196762
                OrigLeft        =   2760
                OrigTop         =   4680
                OrigRight       =   3015
@@ -1914,7 +1923,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   255
                Left            =   240
                TabIndex        =   75
-               Top             =   3720
+               Top             =   3450
                Width           =   3375
             End
             Begin VB.OptionButton opt8 
@@ -1922,7 +1931,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   195
                Left            =   240
                TabIndex        =   74
-               Top             =   3420
+               Top             =   3180
                Width           =   3015
             End
             Begin VB.OptionButton opt7 
@@ -1930,7 +1939,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   255
                Left            =   240
                TabIndex        =   73
-               Top             =   3080
+               Top             =   2880
                Width           =   3015
             End
             Begin VB.OptionButton opt6 
@@ -1938,7 +1947,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   195
                Left            =   240
                TabIndex        =   72
-               Top             =   2780
+               Top             =   2620
                Width           =   3015
             End
             Begin VB.OptionButton opt5 
@@ -1946,7 +1955,7 @@ Begin VB.Form prjAtmRefMainfm
                Height          =   195
                Left            =   240
                TabIndex        =   71
-               Top             =   2440
+               Top             =   2340
                Width           =   2775
             End
             Begin VB.OptionButton opt2 
@@ -2109,7 +2118,7 @@ Begin VB.Form prjAtmRefMainfm
                Value           =   100
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtEInv"
-               BuddyDispid     =   196785
+               BuddyDispid     =   196786
                OrigLeft        =   4080
                OrigTop         =   1320
                OrigRight       =   4335
@@ -2142,7 +2151,7 @@ Begin VB.Form prjAtmRefMainfm
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtSInv"
-               BuddyDispid     =   196786
+               BuddyDispid     =   196787
                OrigLeft        =   4200
                OrigTop         =   960
                OrigRight       =   4455
@@ -2175,7 +2184,7 @@ Begin VB.Form prjAtmRefMainfm
                Value           =   5
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtDInv"
-               BuddyDispid     =   196787
+               BuddyDispid     =   196788
                OrigLeft        =   4440
                OrigTop         =   600
                OrigRight       =   4695
@@ -2305,7 +2314,7 @@ Begin VB.Form prjAtmRefMainfm
                _Version        =   393216
                Value           =   10
                BuddyControl    =   "txtHeightStepSize"
-               BuddyDispid     =   196795
+               BuddyDispid     =   196796
                OrigLeft        =   3120
                OrigTop         =   1920
                OrigRight       =   3375
@@ -2438,7 +2447,7 @@ Begin VB.Form prjAtmRefMainfm
                Value           =   6
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtLapse"
-               BuddyDispid     =   196804
+               BuddyDispid     =   196805
                OrigLeft        =   3480
                OrigTop         =   2640
                OrigRight       =   3735
@@ -2955,6 +2964,14 @@ Private Sub chkH2_Click()
       End If
 End Sub
 
+Private Sub chkHgtProfile_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
+   If chkHgtProfile.Value = vbChecked Then
+      DistToHug = InputBox("How far to hug hills from observer? (km)", "Hill Hugging", 80)
+   Else
+      DistToHug = 80
+      End If
+End Sub
+
 Private Sub chkLapse_Click()
   If chkLapse.Value = vbChecked Then
      lblLapse.Enabled = True
@@ -3293,6 +3310,8 @@ pAR10:
         ElseIf prjAtmRefMainfm.opt10.Value = True Then
            AtmNumber = 10
            FNM = txtOther.Text
+        ElseIf prjAtmRefMainfm.opt11.Value = True Then
+           AtmNumber = 11 'use vdw values
            End If
         End If
 
@@ -3665,13 +3684,13 @@ ps100:
                      End If
                      
 'C                AIRMASS
-                  DD = Sqr(UP * UP + DZ * DZ)
+                  dd = Sqr(UP * UP + DZ * DZ)
                   
                   If (RC <> 0#) Then
-                     AMGAM = 2# * DASIN(DD / (2# * RC))
+                     AMGAM = 2# * DASIN(dd / (2# * RC))
                      AIRM(j) = AIRM(j) + Abs(ADEN(II) * RC * AMGAM)
                   Else
-                     AIRM(j) = AIRM(j) + DD
+                     AIRM(j) = AIRM(j) + dd
                      End If
                      
 'C                 DETERMINE THE NEW PARAMETERS
@@ -6163,7 +6182,6 @@ Dim k As Long, l As Long, n As Long, KWAV As Double, KMIN As Double, KMAX As Dou
 Dim s As Double, T As Double, a3 As Double, e1 As Double, e2 As Double, g1 As Double, d6 As Double, S1 As Double, s2 As Double
 '    //char ch[1]
 Dim dg As Double, bn As Double, el As Double, en As Double, bz As Double, cz As Double, em As Double, StatusMes As String
-
 '    //int nn
 Dim rt As Double
 Dim XP  As Double
@@ -6219,11 +6237,12 @@ START = False
 Dim filnam As String
 '    char chr[2] = sempty
 Dim ier As Integer
+Dim ConvertToKm As Boolean
 ier = 0
 '    int ier = 0
 
 Dim FNM As String, AtmType As Integer, AtmNumber As Integer, lpsrate As Double, tst As Double, pst As Double, NNN As Long
-Dim Path As Double, Pg As Double, Tg As Double
+Dim Path As Double, Pg As Double, Tg As Double, Convert As Double
 
 '/////////diagnostics/////////////////
 DiagnoseIndex = True
@@ -6431,6 +6450,8 @@ RE = ra * 1000#
         ElseIf prjAtmRefMainfm.opt10.Value = True Then
            AtmNumber = 10
            FNM = txtOther.Text
+        ElseIf prjAtmRefMainfm.opt11.Value = True Then
+           AtmNumber = 11
            End If
         End If
 
@@ -6564,6 +6585,18 @@ ps100:
 '
 '    hsof = layerheights[numlayers - 1]
      hsof = ELV(NNN)
+     
+     Convert = 1#
+     If hsof > 100 Then
+        ConvertToKm = True
+        Convert = 0.001
+        hsof = hsof * Convert
+        
+        For k = 1 To NumLayers
+           ELV(k - 1) = ELV(k - 1) * Convert
+        Next k
+        End If
+     
 '
 '    //output file
      fileout% = FreeFile
@@ -6627,6 +6660,7 @@ ps100:
                     & vbCrLf & "To use this atmosphere, you can renormalize the heights to zero" _
                     & vbCrLf & "Or enter a higher elevation for the HOE.", vbInformation, "Missing layer")
         Screen.MousePointer = vbDefault
+        prjAtmRefMainfm.progressfrm.Visible = True
         Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, 0)
         prjAtmRefMainfm.progressfrm.Visible = False
         cmdMenat.Enabled = True
@@ -6797,6 +6831,8 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
 
    wl = 380# + CDbl(KWAV - 1) * 5#
    wl = wl / 1000# 'convert to nm
+   
+   prjAtmRefMainfm.progressfrm.Visible = True
    
     Call UpdateStatus(prjAtmRefMainfm, picProgBar, 1, 0) 'reset
    
@@ -9015,6 +9051,8 @@ If prjAtmRefMainfm.chkHSoatm.Value = vbChecked Then
         ElseIf prjAtmRefMainfm.opt10.Value = True Then
            AtmNumber = 10
            FNM = txtOther.Text
+        ElseIf prjAtmRefMainfm.opt11.Value = True Then
+           AtmNumber = 11 'use vdw values
            End If
         End If
 
@@ -10865,7 +10903,7 @@ Private Sub cmdVDW_Click()
 'DefDbl A-H, O-Z
 'Option Explicit
 '
-Dim PRESSD1(99999) As Double, PRESSD2(99999) As Double
+Dim PRESSD1(99999) As Double, PRESSD2(99999) As Double, OrigNumTemp As Long
 Dim HMAXT As Double, TLOW As Double, THIGH As Double, Press0 As Double
 Dim RELHUM As Double, BETALO As Double, BETAHI As Double, BETAST As Double, WAVELN As Double
 Dim NSTEPS As Long, i As Long, FSize As Long, BETAM As Double, StatusMes As String, NumLayers As Long
@@ -11034,6 +11072,8 @@ Next II
         ElseIf prjAtmRefMainfm.opt10.Value = True Then
            AtmNumber = 10
            FNM = txtOther.Text
+        ElseIf prjAtmRefMainfm.opt11.Value = True Then
+           AtmNumber = 11 'use vdw values
         Else 'use vdw values
            AtmNumber = 0
            End If
@@ -11879,7 +11919,11 @@ For HLoop = HgtStart To HgtEnd Step HgtStep
            End If
         fileout% = FreeFile
         If OptionSelby.Value = False And chkDucting.Value = vbUnchecked Then
-            FilNm = App.Path & "\TR_VDW_" & Trim(Str(Fix(TGROUND))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
+            If BARParametersfm.chkUseDTM.Value And Not BARParametersfm.chkMatch Then
+                FilNm = App.Path & "\TR_VDW_LAYERS_" & RadioSonde$ & "_NoDTMHug_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
+            Else
+               FilNm = App.Path & "\TR_VDW_" & Trim(Str(Fix(TGROUND))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
+               End If
             Open FilNm For Output As #fileout%
             Print #fileout%, "Standard REF2017 atmosphere calculation with Tground =" & Str(TGROUND) & " ground pressure: " & Str(Press0) & " Steps: " & txtNSTEPS
         ElseIf chkDucting.Value = vbChecked Then
@@ -11888,7 +11932,11 @@ For HLoop = HgtStart To HgtEnd Step HgtStep
             'use van der Werf's formula to simulate an inversion
             Print #fileout%, "Inversion layer added starting at" & Str(HL0) & " meters and ending at" & Str(TL0) & " meters, lapse rate:" & Str(LRL0) & " degrees K/meter"
         ElseIf OptionSelby.Value = True Then
-            FilNm = App.Path & "\TR_VDW_LAYERS_" & Trim(Str(Fix(TGROUND))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
+            If BARParametersfm.chkUseDTM.Value And Not BARParametersfm.chkMatch Then
+                FilNm = App.Path & "\TR_VDW_LAYERS_" & RadioSonde$ & "_DTMHug_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
+            Else
+                FilNm = App.Path & "\TR_VDW_LAYERS_" & Trim(Str(Fix(TGROUND))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
+                End If
             Open FilNm For Output As #fileout%
             Print #fileout%, "Custom atmospheric layer file type" & Str(AtmNumber); " used with" & Str(NumLayers) & " layers"
             End If
@@ -12382,6 +12430,7 @@ Call StatusMessage(StatusMes, 1, 0)
 
 '-------------fill in mscharts array and plot it--------------
 MultFac = 0.001
+OrigNumTemp = NNN
 If OptionSelby Then MultFac = 1#
 If NNN > 1000 Then
      ReDim TransferCurve(1 To NNN / 10, 1 To 2) As Variant
@@ -12412,6 +12461,7 @@ Else 'no need to use less resolution
      Close #filetmp
      
      NumTemp = NNN
+     
    End If
  
  With MSChartTemp
@@ -12880,7 +12930,7 @@ For jstep = 1 To n_size + 1
         If nloop = 0 Then
 '           If Not TempLoop Then Print #fileout%, 0, FormatNumber(HOBS, 1, vbFalse, vbFalse, vbFalse)
 '           If Not TempLoop Then Write #fileout%, 0, HOBS, ALFA(KMIN, jstep)
-            TRUALT = BETAM - REFRAC
+            TRUALT = BETAM - REFRAC 'true altitude = what altitude would be if there was no refraction, i.e., less than the apparent altitude = BETAM
            Print #fileout%, Format(0, "######0.0####"), Format(0, "######0.0####"), Format(HOBS, "######0.0####"), Format(BETAM, "######0.0####"), Format(BETA2 * 1000#, "######0.0####"), Format(REFRAC * (1000# * RADCON), "######0.0####")
            End If
            
@@ -12896,7 +12946,7 @@ For jstep = 1 To n_size + 1
         Else
             If H2 > HLIMIT Then
                 ' H2 PASSED HLIMIT METER
-                TRUALT = BETAM - REFRAC
+                TRUALT = BETAM - REFRAC  'true altitude = what altitude would be if there was no refraction, i.e., less than the apparent altitude = BETAM
 '                Print #fileout1%, Format(Str(BETAM), " ####0.0#####"), ",", Format(Str(REFRAC), " ####0.0#####"), ",", Format(Str(TRUALT), " ####0.0#####"), ",", Format(Str(AIRDRY), " ####0.0#####"), ",", Format(Str(AIRVAP), " ####0.0#####")
                 If Not TempLoop Then Write #fileout1%, BETAM, REFRAC, TRUALT, AIRDRY, AIRVAP
                 '  BETAM, REFRAC,TRUALT, AIRDRY AND AIRVAP HAVE BEEN STORED IN REF2017.OUT
@@ -12911,16 +12961,28 @@ For jstep = 1 To n_size + 1
 '        picVDW.Scale (-LRANGE * 0.01, HLIMIT + 2000)-(LRANGE * 1.01, -2000)
         Dist = Dist + Rearth * (PHI2 - PHI1) 'distance along the earth
 '        Pathh = Pathh + fGUESSP(BETA2 / RADCON, H2 - H1) 'estimae of distance along the ray
-        REFRAC = REFRAC + DREFR / RADCON
+        REFRAC = REFRAC + DREFR / RADCON 'accumulate refraction along each step of the ray's path
        
         If (nloop + 1) Mod Val(prjAtmRefMainfm.txtHeightStepSize.Text) = 0 Then
 '           Print #fileout%, FormatNumber(DIST, 1, vbFalse, vbFalse, vbFalse), FormatNumber(h2, 1, vbFalse, vbFalse, vbFalse)
 '           Write #fileout%, DIST, h2, ALFA(KMIN, jstep)
-            TRUALT = BETAM - REFRAC
+            TRUALT = BETAM - REFRAC 'true altitude = what altitude would be if there was no refraction, i.e., less than the apparent altitude = BETAM
 '           Print #fileout%, Format(DIST, "######0.0####"), Format(PATHLENGTH, "######0.0####"), Format(H2, "######0.0####"), Format(BETAM, "######0.0####"), Format(BETA2 * 1000#, "######0.0####"), Format(REFRAC * (1000# * RADCON), "######0.0####")
 '           PATHLENGTH = Dist 'distance along earth
            Print #fileout%, Format(Dist, "######0.0####"), Format(Pathh, "######0.0####"), Format(H2, "######0.0####"), Format(BETAM, "######0.0####"), Format(BETA2 * 1000#, "######0.0####"), Format(REFRAC * (1000# * RADCON), "######0.0####")
            End If
+          
+        If C5Click Then
+            If BARParametersfm.chkMatch.Value Then
+    '           If VRVDWcalc - Abs(TRUALT / 60#) <= DifVRexpected Then
+                If REFRAC / 60# >= Abs(DifVRexpected) Then
+                 'reached the observed level of refraction, record the distance
+                 DistMatch = Dist
+                 jstop = -1
+                 GoTo NEXTRAY
+                 End If
+               End If
+            End If
            
         If H2 > HLIMIT Then
             GoTo NORAYPRINT
@@ -12969,7 +13031,7 @@ NEXTRAY:
         Exit For
     ElseIf jstop = -1 Then
 '        ALFA(KMIN, NumTc) = BETAM 'arc minutes
-        ALFT(KMIN, jstep) = BETAM - REFRAC 'arc minutes
+        ALFT(KMIN, jstep) = BETAM - REFRAC 'arc minutes, this is view angle after the light is bent due to refraction
         NumTc = NumTc + 1
         
         If chkTRef.Value = vbChecked And ALFA(KMIN, jstep) = 0 Then
@@ -13212,6 +13274,12 @@ If Not CalcSondes Then Close
          prjAtmRefMainfm.lblRef.Caption = "Atms. refraction (deg.) at " & ALFA(KMIN, j) / 60 & " deg = " & Abs(ALFT(KMIN, j)) / 60# & vbCrLf & "Atms. refraction (mrad) at " & ALFA(KMIN, j) / 60 & " deg = " & Abs(ALFT(KMIN, j)) * 1000# * cd / 60#
          
          VRefDeg = Abs(ALFT(KMIN, j)) / 60#
+         If C5Click Then
+            If BARParametersfm.chkMatch.Value Then
+               VRefDeg = Abs(REFRAC / 60#)
+               End If
+            End If
+            
          prjAtmRefMainfm.lblRef.Refresh
          found% = 1
          
@@ -13334,7 +13402,11 @@ If Not CalcSondes Then Close
 '    BrutonAtmReffm.WindowState = vbMaximized
  'set size of picref by size of earth
 
- If OptionSelby Then NumTemp = NumLayers
+ If OptionSelby Then
+    NumTemp = NumLayers
+ Else
+    NumTemp = OrigNumTemp
+    End If
  Call PlotRayTracing(prjAtmRefMainfm, prjAtmRefMainfm.Picture2, prjAtmRefMainfm.cmbSun, prjAtmRefMainfm.cmbAlt)
  prjAtmRefMainfm.cmbSun.Clear
  prjAtmRefMainfm.cmbAlt.Clear
@@ -13733,7 +13805,13 @@ Function fSTNDATM(H As Double, Dist As Double, NumLayers As Long) As Double
      'import model 2D model of ground height vs. distance Dist (m) from observer
      If chkHgtProfile.Value = vbChecked And chkDruk.Value = vbChecked And Dist <> -1 Then
 
-        GrndHgt = DistModel(Dist) 'assumes that atmospheric layers are displaced vertically
+        If BARParametersfm.chkUseDTM.Value Then
+           GrndHgt = DTMheight(Dist) 'calculate SRTM height along the light trajectory
+        Else
+           'use polynomial fit of heights along the due east trajectory
+           GrndHgt = DistModel(Dist) 'assumes that atmospheric layers are displaced vertically
+           End If
+           
         GrndHgt = GrndHgt * 0.001
      
      Else
@@ -16448,6 +16526,12 @@ Private Sub opt10_Click()
       End If
 End Sub
 
+Private Sub opt11_Click()
+   If opt11.Value = True Then
+      OptionSelby.Value = True
+      End If
+End Sub
+
 Private Sub opt2_Click()
    If opt2.Value = True Then
       OptionSelby.Value = True
@@ -16508,7 +16592,8 @@ Private Sub OptionZero_Click()
   chkReNorm.Value = vbUnchecked
   chkHgtProfile.Value = vbUnchecked
   chkDruk.Value = vbUnchecked
-  OptionSelby.Value = vbUnchecked
+  OptionSelby.Value = False
+'  OptionLayer.Value = False
   OptionSelby = False
 End Sub
 

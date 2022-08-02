@@ -21,10 +21,10 @@ Public ELV(MaxViewSteps&) As Double, TMP(MaxViewSteps&) As Double, PRSR(MaxViewS
 Public IndexRefraction(MaxViewSteps&) As Double
 Public ALFA(82, MaxViewSteps&) As Double, ALFT(82, MaxViewSteps&) As Double, SSR(82, MaxViewSteps&) As Double
 Public AA(MaxViewSteps&) As Double, AT(MaxViewSteps&) As Double, VRefDeg As Double, CalcSondes As Boolean
-Public den As Double, RefCalcType%
-Public EDIS(82) As Double, IDCT(10001) As Double, IEND(10001) As Double
+Public den As Double, RefCalcType%, RadioSonde$, SondeDayNum As Double, DifVRexpected As Double, DistMatch As Double, VRVDWcalc As Double
+Public EDIS(82) As Double, IDCT(10001) As Double, IEND(10001) As Double, ParameterFmVis
 Public AIRM(MaxViewSteps&) As Double, ADEN(MaxViewSteps&) As Double, RC As Double
-Public SINV As Double, EINV As Double, HGTSCALE As Double, DTINV As Double
+Public SINV As Double, EINV As Double, HGTSCALE As Double, DTINV As Double, C5Click As Boolean
 Public ALT(NumSuns + 1) As Double, AZM(NumSuns + 1) As Double ', CNST(1000) As Double
 
 Public KSTOP As Long, III As Long, IIS As Long, j As Long, ISSR As Integer, INVFLAG As Integer
@@ -37,7 +37,7 @@ Public ZL As Double, ZR As Double, ISTOP As Long, CON As Double, U As Double
 Public RMINTMP As Double, RMAXTMP As Double, RMINELV As Double, RMAXELV As Double
 Public IJK As Long, MMM As Long, IX As Long, IY As Long, IPER As Long
 Public IG As Long, IR As Long, IB As Long, MM As Long, NN As Long, n_size As Long, msize As Long
-Public r As Double, g As Double, b As Double, CalcComplete As Boolean
+Public r As Double, g As Double, b As Double, CalcComplete As Boolean, SondeDate$
 Public DELALT As Double, DELAZM As Double, STARTAZM As Double, TransferCurve() As Variant
 Public ROBJ As Double, n As Long, m As Long, KMIN As Long, KMAX As Long, KSTEP As Long
 Public GAM As Double, max As Long, HDEG As Double, PPAM As Double, DELTA As Double, XMAX As Double
@@ -45,9 +45,9 @@ Public SSRMAX As Double, RMX As Double, TSUN As Double, ITRAN As Long, Image1 As
 Public SunAngles(NumSuns, TotNumSunAlt) As Long, NumSunAlt(TotNumSunAlt) As Long, HeightStep As Double
 Public DirectOut$, FinishedTracing As Boolean, SkipRepeats As Boolean, cmdVDW_error As Integer
 Public FileNameAtmOut As String, fileoutatm As Integer, LoopingAtmTracing As Boolean, DateNameAtm As String
-Public HillHugging As Boolean, ReNormHeight As Boolean, ZeroRefTesting As Boolean
+Public HillHugging As Boolean, ReNormHeight As Boolean, ZeroRefTesting As Boolean, DistToHug As Double
 
-Public PlotMode As Integer, CalcMode As Integer, SunPlotMode As Integer
+Public PlotMode As Integer, CalcMode As Integer, SunPlotMode As Integer, Bearing As Double
 Public RayTrace(MaxViewAngles&, MaxViewSteps&) As POINTAPI, NumTraces(MaxViewAngles&) As Long, TracesLoaded As Boolean
 Public FilNm As String
 
@@ -505,8 +505,8 @@ FileDialog_Error:
 End Sub
 
 Public Function DASIN(XX As Double) As Double
-   If XX >= 1# Then
-      DASIN = 90# * cd
+   If XX > 1# Then
+      DASIN = 1
    ElseIf XX <= -1# Then
       DASIN = 270# * cd
    Else
@@ -1246,13 +1246,21 @@ Dim BorderColor As Long, X1 As Long, X2 As Long, Y1 As Long, Y2 As Long
 Dim ANGLE As Double, A1 As Double, A2 As Double, TwipFactor As Double
 Dim RecordVertices As Boolean, SunAngle As Single, VA As Single ', MultElv As Double
 Dim Refr As Double, TRUANG As Double, InvLabels() As POINTAPI, NumInversions As Integer, InvText() As String
-Dim DeltaX As Double, DeltaY As Double, HgtMult As Double
+Dim DeltaX As Double, DeltaY As Double, HgtMult As Double, HgtMultHCROSS As Double
+Dim doclinInversions() As String
 'Dim InversionLayer As Boolean
 
 InversionLayer = False
 
+NumInversions = 0
+
 HgtMult = 1#
 If prjAtmRefMainfm.OptionSelby Then HgtMult = 1000#
+If HCROSS < 100 Then
+   HgtMultHCROSS = 1000#
+Else
+   HgtMultHCROSS = 1#
+   End If
 'If RefCalcType% = 2 Then HgtMult = 1#
 
 PicCenterX = picRef.Width * 0.5 + Xorigin
@@ -1360,11 +1368,9 @@ For i = NumTemp To 1 Step -1
 '           ElseIf InversionLayer And TMP(i - 1) > TMP(i) And ELV(i - 1) < 11000 Then
 '               InversionLayer = False
               'mark the inversion layer
-            If i = 19 Then
-               ccc = 1
-               End If
+
 '               picRef.Circle (PicCenterX, PicCenterY - Multiplication * HOBS), CSng(Multiplication * (RE + ELV(i - 1))), QBColor(1)
-            If slope0 * slope1 < 0 And ELV(i - 1) * HgtMult < HCROSS And i < NumTemp And i > 1 Then
+            If slope0 * slope1 < 0 And ELV(i - 1) * HgtMult < HCROSS * HgtMultHCROSS And i < NumTemp And i > 1 And i < NumTemp - 1 Then
                picRef.Circle (PicCenterX, PicCenterY), CSng(Multiplication * (RE + ELV(i - 1) * HgtMult)), QBColor(1)
                NumInversions = NumInversions + 1
                ReDim Preserve InvLabels(NumInversions)
@@ -1375,7 +1381,46 @@ For i = NumTemp To 1 Step -1
                InvLabels(NumInversions - 1).y = CLng(PicCenterY - Sqr((Multiplication * (RE + ELV(i - 1) * HgtMult)) ^ 2 - DeltaX ^ 2))
                ReDim Preserve InvText(NumInversions)
                InvText(NumInversions - 1) = "Inversion at: " & Str(ELV(i - 1) * HgtMult) & " meters"
-               End If
+               If NumInversions > 0 And C5Click Then
+                   SondeInversionInfoFile$ = App.Path & "\Sondes-Inversions.txt"
+                   doclin2$ = RadioSonde$ & _
+                              "," & Format(Str$(SondeDayNum), "##0.0##") & _
+                              "," & Format(Str$(ELV(i - 1) * HgtMult), "####0.0###") & _
+                              "," & Format(Str$(TMP(i - 1) - 273.15), "###0.0#") & _
+                              "," & Format(Str$(DistMatch), "#####0.0##") & _
+                              "," & Format(Str$(DifVRexpected * 60 * 3.3), "##0.0##")
+                    ReDim Preserve doclinInversions(NumInversions) As String
+                    doclinInversions(NumInversions - 1) = doclin2$
+                              
+                   If Dir(SondeInversionInfoFile$) <> sEmpty Then
+                      'check if already recorded the info
+                      filesonde% = FreeFile
+                      Open SondeInversionInfoFile$ For Input As #filesonde%
+                      found% = 0
+                      Line Input #filesonde%, doclin$ 'header line
+                      Do Until EOF(filesonde%)
+                         Line Input #filesonde%, doclin$ 'data lines
+                         If InStr(doclin$, doclin2$) Then
+                            found% = 1
+                            Exit Do
+                            End If
+                      Loop
+                      Close #filesonde%
+                      If found% = 0 Then
+                         filesonde% = FreeFile
+                         Open SondeInversionInfoFile$ For Append As #filesonde%
+                         Print #filesonde%, doclin2$
+                         Close #filesonde%
+                         End If
+                   Else
+                      filesonde% = FreeFile
+                      Open SondeInversionInfoFile$ For Output As #filesonde%
+                      Print #filesonde%, "Date, day number, Elevation (m), Temperature (C), dist. from observer (m), Diff. sunrise (seconds)"
+                      Print #filesonde%, doclin2$
+                      Close #filesonde%
+                      End If
+                   End If
+                End If
               
              If i < NumTemp Then
                 t0 = T1
@@ -1416,6 +1461,40 @@ For i = NumTemp To 1 Step -1
 '   End If
 skipstep:
 Next i
+
+'////////////////////////////added 070302//////////////////////////////////////////////////
+'now record only the last found inversion in the radiosonde-last-inversion file
+If NumInversions > 0 And C5Click Then
+    SondeInversionInfoFile$ = App.Path & "\Sondes-Last-Inversions.txt"
+    If Dir(SondeInversionInfoFile$) <> sEmpty Then
+       'check for duplications
+       found% = 0
+       filesonde% = FreeFile
+       Open SondeInversionInfoFile$ For Input As #filesonde%
+       Line Input #filesonde%, doclin$ 'header line
+       Do Until EOF(filesonde%)
+          Line Input #filesonde%, doclin$
+          If doclin$ = doclinInversions(NumInversions - 1) Then
+             found% = 1
+             Exit Do
+             End If
+       Loop
+       Close #filesonde%
+       If found% = 0 Then
+          filesonde% = FreeFile
+          Open SondeInversionInfoFile$ For Append As #filesonde%
+          Print #filesonde%, doclinInversions(NumInversions - 1)
+          Close #filesonde%
+          End If
+    Else
+       filesonde% = FreeFile
+       Open SondeInversionInfoFile$ For Output As #filesonde%
+       Print #filesonde%, "Date, day number, Elevation (m), Temperature (C), dist. from observer (m), Diff. sunrise (seconds)"
+       Print #filesonde%, doclinInversions(NumInversions - 1)
+       Close #filesonde%
+       End If
+    End If
+'///////////////////////////////////////////////////////////
 
 'draw earth
 picRef.FillStyle = 0
@@ -1648,9 +1727,17 @@ If RefCalcType% = 0 Then 'Brutton formulation of raytracing used
        numStep& = 0
        NumViewAngles& = 0
        'only plot the selected view angle
-       If prjAtmRefMainfm.OptionSelby.Value = True Or prjAtmRefMainfm.chkDucting.Value = vbChecked Then
+       If prjAtmRefMainfm.OptionSelby.Value = True Or prjAtmRefMainfm.chkDucting.Value = vbChecked Or RefCalcType% = 2 Then
           'skip doc line
           Line Input #filnum%, doclin$
+       Else
+          Line Input #filnum%, doclin$
+          If InStr(doclin$, "Standard REF2017 atmosphere calculation") Then
+          Else
+             Seek (filnum%), 1 'rewind the file
+             End If
+             
+             
           End If
        Do Until EOF(filnum%)
           Input #filnum%, XP, PATHLENGTH, YP, VA, TRUANG, Refr
@@ -2688,6 +2775,62 @@ Public Function LoadAtmospheres(filename As String, AtmType As Integer, AtmNumbe
                            Exit Function
                     End Select
                     End If
+                    
+               Case 11
+                  'use REF2017 temperature profile and standard pressure
+                  NumSource = 201
+                  NumRecords = NumSource - 1
+                  
+                  For i = 1 To NumSource
+                    ELV(i - 1) = (i - 1) * 0.5 'kms
+            
+                    TGROUND = Val(prjAtmRefMainfm.txtTGROUND.Text)
+                    TPress = Val(prjAtmRefMainfm.txtPress0.Text)
+                    PRSR(i - 1) = TPress * Exp(-ELV(i - 1) * 1000# / 8400#)
+            
+                    HCROSS = (TGROUND - 216.65) / 0.0065
+                    H = (i - 1) * 500
+            
+                    If H < HCROSS Then
+                        TMP(i - 1) = 216.65 + 0.0065 * (HCROSS - H)
+                    Else
+                        If H < 20000# Then
+                            TMP(i - 1) = 216.65
+                        Else
+                            If H < 32000# Then
+                                TMP(i - 1) = 216.65 + 0.001 * (H - 20000#)
+                            Else
+                                If H < 47000# Then
+                                    TMP(i - 1) = 228.65 + 0.0028 * (H - 32000#)
+                                Else
+                                    If H < 51000# Then
+                                        TMP(i - 1) = 270.65
+                                    Else
+                                        If H < 71000# Then
+                                            TMP(i - 1) = 270.65 - 0.0028 * (H - 51000#)
+                                        Else
+                                            If H < 85000 Then
+                                                TMP(i - 1) = 214.65 - 0.002 * (H - 71000#)
+                                            Else
+                                                TMP(i - 1) = 186.65
+                                            End If
+                                        End If
+                                    End If
+                                End If
+                            End If
+                        End If
+                    End If
+                    
+                    If i = 1 Then
+                       MinTemp = TMP(0)
+                       MaxTemp = MinTemp
+                    Else
+                       If TMP(i - 1) > MaxTemp Then MaxTemp = TMP(i - 1)
+                       If TMP(i - 1) < MinTemp Then MinTemp = TMP(i - 1)
+                       End If
+                  
+                  Next i
+                  
 
            End Select
         
@@ -2962,7 +3105,7 @@ ConvertToElevTempPress2:
                HH0 = HH0 * 1000 'convert to meters
                Lapse0 = Lapse0 * 0.001 'convert to deg K/meters
                
-               ELV(NumSource) = HH0 * 1000
+               ELV(NumSource) = HH0
                TMP(NumSource) = StartTemp
                PRSR(NumSource) = prjAtmRefMainfm.txtGroundPressure
                
@@ -2989,6 +3132,7 @@ ConvertToElevTempPress2:
                PRSR(NumSource) = prjAtmRefMainfm.txtGroundPressure * Exp(-ELV(NumSource) / 8400#)
                   
                Lapse0 = Lapse
+               StartTemp = TMP(NumSource)
                HH0 = HH
                 
                If Mode = 3 And ELV(NumSource) > 11000 Then
@@ -3679,23 +3823,23 @@ End Sub
          
 
 End Sub
-'The following function will return the inverse tangent in the proper
-'quadrant determined by the signs of x and y.
-'http://computer-programming-forum.com/16-visual-basic/f6b1e67cca79ee85.htm
-Public Function Atan2(x As Double, y As Double) As Double
-'-pi < Atan2 <= pi
-'    If x > 0 Then Atan2 = Atn(y / x): Exit Function     '1st & 4th quadrants
-'    If x < 0 And y > 0 Then Atan2 = Atn(y / x) + PI: Exit Function      '2nd quadrant
-'    If x < 0 And y < 0 Then Atan2 = Atn(y / x) - PI: Exit Function      '3rd quadrant
-'    If x = 0 And y > 0 Then Atan2 = PI / 2: Exit Function
-'    If x = 0 And y < 0 Then Atan2 = -PI / 2
-
-If x Then
-        Atan2 = Atn(y / x) - (x > 0) * 3.14159265358979
-    Else
-        Atan2 = 1.5707963267949 + (y > 0) * 3.14159265358979
-End If
-End Function
+''The following function will return the inverse tangent in the proper
+''quadrant determined by the signs of x and y.
+''http://computer-programming-forum.com/16-visual-basic/f6b1e67cca79ee85.htm
+'Public Function atan2(x As Double, y As Double) As Double
+''-pi < Atan2 <= pi
+''    If x > 0 Then Atan2 = Atn(y / x): Exit Function     '1st & 4th quadrants
+''    If x < 0 And y > 0 Then Atan2 = Atn(y / x) + PI: Exit Function      '2nd quadrant
+''    If x < 0 And y < 0 Then Atan2 = Atn(y / x) - PI: Exit Function      '3rd quadrant
+''    If x = 0 And y > 0 Then Atan2 = PI / 2: Exit Function
+''    If x = 0 And y < 0 Then Atan2 = -PI / 2
+'
+'If x Then
+'        atan2 = Atn(y / x) - (x > 0) * 3.14159265358979
+'    Else
+'        atan2 = 1.5707963267949 + (y > 0) * 3.14159265358979
+'End If
+'End Function
 'The following function will return the inverse tangent in the proper
 'quadrant determined by the signs of x and y.
 'http://computer-programming-forum.com/16-visual-basic/f6b1e67cca79ee85.htm
@@ -3773,6 +3917,7 @@ Public Function fun_(h__ As Double, zz_1() As zz, num_Layers As Integer, Dist As
 '{
 '    /* System generated locals */
      Dim ret_val As Double, d__1 As Double, GrndHgt As Double
+     Dim fSTNDATM As Double, HCROSS As Double
 
 '    /* Builtin functions */
 '    'double pow_dd(double *, double *)
@@ -3819,9 +3964,16 @@ Public Function fun_(h__ As Double, zz_1() As zz, num_Layers As Integer, Dist As
 '''''''''''''''''''''new format 072521''''''''''''''''''''''''''''''
     
 '////////////////ground hugging added to Menat atmospheres on 081321 //////////////////////////////
+   On Error GoTo fun__Error
+
     If prjAtmRefMainfm.OptionSelby.Value = True And prjAtmRefMainfm.chkHgtProfile.Value = vbChecked And prjAtmRefMainfm.chkDruk.Value = vbChecked And Dist <> -1 Then
-        GrndHgt = DistModel(Dist) 'assumes that atmospheric layers are displaced vertically
-        GrndHgt = GrndHgt * 0.001
+        If BARParametersfm.chkUseDTM.Value Then
+            GrndHgt = DTMheight(Dist)
+        Else
+            GrndHgt = DistModel(Dist) 'assumes that atmospheric layers are displaced vertically
+            End If
+            
+        GrndHgt = GrndHgt * 0.001 'convert from m to km
         
         '///////////////fixed on 081321////////////////////
         If h__ < GrndHgt Then h__ = GrndHgt 'light doesn't travel underground!!!!
@@ -3830,6 +3982,49 @@ Public Function fun_(h__ As Double, zz_1() As zz, num_Layers As Integer, Dist As
     Else
         GrndHgt = 0#
         End If
+        
+
+''///////////////added REF2017 modified 1972 U.S. Standard Atmosphere/////////////////
+'    If prjAtmRefMainfm.OptionSelby.Value = False And prjAtmRefMainfm.OptionLayer.Value = True Then
+'        'use REF2017 modified 1976 U.S. Standard Atmosphere for the temperatures instead of the unmodified standard temperatures.
+'        fSTNDATM = -9999
+'
+'        TGROUND = Val(prjAtmRefMainfm.txtTGROUND.Text)
+'
+'        HCROSS = (TGROUND - 216.65) / 0.0065
+'        H = h__ * 1000# - GrndHgt
+'
+'        If H < HCROSS Then
+'            fSTNDATM = 216.65 + 0.0065 * (HCROSS - H)
+'        Else
+'            If H < 20000# Then
+'                fSTNDATM = 216.65
+'            Else
+'                If H < 32000# Then
+'                    fSTNDATM = 216.65 + 0.001 * (H - 20000#)
+'                Else
+'                    If H < 47000# Then
+'                        fSTNDATM = 228.65 + 0.0028 * (H - 32000#)
+'                    Else
+'                        If H < 51000# Then
+'                            fSTNDATM = 270.65
+'                        Else
+'                            If H < 71000# Then
+'                                fSTNDATM = 270.65 - 0.0028 * (H - 51000#)
+'                            Else
+'                                If H < 85000 Then
+'                                    fSTNDATM = 214.65 - 0.002 * (H - 71000#)
+'                                Else
+'                                    fSTNDATM = 186.65
+'                                End If
+'                            End If
+'                        End If
+'                    End If
+'                End If
+'            End If
+'        End If
+'    End If
+        
 '
 '    found% = 0
 '    For n = 2 To num_Layers - 1
@@ -3871,11 +4066,17 @@ L15:
        Exit Function
        End If
        
-    T = zz_1(m - 1).tj + zz_1(m - 1).AT * (h__ - zz_1(m - 1).hj - GrndHgt)
-    d__1 = T / zz_1(m - 1).tj
+'    If prjAtmRefMainfm.OptionSelby.Value = False And prjAtmRefMainfm.OptionLayer = True And _
+'       fSTNDATM <> -9999 Then
+'       T = fSTNDATM
+'       d__1 = T / zz_1(m - 1).tj
+'    Else
+       T = zz_1(m - 1).tj + zz_1(m - 1).AT * (h__ - zz_1(m - 1).hj - GrndHgt)
+       d__1 = T / zz_1(m - 1).tj
+'       End If
 
     If (zz_1(m).tj + GrndHgt <> zz_1(m - 1).tj + GrndHgt) Then 'non-isothermic region
-
+          
         P = zz_1(m - 1).pj * d__1 ^ zz_1(m - 1).ct
         ret_val = P * 0.000079 / T
         
@@ -3888,6 +4089,13 @@ L15:
 '/* L25: */
 '    return ret_val
     fun_ = ret_val
+
+   On Error GoTo 0
+   Exit Function
+
+fun__Error:
+    Resume
+    MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure fun_ of Module modBurtonAstRef"
 End Function
 'Public Sub layers_int(h__ As Double, zz_1 As zz, num_Layers As Integer, P As Double, T As Double)
 Public Sub layers_int(h__ As Double, zz_1() As zz, num_Layers As Integer, P As Double, T As Double)
@@ -3991,7 +4199,7 @@ Public Sub casgeo(kmx, kmy, lg, lt)
             End If
             
         r# = 57.2957795131
-        B2# = 0.03246816
+        b2# = 0.03246816
         f1# = 206264.806247096
         S1# = 126763.49
         s2# = 114242.75
@@ -4010,17 +4218,17 @@ ca5:    If (yy2# > 550000#) Then GoTo ca10
         yy1# = yy1# - 1000000#
 ca10:   X1# = X2# - X1#
         yy1# = yy2# - yy1#
-        D1# = yy1# * B2# / 2#
+        D1# = yy1# * b2# / 2#
         O1# = s2# + D1#
         O2# = O1# + D1#
         a3# = O1# / f1#
-        A4# = O2# / f1#
-        B3# = 1# - e4# * Sin(a3#) ^ 2
-        B4# = B3# * Sqr(B3#) * C1#
-        C4# = 1# - e4# * Sin(A4#) ^ 2
-        C5# = Tan(A4#) * C2# * C4# ^ 2
+        a4# = O2# / f1#
+        b3# = 1# - e4# * Sin(a3#) ^ 2
+        b4# = b3# * Sqr(b3#) * C1#
+        C4# = 1# - e4# * Sin(a4#) ^ 2
+        C5# = Tan(a4#) * C2# * C4# ^ 2
         C6# = C5# * X1# ^ 2
-        D2# = yy1# * B4# - C6#
+        D2# = yy1# * b4# - C6#
         C6# = C6# / 3#
 'LAT
         l1# = (s2# + D2#) / f1#
@@ -4151,19 +4359,32 @@ T50:
      
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : worldheights
+' Author    : chaim
+' Date      : 6/26/2022
+' Purpose   : returns the DTM height, hgt, in meters at geographic location (lg,lt)
+'             where lg < 0 for Western hemisphere, like the standard map convention
+'---------------------------------------------------------------------------------------
+'
 Public Sub worldheights(lg, lt, hgt)
    Dim leros As Long, lmag As Long
    Dim world As Boolean, srtmdtm As String, DTMflag As Integer
    Dim NCOLS As Integer, NROWS As Integer, AA$, j%
+   Dim israeldtm As String, IsraelDTMsource%, worlddtm As String
    
    On Error GoTo worlderror
    
    If lt > 90 Or lt < -90 Or lg < -180 Or lg > 180 Then Exit Sub
    
    'make 30 m SRTM default for this program, residing in c directory
-   world = True
+   israeldtm = "c"
    srtmdtm = "c"
+   worlddtm = "c"
+   world = True
    DTMflag = 1
+   IsraelDTMsource% = 0
+
    
    'check if have correct CD in the drive, if not present error message
    If (world = False And IsraelDTMsource% = 1) Or (DTMflag > 0 And (lt >= -60 And lt <= 61)) Then 'SRTM
@@ -4293,74 +4514,17 @@ gtopo:
       NCOLS = 7200
       numCD% = 5
       End If
-   If worldfil$ <> DEMfile1$ Then
-      myfile = Dir(DEMfile$)
-      If myfile = sEmpty Then
-         mapEROSDTMwarn.Visible = True
-         ret = SetWindowPos(mapEROSDTMwarn.hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-         mapEROSDTMwarn.Label3.Caption = numCD%
-         leros = FindWindow(vbNullString, "         USGS EROS DEM CD not found!")
-         If leros > 0 Then
-            ret = BringWindowToTop(leros) 'bring message to top
-            End If
-      Else
-         If mapEROSDTMwarn.Visible = True Then
-            Unload mapEROSDTMwarn
-            Set skyerosdtwarn = Nothing
-            If magbox = True Then
-               lmag = FindWindow(vbNullString, mapMAGfm.Caption)
-               If lmag > 0 Then
-                  ret = BringWindowToTop(lmag) 'bring mapMAGfm back to top of Z order
-                  'ret = ShowWindow(lmag, SW_RESTORE) 'redisplay mapMAGfm
-                  End If
-               End If
-            End If
-         If worldfnum% <> 0 Then Close #worldfnum%
-         '******set as constants
-         'worldfnum% = FreeFile
-         'worldfil$ = DEMfile1$
-         'Open DEMfile1$ + ".STX" For Input As #worldfnum%
-         'Input #worldfnum%, A, elevmin%, elevmax%, D, E
-         'Close #worldfnum%
-         'Open DEMfile1$ + ".HDR" For Input As #worldfnum%
-         'npos% = 0
-         'Do Until EOF(worldfnum%)
-         '  npos% = npos% + 1
-         '  Line Input #worldfnum%, doclin$
-         '  If npos% = 3 Then
-         '     nrows% = Val(Mid$(doclin$, 15, Len(doclin$) - 14))
-         '  ElseIf npos% = 4 Then
-         '     ncols% = Val(Mid$(doclin$, 15, Len(doclin$) - 14))
-         '  ElseIf npos% = 13 Then
-         '     xdim = Val(Mid$(doclin$, 15, Len(doclin$) - 14))
-         '  ElseIf npos% = 14 Then
-         '     ydim = Val(Mid$(doclin$, 15, Len(doclin$) - 14))
-         '     End If
-        'Loop
-        'Close #worldfnum%
-        worldfnum% = FreeFile
-        Open DEMfile$ For Binary As #worldfnum%
-        GoSub Eroshgt
-        Close #worldfnum%
-        worldfnum% = 0
-        hgt = integ2%
-        End If
-    Else
-       If mapEROSDTMwarn.Visible = True Then
-          Unload mapEROSDTMwarn
-          Set skyerosdtwarn = Nothing
-          End If
-       If magbox = True Then
-          lmag = FindWindow(vbNullString, mapMAGfm.Caption)
-          If lmag > 0 Then
-             ret = BringWindowToTop(lmag) 'bring mapMAGfm back to top of Z order
-'             ret = ShowWindow(lmag, SW_RESTORE) 'redisplay mapMAGfm
-             End If
-          End If
-       'continue reading
-        GoSub Eroshgt
-        hgt = integ2%
-        End If
+      
+     If worldfnum% <> 0 Then Close #worldfnum%
+
+    worldfnum% = FreeFile
+    Open DEMfile$ For Binary As #worldfnum%
+    GoSub Eroshgt
+    Close #worldfnum%
+    worldfnum% = 0
+    hgt = integ2%
+
+
     Exit Sub
 
 Eroshgt:
@@ -4385,7 +4549,7 @@ Eroshgt:
     TR = T1 * 256 + T2
     integ1& = TR
 mer130:
-    If IO% < 0 Or integ1& > elevmax% Then 'modular division failed use HEX swap
+    If IO% < 0 Or integ1& > ElevMax% Then 'modular division failed use HEX swap
        a0$ = LTrim$(RTrim$(Hex$(IO%)))
        AA$ = sEmpty
        'swap the two bytes using their hex representation
@@ -4535,16 +4699,24 @@ g99:
 
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : DistModel
+' Author    : chaim
+' Date      : 6/26/2022
+' Purpose   : Polynomial approximation to the heights along the due east crossection from
+'             the Armon Hanatziv observation spot eastward toward Harei Moav
+'---------------------------------------------------------------------------------------
+'
 Public Function DistModel(Dist As Double) As Double
    Dim DistModelCoef(12) As Double, i As Integer
    Dim dist1 As Double, dist2 As Double, hgt1 As Double, hgt2 As Double, numHgts As Long
    
-   DistModel = 0
+   DistModel = 0 'initialize height to zero meters
    
    If prjAtmRefMainfm.txtHgtProfile.Text = "External terrain profile file path (m,m)" Then
         '10th order polynomial fit to height vs distance profile between Rabbi Druk's obsdervation place and due East for 80 km
         
-        If (Dist > 0 And Dist < 80000 And Dist <> -1) Then
+        If (Dist > 0 And Dist < DistToHug * 1000 And Dist <> -1) Then
             'at zero azimuth, i.e., due East
             DistModelCoef(0) = 719.595830740319
             DistModelCoef(1) = -4.81685432649849E-02
@@ -4586,8 +4758,8 @@ Public Function DistModel(Dist As Double) As Double
 '            Next i
             
          ElseIf Dist = 0 Then
-            DistModel = 800.5 'last height of profile in Harei Moav
-         ElseIf Dist = -1 Or Dist > 80000 Then
+            DistModel = prjAtmRefMainfm.txtHeight 'DistModel(0) '800.5 'first height in cross section
+         ElseIf Dist = -1 Or Dist > DistToHug Then
             DistModel = 0#
             End If
         
@@ -4980,3 +5152,115 @@ Public Function DaysinYear(yrdy As Integer) As Integer
     If yd Mod 4 = 0 And yrdy Mod 100 = 0 And yrdy Mod 400 <> 0 Then DaysinYear = 365
     
 End Function
+'---------------------------------------------------------------------------------------
+' Procedure : DTMheight
+' Author    : chaim
+' Date      : 6/26/2022
+' Purpose   : 'read the SRTM 1 arcsecond heights along the radial having a certain Bearing
+'           : lon convention is positive for West longitude
+' Source:  Aviation Formulary V1.47 by Ed Williams  https://edwilliams.org/avform147.htm
+'---------------------------------------------------------------------------------------
+'
+Public Function DTMheight(Dist As Double)
+
+   Dim lon1 As Double, lat1 As Double
+   Dim lat, lon, hgt, d As Double, dlon As Double
+   Dim latt, lontt
+
+   On Error GoTo DTMheight_Error
+   
+   If Dist = 0 Then
+   
+      DTMheight = prjAtmRefMainfm.txtHeight
+      
+      Exit Function
+      
+      End If
+   
+'   'Rabbi Druk's shul at Armon Hanatziv
+    lon1 = -35.238133306709
+    lat1 = 31.7487155576439
+    
+    d = Dist / RE  'units of Dist is meters
+    
+    lon1 = -35.238133306709 * cd
+    lat1 = 31.7487155576439 * cd
+    d = Dist / 6356766#  'distance away from the observer in radians of great circle arc
+    tc1 = Bearing * cd 'compass bearing = azimuth + 90 in radians
+    
+    lat = asin(Sin(lat1) * Cos(d) + Cos(lat1) * Sin(d) * Cos(tc1))
+    latt = lat / cd
+    
+'    lon = mod2(lon1 - asin(Sin(tc1) * Sin(d) / Cos(lat)) + pi, 2 * pi) - pi
+'    lontt = lon / cd
+    
+    'another, more general method
+    dlon = atan2(Sin(tc1) * Sin(d) * Cos(lat1), Cos(d) - Sin(lat1) * Sin(lat))
+    lon = mod2(lon1 - dlon + pi, 2 * pi) - pi
+    lontt = lon / cd
+    
+    Call worldheights(-lontt, latt, hgt)
+    
+    DTMheight = hgt
+       
+
+   On Error GoTo 0
+   Exit Function
+
+DTMheight_Error:
+    MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure DTMheight of Module modBurtonAstRef"
+    
+End Function
+
+Public Function asin(x As Double) As Double
+
+    If x > 1 Then
+       asin = 1
+    ElseIf x < -1 Then
+       asin = -1
+    Else
+        asin = 2 * Atn(x / (1 + Sqr(1 - x * x)))
+        End If
+    
+End Function
+Public Function acos(x As Double) As Double
+    
+    If x > 1 Then
+       acos = 1
+    ElseIf x < -1 Then
+       acos = -1
+    Else
+
+        If (x >= 0) Then
+            acos = 2 * Atn(Sqr((1 - x) / (1 + x)))
+        ElseIf x < 0 Then
+            acos = pi - 2 * Atn(Sqr((1 + x) / (1 - x)))
+            End If
+            
+        End If
+        
+End Function
+
+Public Function atan2(y As Double, x As Double) As Double
+
+   If x > 0 Then
+      atan2 = Atn(y / x)  'x>0
+   ElseIf x < 0 And y >= 0 Then
+      atan2 = Atn(y / x) + pi 'x<0, y>=0
+   ElseIf x = 0 And y > 0 Then
+      atan2 = pi / 2       'x=0, y>0
+   ElseIf x < 0 And y < 0 Then
+      atan2 = Atn(y / x) - pi 'x<0, y<0
+   ElseIf x = 0 And y < 0 Then
+      atan2 = -pi / 2      'x=0, y<0
+   ElseIf x = 0 And y = 0 Then
+      End If
+  ' atan2(0,0) is undefined and should give an error.
+  
+End Function
+
+Public Function mod2(y As Double, x As Double) As Double
+    mod2 = y - x * Int(y / x)
+    If (mod2 < 0) Then mod2 = mod2 + x
+End Function
+

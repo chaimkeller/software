@@ -1,19 +1,29 @@
 VERSION 5.00
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
 Begin VB.Form BARParametersfm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Calculation mode"
-   ClientHeight    =   12330
-   ClientLeft      =   45
-   ClientTop       =   -3300
+   ClientHeight    =   10650
+   ClientLeft      =   4020
+   ClientTop       =   735
    ClientWidth     =   5985
    LinkTopic       =   "Form1"
    LockControls    =   -1  'True
    MaxButton       =   0   'False
    MDIChild        =   -1  'True
    MinButton       =   0   'False
-   ScaleHeight     =   12330
+   ScaleHeight     =   10650
    ScaleWidth      =   5985
+   Begin VB.CommandButton cmdC7 
+      Caption         =   "C7"
+      Height          =   255
+      Left            =   0
+      TabIndex        =   48
+      ToolTipText     =   "List dist to Max Temp, dist to Half Max Temp"
+      Top             =   5160
+      Width           =   255
+   End
    Begin VB.CheckBox chkEdmonton 
       Caption         =   "Edmonton sondes"
       Height          =   195
@@ -36,7 +46,6 @@ Begin VB.Form BARParametersfm
          TabIndex        =   35
          ToolTipText     =   "calculate refraction for all seasons using the recorded pressures"
          Top             =   180
-         Value           =   -1  'True
          Width           =   1695
       End
       Begin VB.OptionButton optAllSeasons 
@@ -46,6 +55,7 @@ Begin VB.Form BARParametersfm
          TabIndex        =   34
          ToolTipText     =   "calculate the sondes for all seasons using vdw ciddor pressures"
          Top             =   180
+         Value           =   -1  'True
          Width           =   1215
       End
       Begin VB.OptionButton optSummer 
@@ -74,6 +84,37 @@ Begin VB.Form BARParametersfm
       TabIndex        =   23
       Top             =   3680
       Width           =   5535
+      Begin MSComCtl2.UpDown UpDownDist 
+         Height          =   285
+         Left            =   4920
+         TabIndex        =   43
+         Top             =   480
+         Width           =   255
+         _ExtentX        =   450
+         _ExtentY        =   503
+         _Version        =   393216
+         Value           =   80
+         AutoBuddy       =   -1  'True
+         BuddyControl    =   "txtDist"
+         BuddyDispid     =   196617
+         OrigLeft        =   4920
+         OrigTop         =   480
+         OrigRight       =   5175
+         OrigBottom      =   735
+         Max             =   80
+         SyncBuddy       =   -1  'True
+         BuddyProperty   =   0
+         Enabled         =   -1  'True
+      End
+      Begin VB.TextBox txtDist 
+         Alignment       =   2  'Center
+         Height          =   285
+         Left            =   4560
+         TabIndex        =   42
+         Text            =   "80"
+         Top             =   480
+         Width           =   360
+      End
       Begin VB.OptionButton optfit1 
          Caption         =   "eps and ref fitting"
          Height          =   255
@@ -99,20 +140,56 @@ Begin VB.Form BARParametersfm
          Value           =   -1  'True
          Width           =   2415
       End
+      Begin VB.Label lblDist 
+         Caption         =   "Distance to hug (km):"
+         Height          =   255
+         Left            =   3000
+         TabIndex        =   44
+         Top             =   480
+         Width           =   1575
+      End
    End
    Begin VB.Frame frmsondes 
       Caption         =   "Convert Sondes to atmosphere csv files"
-      Height          =   7215
+      Height          =   5415
       Left            =   240
       TabIndex        =   16
       Top             =   5040
       Width           =   5535
+      Begin VB.CommandButton cmd6 
+         Caption         =   "C6"
+         Height          =   255
+         Left            =   0
+         TabIndex        =   47
+         ToolTipText     =   "convert TR refraction files to reverse refraction"
+         Top             =   120
+         Width           =   375
+      End
+      Begin VB.CheckBox chkMatch 
+         Caption         =   "Hug only to match observations"
+         Height          =   195
+         Left            =   480
+         TabIndex        =   46
+         ToolTipText     =   "Keep on hugging the terrain only as long as need to to match the observation's refraction"
+         Top             =   160
+         Width           =   2655
+      End
+      Begin VB.CheckBox chkUseDTM 
+         Caption         =   "Use DTM elevations"
+         Height          =   195
+         Left            =   3240
+         TabIndex        =   45
+         ToolTipText     =   "Use actual DTM elevations for hill hugging rather than the polynomial fit"
+         Top             =   160
+         Value           =   2  'Grayed
+         Width           =   1815
+      End
       Begin VB.CommandButton cmdC5 
          Caption         =   "C5"
          Height          =   255
-         Left            =   5240
+         Left            =   5160
          TabIndex        =   41
-         Top             =   6480
+         Top             =   120
          Width           =   320
       End
       Begin VB.ListBox lstC2 
@@ -127,9 +204,9 @@ Begin VB.Form BARParametersfm
       Begin VB.CommandButton cmdCalc2 
          Caption         =   "C2"
          Height          =   255
-         Left            =   4880
+         Left            =   4800
          TabIndex        =   39
-         Top             =   6480
+         Top             =   4800
          Width           =   375
       End
       Begin VB.CommandButton cmdFitFiles 
@@ -138,7 +215,7 @@ Begin VB.Form BARParametersfm
          Height          =   255
          Left            =   1560
          TabIndex        =   37
-         Top             =   6840
+         Top             =   5040
          Width           =   855
       End
       Begin VB.CommandButton cmdAutoBrowse 
@@ -147,48 +224,48 @@ Begin VB.Form BARParametersfm
          Left            =   120
          TabIndex        =   33
          ToolTipText     =   "Auto browse directory for file type"
-         Top             =   6840
+         Top             =   5040
          Width           =   1455
       End
       Begin VB.CommandButton cmdAddRef 
          Caption         =   "Add Ref"
          Height          =   255
-         Left            =   4200
+         Left            =   3960
          TabIndex        =   29
-         Top             =   6840
+         Top             =   5040
          Width           =   1095
       End
       Begin VB.CommandButton cmdAddVA 
          Caption         =   "Add VAs"
          Height          =   255
-         Left            =   2520
+         Left            =   2400
          TabIndex        =   28
-         Top             =   6840
+         Top             =   5040
          Width           =   1575
       End
       Begin VB.CommandButton cmdCalcAtms 
          Caption         =   "Calculate"
          Enabled         =   0   'False
          Height          =   255
-         Left            =   4030
+         Left            =   3960
          TabIndex        =   27
-         Top             =   6480
+         Top             =   4800
          Width           =   855
       End
       Begin VB.CommandButton cmdClear 
          Caption         =   "Clear"
          Height          =   255
-         Left            =   2800
+         Left            =   2760
          TabIndex        =   22
-         Top             =   6480
+         Top             =   4800
          Width           =   495
       End
       Begin VB.CommandButton cmdUnselect 
          Caption         =   "Unselect all"
          Height          =   255
-         Left            =   1810
+         Left            =   1800
          TabIndex        =   21
-         Top             =   6480
+         Top             =   4800
          Width           =   975
       End
       Begin VB.CommandButton cmdAll 
@@ -196,16 +273,16 @@ Begin VB.Form BARParametersfm
          Height          =   255
          Left            =   960
          TabIndex        =   20
-         Top             =   6480
+         Top             =   4800
          Width           =   855
       End
       Begin VB.CommandButton cmdConvertSonde 
          Caption         =   "Convert"
          Height          =   255
-         Left            =   3300
+         Left            =   3240
          TabIndex        =   19
          ToolTipText     =   "convert to atmosphere file: elevation,temperature,pressure"
-         Top             =   6480
+         Top             =   4800
          Width           =   735
       End
       Begin VB.ListBox lstSondes 
@@ -218,7 +295,7 @@ Begin VB.Form BARParametersfm
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   6000
+         Height          =   4380
          Left            =   240
          Sorted          =   -1  'True
          Style           =   1  'Checkbox
@@ -232,7 +309,7 @@ Begin VB.Form BARParametersfm
          Left            =   100
          TabIndex        =   17
          ToolTipText     =   "browse for sondes to convert or for atmospheric files to calculate ray tracing"
-         Top             =   6480
+         Top             =   4800
          Width           =   855
       End
    End
@@ -437,6 +514,86 @@ Private Sub chkPlotMode_Click()
    If chkPlotMode.Value = vbChecked Then
       SunPlotMode = 1
       End If
+End Sub
+
+'---------------------------------------------------------------------------------------
+' Procedure : cmd6_Click
+' Author    : chaim
+' Date      : 7/11/2022
+' Purpose   : used for analysis of the DTMhug and nohug refraction files outputed by the VDW DTMhug raytracing
+'             typical names are: TR_VDW_LAYERS_25-Feb-95_NoDTMHug_756_32.dat for No terrain hugging
+'                           and: TR_VDW_LAYERS_25-Feb-95_DTMHug_756_32.dat for terrain hugging using SRTM elevations along ray's path
+'---------------------------------------------------------------------------------------
+'
+Private Sub cmd6_Click()
+    Dim DirectOut$, HHDTMfile$, HHDTMoutfile$
+    Dim SondeHugDTMFile$, SondeNoHugDTMFile$
+    Dim SondeHugDTMFileRev$
+    Dim filein%, fileout%, fileNoHug%, fileHug%
+    Dim RefracNoHug As Double, RefracHug As Double
+    
+   On Error GoTo cmd6_Click_Error
+   
+   Screen.MousePointer = vbHourglass
+
+   If DirectOut$ = "" Then DirectOut$ = "c:/jk/Druk-Vangeld-data/"
+   HHDTMfile$ = DirectOut$ & "Figure8-win-0Z-wVA-HHDTM.csv"
+   HHDTMoutfile$ = DirectOut$ & "sondes-refract.csv"
+   If Dir(HHDTMfile$) <> sEmpty Then
+      filein% = FreeFile
+      Open HHDTMfile$ For Input As #filein%
+      fileout% = FreeFile
+      Open HHDTMoutfile$ For Output As #fileout%
+      Do Until EOF(filein%)
+        Input #filein%, SondeDate$, A2, a3, a4, DifTime, a6, a7, a8
+        SondeHugDTMFile$ = App.Path & "\TR_VDW_LAYERS_" & SondeDate$ & "_DTMHug_756_32.dat"
+        SondeNoHugDTMFile$ = App.Path & "\TR_VDW_LAYERS_" & SondeDate$ & "_NoDTMHug_756_32.dat"
+        If Dir(SondeHugDTMFile$) <> sEmpty And Dir(SondeNoHugDTMFile$) <> sEmpty Then
+           fileNoHug% = FreeFile
+           Open SondeNoHugDTMFile$ For Input As #fileNoHug%
+           Line Input #fileNoHug%, doclin$ 'doc line
+           Do Until EOF(fileNoHug%)
+              Input #fileNoHug%, B1, b2, b3, b4, b5, RefracNoHug
+           Loop
+           Close #fileNoHug%
+           fileHug% = FreeFile
+           Open SondeHugDTMFile$ For Input As #fileHug%
+           Line Input #fileNoHug%, doclin$ 'doc line
+           Do Until EOF(fileNoHug%)
+              Input #fileNoHug%, B1, b2, b3, b4, b5, RefracHug
+           Loop
+           Close #fileNoHug%
+           Print #fileout%, SondeDate$ & "," & Format(Str$(DifTime), "##0.0#") & "," & Format(Str$(RefracNoHug), "##0.0#") & "," & Format(Str$(RefracHug), "##0.0#")
+           'now rewrite the hug file to be two columns: distance in km, refraction in mrad.
+           SondeHugDTMFileRev$ = App.Path & "\" & SondeDate$ & "_DTMHug_Rev.dat"
+           fileoutrev% = FreeFile
+           Open SondeHugDTMFileRev$ For Output As #fileoutrev%
+           fileHug% = FreeFile
+           Open SondeHugDTMFile$ For Input As #fileHug%
+           Line Input #fileHug%, doclin$ 'doc line
+           Print #fileoutrev%, doclin$
+           Do Until EOF(fileHug%)
+              Input #fileHug%, B1, b2, b3, b4, b5, RefracHugB
+              Print #fileoutrev%, Format(Str$(B1 * 0.001), "#####0.0#") & "," & Format(Str$(RefracHug - RefracHugB), "##0.0#")
+           Loop
+           Close #fileHug%
+           Close #fileoutrev%
+           End If
+      Loop
+      Close #filein%
+      Close #fileout%
+      End If
+      
+   Screen.MousePointer = vbDefault
+      
+   On Error GoTo 0
+   Exit Sub
+
+cmd6_Click_Error:
+    Screen.MousePointer = vbDefault
+    Close
+    MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure cmd6_Click of Form BARParametersfm"
+   
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -765,8 +922,8 @@ Private Sub cmdAddVA_Click()
          Line Input #filerec, doclin$
          DocSplit = Split(doclin$, ",")
          'determine the date
-         FileSonde$ = DocSplit(0)
-         FileDate$ = Mid$(FileSonde$, Len(DirectOut$) + 1, 11)
+         filesonde$ = DocSplit(0)
+         FileDate$ = Mid$(filesonde$, Len(DirectOut$) + 1, 11)
          fileres = FreeFile
          Open FileResults For Input As #fileres
          Do Until EOF(fileres)
@@ -826,10 +983,10 @@ Private Sub cmdAddVA_Click()
        Line Input #filedruk, doclin$ 'skip two lines of documentation
        Line Input #filedruk, doclin$
 
-       Input #filedruk, az1, VA1, bb, cc, DD, EE
+       Input #filedruk, az1, VA1, bb, cc, dd, EE
        If az1 = 45# Then GoTo 900
 170:
-       Input #filedruk, az2, VA2, bb, cc, DD, EE
+       Input #filedruk, az2, VA2, bb, cc, dd, EE
        If AziOut >= az1 And AziOut < az2 Then
           VAOut = ((VA2 - VA1) / (az2 - az1)) * (AziOut - az1) + VA1
           Print #fileout, doclinIn$ & "," & Trim$(Str$(AziOut)) & "," & Trim$(Str$(VAOut))
@@ -1316,37 +1473,124 @@ End Sub
 ' Purpose   : Find date of sonde, then find view angle of that day, use it to calculate
 '             the hill hugging refraction at that VA, and then the standard REF2017 refraction using the
 '             the worldclim ground temperature and standard pressure.
+'           ////////////////////////////new on 061322////////////////////////////////////////
+'           This option was used to generate Figure 8 of the Keller Hall paper in Computers and Geosciences
+'           Use it also to investigate how far out the hill hugging has to go to generate the same results.
+'           For this change the output file names
+'           This new version is distinguished by CalcVariableDist = true
 '---------------------------------------------------------------------------------------
 '
 Private Sub cmdC5_Click()
 
    On Error GoTo cmdC5_Click_Error
 
-   Dim NewPath$, RadioSonde$, dynum As Double
+   Dim NewPath$, dynum As Double
    Dim TestCalc As Boolean
    Dim lg1 As Double, lt1 As Double
    Dim MT(12) As Integer, AT(12) As Integer, ier As Integer
    Dim mMonth As Integer, WinCalc As Boolean
    Dim FileOutName$, CheckForRepeat As Boolean
-   Dim CalendDate$, InputPlFile$
-      
+   Dim CalendDate$, InputPlFile$, UseMenat As Boolean
+   Dim CalcVariableDist As Boolean, UseOldCalc As Boolean
+   
+   C5Click = True
+   
+   DistToHug = txtDist
+         
    NewPath$ = "c:\jk\Druk-Vangeld-data\"
    
    '//////////diagnostics///////////////////////
    TestCalc = False
-   WinCalc = False
+   WinCalc = True
    HillHugging = True
-   CheckForRepeat = True
+   CheckForRepeat = True  'read the standard VDW atms refraction from the stored value
+   UseMenat = False
+   CalcVariableDist = True
+   UseOldCalc = True 'false
    '/////////////////////////////////////
    
-    If WinCalc And HillHugging Then
-      FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA.csv"
-    ElseIf Not WinCalc And HillHugging Then
-      FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA.csv"
-    ElseIf WinCalc And Not HillHugging Then
-      FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA.csv"
-    ElseIf Not WinCalc And Not HillHugging Then
-      FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA.csv"
+   If Not CalcVariableDist Then
+   
+      Select Case MsgBox("This operation will overwrite the files used for generating figure 8!!!" _
+                         & vbCrLf & "" _
+                         & vbCrLf & "Are you sure you want to recalculate the files and overwrite the old ones?" _
+                         , vbYesNo Or vbQuestion Or vbDefaultButton2, "Figure 8 calculations")
+      
+        Case vbYes
+      
+        Case vbNo
+           Exit Sub
+      
+      End Select
+   
+        If Not UseMenat Then
+             If WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA.csv"
+             ElseIf Not WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA.csv"
+             ElseIf WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA.csv"
+             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA.csv"
+               End If
+        Else
+             If WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA-Menat.csv"
+             ElseIf Not WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-Menat.csv"
+             ElseIf WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA-Menat.csv"
+             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-Menat.csv"
+               End If
+             End If
+             
+   Else
+   
+        If Not UseMenat Then
+           If chkUseDTM.Value And Not chkMatch Then
+             If WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA-HHDTM.csv"
+             ElseIf Not WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-HHDTM.csv"
+             ElseIf WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA-HHDTM.csv"
+             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-HHDTM.csv"
+               End If
+           ElseIf chkUseDTM And chkMatch Then
+             If WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA-HHDTM-Match.csv"
+             ElseIf Not WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-HHDTM-Match..csv"
+             ElseIf WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA-HHDTM-Match..csv"
+             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-HHDTM-Match..csv"
+               End If
+           Else
+             If WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA-HH-" & Trim$(Str$(DistToHug)) & "km-6.csv"
+             ElseIf Not WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+               End If
+             End If
+        Else
+             If WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf Not WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+               End If
+             End If
+   
       End If
    
    lstSondes.Visible = False
@@ -1365,7 +1609,7 @@ Private Sub cmdC5_Click()
    CalcSondes = True
 
    filin1% = FreeFile
-   Open NewPath$ & "Druk-all-dates-sorted.csv" For Input As #filin1%
+   Open NewPath$ & "Druk-all-dates-sorted.csv" For Input As #filin1%  'azimuth on 3rd line
    filin2% = FreeFile
    Open NewPath$ & "Druk-mt-combined-sorted-new.csv" For Input As #filin2%
    filin3% = FreeFile
@@ -1384,7 +1628,7 @@ Private Sub cmdC5_Click()
 5:
       prjAtmRefMainfm.WindowState = 1 'minimize
       BringWindowToTop (BARParametersfm.hwnd)
-      Input #filin1%, RadioSonde$, dynum, bb, cc, DD, EE, ff, GG
+      Input #filin1%, RadioSonde$, dynum, bb, cc, dd, EE, ff, GG
       If Len(RadioSonde$) = 8 Then RadioSonde$ = "0" + RadioSonde$
       'make sure it exists
       If Not WinCalc Then
@@ -1446,7 +1690,10 @@ Private Sub cmdC5_Click()
       InputPlFile$ = "c:/fordtm/netz/RavD19" & Mid$(RadioSonde$, 8, 2) & ".pl1"
       
       If Dir(InputPlFile$) = "" Then
-         ier = MsgBox("Can't find RavD file: " & InputPlFile$ & vbCrLf & "Aborting run....", vbOKOnly + vbCritical, "Missing pl file")
+         ier = MsgBox("Can't find RavD file: " & InputPlFile$ & vbCrLf & _
+                      "You need to run the prjDruk (Druk.exe) program" & vbCrLf & _
+                      "In order to populate fordtm/netz with the Armon HaNatziv netz times!" & vbCrLf & _
+                      "Aborting run....", vbOKOnly + vbCritical, "Missing pl file")
          Exit Sub
          End If
          
@@ -1460,11 +1707,13 @@ Private Sub cmdC5_Click()
          Input #filpl%, doclin$
          CalcDate$ = Mid$(doclin$, 1, 11)
          azimuth = Val(Mid$(doclin$, 38, 10))
+         Bearing = 90# + azimuth  'Compass Bearing in degrees is 90 degrees plus the azimuth as defined -/+ around due East.
          viewangle = Val(Mid$(doclin$, 49, 11))
          If CalcDate$ = CalendDate$ Then
             'use this viewangle
 '            prjAtmRefMainfm.txtStartAlt.Text = viewangle * 60 'convert degrees to arcminutes
 '            prjAtmRefMainfm.txtOther.Text = FullRadioSonde$
+'           viewangle = -0.1895
             Exit Do
             End If
       Loop
@@ -1522,6 +1771,32 @@ Private Sub cmdC5_Click()
           Close #filout%
                
       Else
+        If chkMatch.Value Or UseOldCalc Then
+           'find the VR2 to use for matching
+            'skip this step, just read the refraction from an old calculation
+            FileOld$ = NewPath$ & "Figure8-win-0Z-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+            If Dir(FileOld$) <> sEmpty Then
+               fileoldnum% = FreeFile
+               Open FileOld$ For Input As #fileoldnum%
+               found% = 0
+               Do Until EOF(fileoldnum%)
+                  Input #fileoldnum%, RecordedSonde$, SondeDayNum, ccc, cc, Time_Div_of_Obs_from_Astron, VRSondeAtm, VRVDWcalc, ggg
+                  If RecordedSonde$ = RadioSonde$ Then
+                     DifVRexpected = Time_Div_of_Obs_from_Astron / 3.3
+                     '/////////added 070322///////////////////////////
+                     If DifVRexpected > 0 And chkMatch.Value Then 'sunrise was later than expected, so nothing to investigate via raytracing, skip
+                        GoTo NextSonde
+                        End If
+                     '///////////////////////////////////
+                     found% = 1
+                     VR2 = VRVDWcalc
+                     Exit Do
+                     End If
+               Loop
+               Close #fileoldnum%
+               End If
+            End If
+            
         BringWindowToTop (prjAtmRefMainfm.hwnd)
 
         With prjAtmRefMainfm
@@ -1531,11 +1806,19 @@ Private Sub cmdC5_Click()
            .txtOther.Text = FullRadioSonde$
            .chkMeters.Value = vbChecked
            .chkHgtProfile.Value = vbChecked
+            DistToHug = BARParametersfm.txtDist
            .txtStartAlt.Text = viewangle * 60 'convert degrees to arcminutes
            .chkUseAlt.Value = vbChecked 'flag to use the above viewangle in calculating the refraction
            If HillHugging Then .chkDruk.Value = vbChecked
+           .txtNSTEPS.Text = "1000" 'double the standard resolution //070622
            endit% = 5
-           .cmdVDW.Value = True
+           
+           If Not UseMenat Then
+            .cmdVDW.Value = True
+           Else
+             .cmdMenat.Value = True
+             End If
+             
            .WindowState = 2 'maximize the dialog
            DoEvents
            Do Until FinishedTracing
@@ -1550,6 +1833,15 @@ Private Sub cmdC5_Click()
            'now redo without the sondes
            'determine temperature and pressure according to WorldClim
            'ITM coordinates of Rabbi Druk's observation point
+           
+           If UseOldCalc Then
+              'skip this search since already have the refraction value
+              filout% = FreeFile
+              Open FileOutName$ For Append As #filout%
+              Write #filout%, RadioSonde$, dynum, AS1, AS2, AS1 - AS2, VR1, VR2, (VR2 - VR1) * 5# 'approx conversion of refraction to minutes = * 5
+              Close #filout%
+              GoTo NextSonde
+              End If
 
            'determine month number
            MonthN$ = Mid$(RadioSonde$, 4, 3)
@@ -1584,7 +1876,15 @@ Private Sub cmdC5_Click()
            
            .TabRef.Tab = 0
            .OptionZero.Value = True
-           .cmdVDW.Value = True
+           
+           .txtNSTEPS.Text = "1000" 'double the resolution ///070622
+           
+           If Not UseMenat Then
+              .cmdVDW.Value = True
+           Else
+              .cmdMenat.Value = True
+              End If
+              
            .chkDruk.Value = vbUnchecked
            Do Until FinishedTracing
               DoEvents
@@ -1619,8 +1919,94 @@ NextSonde:
    Exit Sub
 
 cmdC5_Click_Error:
-
     MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure cmdC5_Click of Form BARParametersfm"
+End Sub
+
+'---------------------------------------------------------------------------------------
+' Procedure : cmdC7_Click
+' Author    : chaim
+' Date      : 7/18/2022
+' Purpose   : Open sondes and determine distance to maximum Temperature, and distance to ground temperature
+'---------------------------------------------------------------------------------------
+'
+Private Sub cmdC7_Click()
+
+   Dim FileNameIn$, filein%, DirectOut$
+   Dim FileNameOut$, fileout%, TempDif As Double
+   Dim SondeName$, ElevMax As Double, TempFirst As Double, ElevToFirst As Double
+   Dim FileSondeName$, filesonde%, numsonde%, TempMax As Double, TempToFirst As Double
+
+   On Error GoTo cmdC7_Click_Error
+
+   If DirectOut$ = "" Then DirectOut$ = "c:/jk/Druk-Vangeld-data/"
+   
+   FileNameIn$ = DirectOut$ & "sondes-refract-sorted-2.csv"
+   FileNameOut$ = DirectOut$ & "sondes-refract-sorted-3.csv"
+   
+   Screen.MousePointer = vbHourglass
+   
+   filein% = FreeFile
+   Open FileNameIn$ For Input As #filein%
+   fileout% = FreeFile
+   Open FileNameOut$ For Output As #fileout%
+   
+   Print #fileout%, "SoneName, Dif. in Sunrise(min), Ref of NoHug(mrad), Ref o Hug(mrad), Dif. in Ref(mrad), Sonde Elev at Max Temp (m), Temp Dif (C), Elev returns to First Temp (m)"
+   Do Until EOF(filein%)
+      Input #filein%, SondeName$, a11, a22, a33, a44
+      If Len(SondeName$) = 10 Then SondeName$ = "0" & SondeName$
+      FileSondeName$ = DirectOut$ & SondeName$ & "-2-sondes.txt"
+      If Dir(FileSondeName$) <> sEmpty Then
+        filesonde% = FreeFile
+        Open FileSondeName$ For Input As #filesonde%
+        numsonde% = 0
+        TempMax = -9999
+        found% = 0
+        Do Until EOF(filesonde%)
+           Input #filesonde%, b11, b22, b33
+           If numsonde% = 0 Then
+              DistFirst = b11  'meters
+              TempFirst = b22 'temperature C
+              TempMax = TempFirst
+              ElevToMax = DistFirst
+              b220 = b22
+              b110 = b11
+           Else
+              If b22 > TempMax Then
+                 TempMax = b22
+                 ElevToMax = b11
+                 TempDif = TempMax - TempFirst
+                 End If
+              If b22 <= TempFirst Then
+                 ElevToFirst = b11 + (b11 - b110) * (TempFirst - b220) / (b22 - b220)
+                 found% = 1
+                 Exit Do
+              Else
+                 b220 = b22
+                 b110 = b11
+                 End If
+              End If
+
+           numsonde% = numsonde% + 1
+        Loop
+        Close #filesonde%
+        If found% = 1 Then
+           Print #fileout%, SondeName$ & "," & Str$(a11) & "," & Str$(a22) & "," & Str$(a33) & "," & Str$(a44) & _
+                "," & Format(Str$(ElevToMax), "######0.0") & "," & Format(Str$(TempDif), "##0.0") & "," & Format(Str$(ElevToFirst), "######0.0")
+           End If
+        End If
+   Loop
+   Close #filein%
+   Close #fileout%
+   
+   Screen.MousePointer = vbDefault
+
+   On Error GoTo 0
+   Exit Sub
+
+cmdC7_Click_Error:
+    Screen.MousePointer = vbDefault
+    Close
+    MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure cmdC7_Click of Form BARParametersfm"
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -1703,7 +2089,7 @@ Private Sub cmdCalc2_Click()
 5:
       prjAtmRefMainfm.WindowState = 1 'minimize
       BringWindowToTop (BARParametersfm.hwnd)
-      Input #filin1%, RadioSonde$, dynum, bb, cc, DD, EE, ff, GG
+      Input #filin1%, RadioSonde$, dynum, bb, cc, dd, EE, ff, GG
       If Len(RadioSonde$) = 8 Then RadioSonde$ = "0" + RadioSonde$
       'make sure it exists
       If Not WinCalc Then
@@ -2877,7 +3263,7 @@ End Sub
 ' Procedure : cmdFitFiles_Click
 ' Author    : chaim
 ' Date      : 5/24/2020
-' Purpose   : wite files containing )1) eps and (2) ref values corresponding to every 30 meters in height from 0 to 3000 meters as function of temperature
+' Purpose   : write files containing (1) eps and (2) ref values corresponding to every 30 meters in height from 0 to 3000 meters as function of temperature
 '             to be used to determine temperature scaling relationshiop
 '---------------------------------------------------------------------------------------
 '
@@ -3078,8 +3464,8 @@ Private Sub cmdRedo_Click()
     Next i
     AveMinTmp = AveMinTmp / 12 + 273.15
     
-    'compareTR-2 is 599-jure.pr6
-    'compareTR-4 is c:/cities/erors/netz/netz/Cuernavaca-NETZ0000.pr1
+    'compareTR-2 is 599-jeru.pr6
+    'compareTR-4 is c:/cities/eros/netz/netz/Cuernavaca-NETZ0000.pr1
     'compareTR-5 is c:/cities/eros/netz/skiy/NETZ0000.pr1 'about 80 km east of the Rockies and east of Boulder
     'compareTR-6 is c:/cities/givat_zeev_agan_haayalot_moav/277-MOAV.PR1
     'compareTR-7 is Rav Druk's observation spot at Armon Hanatziv
@@ -3167,6 +3553,8 @@ End Sub
 Private Sub Form_Load()
     Dim dtmdir As String, n%, i&, j&, filnum%
     
+    ParameterFmVis = True
+    
     dtmdir = "c:\dtm"
     
     CHMNEO = "XX"
@@ -3223,6 +3611,11 @@ End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
   CalcSondes = False
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+   Set BARParametersfm = Nothing
+   ParameterFmVis = False
 End Sub
 
 Private Sub optCalculate_Click()

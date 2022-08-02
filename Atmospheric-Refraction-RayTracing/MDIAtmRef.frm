@@ -52,7 +52,7 @@ Begin VB.MDIForm MDIAtmRef
          BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Key             =   "toolkey"
             Description     =   "More refraction tools"
-            Object.ToolTipText     =   "Open refraction tools dialog"
+            Object.ToolTipText     =   "Open refraction tools dialog (contains mainy utilities for comparing observations to calculations)"
             ImageIndex      =   1
          EndProperty
          BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
@@ -113,7 +113,12 @@ End Sub
 Private Sub Toolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
    Select Case Button.Key
      Case "toolkey" 'choose calculation mode
-         BARParametersfm.Visible = True
+         If ParameterFmVis Then
+            BringWindowToTop (BARParametersfm.hwnd)
+
+         Else
+            BARParametersfm.Visible = True
+            End If
          
      Case "ParametersKey" 'load or unload Geo maps (left Geo map button)
            If CalcMode = 0 Then
