@@ -1968,10 +1968,17 @@ Public Sub blitpictures()
 
 If world = False Then
     'keep EY topo maps within EY boundaries
-    If kmxc > 250000 Then kmxc = 73000
-    If kmxc < 73000 Then kmxc = 250000
-    If kmyc > 1240000 Then kmyc = 83000
-    If kmyc < 83000 Then kmyc = 1240000
+    If map400 Then
+       If kmxc > 250000 Then kmxc = 73000
+       If kmxc < 73000 Then kmxc = 250000
+       If kmyc > 1310000 Then kmyc = 83000
+       If kmyc < 83000 Then kmyc = 1310000
+    ElseIf map50 Then
+       If kmxc > 250000 Then kmxc = 73000
+       If kmxc < 73000 Then kmxc = 250000
+       If kmyc > 1320000 Then kmyc = 83000
+       If kmyc < 83000 Then kmyc = 1320000
+       End If
     
     If mag > 1 Then
        kmxcc = kmxc

@@ -785,6 +785,7 @@ l50:
                 If engcitynam$ = FileViewDir$ Then
                    Text2.Text = hebcitynam$
                    cityfound% = 1
+                   Exit Do
                    End If
              Loop
 cb25:        Close #filcit%
@@ -1153,12 +1154,12 @@ ca81:
                '   Write #batfile%, drivfordtm$ + "skiy\" + fnn$ + iipr$, kmyeros, -kmxeros, hgteros
                '   End If
                If Mode% = 1 Then
-                  Write #tmp2num%, drivfordtm$ + "netz\" + fnn$, _
+                  Write #tmp2num%, drivfordtm$ + "netz\" + fnn$ + iipr$, _
                   Val(Trim$(Format(CStr(coordAnalyze(0)), "####.0#####"))), _
                   Val(Trim$(Format(CStr(coordAnalyze(1)), "####.0#####"))), _
                   Val(Trim$(Format(CStr(coordAnalyze(2)), "####.00")))
                ElseIf Mode% = 0 Then
-                  Write #tmp2num%, drivfordtm$ + "skiy\" + fnn$, _
+                  Write #tmp2num%, drivfordtm$ + "skiy\" + fnn$ + iipr$, _
                   Val(Trim$(Format(CStr(coordAnalyze(0)), "####.0#####"))), _
                   Val(Trim$(Format(CStr(coordAnalyze(1)), "####.0#####"))), _
                   Val(Trim$(Format(CStr(coordAnalyze(2)), "####.00")))
@@ -1825,7 +1826,7 @@ Private Sub dirsavecheck_Click()
       End If
 End Sub
 
-Private Sub form_load()
+Private Sub Form_Load()
 
    If world Then
       Text3.Text = 6
