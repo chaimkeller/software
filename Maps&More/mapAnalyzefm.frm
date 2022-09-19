@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form mapAnalyzefm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Analysis Wizard Form"
@@ -29,7 +29,7 @@ Begin VB.Form mapAnalyzefm
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   400
          Underline       =   0   'False
          Italic          =   0   'False
@@ -60,7 +60,7 @@ Begin VB.Form mapAnalyzefm
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -72,7 +72,7 @@ Begin VB.Form mapAnalyzefm
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   400
          Underline       =   0   'False
          Italic          =   0   'False
@@ -90,7 +90,7 @@ Begin VB.Form mapAnalyzefm
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   400
          Underline       =   0   'False
          Italic          =   0   'False
@@ -113,15 +113,6 @@ Begin VB.Form mapAnalyzefm
       Begin VB.TextBox txtOutput 
          Alignment       =   2  'Center
          Enabled         =   0   'False
-         BeginProperty Font 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
          Height          =   315
          Left            =   1020
          TabIndex        =   7
@@ -143,7 +134,7 @@ Begin VB.Form mapAnalyzefm
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   9.75
-            Charset         =   0
+            Charset         =   177
             Weight          =   400
             Underline       =   0   'False
             Italic          =   0   'False
@@ -166,15 +157,6 @@ Begin VB.Form mapAnalyzefm
       Width           =   4515
       Begin VB.ComboBox cmbExtensions 
          Enabled         =   0   'False
-         BeginProperty Font 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
          Height          =   315
          Left            =   720
          TabIndex        =   4
@@ -190,15 +172,6 @@ Begin VB.Form mapAnalyzefm
       Top             =   0
       Width           =   4515
       Begin VB.ComboBox cmbRoots 
-         BeginProperty Font 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
          Height          =   315
          Left            =   1080
          TabIndex        =   3
@@ -255,7 +228,7 @@ Private Sub cmdBack_Click()
 End Sub
 
 Private Sub cmdCancel_Click()
-  Call form_queryunload(0, 0)
+  Call Form_QueryUnload(0, 0)
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -446,7 +419,7 @@ cmdNext_Click_Error:
         End If
 End Sub
 
-Private Sub form_load()
+Private Sub Form_Load()
    On Error GoTo form_load_Error
 
    If UniqueRoots% > 1 Then
@@ -472,13 +445,13 @@ form_load_Error:
     
     Select Case Err.Number
        Case 380 'trying to exit
-           Call form_queryunload(0, 0)
+           Call Form_QueryUnload(0, 0)
        Case Else
           MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure form_load of Form mapAnalyzefm"
     End Select
 End Sub
 
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
    Unload Me
    Set mapAnalyzefm = Nothing
    AutoProf = False
@@ -558,14 +531,14 @@ Line Input #tmpfil%, doclin$
 Input #tmpfil%, kmxoa, kmyoa, hgta, begkmx, endkmx, dX, dY, apprn
 coordAnalyze(0) = kmxoa
 coordAnalyze(1) = kmyoa
-coordAnalyze(2) = hgta
+coordAnalyze(2) = hgta - hgtobs
 Close #tmpfil%
 
 If mapPictureform.Visible = True Then
    'move to map to that point
    Maps.Text5.Text = kmxoa
    Maps.Text6.Text = kmyoa
-   Maps.Text7.Text = hgta
+   Maps.Text7.Text = hgta - hgtobs
    Call goto_click
    End If
 
@@ -828,7 +801,8 @@ a800:
      Screen.MousePointer = vbDefault
     'now plot the temporary plot file
      mapgraphfm.Visible = True
-     ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'     ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+     BringWindowToTop (mapgraphfm.hWnd)
      
      cal1% = 0
      If IntOld2% = 0 Then
@@ -842,6 +816,7 @@ a800:
          
         If AutoScanlist = True Then 'automatic operation
         '**************************
+            mapgraphfm.Picture1.Refresh
 a250:       If Timer > waitime + 2 And cal1% = 0 Then
                'push the obstruction button
                cal1% = 1

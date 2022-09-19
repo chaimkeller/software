@@ -20,7 +20,7 @@ Begin VB.Form mapPLACfm
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   12
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   -1  'True
@@ -61,7 +61,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
-Private Sub form_load()
+Private Sub Form_Load()
    Screen.MousePointer = vbHourglass
    
    If world = True Then
@@ -103,23 +103,26 @@ f50:  Loop
 formerrhandler:
    GoTo f50
 End Sub
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     Dim lResult As Long
     Unload mapPLACfm
     Set mapPLACfm = Nothing
     lplac% = 0
     tblbuttons%(9) = 0
     Maps.Toolbar1.Buttons(9).value = tbrUnpressed
-    ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'    ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+    BringWindowToTop (mapPictureform.hWnd)
     If world = False Then
       lResult = FindWindow(vbNullString, terranam$)
       If lResult > 0 Then
-         ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'         ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         BringWindowToTop (lResult)
          End If
     Else
       lResult = FindWindow(vbNullString, "3D Viewer")
       If lResult > 0 Then
-         ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'         ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         BringWindowToTop (lResult)
          End If
       End If
 End Sub
@@ -128,7 +131,7 @@ Function skyp(row As Integer, col As Integer) As Long
      skyp = row * sky1.Cols + col
 End Function
 Private Sub placCLOSEbut_Click()
-   Call form_queryunload(i%, j%)
+   Call Form_QueryUnload(i%, j%)
    'Unload mapPLACfm
    'Set mapPLACfm = Nothing
    'mappictureform.mappicture.SetFocus
@@ -154,13 +157,13 @@ Private Sub sky1_DblClick()
   If world = True Then
      l2 = sky1.TextArray(skyp(sky1.MouseRow, 2))
      l1 = sky1.TextArray(skyp(sky1.MouseRow, 3))
-     Call form_queryunload(i%, j%)
+     Call Form_QueryUnload(i%, j%)
      Maps.Text6.Text = l1
      Maps.Text5.Text = l2
      Call goto_click
      Exit Sub
      End If
-  Call form_queryunload(i%, j%)
+  Call Form_QueryUnload(i%, j%)
   Maps.Text6.Text = kmyc
   Maps.Text5.Text = kmxc
 '  lResult = FindWindow(vbNullString, terranam$)

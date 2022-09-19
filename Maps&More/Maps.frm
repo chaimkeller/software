@@ -1133,6 +1133,9 @@ Begin VB.MDIForm Maps
          Begin VB.Menu mnuRowfix 
             Caption         =   "Enable &Row Glitch Fix"
          End
+         Begin VB.Menu mnuXYFix 
+            Caption         =   "Enable &XY Glitch Fix"
+         End
       End
       Begin VB.Menu appendbar 
          Caption         =   "-"
@@ -1165,6 +1168,10 @@ Begin VB.MDIForm Maps
       End
       Begin VB.Menu mnushowmapinfo 
          Caption         =   "Show Map Info"
+         Enabled         =   0   'False
+      End
+      Begin VB.Menu mnuImportXYZ 
+         Caption         =   "Import XYZ terrain file"
          Enabled         =   0   'False
       End
    End
@@ -1222,8 +1229,9 @@ Public dragx, dragy
 
 Private Sub appendfrm_Click()
   Maps.StatusBar1.Panels(2) = "Choose a travel file to append to"
-  ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-  ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'  ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'  ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+  BringWindowToTop (lResult)
   CommonDialog1.CancelError = True
   If world = False Then
     CommonDialog1.Filter = "Temporay travel files (*.trf)|*.trf|"
@@ -1235,8 +1243,9 @@ Private Sub appendfrm_Click()
     CommonDialog1.FileName = drivdtm$ & "*.wtf"
    End If
   CommonDialog1.ShowOpen
-  ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-  ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'  ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'  ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+  BringWindowToTop (mapPictureform.hWnd)
   'read the speed, and place the points into the travel arrays
   'then move the maps to the last point and depress the travel
   'button
@@ -1516,7 +1525,8 @@ mapinfobegin:
                         & "Please fill in the necessary information.", _
                         vbInformation + vbOKOnly, "Maps & More")
      mapMapInfo.Visible = True
-     ret = SetWindowPos(mapMapInfo.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'     ret = SetWindowPos(mapMapInfo.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+     BringWindowToTop (mapMapInfo.hWnd)
 
      mnushowmapinfo.Checked = True
 
@@ -1536,6 +1546,9 @@ mapinfobegin:
         Maps.Text6.Text = MapInfo.latcenter 'latitude
         Maps.Text5.Text = MapInfo.loncenter 'longitude
         Call goto_click
+        
+        ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+        
         response = MsgBox("Is this a map for the city: " & placnam$ & "? Check the location on the map.", vbQuestion + vbYesNoCancel, "Maps & More")
         If response = vbCancel Or response = vbNo Then
            Exit Sub
@@ -1586,6 +1599,9 @@ mapinfobegin:
             End Select
             End If
         End If
+        
+    ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+    BringWindowToTop (mapPictureform.hWnd)
    
    'now calculate all the information needed to blit the file
    'in place of the world map
@@ -1734,7 +1750,8 @@ End Sub
 Private Sub diskDTMfm_Click()
    mapdiskDTMfm.Visible = True
    mapdiskDTMfm.SSTab1.Tab = 0
-   ret = SetWindowPos(mapdiskDTMfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'   ret = SetWindowPos(mapdiskDTMfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   BringWindowToTop (mapdiskDTMfm.hWnd)
 End Sub
 
 Private Sub dontresetfm_Click()
@@ -1745,7 +1762,8 @@ End Sub
 
 Private Sub DTMlimitsfm_Click()
    mapLimitsfm.Visible = True
-   ret = SetWindowPos(mapLimitsfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'   ret = SetWindowPos(mapLimitsfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   BringWindowToTop (mapLimitsfm.hWnd)
 End Sub
 
 Private Sub fmHelp_Click()
@@ -1764,7 +1782,8 @@ Private Sub fmMMHelp_Click()
     Loop
     lHelp = FindWindow(vbNullString, "Maps & More Help")
     If lHelp > 0 Then
-       ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'       ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+       BringWindowToTop (lHelp)
        End If
 End Sub
 
@@ -2423,7 +2442,8 @@ map50:
    coordmode% = 1
    speed = 80
    speedmodify = False
-   ret = SetWindowPos(mapsplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'   ret = SetWindowPos(mapsplash.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   BringWindowToTop (mapsplash.hWnd)
    Maps.MousePointer = 0
    mapwi = mapPictureform.Width
    maphi = mapPictureform.Height
@@ -2881,6 +2901,10 @@ End Sub
 
 
 
+Private Sub MDIForm_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+   If MapOn Then BringWindowToTop (mapPictureform.hWnd)
+End Sub
+
 Private Sub mihr100fm_Click()
    If mihr100fm.Checked = False Then
       mihr100fm.Checked = True
@@ -3046,6 +3070,10 @@ Private Sub mnuColumnFix_Click()
    mnuTrigDrag.Checked = False
    mnuColumnFix.Checked = True
    mnuRowfix.Checked = False
+   mnuXYFix.Checked = False
+'   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   BringWindowToTop (mapPictureform.hWnd)
+
 End Sub
 
 Private Sub mnuCrossSection_Click()
@@ -3061,6 +3089,9 @@ Private Sub mnuDragDisable_Click()
    mnuTrigDrag.Checked = False
    mnuColumnFix.Checked = False
    mnuRowfix.Checked = False
+   mnuXYFix.Checked = False
+'   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   BringWindowToTop (mapPictureform.hWnd)
 End Sub
 
 Private Sub mnuExcelDrag_Click()
@@ -3072,6 +3103,10 @@ Private Sub mnuExcelDrag_Click()
    mnuTrigDrag.Checked = False
    mnuColumnFix.Checked = False
    mnuRowfix.Checked = False
+   mnuXYFix.Checked = False
+'   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   BringWindowToTop (mapPictureform.hWnd)
+   
 End Sub
 
 Private Sub mnuExit_Click()
@@ -3282,12 +3317,215 @@ errhand:
   
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : mnuImportXYZ_Click
+' Author    : chaim
+' Date      : 9/18/2022
+' Purpose   : import external dtm segment in xyz format into the DTMs
+'             usually used for fixing JKH DTM's tiles after using DTMEditing
+'---------------------------------------------------------------------------------------
+'
+Private Sub mnuImportXYZ_Click()
+   Dim KmxStart, KmyStart, KmxEnd, KmyEnd, FileIn$, NumLines&
+   
+   On Error GoTo mnuImportXYZ_Click_Error
+   
+   'open file and determine x,y boundaries
+   With CommonDialog1
+      .CancelError = True
+      .Filter = "XYZ files (*.xyz)|*.xyz|All files (*.*)|*.*"
+      .ShowOpen
+       FileIn$ = .FileName
+   End With
+   
+   fileinput% = FreeFile
+   KmxStart = 99999999
+   KmxEnd = -99999999
+   KmyStart = 99999999
+   KmyEnd = -99999999
+   
+   Screen.MousePointer = vbHourglass
+   NumLines& = 0
+   Open FileIn$ For Input As #fileinput%
+   Do Until EOF(fileinput%)
+      NumLines& = NumLines& + 1
+      Input #fileinput%, kmx, kmy, hgt
+      If kmx > KmxEnd Then
+         KmxEnd = kmx
+         End If
+      If kmx < KmxStart Then
+         KmxStart = kmx
+         End If
+       If kmy > KmyEnd Then
+         KmyEnd = kmy
+         End If
+      If kmy < KmyStart Then
+         KmyStart = kmy
+         End If
+   Loop
+   Close #fileinput%
+   Screen.MousePointer = vbDefault
+   
+
+    If (KmxStart < 40000 Or KmxEnd < 40000 Or KmxStart > 300000 Or KmxEnd > 300000) Then
+        Call MsgBox("X coordinates are beyond the permitted range" + _
+        vbCrLf & _
+        "Or not in the proper 6 digit format", vbInformation, "Import XYZ segment error")
+        Exit Sub
+        End If
+    If (KmyStart < 20000 Or KmyEnd < 20000 Or KmyStart > 1200000 Or KmyEnd > 1200000) Then
+        Call MsgBox("Y coordinates are beyond the permitted range." + _
+        vbCrLf & _
+        "Or not in the proper 7 digit format", vbInformation, "Import XYZ segment error")
+        Exit Sub
+        End If
+    
+      
+       '-----------save the points to the DTM tile----------------------
+       response = MsgBox("Backup DTM files before saving changes?" & vbLf & _
+                     "(The date will be added as a suffix to the backup tiles)", _
+                     vbQuestion + vbYesNoCancel, "Maps&More")
+       If response = vbYes Then
+          backup% = 1
+          End If
+               
+              
+   Screen.MousePointer = vbHourglass
+   
+   With mapprogressfm
+        .Visible = True
+        .Text1.Visible = False
+        .Text2.Visible = False
+        .Acceptbut.Visible = False
+        .Command2.Visible = False
+        .frmDTM.Visible = False
+        .Caption = "Exporting xyz file, 0%"
+        .StatusBar1.Panels(1).Text = "Please wait..."
+        .ProgressBar1.Min = 0
+        .ProgressBar1.Max = NumLines&
+        .ProgressBar1.value = 0
+        .Left = Maps.Left + 0.5 * Maps.Width - 0.5 * .Width
+        .Top = Maps.Top + 0.5 * Maps.Height - 0.5 * .Height
+   End With
+   
+   ProgressView = True
+
+   numSteps& = 0
+   filnum% = FreeFile
+   Open FileIn$ For Input As #filnum%
+   Do Until EOF(filnum%)
+      Input #filnum%, kmx, kmy, hgt
+          
+      numSteps& = numSteps& + 1
+      mapprogressfm.ProgressBar1.value = CLng(100 * numSteps& / NumLines&)
+      mapprogressfm.Caption = "Importing xyz file, " + Str$(CLng(100 * numSteps& / mapprogressfm.ProgressBar1.Max)) + "%"
+      mapprogressfm.Label1.Caption = Str$(CLng(100 * numSteps& / mapprogressfm.ProgressBar1.Max)) + "%"
+      mapprogressfm.Refresh
+      
+        kmxDTM = kmx * 0.001
+        kmyDTM = (kmy - 1000000) * 0.001
+        IKMX% = Int((kmxDTM + 20!) * 40!) + 1
+        IKMY% = Int((380! - kmyDTM) * 40!) + 1
+        NROW% = IKMY%: NCOL% = IKMX%
+
+'       GETZ FINDS THE HEIGHT OF A POINT AT THE NORW AND NCOL FROM 380N
+'       AND -20E WHERE 1,1 IS THAT CORNER POINT
+'       FIND THE PROPER INDICES I,J OF THE PROPER .SUM FILE
+        Jg% = 1 + Int((NROW% - 2) / 800)
+        Ig% = 1 + Int((NCOL% - 2) / 800)
+        
+        CHFindTmp$ = CHMAP(Ig%, Jg%)
+        If CHFindTmp$ <> CHFind$ Then
+           CHFind$ = CHFindTmp$
+           End If
+           
+        If backup% = 1 Then
+           'back it up if not already backed up
+           If Dir(israeldtm + ":\dtm\" & CHFind$ & "_" & Month(Date) & Day(Date) & Year(Date)) = sEmpty Then
+              FileCopy israeldtm + ":\dtm\" & CHFind$, israeldtm + ":\dtm\" & CHFind$ & "_" & Month(Date) & Day(Date) & Year(Date)
+              End If
+           End If
+                    
+        CHMNEO = sEmpty 'reinitialize DTM reading (GETZ)
+        Close 'close any opened files (for example by sub heights)
+        filn% = FreeFile
+        Open israeldtm + ":\dtm\" & CHFind$ For Random As #filn% Len = 2
+        
+'       CONVERT TO GRID LOCATION IN .SUM FILE
+        IR% = NROW% - (Jg% - 1) * 800
+        IC% = NCOL% - (Ig% - 1) * 800
+        IFN& = (IR% - 1) * 801! + IC%
+        Put #filn%, IFN&, CInt(hgt * 10)
+
+   Loop
+   Close #filnum%
+   Unload mapprogressfm
+   ProgressView = False
+   Screen.MousePointer = vbDefault
+          
+   On Error GoTo 0
+   Exit Sub
+
+mnuImportXYZ_Click_Error:
+    cc = Err.Number
+    
+    Close 'close any open files
+    Select Case Err.Number
+       Case 55 'can't save file to this directory
+          If FirstTry% = 0 Then 'try once again
+             FirstTry% = 1
+             Resume
+             End If
+          response = MsgBox("Can't save the tile to the dtm directory!" & vbLf & _
+                 "Do you want to save it to a different directory?", _
+                 vbExclamation + vbYesNoCancel, "Maps & More")
+          If response = vbYes Then
+             res = InputBox("Input directory name." & vbLf & _
+                 "Add a final backslashes '\'" & vbLf & _
+                 "Example: ""c:\windows\temp\""", "Backup Tile", _
+                 israeldtm + ":\dtm\", 6450)
+             If res = sEmpty Then
+                progbarFixGlitch.Visible = False
+                Exit Sub
+             Else
+                FileCopy israeldtm + ":\dtm\" & CHFind$, res & CHFind$ & "_" & Month(Date) & Day(Date) & Year(Date)
+                Resume Next
+                End If
+             End If
+       Case 75 'can't save to tile
+
+          MsgBox "The dtm tile is read only and can't be edited!", vbCritical + vbOKOnly, "Maps&More"
+          progbarFixGlitch.Visible = False
+          Exit Sub
+       Case Else
+            MsgBox "Error Number: " & Str$(Err.Number) & " encountered!" & vbLf & _
+                   Err.Description & vbLf & _
+                   "Current procedure will be aborted!", vbCritical + vbOKOnly, "Maps&More"
+            'ExcelApp.Quit
+            
+            'Set ExcelApp = Nothing
+            'Set ExcelBook = Nothing
+            'Set ExcelSheet = Nothing
+      End Select
+    
+    progbarFixGlitch.Visible = False
+'    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdFix_Click of Form mapXYGlitchfrm"
+
+   On Error GoTo 0
+   Exit Sub
+
+
+End Sub
+
 Private Sub mnuMagDragEnable_Click()
    'enable dragging to obtain magnification window
    mnuDragDisable.Checked = False
    mnuMagDragEnable.Checked = True
    mnuExcelDrag.Checked = False
    mnuTrigDrag.Checked = False
+   mnuColumnFix.Checked = False
+   mnuRowfix.Checked = False
+   mnuXYFix.Checked = False
 End Sub
 
 Private Sub mnuRowfix_Click()
@@ -3297,6 +3535,7 @@ Private Sub mnuRowfix_Click()
    mnuTrigDrag.Checked = False
    mnuColumnFix.Checked = False
    mnuRowfix.Checked = True
+   mnuXYFix.Checked = False
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -3379,7 +3618,8 @@ s900:
    Close #filtmp%
 
    mapAnalyzefm.Visible = True
-   ret = SetWindowPos(mapAnalyzefm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'   ret = SetWindowPos(mapAnalyzefm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   BringWindowToTop (mapAnalyzefm.hWnd)
 
 Exit Sub
 
@@ -3425,7 +3665,8 @@ End Sub
 Private Sub mnushowmapinfo_Click()
    If Not MapFormatVis Then
       mapMapInfo.Visible = True
-      ret = SetWindowPos(mapMapInfo.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'      ret = SetWindowPos(mapMapInfo.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+      BringWindowToTop (mapMapInfo.hWnd)
       
       mnushowmapinfo.Checked = True
       End If
@@ -3439,6 +3680,9 @@ Private Sub mnuTrigDrag_Click()
    mnuTrigDrag.Checked = True
    mnuColumnFix.Checked = False
    mnuRowfix.Checked = False
+   mnuXYFix.Checked = False
+'   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   BringWindowToTop (mapPictureform.hWnd)
 End Sub
 
 Private Sub mnuTrigUndo_Click()
@@ -3449,6 +3693,18 @@ Private Sub mnuTrigUndo_Click()
       CHMNEO = sEmpty
       End If
   
+End Sub
+
+Private Sub mnuXYFix_Click()
+   mnuDragDisable.Checked = False
+   mnuMagDragEnable.Checked = False
+   mnuExcelDrag.Checked = False
+   mnuTrigDrag.Checked = False
+   mnuColumnFix.Checked = False
+   mnuRowfix.Checked = False
+   mnuXYFix.Checked = True
+'   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   BringWindowToTop (mapPictureform.hWnd)
 End Sub
 
 Private Sub openbatfm_Click()
@@ -3673,11 +3929,15 @@ Private Sub routefm_Click()
           If lResult = 0 Or mapPictureform.mapPicture.Visible = False Then
              ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
              response = MsgBox("You must display the maps and activate the terraviewer before loading travel files!", vbOKOnly + vbCritical, "Maps & More")
-             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+             BringWindowToTop (mapPictureform.hWnd)
+
              Exit Sub
              End If
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-          ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'          ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+          BringWindowToTop (mapPictureform.hWnd)
+
           CommonDialog1.CancelError = True
           CommonDialog1.Filter = "Temporay travel files (*.trf)|*.trf|"
           CommonDialog1.FilterIndex = 1
@@ -3694,8 +3954,11 @@ Private Sub routefm_Click()
           Screen.MousePointer = vbHourglass
           openfile$ = CommonDialog1.FileName
           openfilnum% = FreeFile
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-          ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+          BringWindowToTop (mapPictureform.hWnd)
+
+'          ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+          BringWindowToTop (lResult)
           myfile = Dir(openfile$)
 
           Open openfile$ For Input As #openfilnum%
@@ -3864,7 +4127,9 @@ Private Sub routefm_Click()
      'If lResult = 0 Then 'activate the 3D Viewer
      '   taskID = Shell("c:\samples\vc98\sdk\graphics\directx\egg\debug\egg.exe", vbNormalFocus)
      '   End If
-     ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'     ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+     BringWindowToTop (mapPictureform.hWnd)
+  
      If lResult <> 0 Then ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
      CommonDialog1.CancelError = True
      CommonDialog1.Filter = "world travel files (*.wtf)|*.wtf|"
@@ -3874,8 +4139,13 @@ Private Sub routefm_Click()
      Screen.MousePointer = vbHourglass
      openfile$ = CommonDialog1.FileName
      openfilnum% = FreeFile
-     ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-     If lResult <> 0 Then ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'     ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+     BringWindowToTop (mapPictureform.hWnd)
+
+     If lResult <> 0 Then
+'        ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+        BringWindowToTop (lResult)
+        End If
      Open openfile$ For Input As #openfilnum%
      'check if speed needs to modified
      Line Input #openfilnum%, doclin$
@@ -3967,7 +4237,8 @@ Private Sub routefm_Click()
                Maps.Toolbar1.Buttons(26).value = tbrUnpressed
                ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                response = MsgBox("USGS EROS CD not found!  Please enter the appropriate CD, and then press the DTM button!", vbCritical + vbOKOnly, "Maps & More")
-               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+               BringWindowToTop (mapPictureform.hWnd)
                NoCDWarning = True
                Exit Sub
                End If
@@ -4024,11 +4295,15 @@ errorroute:
         dx1 = 0
         dy1 = -120 'move the pointer away from terraviewer window
         Call mouse_event(MOUSEEVENTF_MOVE, adx1 * dx1, bdy1 * dy1, 0, 0) 'move mouse to Location item
-        ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-        ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'        ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+        BringWindowToTop (mapPictureform.hWnd)
+'        ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+        BringWindowToTop (lResult)
    Else
-        ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-        ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'        ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+        BringWindowToTop (mapPictureform.hWnd)
+'        ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+        BringWindowToTop (lResult)
         End If
    Exit Sub
 
@@ -4044,13 +4319,16 @@ End Sub
 
 Private Sub searchfm_Click()
    If mapsearchfm.Visible = True Then
-      ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'      ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+      BringWindowToTop (mapPictureform.hWnd)
    Else
       mapsearchfm.Visible = True
       OverhWnd = FindWindow(vbNullString, "Overview")
-      ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'      ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+      BringWindowToTop (mapsearchfm.hWnd)
       'Call BringWindowToTop(OverhWnd)
-      ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'      ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+      BringWindowToTop (OverhWnd)
       End If
 End Sub
 
@@ -4070,7 +4348,8 @@ Private Sub snapshotfm_Click()
        response = MsgBox("The BitMap of the world map has been saved to the Clipboard. " + _
                        "Use MSPaint or an equivalent program to edit/print it.", vbInformation + vbOKOnly, "Maps & More")
        If world = True And mapPictureform.Visible = True Then
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+          BringWindowToTop (mapPictureform.hWnd)
           End If
        Exit Sub
        End If
@@ -4092,7 +4371,8 @@ Private Sub snapshotfm_Click()
        Screen.MousePointer = vbDefault
        lResult = FindWindow(vbNullString, terranam$)
        If lResult > 0 Then 'remove topmost status from terraviewer in order to display message
-         ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'         ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         BringWindowToTop (lResult)
          End If
        If mapPictureform.Visible = True Then 'remove topmost status from map
          ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
@@ -4101,10 +4381,12 @@ Private Sub snapshotfm_Click()
        response = MsgBox("The BitMap of the TerraViewere Picture has been saved to the Clipboard. " + _
                   "Use MSPaint or an equivalent program to edit/print it.", vbInformation + vbOKOnly, "Maps & More")
        If lResult > 0 Then 'restore topmost status
-          ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'          ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+          BringWindowToTop (lResult)
           End If
        If mapPictureform.Visible = True Then 'restore topmost status to map
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+          BringWindowToTop (mapPictureform.hWnd)
           End If
       'ret = BringWindowToTop(lResult) 'bring TerraViewer to top of Z order
       End If
@@ -4204,7 +4486,8 @@ Private Sub Timer2_Timer()
         'check if window already activated, if so deactivate it
          lwin = FindWindow(vbNullString, "Jump to Location")
          If lwin <> 0 Then
-            ret = SetWindowPos(lwin, HWND_TOPMOST, 0, 0, 0, 0, SWP_HIDEWINDOW)
+'            ret = SetWindowPos(lwin, HWND_TOPMOST, 0, 0, 0, 0, SWP_HIDEWINDOW)
+            BringWindowToTop (lwin)
             Call keybd_event(VK_ESCAPE, 0, 0, 0)
             Call keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0)
             End If
@@ -4242,7 +4525,8 @@ Private Sub Timer2_Timer()
        Loop
        lwin = FindWindow(vbNullString, "Jump to Location")
        If lwin = 0 Then Exit Sub
-       ret = SetWindowPos(lwin, HWND_TOPMOST, 0, 0, 0, 0, SWP_HIDEWINDOW)
+'       ret = SetWindowPos(lwin, HWND_TOPMOST, 0, 0, 0, 0, SWP_HIDEWINDOW)
+       BringWindowToTop (lwin)
 
        Call keybd_event(VK_CONTROL, 0, 0, 0) 'enter SKYx
        Call keybd_event(VK_INSERT, 0, 0, 0)
@@ -4270,12 +4554,14 @@ Private Sub Timer2_Timer()
        'Do Until Timer > waitime + 0.01
        '   DoEvents
        'Loop
-       ret = SetWindowPos(lwin, HWND_TOPMOST, 0, 0, 0, 0, SWP_HIDEWINDOW)
+'       ret = SetWindowPos(lwin, HWND_TOPMOST, 0, 0, 0, 0, SWP_HIDEWINDOW)
+       BringWindowToTop (lwin)
        Call keybd_event(VK_ESCAPE, 0, 0, 0)
        Call keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0)
 150:   lwin = FindWindow(vbNullString, "Jump to Location")
        If lwin <> 0 Then
-          ret = SetWindowPos(lwin, HWND_TOPMOST, 0, 0, 0, 0, SWP_HIDEWINDOW)
+'          ret = SetWindowPos(lwin, HWND_TOPMOST, 0, 0, 0, 0, SWP_HIDEWINDOW)
+          BringWindowToTop (lwin)
           Call keybd_event(VK_ESCAPE, 0, 0, 0)
           Call keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0)
           GoTo 150
@@ -4552,6 +4838,7 @@ Private Sub text7_MouseMove(Button As Integer, Shift As Integer, x As Single, y 
 End Sub
 Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = sEmpty
+   If MapOn Then BringWindowToTop (mapPictureform.hWnd)
 End Sub
 Private Sub statusbar1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    If x >= StatusBar1.Panels(1).Width + StatusBar1.Panels(2).Width Then
@@ -4707,6 +4994,7 @@ Private Sub toolbar1_MouseMove(Button As Integer, Shift As Integer, x As Single,
        X1 = X1 + Toolbar1.Buttons(i%).Width
    Next i%
    Maps.StatusBar1.Panels(2).Text = sEmpty 'default message
+   If MapOn Then BringWindowToTop (mapPictureform.hWnd)
 End Sub
 '---------------------------------------------------------------------------------------
 ' Procedure : Toolbar1_ButtonClick
@@ -4737,13 +5025,18 @@ Private Sub Toolbar1_ButtonClick(ByVal Button As MSComCtlLib.Button)
            response = MsgBox("This means that you won't be able to display heights!", _
                            vbExclamation + vbOKCancel, "Maps & More")
            If world = False And lResult > 0 Then 'restore topmost status
-              ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'              ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+              BringWindowToTop (lResult)
+
               End If
            If world = False And mapPictureform.Visible = True Then 'restore topmost status
-              ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'              ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+              BringWindowToTop (mapPictureform.hWnd)
+
               End If
            If world = True And mapPictureform.Visible = True Then
-              ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'              ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+              BringWindowToTop (mapPictureform.hWnd)
               End If
            If response = vbOK Then
               noheights = True
@@ -4781,11 +5074,13 @@ d10:         If world = False Then
                 If world = False Then
                   lResult = FindWindow(vbNullString, terranam$)
                   If lResult > 0 Then
-                     ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                     ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+                     BringWindowToTop (lResult)
                      End If
                   End If
                   If world = True And mapPictureform.Visible = True Then
-                      ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                      ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+                      BringWindowToTop (mapPictureform.hWnd)
                       End If
                   If Not NoCDWarning Then
                      response = MsgBox("DTM CD not found, please load it into the CD drive.", _
@@ -4793,10 +5088,12 @@ d10:         If world = False Then
                     NoCDWarning = True
                     End If
                 If world = False And lResult > 0 Then
-                     ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                     ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+                     BringWindowToTop (lResult)
                      End If
                 If world = True And mapPictureform.Visible = True Then
-                      ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                      ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+                      BringWindowToTop (mapPictureform.hWnd)
                       End If
                 If response = vbOK Then
                    GoTo d10
@@ -4844,18 +5141,22 @@ CDerror:
       If world = False Then
         lResult = FindWindow(vbNullString, terranam$)
         If lResult > 0 Then
-           ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'           ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+           BringWindowToTop (lResult)
            End If
         End If
       If world = True And mapPictureform.Visible = True Then
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+          BringWindowToTop (mapPictureform.hWnd)
           End If
       response = MsgBox("Drive not ready, try again?", vbCritical + vbOKCancel, "Maps & More")
       If world = False And lResult > 0 Then
-           ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'           ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+           BringWindowToTop (lResult)
            End If
       If world = True And mapPictureform.Visible = True Then
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+          BringWindowToTop (mapPictureform.hWnd)
           End If
       If response = vbOK Then
          Resume
@@ -4868,11 +5169,13 @@ CDerror:
        If world = False Then
           lResult = FindWindow(vbNullString, terranam$)
           If lResult > 0 Then
-             ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'             ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+             BringWindowToTop (lResult)
              End If
           End If
        If world = True And mapPictureform.Visible = True Then
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+          BringWindowToTop (mapPictureform.hWnd)
           End If
        If Not NoCDWarning Then
           response = MsgBox("DTM CD not found, please load it into the CD drive.", _
@@ -4880,10 +5183,12 @@ CDerror:
           NoCDWarning = True
           End If
        If world = False And lResult > 0 Then
-          ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'          ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+          BringWindowToTop (lResult)
           End If
        If world = True And mapPictureform.Visible = True Then
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+          BringWindowToTop (mapPictureform.hWnd)
           End If
        If response = vbOK Then
           Resume
@@ -5039,8 +5344,10 @@ d100:   Next i%
                   ret = MoveWindow(TdxhWnd, xwin, ywin, winw, winh, winp)
                   ret = MoveWindow(OverhWnd, xwin, ywin, winw, winh, winp)
                   ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-                  ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-                  ret = SetWindowPos(TdxhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                  ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                  ret = SetWindowPos(TdxhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+                  BringWindowToTop (OverhWnd)
+                  BringWindowToTop (TdxhWnd)
                   'now determine how far off the present coordinates of the 3D Explorer
                   'are off from the desired coordinates
                   'if they are off the present screen, then open Find window
@@ -5075,12 +5382,14 @@ d100:   Next i%
                         End If
                      End If
                Else
-                  ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                  ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+                  BringWindowToTop (mapPictureform.hWnd)
                   End If
                End If
          ElseIf world = True And TdxhWnd <> 0 Then
             'bring 3d explorer to top of z order
-            ret = SetWindowPos(TdxhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            ret = SetWindowPos(TdxhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            BringWindowToTop (TdxhWnd)
             Exit Sub
          Else
             Exit Sub
@@ -5092,7 +5401,8 @@ d100:   Next i%
              tblbuttons(4) = 1
              Maps.Toolbar1.Buttons(4).value = tbrPressed
              'set filters
-             ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'             ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+             BringWindowToTop (mapPictureform.hWnd)
              CommonDialog1.Filter = "Sunrise/Sunset profile files (*.p*)|*.p*|" + _
                                  "All files (*.*)|*.*|"
              'specify the default flter
@@ -5106,7 +5416,8 @@ d100:   Next i%
              obsfile$ = CommonDialog1.FileName
              Maps.Caption = Maps.Caption + "  (obstruction file: " + obsfile$ + ")"
              obsfilnum% = FreeFile
-             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+             BringWindowToTop (mapPictureform.hWnd)
              myfile = Dir(obsfile$)
              If myfile <> sEmpty Then
                 Open obsfile$ For Input As obsfilnum%
@@ -5207,7 +5518,8 @@ obserrhandler:
         If world = False Then
            lResult = FindWindow(vbNullString, terranam$)
            If lResult > 0 Then
-              ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'              ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+              BringWindowToTop (lResult)
               End If
            End If
         If lplac% = 0 Then
@@ -5222,7 +5534,8 @@ obserrhandler:
                  End If
               End If
            mapPLACfm.Visible = True
-           ret = SetWindowPos(mapPLACfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'           ret = SetWindowPos(mapPLACfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+           BringWindowToTop (mapPLACfm.hWnd)
            Screen.MousePointer = vbDefault
            lplac% = 1
         ElseIf lplac% = 1 Then 'bring places to top of z order
@@ -5339,6 +5652,21 @@ obserrhandler:
           Toolbar1.Buttons(6).value = tbrPressed
           tblbuttons(6) = 1
           Toolbar1.Buttons(17).Enabled = True
+          
+          importfm.Enabled = True
+          importmapfm.Enabled = False
+          importcenterfm.Enabled = False
+          resetoriginfm.Enabled = False
+          mnushowmapinfo.Checked = False
+          mnushowmapinfo.Enabled = False
+          mnuImportXYZ.Enabled = True
+
+          
+'          If mapPictureform.Visible = True Then
+'             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+             BringWindowToTop (mapPictureform.hWnd)
+'             End If
+             
           Call loadpictures  'load appropriate map tiles into off-screen buffers
           Call blitpictures   'blit desired portions of the off-screen buffers to the screen
           If kmx50c = 0 And kmy50c = 0 And kmx400c = 0 And kmy400c = 0 Then
@@ -5353,9 +5681,10 @@ obserrhandler:
              'Maps.Text6.Text = T2
              'Maps.Text7.Text = hgtpos
              End If
-          If mapPictureform.Visible = True Then
-             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-             End If
+'          If mapPictureform.Visible = True Then
+'             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+             BringWindowToTop (mapPictureform.hWnd)
+'             End If
        Else
           map400 = False
           If Not bAirPath Then
@@ -5363,6 +5692,16 @@ obserrhandler:
             mnuFirstPoint.Enabled = False
             mnuSecondPoint.Enabled = False
             End If
+            
+          importfm.Enabled = True
+          importmapfm.Enabled = False
+          importcenterfm.Enabled = False
+          resetoriginfm.Enabled = False
+          mnushowmapinfo.Checked = False
+          mnushowmapinfo.Enabled = False
+          mnuImportXYZ.Checked = False
+          mnuImportXYZ.Enabled = False
+          
           openbatfm.Enabled = False
           Toolbar1.Buttons(6).value = tbrUnpressed
           tblbuttons(6) = 0
@@ -5403,7 +5742,11 @@ obserrhandler:
           topofm.Enabled = False
           importfm.Enabled = True
           importmapfm.Enabled = True
+          mnuImportXYZ.Enabled = False
           resetoriginfm.Enabled = True
+          mnuImportXYZ.Enabled = False
+          mnuImportXYZ.Checked = False
+          
           If noheights = False Then
             mnuCrossSection.Enabled = True
             mnuFirstPoint.Enabled = True
@@ -5545,9 +5888,10 @@ obserrhandler:
           Toolbar1.Buttons(25).Enabled = False
           tblbuttons(25) = 0
           showroute = False
-          If mapPictureform.Visible = True Then
-             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-             End If
+'          If mapPictureform.Visible = True Then
+'             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'             End If
+          BringWindowToTop (mapPictureform.hWnd)
           Timer2.Interval = 7500
           Loadfm.Enabled = True
           If Dir(ramdrive + ":\travlog.x") <> sEmpty Then recoverroutefm.Enabled = True
@@ -5646,9 +5990,10 @@ obserrhandler:
           Maps.Toolbar1.Buttons(3).Enabled = False
           End If
      Case "rightbut"
-       If mapPictureform.Visible = True Then
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-          End If
+'       If mapPictureform.Visible = True Then
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'          End If
+       BringWindowToTop (mapPictureform.hWnd)
        If mapPictureform.Visible = False Then Exit Sub
        If tblbuttons%(13) = 0 Then
           If tblbuttons%(12) = 1 Then
@@ -5669,9 +6014,10 @@ obserrhandler:
           Timer1.Enabled = False
           End If
      Case "leftbut"
-       If mapPictureform.Visible = True Then
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-          End If
+'       If mapPictureform.Visible = True Then
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'          End If
+       BringWindowToTop (mapPictureform.hWnd)
        If mapPictureform.Visible = False Then Exit Sub
        If tblbuttons%(12) = 0 Then
           If tblbuttons%(13) = 1 Then
@@ -5692,9 +6038,10 @@ obserrhandler:
           Timer1.Enabled = False
           End If
      Case "downbut"
-       If mapPictureform.Visible = True Then
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-          End If
+'       If mapPictureform.Visible = True Then
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'          End If
+       BringWindowToTop (mapPictureform.hWnd)
        If mapPictureform.Visible = False Then Exit Sub
        If tblbuttons%(14) = 0 Then
           If tblbuttons%(15) = 1 Then
@@ -5715,9 +6062,10 @@ obserrhandler:
           Timer1.Enabled = False
           End If
      Case "upbut"
-       If mapPictureform.Visible = True Then
-          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-          End If
+'       If mapPictureform.Visible = True Then
+'          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'          End If
+       BringWindowToTop (mapPictureform.hWnd)
        If mapPictureform.Visible = False Then Exit Sub
        If tblbuttons%(15) = 0 Then
           If tblbuttons%(14) = 1 Then
@@ -5836,7 +6184,8 @@ obserrhandler:
           winp = True
           ret = MoveWindow(lResult, xwin, ywin, winw, winh, winp)
 
-          ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'          ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+          BringWindowToTop (lResult)
           waitime = Timer 'now get rid of navigation map
           Do Until Timer > waitime + 0.1
              DoEvents
@@ -5997,7 +6346,8 @@ sky200:      Call skyTERRAgoto
         '   terwt = True
            'lResult = FindWindow(vbNullString, terranam$)
            If lResult > 0 Then 'restore topmost status
-              ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'              ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+              BringWindowToTop (lResult)
               'ret = BringWindowToTop(lResult) 'bring TerraViewer to top of Z order
            Else
               mapPictureform.mapPicture.SetFocus
@@ -6018,7 +6368,7 @@ sky200:      Call skyTERRAgoto
            Toolbar1.Buttons(20).value = tbrUnpressed
            If travelnum% >= 1 Then
                'process recorded values
-tr50:           ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+tr50:           BringWindowToTop (mapPictureform.hWnd) 'ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                 If speed = 80 Then speed = 3000
                 oldspeed = speed
                 speed = Val(InputBox("Speed (mi/hr)", "Maps & More", speed, 1000, 2000))
@@ -6042,12 +6392,14 @@ tr50:           ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0,
                 'read the files coordinates, goto there, and then plot the obstructions
                 savfile$ = CommonDialog1.FileName
 tr75:           savfilnum% = FreeFile
-                ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'                ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+                BringWindowToTop (mapPictureform.hWnd)
                 myfile = Dir(savfile$)
                 If myfile <> sEmpty And appendtravel = False Then
-                   ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'                   ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                    response = MsgBox("File already exists, do you want to overwrite it?", vbYesNo + vbExclamation + vbDefaultButton2, "Maps & More")
-                   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'                   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+                   BringWindowToTop (mapPictureform.hWnd)
                    If response = vbNo Then GoTo tr50
                    End If
                 Screen.MousePointer = vbHourglass
@@ -6108,7 +6460,8 @@ traverrorhand:
            Screen.MousePointer = vbHourglass
            Call blitpictures
            Screen.MousePointer = vbDefault
-           ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'           ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+           BringWindowToTop (mapPictureform.hWnd)
            Exit Sub
      Case "pausebut"
         If tblbuttons(23) = 0 Then
@@ -6236,7 +6589,8 @@ to550:  If world = True And showroute = True Then
      Case "sunrisekey"
         If graphwind = True Then
            If mapgraphfm.Caption = "Sunrise horizon profile" Then
-              ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'              ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+              BringWindowToTop (mapgraphfm.hWnd)
               'Exit Sub
               End If
            End If
@@ -6260,9 +6614,10 @@ to550:  If world = True And showroute = True Then
                      Call sunrisesunset(1)
                    ElseIf Not NoCDWarning Then
                       Maps.Toolbar1.Buttons(26).value = tbrUnpressed
-                      ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'                      ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                       response = MsgBox("USGS EROS CD not found!  Please enter the appropriate CD, and then press the DTM button!", vbCritical + vbOKOnly, "Maps & More")
-                      ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'                      ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+                      BringWindowToTop (mapPictureform.hWnd)
                       NoCDWarning = True
                       Exit Sub
                    End If
@@ -6297,7 +6652,8 @@ to550:  If world = True And showroute = True Then
      Case "sunsetkey"
         If graphwind = True Then
            If mapgraphfm.Caption = "Sunset horizon profile" Then
-              ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'              ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+              BringWindowToTop (mapgraphfm.hWnd)
               'Exit Sub
               End If
            End If
@@ -6317,9 +6673,10 @@ to550:  If world = True And showroute = True Then
                       Call sunrisesunset(0)
                     ElseIf Not NoCDWarning Then
                       Maps.Toolbar1.Buttons(26).value = tbrUnpressed
-                      ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+                      'ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                       response = MsgBox("USGS EROS CD not found!  Please enter the appropriate CD, and then press the DTM button!", vbCritical + vbOKOnly, "Maps & More")
-                      ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'                      ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+                      BringWindowToTop (mapPictureform.hWnd)
                       NoCDWarning = True
                       Exit Sub
                     End If
@@ -6355,7 +6712,8 @@ to550:  If world = True And showroute = True Then
      Case "Tempbut"
         If Not TempFormVis Then
            mapTempfrm.Visible = True
-           ret = SetWindowPos(mapTempfrm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'           ret = SetWindowPos(mapTempfrm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+           BringWindowToTop (mapTempfrm.hWnd)
            tblbuttons(29) = 1
            Toolbar1.Buttons(29).value = tbrPressed
         Else
@@ -6367,7 +6725,8 @@ to550:  If world = True And showroute = True Then
      Case "Googlebut"
         If Not GoogleMapVis Then
            frmMap.Visible = True
-           ret = SetWindowPos(frmMap.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'           ret = SetWindowPos(frmMap.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+           BringWindowToTop (frmMap.hWnd)
            tblbuttons(30) = 1
            Toolbar1.Buttons(30).value = tbrPressed
         Else
@@ -6414,7 +6773,8 @@ Private Sub MDIform_queryunload(Cancel As Integer, UnloadMode As Integer)
        If response <> vbYes Then
           Cancel = True
           For i% = 0 To Forms.count - 1
-             ret = SetWindowPos(Forms(i%).hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'             ret = SetWindowPos(Forms(i%).hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+             BringWindowToTop (Forms(i%).hWnd)
           Next i%
           Exit Sub
           End If
@@ -6762,8 +7122,14 @@ oldspeed = speed
  dy1 = -150 'move the pointer away from terraviewer window
  Call mouse_event(MOUSEEVENTF_MOVE, adx1 * dx1, bdy1 * dy1, 0, 0) 'move mouse to Location item
 
-If lResult > 0 Then ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-If mapPictureform.Visible = True Then ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+If lResult > 0 Then
+'    ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+    BringWindowToTop (lResult)
+    End If
+If mapPictureform.Visible = True Then
+'   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   BringWindowToTop (mapPictureform.hWnd)
+   End If
 End Sub
 Private Sub picture4_KeyDown(KeyCode As Integer, Shift As Integer)
    Dim lHelp As Long
@@ -6778,7 +7144,8 @@ Private Sub picture4_KeyDown(KeyCode As Integer, Shift As Integer)
          Loop
          lHelp = FindWindow(vbNullString, "Maps & More Help")
          If lHelp > 0 Then
-            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            BringWindowToTop (lHelp)
             End If
       Case Else
    End Select
@@ -6796,7 +7163,8 @@ Private Sub toolbar1_KeyDown(KeyCode As Integer, Shift As Integer)
          Loop
          lHelp = FindWindow(vbNullString, "Maps & More Help")
          If lHelp > 0 Then
-            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            BringWindowToTop (lHelp)
             End If
       Case Else
    End Select
@@ -6814,7 +7182,8 @@ Private Sub picture1_KeyDown(KeyCode As Integer, Shift As Integer)
          Loop
          lHelp = FindWindow(vbNullString, "Maps & More Help")
          If lHelp > 0 Then
-            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            BringWindowToTop (lHelp)
             End If
       Case Else
    End Select
@@ -6832,7 +7201,8 @@ Private Sub statusbar1_KeyDown(KeyCode As Integer, Shift As Integer)
          Loop
          lHelp = FindWindow(vbNullString, "Maps & More Help")
          If lHelp > 0 Then
-            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            BringWindowToTop (lHelp)
             End If
       Case Else
    End Select
@@ -6934,6 +7304,21 @@ Private Sub map50butsub()
           Toolbar1.Buttons(7).value = tbrPressed
           tblbuttons(7) = 1
           Toolbar1.Buttons(17).Enabled = True
+          
+          importfm.Enabled = True
+          importmapfm.Enabled = False
+          importcenterfm.Enabled = False
+          resetoriginfm.Enabled = False
+          mnushowmapinfo.Checked = False
+          mnushowmapinfo.Enabled = False
+          mnuImportXYZ.Checked = False
+          mnuImportXYZ.Enabled = True
+          
+          If mapPictureform.Visible = True Then
+'             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+             BringWindowToTop (mapPictureform.hWnd)
+             End If
+             
           Call loadpictures  'load appropriate map tiles into off-screen buffers
           Call blitpictures   'blit desired portions of the off-screen buffers to the screen
           If kmx50c = 0 And kmy50c = 0 And kmx400c = 0 And kmy400c = 0 Then
@@ -6949,7 +7334,8 @@ Private Sub map50butsub()
              'Maps.Text7.Text = hgtpos
              End If
           If mapPictureform.Visible = True Then
-             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+             BringWindowToTop (mapPictureform.hWnd)
              End If
        Else
           map50 = False

@@ -36,14 +36,15 @@ Attribute VB_Exposed = False
 'Private Sub MagClosebut_Click()
 '   Call form_queryunload(i%, j%)
 'End Sub
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     Unload mapMAGfm
     Set skyMAGm = Nothing
-    ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'    ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+    BringWindowToTop (mapPictureform.hWnd)
     magclose = True
     magbox = False
 End Sub
-Private Sub MAGpicture_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub MAGpicture_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
  Maps.StatusBar1.Panels(2) = "Move the cursor to the desired location (click to center on this point)"
   If world = True Then GoTo ma50
   If map400 = True Then
@@ -52,8 +53,8 @@ Private Sub MAGpicture_MouseMove(Button As Integer, Shift As Integer, X As Singl
         kmycc = kmyc
         xo = kmxcc - (km400x / mag) * (mapwi2 - mapxdif) * 0.5
         yo = kmycc + (km400y / mag) * (maphi2 - mapydif) * 0.5
-        kmxo = Fix(xo + (drag1x + X * magx) * km400x / mag) 'mapdif accounts for size of frame around picture
-        kmyo = Fix(yo - (drag1y + Y * magy) * km400y / mag)
+        kmxo = Fix(xo + (drag1x + x * magx) * km400x / mag) 'mapdif accounts for size of frame around picture
+        kmyo = Fix(yo - (drag1y + y * magy) * km400y / mag)
      Else
         kmxcc = kmxc + (km400x) * (mapwi - mapwi2 + mapxdif) / 2
         kmycc = kmyc - (km400y) * (maphi - maphi2 + mapydif) / 2
@@ -61,8 +62,8 @@ Private Sub MAGpicture_MouseMove(Button As Integer, Shift As Integer, X As Singl
         'so topleft corner=origin corresponds to:
         xo = kmxcc - km400x * sizex / 2  'mapPictureform.mapPicture.Width / 2
         yo = kmycc + km400y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-        kmxo = Fix(xo + (drag1x + X * magx) * km400x)   'mapdif accounts for size of frame around picture
-        kmyo = Fix(yo - (drag1y + Y * magy) * km400y)
+        kmxo = Fix(xo + (drag1x + x * magx) * km400x)   'mapdif accounts for size of frame around picture
+        kmyo = Fix(yo - (drag1y + y * magy) * km400y)
         End If
      If (kmxo <> kmxoo Or kmyo <> kmyoo) Then
         kmxoo = kmxo: kmyoo = kmyo
@@ -79,15 +80,15 @@ Private Sub MAGpicture_MouseMove(Button As Integer, Shift As Integer, X As Singl
         kmycc = kmyc
         xo = kmxcc - (km50x / mag) * (mapwi2 - mapxdif) * 0.5
         yo = kmycc + (km50y / mag) * (maphi2 - mapydif) * 0.5
-        kmxo = Fix(xo + (drag1x + X * magx) * km50x / mag) 'mapdif accounts for size of frame around picture
-        kmyo = Fix(yo - (drag1y + Y * magy) * km50y / mag)
+        kmxo = Fix(xo + (drag1x + x * magx) * km50x / mag) 'mapdif accounts for size of frame around picture
+        kmyo = Fix(yo - (drag1y + y * magy) * km50y / mag)
      Else
         kmxcc = kmxc + (km50x) * (mapwi - mapwi2 + mapxdif) / 2
         kmycc = kmyc - (km50y) * (maphi - maphi2 + mapydif) / 2
         xo = kmxcc - km50x * sizex / 2  'mapPictureform.mapPicture.Width / 2
         yo = kmycc + km50y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-        kmxo = Fix(xo + (drag1x + X * magx) * km50x)
-        kmyo = Fix(yo - (drag1y + Y * magy) * km50y)
+        kmxo = Fix(xo + (drag1x + x * magx) * km50x)
+        kmyo = Fix(yo - (drag1y + y * magy) * km50y)
         End If
      If (kmxo <> kmxoo Or kmyo <> kmyoo) Then
         kmxoo = kmxo: kmyoo = kmyo
@@ -116,8 +117,8 @@ ma50: Select Case coordmode%
                'lato = yo - (drag1y + y * magy) * (180# / (sizewy * mag))
                xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
-               lono = xo + (drag1x + X * magx) * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
-               lato = yo - (drag1y + Y * magy) * (deglat / (sizewy * mag))
+               lono = xo + (drag1x + x * magx) * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
+               lato = yo - (drag1y + y * magy) * (deglat / (sizewy * mag))
                lg = lono
                lt = lato
              Else
@@ -131,8 +132,8 @@ ma50: Select Case coordmode%
                latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy
                xo = lonc - deglog / 2
                yo = latc + deglat / 2
-               lono = xo + (drag1x + X * magx) * (deglog / sizewx)
-               lato = yo - (drag1y + Y * magy) * (deglat / sizewy)
+               lono = xo + (drag1x + x * magx) * (deglog / sizewx)
+               lato = yo - (drag1y + y * magy) * (deglat / sizewy)
                If sizewx = Screen.TwipsPerPixelX * 10201 And sizewy = Screen.TwipsPerPixelY * 5489 Then
                   'fudge factor for inaccuracy of linear degree approx for large size map
                    lono = lono - 0.006906
@@ -196,8 +197,8 @@ ma50: Select Case coordmode%
                'lato = yo - (drag1y + y * magy) * (180# / (sizewy * mag))
                xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
-               lono = xo + (drag1x + X * magx) * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
-               lato = yo - (drag1y + Y * magy) * (deglat / (sizewy * mag))
+               lono = xo + (drag1x + x * magx) * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
+               lato = yo - (drag1y + y * magy) * (deglat / (sizewy * mag))
              Else
                'lonc = lon + (180# / sizewx) * (mapwi - mapwi2 + mapxdif) / 2
                'latc = lat - (180# / sizewy) * (maphi - maphi2 + mapydif) / 2
@@ -209,8 +210,8 @@ ma50: Select Case coordmode%
                latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy
                xo = lonc - deglog / 2
                yo = latc + deglat / 2
-               lono = xo + (drag1x + X * magx) * (deglog / sizewx)
-               lato = yo - (drag1y + Y * magy) * (deglat / sizewy)
+               lono = xo + (drag1x + x * magx) * (deglog / sizewx)
+               lato = yo - (drag1y + y * magy) * (deglat / sizewy)
                If sizewx = Screen.TwipsPerPixelX * 10201 And sizewy = Screen.TwipsPerPixelY * 5489 Then
                   'fudge factor for inaccuracy of linear degree approx for large size map
                    lono = lono - 0.006906
@@ -222,7 +223,7 @@ ma50: Select Case coordmode%
         End Select
 End Sub
 Private Sub MAGpicture_MouseUp(Button As Integer, _
-   Shift As Integer, X As Single, Y As Single)
+   Shift As Integer, x As Single, y As Single)
       Select Case Button
       Case 1  'left button
            If Maps.Timer2.Enabled = True Then Exit Sub
@@ -230,7 +231,7 @@ Private Sub MAGpicture_MouseUp(Button As Integer, _
          'MAGpicture.DrawWidth = 1
          'MAGpicture.Circle (X, Y), 100, 255
          MAGpicture.DrawWidth = 2 / magx
-         MAGpicture.Circle (X, Y), 20, 255 '20 * magx, 255
+         MAGpicture.Circle (x, y), 20, 255 '20 * magx, 255
          MAGpicture.DrawWidth = 1 / magx
          If world = False Then
             'kmxc = kmxoo: kmyc = kmyoo
@@ -241,8 +242,8 @@ Private Sub MAGpicture_MouseUp(Button As Integer, _
             'Maps.Text6.Text = kmyoo
          Else
             cirworld = True
-            Xworld = X * magx + drag1x
-            Yworld = Y * magy + drag1y
+            Xworld = x * magx + drag1x
+            Yworld = y * magy + drag1y
             'mapPictureform.mapPicture.DrawWidth = 1
             'mapPictureform.mapPicture.Circle (Xworld, Yworld), 100, 255
             mapPictureform.mapPicture.DrawWidth = 2 * mag
@@ -265,13 +266,14 @@ Private Sub MAGpicture_MouseUp(Button As Integer, _
                   End If
                End If
             maprightform.Visible = True
-            ret = SetWindowPos(maprightform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            ret = SetWindowPos(maprightform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            BringWindowToTop (maprightform.hWnd)
             maprightform.SetFocus
             Exit Sub
             End If
          If map50 = True Then
-            X50c = X * magx + drag1x
-            Y50c = Y * magy + drag1y
+            X50c = x * magx + drag1x
+            Y50c = y * magy + drag1y
             'mapPictureform.mapPicture.DrawWidth = 1
             'mapPictureform.mapPicture.Circle (X50c, Y50c), 100, 255
             mapPictureform.mapPicture.DrawWidth = 2 '2 * mag
@@ -279,8 +281,8 @@ Private Sub MAGpicture_MouseUp(Button As Integer, _
             'cir50 = True
             kmx50c = kmxoo: kmy50c = kmyoo: hgt50c = hgt
          Else
-            X400c = X * magx + drag1x
-            Y400c = Y * magy + drag1y
+            X400c = x * magx + drag1x
+            Y400c = y * magy + drag1y
             'mapPictureform.mapPicture.DrawWidth = 1
             'mapPictureform.mapPicture.Circle (X400c, Y400c), 100, 255
             mapPictureform.mapPicture.DrawWidth = 2 '2 * mag
@@ -293,7 +295,8 @@ Private Sub MAGpicture_MouseUp(Button As Integer, _
          maprightform.Text3 = kmyoo
          maprightform.Text4 = hgt
          maprightform.Text1 = picf$
-         ret = SetWindowPos(mapMAGfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'         ret = SetWindowPos(mapMAGfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         BringWindowToTop (mapMAGfm.hWnd)
          maprightform.Visible = True
          maprightform.SetFocus
       End Select

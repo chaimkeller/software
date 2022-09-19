@@ -23,7 +23,7 @@ Begin VB.Form mapVersionfm
       Begin VB.Label Label3 
          Caption         =   "This program is protected by international copyright law"
          BeginProperty Font 
-            Name            =   "MS Serif"
+            Name            =   "Arial"
             Size            =   6.75
             Charset         =   0
             Weight          =   400
@@ -42,7 +42,7 @@ Begin VB.Form mapVersionfm
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   9.75
-            Charset         =   0
+            Charset         =   177
             Weight          =   700
             Underline       =   0   'False
             Italic          =   0   'False
@@ -59,7 +59,7 @@ Begin VB.Form mapVersionfm
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   9.75
-            Charset         =   0
+            Charset         =   177
             Weight          =   700
             Underline       =   0   'False
             Italic          =   0   'False
@@ -87,13 +87,14 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Private Sub form_load()
+Private Sub Form_Load()
    Dim lVersion As Long
    Label1.Caption = "Version " & App.Major & "." & App.Minor & "." & App.Revision
    Label2.Caption = "© CNK 1999-" + LTrim$(Str(Year(Date)))
-   ret = SetWindowPos(mapVersionfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'   ret = SetWindowPos(mapVersionfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   BringWindowToTop (mapVersionfm.hWnd)
 End Sub
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
    Unload Me
 End Sub
 Private Sub form_KeyDown(KeyCode As Integer, Shift As Integer)
@@ -109,7 +110,8 @@ Private Sub form_KeyDown(KeyCode As Integer, Shift As Integer)
          Loop
          lHelp = FindWindow(vbNullString, "Maps & More Help")
          If lHelp > 0 Then
-            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            BringWindowToTop (lHelp)
             End If
       Case Else
    End Select
@@ -127,7 +129,8 @@ Private Sub Image1_KeyDown(KeyCode As Integer, Shift As Integer)
          Loop
          lHelp = FindWindow(vbNullString, "Maps & More Help")
          If lHelp > 0 Then
-            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            BringWindowToTop (lHelp)
             End If
       Case Else
    End Select
@@ -145,7 +148,8 @@ Private Sub Label1_KeyDown(KeyCode As Integer, Shift As Integer)
          Loop
          lHelp = FindWindow(vbNullString, "Maps & More Help")
          If lHelp > 0 Then
-            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            BringWindowToTop (lHelp)
             End If
       Case Else
    End Select
@@ -163,7 +167,8 @@ Private Sub Label2_KeyDown(KeyCode As Integer, Shift As Integer)
          Loop
          lHelp = FindWindow(vbNullString, "Maps & More Help")
          If lHelp > 0 Then
-            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            BringWindowToTop (lHelp)
             End If
       Case Else
    End Select
@@ -181,7 +186,8 @@ Private Sub Label3_KeyDown(KeyCode As Integer, Shift As Integer)
          Loop
          lHelp = FindWindow(vbNullString, "Maps & More Help")
          If lHelp > 0 Then
-            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            BringWindowToTop (lHelp)
             End If
       Case Else
    End Select
@@ -199,7 +205,8 @@ Private Sub Frame1_KeyDown(KeyCode As Integer, Shift As Integer)
          Loop
          lHelp = FindWindow(vbNullString, "Maps & More Help")
          If lHelp > 0 Then
-            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'            ret = SetWindowPos(lHelp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            BringWindowToTop (lHelp)
             End If
       Case Else
    End Select

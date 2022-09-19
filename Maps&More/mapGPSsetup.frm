@@ -130,13 +130,14 @@ Private Sub cmdScan_Click()
 
 End Sub
 
-Private Sub form_load()
+Private Sub Form_Load()
 
    Dim ret As Long
    
    GPSSetupVis = True
 
-   ret = SetWindowPos(GPSsetup.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'   ret = SetWindowPos(GPSsetup.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   BringWindowToTop (GPSsetup.hWnd)
    
    cmbBaud.AddItem 1200
    cmbBaud.AddItem 2400

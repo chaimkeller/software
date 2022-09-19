@@ -31,7 +31,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   -1  'True
@@ -45,15 +45,6 @@ Begin VB.Form maprightform
       Width           =   3135
       Begin VB.CommandButton cmdTrigUndo 
          Caption         =   "&Undo last Trig Point Correction"
-         BeginProperty Font 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
          Height          =   375
          Left            =   240
          TabIndex        =   17
@@ -66,7 +57,7 @@ Begin VB.Form maprightform
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   8.25
-            Charset         =   0
+            Charset         =   177
             Weight          =   700
             Underline       =   0   'False
             Italic          =   0   'False
@@ -86,7 +77,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   8.25
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   -1  'True
@@ -104,7 +95,7 @@ Begin VB.Form maprightform
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   8.25
-            Charset         =   0
+            Charset         =   177
             Weight          =   700
             Underline       =   0   'False
             Italic          =   0   'False
@@ -122,7 +113,7 @@ Begin VB.Form maprightform
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   13.5
-            Charset         =   0
+            Charset         =   177
             Weight          =   700
             Underline       =   0   'False
             Italic          =   0   'False
@@ -142,7 +133,7 @@ Begin VB.Form maprightform
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   12
-            Charset         =   0
+            Charset         =   177
             Weight          =   700
             Underline       =   0   'False
             Italic          =   0   'False
@@ -182,7 +173,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   13.5
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   -1  'True
@@ -199,7 +190,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   12
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -216,7 +207,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   12
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -233,7 +224,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   12
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -250,7 +241,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   12
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -269,7 +260,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   12
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -288,7 +279,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -306,7 +297,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -324,7 +315,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -342,7 +333,7 @@ Begin VB.Form maprightform
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   9.75
-         Charset         =   0
+         Charset         =   177
          Weight          =   700
          Underline       =   0   'False
          Italic          =   0   'False
@@ -384,7 +375,7 @@ Private Sub cmdTrigPoint_Click()
    kmxTrig = Text2
    kmyTrig = Text3
    hgtTrig = Text4
-   Call form_queryunload(0, 0)
+   Call Form_QueryUnload(0, 0)
 End Sub
 
 Private Sub cmdTrigUndo_Click()
@@ -411,10 +402,10 @@ mrf100: response = MsgBox("Backup file for today not found." & vbLf & _
             End If
          End If
       End If
-   Call form_queryunload(0, 0)
+   Call Form_QueryUnload(0, 0)
 End Sub
 
-Private Sub form_load()
+Private Sub Form_Load()
    'enable buttons and frames
    If Maps.mnuTrigDrag.Checked Then
       'disenable place frame
@@ -441,16 +432,17 @@ Private Sub form_load()
 End Sub
 
 Private Sub rightEXITbut_Click()
-    Call form_queryunload(i%, j%)
+    Call Form_QueryUnload(i%, j%)
 End Sub
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     Dim lmag As Long
     Unload maprightform
     Set maprightform = Nothing
     If magbox = True Then 'restore it to top of z order
-      ret = SetWindowPos(mapMAGfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-      ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-   
+'      ret = SetWindowPos(mapMAGfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'      ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+      BringWindowToTop (mapMAGfm.hWnd)
+      BringWindowToTop (mapPictureform.hWnd)
        'lmag = FindWindow(vbNullString, mapMAGfm.Caption)
        'ret = BringWindowToTop(lmag)
     Else
@@ -458,13 +450,16 @@ Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
          lResult = FindWindow(vbNullString, terranam$)
          If lResult > 0 Then
-             ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'             ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+             BringWindowToTop (lResult)
              End If
       Else
-         ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'         ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         BringWindowToTop (mapPictureform.hWnd)
          lResult = FindWindow(vbNullString, "3D Viewer")
          If lResult > 0 Then
-             ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'             ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+             BringWindowToTop (lResult)
              End If
          End If
        End If

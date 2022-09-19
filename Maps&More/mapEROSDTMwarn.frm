@@ -66,7 +66,7 @@ Begin VB.Form mapEROSDTMwarn
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   9.75
-            Charset         =   0
+            Charset         =   177
             Weight          =   700
             Underline       =   0   'False
             Italic          =   0   'False
@@ -92,12 +92,14 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Private Sub form_load()
-   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+Private Sub Form_Load()
+'   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   BringWindowToTop (mapPictureform.hWnd)
 End Sub
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     Unload mapEROSDTMwarn
     Set mapEROSDTMwarn = Nothing
-    ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'    ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+    BringWindowToTop (mapPictureform.hWnd)
 End Sub
 

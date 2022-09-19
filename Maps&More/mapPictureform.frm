@@ -304,7 +304,7 @@ keyerror:
    Exit Sub
 End Sub
 
-Private Sub form_load()
+Private Sub Form_Load()
    MapOn = True
 End Sub
 
@@ -403,15 +403,15 @@ Private Sub Form_Unload(Cancel As Integer)
   Set mapPictureform = Nothing
 End Sub
 
-Private Sub mappicture_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub mappicture_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
   Maps.StatusBar1.Panels(2) = "Move the cursor to the desired location (click to center on this point)"
   If impcenter = True Then
      Maps.StatusBar1.Panels(2) = "Move the cursor to the map's true center and then click."
      'determine new fudx, fudy
      End If
   
-  Xcoord = X
-  Ycoord = Y
+  Xcoord = x
+  Ycoord = y
   If world = True Then GoTo m10
   If map400 = True Then
      If mag > 1 Then
@@ -419,8 +419,8 @@ Private Sub mappicture_MouseMove(Button As Integer, Shift As Integer, X As Singl
         kmycc = kmyc
         xo = kmxcc - (km400x / mag) * (mapwi2 - mapxdif) * 0.5
         yo = kmycc + (km400y / mag) * (maphi2 - mapydif) * 0.5
-        kmxo = Fix(xo + X * km400x / mag) 'mapdif accounts for size of frame around picture
-        kmyo = Fix(yo - Y * km400y / mag)
+        kmxo = Fix(xo + x * km400x / mag) 'mapdif accounts for size of frame around picture
+        kmyo = Fix(yo - y * km400y / mag)
      Else
         kmxcc = kmxc + (km400x) * (mapwi - mapwi2 + mapxdif) / 2
         kmycc = kmyc - (km400y) * (maphi - maphi2 + mapydif) / 2
@@ -428,8 +428,8 @@ Private Sub mappicture_MouseMove(Button As Integer, Shift As Integer, X As Singl
         'so topleft corner=origin corresponds to:
         xo = kmxcc - km400x * sizex / 2  'mapPictureform.mapPicture.Width / 2
         yo = kmycc + km400y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-        kmxo = Fix(xo + X * km400x)   'mapdif accounts for size of frame around picture
-        kmyo = Fix(yo - Y * km400y)
+        kmxo = Fix(xo + x * km400x)   'mapdif accounts for size of frame around picture
+        kmyo = Fix(yo - y * km400y)
         End If
      If (kmxo <> kmxoo Or kmyo <> kmyoo) Then
         kmxoo = kmxo: kmyoo = kmyo
@@ -446,15 +446,15 @@ Private Sub mappicture_MouseMove(Button As Integer, Shift As Integer, X As Singl
         kmycc = kmyc
         xo = kmxcc - (km50x / mag) * (mapwi2 - mapxdif) * 0.5
         yo = kmycc + (km50y / mag) * (maphi2 - mapydif) * 0.5
-        kmxo = Fix(xo + X * km50x / mag) 'mapdif accounts for size of frame around picture
-        kmyo = Fix(yo - Y * km50y / mag)
+        kmxo = Fix(xo + x * km50x / mag) 'mapdif accounts for size of frame around picture
+        kmyo = Fix(yo - y * km50y / mag)
      Else
         kmxcc = kmxc + (km50x) * (mapwi - mapwi2 + mapxdif) / 2
         kmycc = kmyc - (km50y) * (maphi - maphi2 + mapydif) / 2
         xo = kmxcc - km50x * sizex / 2  'mapPictureform.mapPicture.Width / 2
         yo = kmycc + km50y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-        kmxo = Fix(xo + X * km50x)
-        kmyo = Fix(yo - Y * km50y)
+        kmxo = Fix(xo + x * km50x)
+        kmyo = Fix(yo - y * km50y)
         End If
      If (kmxo <> kmxoo Or kmyo <> kmyoo) Then
         kmxoo = kmxo: kmyoo = kmyo
@@ -485,8 +485,8 @@ m10: Select Case coordmode%
                'Y = 0
                xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
-               lono = xo + X * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
-               lato = yo - Y * (deglat / (sizewy * mag))
+               lono = xo + x * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
+               lato = yo - y * (deglat / (sizewy * mag))
                lg = lono
                lt = lato
              Else
@@ -500,8 +500,8 @@ m10: Select Case coordmode%
                latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy
                xo = lonc - deglog / 2
                yo = latc + deglat / 2
-               lono = xo + X * (deglog / sizewx)
-               lato = yo - Y * (deglat / sizewy)
+               lono = xo + x * (deglog / sizewx)
+               lato = yo - y * (deglat / sizewy)
                If sizewx = Screen.TwipsPerPixelX * 10201 And sizewy = Screen.TwipsPerPixelY * 5489 Then
                   'fudge factor for inaccuracy of linear degree approx for large size map
                   lono = lono - 0.006906
@@ -564,8 +564,8 @@ m10: Select Case coordmode%
                'lato = yo - y * (180# / (sizewy * mag))
                xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
-               lono = xo + X * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
-               lato = yo - Y * (deglat / (sizewy * mag))
+               lono = xo + x * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
+               lato = yo - y * (deglat / (sizewy * mag))
              Else
                'lonc = lon + (180# / sizewx) * (mapwi - mapwi2 + mapxdif) / 2
                'latc = lat - (180# / sizewy) * (maphi - maphi2 + mapydif) / 2
@@ -577,8 +577,8 @@ m10: Select Case coordmode%
                latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy
                xo = lonc - deglog / 2
                yo = latc + deglat / 2
-               lono = xo + X * (deglog / sizewx)
-               lato = yo - Y * (deglat / sizewy)
+               lono = xo + x * (deglog / sizewx)
+               lato = yo - y * (deglat / sizewy)
                If sizewx = Screen.TwipsPerPixelX * 10201 And sizewy = Screen.TwipsPerPixelY * 5489 Then
                   'fudge factor for inaccuracy of linear degree approx for large size map
                   lono = lono - 0.006906
@@ -593,14 +593,14 @@ m10: Select Case coordmode%
       mapPictureform.mapPicture.DrawStyle = vbDot
       mapPictureform.DrawWidth = 1
       mapPictureform.mapPicture.Line (drag2x, drag2y)-(drag1x, drag1y), QBColor(15), B
-      mapPictureform.mapPicture.Line (X, Y)-(drag1x, drag1y), QBColor(15), B
-      drag2x = X: drag2y = Y
+      mapPictureform.mapPicture.Line (x, y)-(drag1x, drag1y), QBColor(15), B
+      drag2x = x: drag2y = y
    ElseIf dragbegin = True And Button = 1 And dragbox = False And drawbox = False Then
       mapPictureform.mapPicture.DrawMode = 7
       mapPictureform.mapPicture.DrawStyle = vbDot
       mapPictureform.DrawWidth = 1
-      mapPictureform.mapPicture.Line (X, Y)-(drag1x, drag1y), QBColor(15), B
-      drag2x = X: drag2y = Y
+      mapPictureform.mapPicture.Line (x, y)-(drag1x, drag1y), QBColor(15), B
+      drag2x = x: drag2y = y
       dragbox = True
       End If
    If travelmode = True And travelnum% >= 1 Then
@@ -610,17 +610,17 @@ m10: Select Case coordmode%
       travelY = mapPictureform.Height / 2 - mapydif
       If newblit = False Then mapPictureform.mapPicture.Line (drag2x, drag2y)-(travelX, travelY), QBColor(15)
       newblit = False
-      mapPictureform.mapPicture.Line (X, Y)-(travelX, travelY), QBColor(15)
-      drag2x = X: drag2y = Y
+      mapPictureform.mapPicture.Line (x, y)-(travelX, travelY), QBColor(15)
+      drag2x = x: drag2y = y
       End If
    mapPictureform.mapPicture.DrawStyle = vbSolid
    mapPictureform.mapPicture.DrawMode = 13
  End Sub
 Private Sub mappicture_MouseUp(Button As Integer, _
-   Shift As Integer, X As Single, Y As Single)
+   Shift As Integer, x As Single, y As Single)
    Dim xrl As Long, yrl As Long
-      Xcoord = X
-      Ycoord = Y
+      Xcoord = x
+      Ycoord = y
       Select Case Button
       Case 1  'left button
          
@@ -678,8 +678,8 @@ Private Sub mappicture_MouseUp(Button As Integer, _
                Maps.Text6.Text = Format(lato, "##0.0#####") '90# - Y * 180# / mappictureform.mappicture.Height
                Maps.Label5.Caption = "long."
                Maps.Label6.Caption = "latit."
-               Xworld = X
-               Yworld = Y
+               Xworld = x
+               Yworld = y
                cirworld = True
                hgtworld = hgt
                lon = lono
@@ -723,7 +723,8 @@ mup50:         If impcenter = True Then
                           Maps.Toolbar1.Buttons(26).value = tbrUnpressed
                           ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                           response = MsgBox("USGS EROS CD not found!  Please enter the appropriate CD, and then press the DTM button!", vbCritical + vbOKOnly, "Maps & More")
-                          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'                          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+                          BringWindowToTop (mapPictureform.hWnd)
                           NoCDWarning = True
                           Exit Sub
                           End If
@@ -747,7 +748,7 @@ mup50:         If impcenter = True Then
             ElseIf map400 = True Then
                'cir400 = True
                'cir50 = False
-                X400c = X: Y400c = Y
+                X400c = x: Y400c = y
                 kmx400c = kmxoo: kmy400c = kmyoo
                 kmxc = kmx400c: kmyc = kmy400c
                 hgt400c = hgt
@@ -760,7 +761,7 @@ mup50:         If impcenter = True Then
                   End If
             ElseIf map50 = True Then
                'cir50 = True
-                X50c = X: Y50c = Y
+                X50c = x: Y50c = y
                 kmx50c = kmxoo: kmy50c = kmyoo
                 kmxc = kmx50c: kmyc = kmy50c
                 If topotype% = 1 Then '****************
@@ -788,7 +789,8 @@ mup50:         If impcenter = True Then
                   response = MsgBox("You can't jump around with the Terra Viewer until" + _
                            " you close the Magnifaction box.  Close it now?", vbInformation + vbYesNo, "Skylight")
                   If lResult > 0 Then
-                     ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                     ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+                     BringWindowToTop (lResult)
                      End If
                   If response = vbYes Then
                      Unload mapMAGfm
@@ -828,7 +830,8 @@ mup50:         If impcenter = True Then
                        End If
                     End If
                If Maps.mnuMagDragEnable.Checked Then
-                  ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                  ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+                  BringWindowToTop (mapPictureform.hWnd)
                   Call keybd_event(VK_SNAPSHOT, 1, 0, 0)
                   Call keybd_event(VK_SNAPSHOT, 1, KEYEVENTF_KEYUP, 0)
                   waitime = Timer
@@ -845,7 +848,8 @@ mup50:         If impcenter = True Then
                   mx = Fix(10 / magx) / 10
                   my = Fix(10 / magy) / 10
                   mapMAGfm.Visible = True
-                  ret = SetWindowPos(mapMAGfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                  ret = SetWindowPos(mapMAGfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+                  BringWindowToTop (mapMAGfm.hWnd)
                   mapMAGfm.Caption = "Magnifcation " + Str(mx) + " x" + Str(my) + " of marked region on main map"
                   mapMAGfm.MAGpicture.DrawMode = 13
                   'now load the bitmap from the clipboard to pictureclip2
@@ -921,8 +925,17 @@ mu50:             mapMAGfm.MAGpicture.SetFocus
                         Call GlitchFix(drag1x, drag1y, drag2x, drag2y, CLng(YfixCoord), 1)
                         End If
                      End If
+               ElseIf Maps.mnuXYFix.Checked Then
+                  ret = BringWindowToTop(mapPictureform.hWnd)
+                  If drag1x <> drag2x And drag1y <> drag2y Then
+                    response = MsgBox("Drag defines XY fix area?", vbQuestion + vbYesNoCancel, "Maps&More")
+                    If response = vbYes Then
+                       mapXYGlitchfrm.Show
+                       End If
+                    End If
                   End If
                   
+                  BringWindowToTop (mapPictureform.hWnd)
                   mapPictureform.mapPicture.DrawMode = 7
                   mapPictureform.mapPicture.DrawWidth = 2
                   mapPictureform.mapPicture.Line (drag2x, drag2y)-(drag1x, drag1y), QBColor(15), B
@@ -931,7 +944,8 @@ mu50:             mapMAGfm.MAGpicture.SetFocus
                   drawbox = False
                   dragbegin = False
                   If world = False And lResult > 0 Then
-                     ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'                     ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+                     BringWindowToTop (lResult)
                      End If
                   Maps.Combo1.Enabled = True
                   For j% = 2 To 15
@@ -940,7 +954,7 @@ mu50:             mapMAGfm.MAGpicture.SetFocus
                End If
       Case 2  'right button
          If mapSearchVis Then 'determine nearest search result
-            Call FindSearchResult(X, Y)
+            Call FindSearchResult(x, y)
             Exit Sub
             End If
       
@@ -956,11 +970,11 @@ mu50:             mapMAGfm.MAGpicture.SetFocus
          'mapPictureform.mapPicture.DrawWidth = 1
          'mapPictureform.mapPicture.Circle (X, Y), 100, 255
          mapPictureform.mapPicture.DrawWidth = 2 '2 * mag
-         mapPictureform.mapPicture.Circle (X, Y), 20, 255 '20 * mag, 255
+         mapPictureform.mapPicture.Circle (x, y), 20, 255 '20 * mag, 255
          mapPictureform.mapPicture.DrawWidth = 1 '1 * mag
          If world = True Then
-            Xworld = X
-            Yworld = Y
+            Xworld = x
+            Yworld = y
             cirworld = True
             hgtworld = hgt
             maprightform.Text2 = LTrim$(RTrim$(Mid$(Str$(lono), 1, 10)))
@@ -973,7 +987,8 @@ mu50:             mapMAGfm.MAGpicture.SetFocus
             'Maps.Text6.Text = maprightform.Text4
             maprightform.Text1 = "Name"
             maprightform.Visible = True
-            ret = SetWindowPos(maprightform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            ret = SetWindowPos(maprightform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            BringWindowToTop (maprightform.hWnd)
             maprightform.SetFocus
             Exit Sub
             End If
@@ -1000,7 +1015,8 @@ mu50:             mapMAGfm.MAGpicture.SetFocus
                End If
             End If
          maprightform.Visible = True
-         ret = SetWindowPos(maprightform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'         ret = SetWindowPos(maprightform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         BringWindowToTop (maprightform.hWnd)
          maprightform.SetFocus
       End Select
       
@@ -1012,10 +1028,10 @@ sunrerr:
    
    End Sub
 Private Sub mappicture_mousedown(Button As Integer, _
-   Shift As Integer, X As Single, Y As Single)
+   Shift As Integer, x As Single, y As Single)
    If Button = 1 And drawbox = False And travelmode = False And skyleftjump = False Then 'maybe beginning of drag operation
-      drag1x = X
-      drag1y = Y
+      drag1x = x
+      drag1y = y
       dragbegin = True
       drag2x = drag1x
       drag2y = drag1y

@@ -339,7 +339,7 @@ Private Sub Acceptbut_Click()
    Print #dtmfile%, outdrive$; ","; DTMflag
    Close #dtmfile%
    
-   Call form_queryunload(i%, j%)
+   Call Form_QueryUnload(i%, j%)
    Exit Sub
    
 errhand:
@@ -368,14 +368,14 @@ Private Sub Command1_Click()
       mapprogressfm.Visible = False
       abortDTM = True
       End If
-   Call form_queryunload(i%, j%)
+   Call Form_QueryUnload(i%, j%)
 End Sub
 
 Private Sub Command2_Click()
    On Error GoTo errhand
    
    viewer3D = True
-   Call form_queryunload(i%, j%)
+   Call Form_QueryUnload(i%, j%)
    
    'create eros.tm6 file
    dtmfile% = FreeFile
@@ -398,7 +398,7 @@ errhand:
 
 End Sub
 
-Private Sub form_load()
+Private Sub Form_Load()
    'read last eros.tm6 file to determine last DTM used
    If Dir(ramdrive & ":\eros.tm6") <> sEmpty Then
         dtmfile% = FreeFile
@@ -406,24 +406,24 @@ Private Sub form_load()
         Input #dtmfile%, outdrive$, DTMflag
         Select Case DTMflag
            Case 0 'SRTM30 (1 km)
-              optGTOPO30.Value = True
+              optGTOPO30.value = True
            Case 1 'SRTM-2 (30 meter)
-              optSRTM1.Value = True
+              optSRTM1.value = True
            Case 2 'SRTM-1 (100 meter)
-              optSRTM2.Value = True
+              optSRTM2.value = True
         End Select
         Close #dtmfile%
    Else
        DTMflag = 0 'default is SRTM30
-       optGTOPO30.Value = True
+       optGTOPO30.value = True
        End If
 
    
    'DTMflag = 2 'default is SRTM layer 2 DEM (90 meter)
 End Sub
 
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
-   If viewer3D = False Then ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+   If viewer3D = False Then BringWindowToTop (mapPictureform.hWnd) 'ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
    Unload Me
 End Sub
 
@@ -440,7 +440,7 @@ Private Sub optSRTM2_Click()
 End Sub
 
 Private Sub Text2_Change()
-   If UpDown1.Value <> 2 * Val(Text2.Text) Then UpDown1.Value = 2 * Val(Text2.Text)
+   If UpDown1.value <> 2 * Val(Text2.Text) Then UpDown1.value = 2 * Val(Text2.Text)
 End Sub
 
 Private Sub UpDown1_Change()

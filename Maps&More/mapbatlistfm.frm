@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.1#0"; "mscomctl.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form mapbatlistfm 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "contents of bat file"
@@ -23,15 +23,6 @@ Begin VB.Form mapbatlistfm
       Width           =   4455
    End
    Begin VB.PictureBox Picture2 
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   8.25
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
       Height          =   2855
       Left            =   60
       ScaleHeight     =   2790
@@ -55,15 +46,6 @@ Begin VB.Form mapbatlistfm
    Begin VB.CommandButton Command2 
       Caption         =   "Change the Center Coordinates"
       Enabled         =   0   'False
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   8.25
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
       Height          =   255
       Left            =   120
       TabIndex        =   16
@@ -234,7 +216,7 @@ Begin VB.Form mapbatlistfm
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
          Size            =   8.25
-         Charset         =   0
+         Charset         =   177
          Weight          =   400
          Underline       =   0   'False
          Italic          =   -1  'True
@@ -293,7 +275,8 @@ Private Sub cmdPlotAll_Click()
 
    On Error GoTo cmdPlotAll_Click_Error
    
-   ret = SetWindowPos(mapbatlistfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'   ret = SetWindowPos(mapbatlistfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   BringWindowToTop (mapbatlistfm.hWnd)
    
    If PlotSearchPoints2 Then
       'button pressed twice, so erase plot points
@@ -323,18 +306,18 @@ Private Sub cmdPlotAll_Click()
            End If
         ycoor = Val(Mid$(doclin$, pos2% + 1, pos3% - pos2% - 1))
         If world = True Then
-           Call ScreenToGeo(X, Y, -ycoor, xcoor, 2, ier%)
+           Call ScreenToGeo(x, y, -ycoor, xcoor, 2, ier%)
         Else
            If xcoor And ycoor < 1000 Then 'convert format
               xcoor = xcoor * 1000
               ycoor = ycoor * 1000 + 1000000
               End If
-           Call ScreenToGeo(X, Y, xcoor, ycoor, 2, ier%)
+           Call ScreenToGeo(x, y, xcoor, ycoor, 2, ier%)
            End If
       
        'plot the points
        mapPictureform.mapPicture.DrawWidth = 2 '2 * mag
-       mapPictureform.mapPicture.Circle (X, Y), 20, 255 '20 * mag, 255
+       mapPictureform.mapPicture.Circle (x, y), 20, 255 '20 * mag, 255
        mapPictureform.mapPicture.DrawWidth = 1 '1 * mag
 cpa500:
     Next j&
@@ -476,21 +459,23 @@ mb200:
     Close #filsav%
     End If
 mb500:
-  ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'  ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+  BringWindowToTop (mapPictureform.hWnd)
   Screen.MousePointer = vbDefault
   Exit Sub
   
 errhandler:
    Screen.MousePointer = vbDefault
    response = MsgBox("mapbatlistfm encountered error number: " + Str(Err.Number) + ". The error message is: " + Err.Description + " Sorry!", vbCritical + vbOKOnly, "Maps & More")
-   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+'   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   BringWindowToTop (mapPictureform.hWnd)
    'close all files and exit
    Close
    'kill the sav file and copy the tmp file back to it
    If Err.Number = 54 Then
       'attempt to restore the sav file (it has been erased)
       FileCopy Text8.Text + ".tmp", Text8.Text + ".sav"
-      Call form_queryunload(0, 0)
+      Call Form_QueryUnload(0, 0)
       End If
 End Sub
 
@@ -545,11 +530,12 @@ Private Sub Command3_Click()
       End If
 End Sub
 
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
    resetorigin = False
    Unload Me
    Set mapbatlistfm = Nothing
-   If MapOn Then ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'   If MapOn Then ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   If MapOn Then BringWindowToTop (mapPictureform.hWnd)
 End Sub
 
 Private Sub List1_Click()
@@ -593,8 +579,10 @@ Private Sub List1_Click()
             lat3d = Val(Mid$(Tdxname, iposit% + 4, 2)) + Val(Mid$(Tdxname, iposit% + 8, 4)) / 60
             lon3d = Val(Mid$(Tdxname, iposit% + 15, 3)) + Val(Mid$(Tdxname, iposit% + 19, 5)) / 60
             OverhWnd = FindWindow(vbNullString, "Overview")
-            ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            BringWindowToTop (OverhWnd)
+'            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            BringWindowToTop (mapPictureform.hWnd)
             'Call BringWindowToTop(OverhWnd)
             dx1 = -1000 '-30 '30
             dy1 = -1000 '-240 '60
@@ -614,7 +602,8 @@ Private Sub List1_Click()
             Loop
             Call mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0) 'move mouse to Location item
             Call mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0) 'move mouse to Location item
-            ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            BringWindowToTop (mapsearchfm.hWnd)
             waitime = Timer + 2
             Do Until Timer > waitime
                DoEvents

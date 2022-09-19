@@ -1397,6 +1397,20 @@ End Sub
 Private Sub cmdReLoad_Click()
    
    On Error GoTo cmdReLoad_Click_Error
+   
+   If Not SavedAll Then
+      Select Case MsgBox("You haven't yet saved the buffer points." _
+                         & vbCrLf & "(If you don't save them, then you won't be able to check for skipped points.)" _
+                         & vbCrLf & "" _
+                         & vbCrLf & "Save them now?" _
+                         , vbOKCancel Or vbInformation Or vbDefaultButton1, "Save search points")
+      
+        Case vbOK
+            cmdSaveAll.value = True
+        Case vbCancel
+      
+      End Select
+      End If
 
    'reload the saved points, and begin automatic analysis
    If Dir(drivjk_c$ & "mappoints.sav") <> sEmpty Then
@@ -1688,6 +1702,8 @@ Private Sub cmdSaveAll_Click()
         End If
    Next i&
    Close #savfil%
+   
+   SavedAll = True
 
    On Error GoTo 0
    Exit Sub
@@ -1799,6 +1815,7 @@ Private Sub Command1_Click()
       blitpictures
       End If
       
+   SavedAll = False
       
    mapsearchfm.Width = 5490
    mapsearchfm.frmProg.Visible = True
@@ -2166,7 +2183,8 @@ sr650:
        End If
     Screen.MousePointer = vbDefault
     OverhWnd = FindWindow(vbNullString, "Overview")
-    If OverhWnd <> 0 Then ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'    If OverhWnd <> 0 Then ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+    If OverhWnd <> 0 Then BringWindowToTop (OverhWnd)
     
     'highlight first row
     sky2.SelectionMode = flexSelectionByRow
@@ -2204,7 +2222,8 @@ Private Sub Command10_Click()
    AutoProf = False
    Call sunrisesunset(0)
    viewsearch = False
-   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   BringWindowToTop (OverhWnd)
    Call BringWindowToTop(mapsearchfm.hWnd)
 End Sub
 
@@ -2222,7 +2241,8 @@ Private Sub Command11_Click()
               'lon3d = Val(Text2.Text)
               OverhWnd = FindWindow(vbNullString, "Overview")
               'Call BringWindowToTop(OverhWnd)
-              ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'              ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+              BringWindowToTop (OverhWnd)
               If Abs(Val(Text1.Text) - lat3d) > 0.37167 Or Abs(Val(Maps.Text5.Text) - lon3d > 0.37167) Then
                   'activate find window
                   Call BringWindowToTop(OverhWnd)
@@ -2268,7 +2288,7 @@ Private Sub Command12_Click()
       Call goto_click
       Call BringWindowToTop(mapsearchfm.hWnd)
       OverhWnd = FindWindow(vbNullString, "Overview")
-      If OverhWnd <> 0 Then ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+      If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
       End If
 End Sub
 
@@ -2278,13 +2298,14 @@ Private Sub Command13_Click()
     Call goto_click
     Call BringWindowToTop(mapsearchfm.hWnd)
     OverhWnd = FindWindow(vbNullString, "Overview")
-    If OverhWnd <> 0 Then ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'    If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 End Sub
 
 Private Sub Command14_Click()
   OverhWnd = FindWindow(vbNullString, "Overview")
   If OverhWnd <> 0 Then
-     ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'     ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+     BringWindowToTop (OverhWnd)
   Else
      'Exit Sub
      End If
@@ -2360,12 +2381,16 @@ Private Sub Command15_Click()
             'Call BringWindowToTop(lResult)
             response = MsgBox("Neighborhood has already been recorded, do you wan't to overwrite?", vbExclamation + vbYesNo, "Maps & More Warning")
             If response = vbNo Then
-               ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'               ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+               BringWindowToTop (OverhWnd)
+               BringWindowToTop (mapPictureform.hWnd)
                Exit Sub
             Else
-               ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'               ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+               BringWindowToTop (OverhWnd)
+               BringWindowToTop (mapPictureform.hWnd)
                Exit For
                End If
             End If
@@ -2503,6 +2528,7 @@ Private Sub cmdClear_Click()
        End If
        
     AutoProf = False
+    SavedAll = False
 
 End Sub
 
@@ -2516,7 +2542,8 @@ Private Sub Command5_Click()
    AutoProf = False
    Call sunrisesunset(1)
    viewsearch = False
-   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   BringWindowToTop (OverhWnd)
    Call BringWindowToTop(mapsearchfm.hWnd)
 End Sub
 
@@ -2529,7 +2556,8 @@ Private Sub Command6_Click()
    AutoProf = False
    Call sunrisesunset(0)
    viewsearch = False
-   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   BringWindowToTop (OverhWnd)
    Call BringWindowToTop(mapsearchfm.hWnd)
 End Sub
 
@@ -2568,7 +2596,8 @@ Private Sub Command8_Click()
               'lon3d = Val(Maps.Text5.Text)
               OverhWnd = FindWindow(vbNullString, "Overview")
               'Call BringWindowToTop(OverhWnd)
-              ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'              ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+              BringWindowToTop (OverhWnd)
               If Abs(Val(Maps.Text6.Text) - lat3d) > 0.37167 Or Abs(Val(Maps.Text5.Text) - lon3d > 0.37167) Then
                   'activate find window
                   Call BringWindowToTop(OverhWnd)
@@ -2612,7 +2641,7 @@ Private Sub Command8_Click()
            Call goto_click
            Call BringWindowToTop(mapsearchfm.hWnd)
            OverhWnd = FindWindow(vbNullString, "Google Map")
-           If OverhWnd <> 0 Then ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'           If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
            End If
            
        End If
@@ -2633,7 +2662,8 @@ Private Sub Command9_Click()
    AutoProf = False
    Call sunrisesunset(1)
    viewsearch = False
-   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   BringWindowToTop (overhtwnd)
    Call BringWindowToTop(mapsearchfm.hWnd)
 End Sub
 
@@ -2644,7 +2674,7 @@ End Sub
 ' Purpose   :
 '---------------------------------------------------------------------------------------
 '
-Private Sub form_load()
+Private Sub Form_Load()
    On Error GoTo form_load_Error
 
    mapsearchfm.Width = 4770
@@ -2704,17 +2734,20 @@ Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     
     OverhWnd = FindWindow(vbNullString, "Overview")
     If OverhWnd = 0 Then
-       ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'       ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+       BringWindowToTop (mapPictureform.hWnd)
        End If
     If world = False Then
       lResult = FindWindow(vbNullString, terranam$)
       If lResult > 0 Then
-         ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'         ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         BringWindowToTop (lResult)
          End If
     Else
       lResult = FindWindow(vbNullString, "3D Viewer")
       If lResult > 0 Then
-         ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'         ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         BringWindowToTop (lResult)
          End If
       End If
       
@@ -2807,8 +2840,10 @@ Private Sub sky2_DblClick()
             lat3d = Val(Mid$(Tdxname, iposit% + 4, 2)) + Val(Mid$(Tdxname, iposit% + 8, 4)) / 60
             lon3d = Val(Mid$(Tdxname, iposit% + 15, 3)) + Val(Mid$(Tdxname, iposit% + 19, 5)) / 60
             OverhWnd = FindWindow(vbNullString, "Overview")
-            ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            BringWindowToTop (OverhWnd)
+'            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            BringWindowToTop (mapPictureform.hWnd)
             'Call BringWindowToTop(OverhWnd)
             dx1 = -1000 '-30 '30
             dy1 = -1000 '-240 '60
@@ -2828,7 +2863,8 @@ Private Sub sky2_DblClick()
             Loop
             Call mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0) 'move mouse to Location item
             Call mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0) 'move mouse to Location item
-            ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'            ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            BringWindowToTop (mapsearchfm.hWnd)
             waitime = Timer + 2
             Do Until Timer > waitime
                DoEvents
@@ -2900,7 +2936,8 @@ Sub RunOnAutomatic()
 '   End Select
 
    'New interface
-   ret = SetWindowPos(mapsearchfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+'   ret = SetWindowPos(mapsearchfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   BringWindowToTop (mapsearchfm.hWnd)
    
    frmMsgBox.MsgCstm "Click sunrise or sunset horizon profile buttons:", "Horizon calculations", mbInformation, 1, False, _
                      "Sunrise profiles", "Sunset profiles", "Cancel"
