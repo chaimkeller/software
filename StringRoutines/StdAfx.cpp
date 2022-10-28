@@ -919,13 +919,14 @@ The values set for debugging the program are simply the cgi arguments that are p
    Can now attempt calculations for any laitude and longitude
 35 fixed bug that allowed program to overwrite memory when nplac > MAXNUMPLACES, which was defined before as 200 places
    for some cities with large search radii, this is easily exceeded
+36 fixed DST bug for European countries (code had %72 instead of %7) 10/28/22
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 12.0f;
+float vernum = 13.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -19749,7 +19750,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 		  }
 
 		//first secular year
-		MarchDate =   31-( (int)(floor (FirstSecularYr * 5 / 4)) + 4) % 72; //starts on Sunday = 2 days after Israel
+		MarchDate =   31-( (int)(floor (FirstSecularYr * 5 / 4)) + 4) % 7; //starts on Sunday = 2 days after Israel
 		yl = YearLength( &FirstSecularYr );
 		StartDay[0] = DayNumber(yl,3,MarchDate);
 
@@ -19757,7 +19758,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 		EndDay[0] = DayNumber(yl,10,OctoberDate);
 
 		//second secular year
-		MarchDate =   31-( (int)(floor (SecondSecularYr * 5 / 4)) + 4) % 72; //starts on Sunday = 2 days after Israel
+		MarchDate =   31-( (int)(floor (SecondSecularYr * 5 / 4)) + 4) % 7; //starts on Sunday = 2 days after Israel
 		yl = YearLength( &SecondSecularYr );
 		StartDay[1] = DayNumber(yl,3,MarchDate);
 
