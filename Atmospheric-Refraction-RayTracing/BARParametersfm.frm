@@ -15,6 +15,28 @@ Begin VB.Form BARParametersfm
    MinButton       =   0   'False
    ScaleHeight     =   10650
    ScaleWidth      =   5985
+   Begin VB.CommandButton cmdC9 
+      BackColor       =   &H0080C0FF&
+      Caption         =   "C9"
+      Height          =   255
+      Left            =   0
+      Style           =   1  'Graphical
+      TabIndex        =   52
+      ToolTipText     =   "Organise C5's match results "
+      Top             =   5760
+      Width           =   255
+   End
+   Begin VB.CommandButton cmdC8 
+      BackColor       =   &H0080FF80&
+      Caption         =   "C8"
+      Height          =   255
+      Left            =   0
+      Style           =   1  'Graphical
+      TabIndex        =   51
+      ToolTipText     =   "Find observed diffferences within  x seconds from calculations"
+      Top             =   5400
+      Width           =   255
+   End
    Begin VB.CommandButton cmdC7 
       Caption         =   "C7"
       Height          =   255
@@ -34,11 +56,29 @@ Begin VB.Form BARParametersfm
    End
    Begin VB.Frame frmSeason 
       Caption         =   "Season"
-      Height          =   475
+      Height          =   600
       Left            =   240
       TabIndex        =   30
-      Top             =   4500
+      Top             =   4465
       Width           =   5535
+      Begin VB.OptionButton opt6Z 
+         Caption         =   "6Z"
+         Height          =   255
+         Left            =   1440
+         TabIndex        =   50
+         ToolTipText     =   "All sondes at 6Z"
+         Top             =   360
+         Width           =   735
+      End
+      Begin VB.OptionButton opt0Z 
+         Caption         =   "0Z"
+         Height          =   195
+         Left            =   500
+         TabIndex        =   49
+         ToolTipText     =   "All sondes at 0Z"
+         Top             =   360
+         Width           =   720
+      End
       Begin VB.OptionButton optAllOrigPress 
          Caption         =   "All orig pressures"
          Height          =   195
@@ -55,7 +95,6 @@ Begin VB.Form BARParametersfm
          TabIndex        =   34
          ToolTipText     =   "calculate the sondes for all seasons using vdw ciddor pressures"
          Top             =   180
-         Value           =   -1  'True
          Width           =   1215
       End
       Begin VB.OptionButton optSummer 
@@ -82,7 +121,7 @@ Begin VB.Form BARParametersfm
       Height          =   840
       Left            =   240
       TabIndex        =   23
-      Top             =   3680
+      Top             =   3640
       Width           =   5535
       Begin MSComCtl2.UpDown UpDownDist 
          Height          =   285
@@ -93,16 +132,17 @@ Begin VB.Form BARParametersfm
          _ExtentX        =   450
          _ExtentY        =   503
          _Version        =   393216
-         Value           =   80
+         Value           =   200
          AutoBuddy       =   -1  'True
          BuddyControl    =   "txtDist"
-         BuddyDispid     =   196617
+         BuddyDispid     =   196620
          OrigLeft        =   4920
          OrigTop         =   480
          OrigRight       =   5175
          OrigBottom      =   735
-         Max             =   80
+         Max             =   1000
          SyncBuddy       =   -1  'True
+         Wrap            =   -1  'True
          BuddyProperty   =   0
          Enabled         =   -1  'True
       End
@@ -111,7 +151,7 @@ Begin VB.Form BARParametersfm
          Height          =   285
          Left            =   4560
          TabIndex        =   42
-         Text            =   "80"
+         Text            =   "200"
          Top             =   480
          Width           =   360
       End
@@ -172,6 +212,7 @@ Begin VB.Form BARParametersfm
          TabIndex        =   46
          ToolTipText     =   "Keep on hugging the terrain only as long as need to to match the observation's refraction"
          Top             =   160
+         Value           =   1  'Checked
          Width           =   2655
       End
       Begin VB.CheckBox chkUseDTM 
@@ -181,7 +222,7 @@ Begin VB.Form BARParametersfm
          TabIndex        =   45
          ToolTipText     =   "Use actual DTM elevations for hill hugging rather than the polynomial fit"
          Top             =   160
-         Value           =   2  'Grayed
+         Value           =   1  'Checked
          Width           =   1815
       End
       Begin VB.CommandButton cmdC5 
@@ -1481,32 +1522,47 @@ End Sub
 '---------------------------------------------------------------------------------------
 '
 Private Sub cmdC5_Click()
-
    On Error GoTo cmdC5_Click_Error
 
    Dim NewPath$, dynum As Double
    Dim TestCalc As Boolean
    Dim lg1 As Double, lt1 As Double
    Dim MT(12) As Integer, AT(12) As Integer, ier As Integer
-   Dim mMonth As Integer, WinCalc As Boolean
+   Dim mMonth As Integer ', WinCalc As Boolean, SumCalc As Boolean, AllCalc As Boolean
    Dim FileOutName$, CheckForRepeat As Boolean
-   Dim CalendDate$, InputPlFile$, UseMenat As Boolean
+   Dim CalendDate$, InputPlFile$, UseMenat As Boolean, SkipMissingFiles As Boolean
    Dim CalcVariableDist As Boolean, UseOldCalc As Boolean
+   Dim SkipToNearDate As Boolean, RadioSonde$, RadioSonde2$, FullRadioSonde$, FullRadioSonde2$
+   Dim LoopThroughAllAtmospheres As Boolean
+'   Dim ChangeTerrestrialRefraction As Boolean '11/07/22 it is now global
+   Dim viewangle As Double, azimuth As Double, distObs As Double, hgtObs As Double, LRate As Double, InputPRFile$
+   Dim NewMethod As Boolean, RatioTR As Double, ret As Long, lexists As Long
+   
+Start:
+   
+   If WinCalc = False And AllCalc = False And SumCalc = False And ZeroZCalc = False And SixZCalc = False Then
+      Call MsgBox("Choose one of the seasons or Z options!", vbInformation, "Choose Season)s)")
+      Exit Sub
+      End If
    
    C5Click = True
    
-   DistToHug = txtDist
+   DistToHug = Val(txtDist.Text)
          
    NewPath$ = "c:\jk\Druk-Vangeld-data\"
    
-   '//////////diagnostics///////////////////////
+   '//////////diagnostics and flags///////////////////////
    TestCalc = False
-   WinCalc = True
+'   WinCalc = True
    HillHugging = True
    CheckForRepeat = True  'read the standard VDW atms refraction from the stored value
    UseMenat = False
    CalcVariableDist = True
-   UseOldCalc = True 'false
+   UseOldCalc = True
+   SkipMissingFiles = True
+   SkipToNearDate = False
+   LoopThroughAllAtmospheres = False
+   ChangeTerrestrialRefraction = True 'estimate change in TR due to observed lapse rate near the ground
    '/////////////////////////////////////
    
    If Not CalcVariableDist Then
@@ -1522,25 +1578,63 @@ Private Sub cmdC5_Click()
            Exit Sub
       
       End Select
+       
+        If LoopThroughAllAtmospheres Then 'loop through all the atmospheres for any one observation date
+             If WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-wVA-LoopAll.csv"
+             ElseIf SixZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-6Z-wVA-LoopAll.csv"
+             ElseIf ZeroZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-0Z-wVA-LoopAll.csv"
+             ElseIf SumCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-wVA-LoopAll.csv"
+             ElseIf AllCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-LoopAll.csv"
+             ElseIf WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-nohillhug-wVA-LoopAll.csv"
+             ElseIf SumCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-nohillhug-wVA-LoopAll.csv"
+             ElseIf AllCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-LoopAll.csv"
+               End If
+               
+             GoTo FinishNames
+            End If
    
         If Not UseMenat Then
              If WinCalc And HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA.csv"
-             ElseIf Not WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-wVA.csv"
+             ElseIf SixZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-6Z-wVA.csv"
+             ElseIf ZeroZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-0Z-wVA.csv"
+             ElseIf SumCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-wVA.csv"
+             ElseIf AllCalc And HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA.csv"
              ElseIf WinCalc And Not HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA.csv"
-             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-nohillhug-wVA.csv"
+             ElseIf SumCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-nohillhug-wVA.csv"
+             ElseIf AllCalc And Not HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA.csv"
                End If
         Else
              If WinCalc And HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA-Menat.csv"
-             ElseIf Not WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-wVA-Menat.csv"
+             ElseIf SixZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-6Z-wVA-Menat.csv"
+             ElseIf ZeroZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-0Z-wVA-Menat.csv"
+             ElseIf SumCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-wVA-Menat.csv"
+             ElseIf AllCalc And HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-Menat.csv"
              ElseIf WinCalc And Not HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA-Menat.csv"
-             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-nohillhug-wVA-Menat.csv"
+             ElseIf SumCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-nohillhug-wVA-Menat.csv"
+             ElseIf AllCalc And Not HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-Menat.csv"
                End If
              End If
@@ -1548,50 +1642,92 @@ Private Sub cmdC5_Click()
    Else
    
         If Not UseMenat Then
-           If chkUseDTM.Value And Not chkMatch Then
+           If chkUseDTM.Value And Not chkMatch.Value Then
              If WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-wVA-HHDTM.csv"
+             ElseIf ZeroZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-0Z-wVA-HHDTM.csv"
+             ElseIf SixZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-6Z-wVA-HHDTM.csv"
+             ElseIf SumCalc And HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA-HHDTM.csv"
-             ElseIf Not WinCalc And HillHugging Then
+             ElseIf AllCalc And HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-HHDTM.csv"
              ElseIf WinCalc And Not HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA-HHDTM.csv"
-             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-nohillhug-wVA-HHDTM.csv"
+             ElseIf SumCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-nohillhug-wVA-HHDTM.csv"
+             ElseIf AllCalc And Not HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-HHDTM.csv"
                End If
            ElseIf chkUseDTM And chkMatch Then
              If WinCalc And HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA-HHDTM-Match.csv"
-             ElseIf Not WinCalc And HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-HHDTM-Match..csv"
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-wVA-HHDTM-Match-3.csv"
+               If ChangeTerrestrialRefraction Then
+                  FileOutName$ = NewPath$ & "Figure8-win-6Z-wVA-HHDTM-Match-TRfix.csv"
+                  End If
+             ElseIf ZeroZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-0Z-wVA-HHDTM-Match-3.csv"
+             ElseIf SixZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-6Z-wVA-HHDTM-Match-3.csv"
+             ElseIf SumCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-wVA-HHDTM-Match-3.csv"
+             ElseIf AllCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-HHDTM-Match-3.csv"
              ElseIf WinCalc And Not HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA-HHDTM-Match..csv"
-             ElseIf Not WinCalc And Not HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-HHDTM-Match..csv"
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-nohillhug-wVA-HHDTM-Match-3.csv"
+             ElseIf SumCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-nohillhug-wVA-HHDTM-Match-3.csv"
+             ElseIf AllCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-HHDTM-Match-3.csv"
                End If
            Else
              If WinCalc And HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA-HH-" & Trim$(Str$(DistToHug)) & "km-6.csv"
-             ElseIf Not WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-wVA-HH-" & Trim$(Str$(DistToHug)) & "km-7.csv"
+             ElseIf ZeroZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-0Z-wVA-HH-" & Trim$(Str$(DistToHug)) & "km-6.csv"
+             ElseIf SixZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-6Z-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf SumCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-wVA-HH-" & Trim$(Str$(DistToHug)) & "km-6.csv"
+             ElseIf AllCalc And HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
              ElseIf WinCalc And Not HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
-             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-nohillhug-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf SumCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-nohillhug-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf AllCalc And Not HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
                End If
              End If
         Else
              If WinCalc And HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
-             ElseIf Not WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf ZeroZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-0Z-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf SixZCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-6Z-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf WinCalc And HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf AllCalc And HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
              ElseIf WinCalc And Not HillHugging Then
-               FileOutName$ = NewPath$ & "Figure8-win-0Z-nohillhug-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
-             ElseIf Not WinCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-win-6Z-nohillhug-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf SumCalc And Not HillHugging Then
+               FileOutName$ = NewPath$ & "Figure8-sum-0Z-nohillhug-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+             ElseIf AllCalc And Not HillHugging Then
                FileOutName$ = NewPath$ & "Figure8-sum-0Z-win-6Z-nonhillhug-wVA-Menat-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
                End If
              End If
    
       End If
+      
+FinishNames:
+
+   If SkipToNearDate Then
+     'add "-skip" to name
+     FileOutName$ = Mid$(FileOutName$, 1, Len(FileOutName$) - 4) & "-skip-3.csv"
+     End If
    
    lstSondes.Visible = False
    lstC2.Visible = True
@@ -1623,26 +1759,70 @@ Private Sub cmdC5_Click()
    inter1% = 0
    inter2% = 0
    inter3% = 0
-
+   
+   numsteps% = 0
+'   Input #filin1%, RadioSonde$, dynum, bb, cc, dd, EE, ff, GG
    Do Until EOF(filin1%)
+      If chkMatch.Value = vbChecked Then MatchDist = -5
 5:
       prjAtmRefMainfm.WindowState = 1 'minimize
       BringWindowToTop (BARParametersfm.hwnd)
-      Input #filin1%, RadioSonde$, dynum, bb, cc, dd, EE, ff, GG
+      If Not SkipToNearDate Or numsteps% = 0 Or foundSkip% = 1 Then Input #filin1%, RadioSonde$, dynum, bb, cc, dd, EE, ff, GG
+      numsteps% = numsteps% + 1
+      foundSkip% = 0
+7:
+      If chkMatch.Value = vbChecked Then
+         prjAtmRefMainfm.WindowState = 1 'minimize
+         BringWindowToTop (BARParametersfm.hwnd)
+         MatchDist = MatchDist + 5 'step in increments of 5 kms
+         If MatchDist > Val(txtDist.Text) Then GoTo NextSonde
+         End If
+         
+      RadioSondeOldFormat$ = RadioSonde$
       If Len(RadioSonde$) = 8 Then RadioSonde$ = "0" + RadioSonde$
       'make sure it exists
-      If Not WinCalc Then
+      If AllCalc Then
          'winter at 6Z, summer at 0Z
          FullRadioSonde$ = NewPath$ + Mid$(RadioSonde$, 1, 7) + "19" + Mid$(RadioSonde$, 8, 2) + "-sondes.txt"
-      Else
-         'just winter at 0Z
-         FullRadioSonde$ = NewPath$ + Mid$(RadioSonde$, 1, 7) + "19" + Mid$(RadioSonde$, 8, 2) + "-2-sondes.txt"
+      ElseIf WinCalc Then
+         'winter at 6Z
+         FullRadioSonde$ = NewPath$ + Mid$(RadioSonde$, 1, 7) + "19" + Mid$(RadioSonde$, 8, 2) + "-sondes.txt"
+      ElseIf SumCalc Then 'else
+         'just summer at 0Z
+         FullRadioSonde$ = NewPath$ + Mid$(RadioSonde$, 1, 7) + "19" + Mid$(RadioSonde$, 8, 2) + "-sondes.txt"
+      ElseIf SixZCalc Then
+         'only winter -sondes.txt sondes
+        If InStr(RadioSonde$, "Jan") Or _
+           InStr(RadioSonde$, "Feb") Or _
+           InStr(RadioSonde$, "Nov") Or _
+           InStr(RadioSonde$, "Dec") Then
+           FullRadioSonde$ = NewPath$ + Mid$(RadioSonde$, 1, 7) + "19" + Mid$(RadioSonde$, 8, 2) + "-sondes.txt"
+        Else
+           GoTo NextSonde
+           End If
+      ElseIf ZeroZCalc Then 'for winter, -2-sondes.txt, for summer -sondes.txt
+        If InStr(RadioSonde$, "Jan") Or _
+           InStr(RadioSonde$, "Feb") Or _
+           InStr(RadioSonde$, "Nov") Or _
+           InStr(RadioSonde$, "Dec") Then
+           FullRadioSonde$ = NewPath$ + Mid$(RadioSonde$, 1, 7) + "19" + Mid$(RadioSonde$, 8, 2) + "-2-sondes.txt"
+        ElseIf InStr(RadioSonde$, "May") Or _
+           InStr(RadioSonde$, "Jun") Or _
+           InStr(RadioSonde$, "Jul") Then
+           FullRadioSonde$ = NewPath$ + Mid$(RadioSonde$, 1, 7) + "19" + Mid$(RadioSonde$, 8, 2) + "-sondes.txt"
+         Else
+           GoTo NextSonde
+           End If
          End If
       myfile = Dir(FullRadioSonde$)
       If myfile = sEmpty Then
-         If WinCalc Then GoTo NextSonde
-10:      NewName$ = InputBox("Can't find file: " & vbCrLf & FullRadioSonde$ & "Please edit its name.", RadioSonde$)
-         myfile = Dir(NewName$)
+         If SkipMissingFiles Then GoTo NextSonde
+10:      NewName$ = InputBox("Can't find file: " & vbCrLf & FullRadioSonde$ & ". Please edit its name.", RadioSonde$)
+         If NewName$ <> sEmpty Then
+            myfile = Dir(NewName$)
+         Else
+            myfile = NeName$
+            End If
          If myfile <> sEmpty Then
          Else
             Select Case MsgBox("Still can't find the name." _
@@ -1657,6 +1837,27 @@ Private Sub cmdC5_Click()
                     GoTo 5
             End Select
             End If
+      Else
+         If WinCalc Then
+            'only process winter months
+            If InStr(FullRadioSonde$, "Jan") Or _
+               InStr(FullRadioSonde$, "Feb") Or _
+               InStr(FullRadioSonde$, "Nov") Or _
+               InStr(FullRadioSonde$, "Dec") Then
+               'process these dates
+            Else
+               GoTo NextSonde
+               End If
+         ElseIf SumCalc Then
+            'only process summer months
+            If InStr(FullRadioSonde$, "May") Or _
+               InStr(FullRadioSonde$, "Jun") Or _
+               InStr(FullRadioSonde$, "Jul") Then
+               'process these dates
+            Else
+               GoTo NextSonde
+               End If
+            End If
          End If
         
       If CheckForRepeat And Dir(FileOutName$) <> sEmpty Then
@@ -1665,20 +1866,54 @@ Private Sub cmdC5_Click()
         Open FileOutName$ For Input As #filcheck%
         found% = 0
         Do Until EOF(filcheck%)
-           Input #filcheck%, RadioCheck$, AAAA, bbbb, cccc, DDdd, EEee, ffff, GGgg
-           If RadioCheck$ = RadioSonde$ Then
-              lstC2.AddItem RadioSonde$
-              lstC2.Selected(lstC2.ListCount - 1) = True
-              inter1% = inter1% + 1
-              found% = 1
-              Exit Do
-              End If
+           If chkMatch.Value = vbChecked Then
+             Input #filcheck%, RadioCheck$, dynum2, matchdist2, cccc, ffff
+             If InStr(RadioCheck$, RadioSondeOldFormat$) And matchdist2 = MatchDist Then
+                lstC2.AddItem RadioSonde$ & ", " & Str$(MatchDist)
+                lstC2.Selected(lstC2.ListCount - 1) = True
+                inter1% = inter1% + 1
+                found% = 1
+                If SkipToNearDate Then foundSkip% = 1
+                Exit Do
+                End If
+           Else
+             Input #filcheck%, RadioCheck$, AAAA, bbbb, cccc, DDdd, eeee, ffff
+             If InStr(RadioCheck$, RadioSondeOldFormat$) Then
+                lstC2.AddItem RadioSonde$
+                lstC2.Selected(lstC2.ListCount - 1) = True
+                inter1% = inter1% + 1
+                found% = 1
+                If SkipToNearDate Then foundSkip% = 1
+                Exit Do
+                End If
+             End If
         Loop
         Close #filcheck%
-        If found% = 1 Then GoTo NextSonde
+        If found% = 1 Then
+           If chkMatch.Value = vbChecked Then
+              If matchdist2 < Val(txtDist.Text) Then
+                 MatchDist = matchdist2
+                 If ffff <= cccc Then
+                    MatchDist = -5
+                    GoTo NextSonde
+                 Else
+                    GoTo 7
+                    End If
+              Else
+                 GoTo NextSonde
+                 End If
+           Else
+              GoTo NextSonde
+              End If
+           End If
+           
         End If
       
-      lstC2.AddItem RadioSonde$
+      If chkMatch.Value = vbChecked Then
+         lstC2.AddItem RadioSonde$ & ", " & Str$(MatchDist)
+      Else
+         lstC2.AddItem RadioSonde$
+         End If
       lstC2.Selected(lstC2.ListCount - 1) = True
       inter1% = inter1% + 1
       
@@ -1703,17 +1938,117 @@ Private Sub cmdC5_Click()
 '         Input #filpl%, CalcDate$, NetzTime, filenam, azimuth, viewangle, dobs
 
 'Jan-01-1987   6:38:00   RavDrkTR.pr3    26.697     -.1769    44.83
+'         ret = WinExec(drivjk_c$ & "rdhalba4.exe", SW_SHOWNORMAL)
+
 
          Input #filpl%, doclin$
          CalcDate$ = Mid$(doclin$, 1, 11)
          azimuth = Val(Mid$(doclin$, 38, 10))
+         distObs = Val(Mid$(doclin$, 59, 9))
          Bearing = 90# + azimuth  'Compass Bearing in degrees is 90 degrees plus the azimuth as defined -/+ around due East.
          viewangle = Val(Mid$(doclin$, 49, 11))
+            
          If CalcDate$ = CalendDate$ Then
             'use this viewangle
 '            prjAtmRefMainfm.txtStartAlt.Text = viewangle * 60 'convert degrees to arcminutes
 '            prjAtmRefMainfm.txtOther.Text = FullRadioSonde$
 '           viewangle = -0.1895
+
+            If ChangeTerrestrialRefraction Then
+               'adjust the terrestrial refraction's affect on the view angle using the
+               'the observed lapse rate.
+               'determine the lapse rate, -dT/dh by following the inversion to the maximum temperature
+               'According to Young "Sunset Science Low Altitude refraction part 4" the lapse rate near the observer is
+               'the most important, so assuming that the same Beit Dagan near ground lapse rate applies to Armon Hanatziv
+               'read first two temperatures and heights to determine lapse rate p. 3636
+               filsonde% = FreeFile
+               Open FullRadioSonde$ For Input As #filsonde%
+               Input #filsonde%, hgt1, temp1, press1
+               tempground = temp1 + 273.15
+               Input #filsonde%, hgt2, temp2, press2
+               If (hgt2 = hgt1) Then 'read in another line
+                  Input #filsonde%, hgt2, temp2, press2
+                  End If
+               'determine lapse rate
+               LRate = -1# * (temp2 - temp1) / (hgt2 - hgt1)
+               Close #filsonde%
+               'now adjust viewangle with estimate of the terrestrial refraction
+               RatioTR = (0.0342 - LRate) / (0.0342 - 0.0065)
+               'now find the height of the horizon at the above azimuth
+               If NewMethod Then
+                  'output profile file reflecting this lapse rate
+                  filpr% = FreeFile
+                  Open "c:\jk\TRLapseRate.txt" For Output As #filpr%
+                  Print #filpr%, RatioTR
+                  Close #filpr%
+                  'now run the rdhalba4 program to create the profile file reflecting the modified lapse rate
+                  'first output the modified scanlist.txt file
+                  filpr% = FreeFile
+                  Open "c:\jk\SCANLIST.TXT" For Output As filpr%
+                  Print #filpr%, " 1,'c:\cities\JERUSA~2\netz\RavDrkTR.pr4', 172.654, 128.451,  747.4,  172.654,  260.000,1,45.0,  .000, 1"
+                  Close #filpr%
+                  'run rdhalba4
+retryExe:
+                  ier% = 0
+                  ret = WinExec(drivjk_c$ & "rdhalba4-x5TR.exe", SW_SHOWNORMAL)
+                  lexists = FindWindow(vbNullString, "c:\jk_c\rdhalba4-xSTR.exe")
+                  waitime = Timer
+                  Do Until Timer > waitime + 1
+                     DoEvents
+                  Loop
+                  waitime = Timer
+                  Do Until lexists = sEmpty
+                     DoEvents
+                     lexists = FindWindow(vbNullString, "c:\jk_c\rdhalba4-xSTR.exe")
+                     If Timer > waitime + 300 Or lexists = sEmpty Then
+                        'not advancing, abort
+                        ier% = -1
+                        Exit Do
+                        End If
+                  Loop
+                  If ier% = 0 Then
+                    'open RavDrkTR.pr4 file and read the height and distance to the obstruction at the expected azimuth
+                  Else
+                     Select Case MsgBox("Program rdhalba4-xSTR not terminating or failted to execute!" _
+                                       & vbCrLf & "Try again?" _
+                                       , vbYesNo Or vbInformation Or vbDefaultButton1, "rdhalba4-xSTR not executing")
+                    
+                       Case vbYes
+                          GoTo retryExe
+                       Case vbNo
+                          Close
+                          Exit Sub
+                    
+                     End Select
+                     End If
+               Else
+                    InputPRFile$ = "c:/fordtm/netz/RavDrkTR.pr3"
+                    If Dir(InputPRFile$) <> sEmpty Then
+                       filpr% = FreeFile
+                       Open InputPRFile$ For Input As #filpr%
+                       Line Input #filpr%, doclin$
+                       Line Input #filpr%, doclin$
+                       numpr% = 0
+                       Do Until EOF(filpr%)
+                          If numpr% = 0 Then
+                             Input #filpr%, azii, vangii, coordx, coordy, distpr, hgtpr
+                             azii0 = azii
+                             hgtpr0 = hgtpr
+                          Else
+                             Input #filpr%, azii, vangii, coordx, coordy, distpr, hgtpr
+                             If azii >= azimuth Then
+                                hgtObs = hgtpr0 + (azimuth - azii0) * (hgtpr - hgtpr0) / (azii - azii0)
+                                Exit Do
+                                End If
+                             azii0 = azii
+                             hgtpr0 = hgtpr
+                             End If
+                           numpr% = numpr% + 1
+                       Loop
+                       Close #filpr%
+                       End If
+                    End If
+               End If
             Exit Do
             End If
       Loop
@@ -1774,14 +2109,14 @@ Private Sub cmdC5_Click()
         If chkMatch.Value Or UseOldCalc Then
            'find the VR2 to use for matching
             'skip this step, just read the refraction from an old calculation
-            FileOld$ = NewPath$ & "Figure8-win-0Z-wVA-HH-" & Trim$(Str$(DistToHug)) & "km.csv"
+            FileOld$ = NewPath$ & "Figure8-sum-0Z-win-6Z-wVA.csv"
             If Dir(FileOld$) <> sEmpty Then
                fileoldnum% = FreeFile
                Open FileOld$ For Input As #fileoldnum%
                found% = 0
                Do Until EOF(fileoldnum%)
                   Input #fileoldnum%, RecordedSonde$, SondeDayNum, ccc, cc, Time_Div_of_Obs_from_Astron, VRSondeAtm, VRVDWcalc, ggg
-                  If RecordedSonde$ = RadioSonde$ Then
+                  If InStr(RecordedSonde$, RadioSonde$) Or InStr(RadioSonde$, RecordedSonde$) Then
                      DifVRexpected = Time_Div_of_Obs_from_Astron / 3.3
                      '/////////added 070322///////////////////////////
                      If DifVRexpected > 0 And chkMatch.Value Then 'sunrise was later than expected, so nothing to investigate via raytracing, skip
@@ -1796,6 +2131,81 @@ Private Sub cmdC5_Click()
                Close #fileoldnum%
                End If
             End If
+NextSkipSonde:
+        If SkipToNearDate Then
+           'use the next sonde date if it is separated by 1 day no matter the year
+          If Not EOF(filin1%) Then
+             Input #filin1%, RadioSonde2$, dynum2, bb, cc, dd, EE, ff, GG
+          Else
+             Seek (filin1%), 1
+             Input #filin1%, RadioSonde2$, dynum2, bb, cc, dd, EE, ff, GG
+             numsteps% = 9999
+             End If
+          RadioSondeOldFormat2$ = RadioSonde2$
+          If Len(RadioSonde2$) = 8 Then RadioSonde2$ = "0" + RadioSonde2$
+          'make sure it exists
+          If AllCalc Then
+             'winter at 6Z, summer at 0Z
+             FullRadioSonde2$ = NewPath$ + Mid$(RadioSonde2$, 1, 7) + "19" + Mid$(RadioSonde2$, 8, 2) + "-sondes.txt"
+          ElseIf WinCalc Then
+             'winter at 6Z
+             FullRadioSonde2$ = NewPath$ + Mid$(RadioSonde2$, 1, 7) + "19" + Mid$(RadioSonde2$, 8, 2) + "-sondes.txt"
+          ElseIf SumCalc Then 'else
+             'just summer at 0Z
+             FullRadioSonde2$ = NewPath$ + Mid$(RadioSonde2$, 1, 7) + "19" + Mid$(RadioSonde2$, 8, 2) + "-sondes.txt"
+          ElseIf SixZCalc Then
+             'only winter -sondes.txt sondes
+            If InStr(RadioSonde2$, "Jan") Or _
+               InStr(RadioSonde2$, "Feb") Or _
+               InStr(RadioSonde2$, "Nov") Or _
+               InStr(RadioSonde2$, "Dec") Then
+               FullRadioSonde2$ = NewPath$ + Mid$(RadioSonde2$, 1, 7) + "19" + Mid$(RadioSonde2$, 8, 2) + "-sondes.txt"
+            Else
+               GoTo NextSkipSonde
+               End If
+          ElseIf ZeroZCalc Then 'for winter, -2-sondes.txt, for summer -sondes.txt
+            If InStr(RadioSonde2$, "Jan") Or _
+               InStr(RadioSonde2$, "Feb") Or _
+               InStr(RadioSonde2$, "Nov") Or _
+               InStr(RadioSonde2$, "Dec") Then
+               FullRadioSonde2$ = NewPath$ + Mid$(RadioSonde2$, 1, 7) + "19" + Mid$(RadioSonde2$, 8, 2) + "-2-sondes.txt"
+            ElseIf InStr(RadioSonde$, "May") Or _
+               InStr(RadioSonde2$, "Jun") Or _
+               InStr(RadioSonde2$, "Jul") Then
+               FullRadioSonde2$ = NewPath$ + Mid$(RadioSonde2$, 1, 7) + "19" + Mid$(RadioSonde2$, 8, 2) + "-sondes.txt"
+             Else
+               GoTo NextSkipSonde
+               End If
+             End If
+          myfile = Dir(FullRadioSonde2$)
+          If myfile = sEmpty Then
+             GoTo NextSkipSonde
+          Else
+             If WinCalc Then
+                'only process winter months
+                If InStr(FullRadioSonde2$, "Jan") Or _
+                   InStr(FullRadioSonde2$, "Feb") Or _
+                   InStr(FullRadioSonde2$, "Nov") Or _
+                   InStr(FullRadioSonde2$, "Dec") Then
+                   'process these dates
+                Else
+                   GoTo NextSkipSonde
+                   End If
+             ElseIf SumCalc Then
+                'only process summer months
+                If InStr(FullRadioSonde2$, "May") Or _
+                   InStr(FullRadioSonde2$, "Jun") Or _
+                   InStr(FullRadioSonde2$, "Jul") Then
+                   'process these dates
+                Else
+                   GoTo NextSkipSonde
+                   End If
+                End If
+             End If
+            
+           'now check it is separated only be one day
+           
+           End If
             
         BringWindowToTop (prjAtmRefMainfm.hwnd)
 
@@ -1804,6 +2214,7 @@ Private Sub cmdC5_Click()
            .OptionSelby.Value = True
            .opt10.Value = True
            .txtOther.Text = FullRadioSonde$
+           If SkipToNearDate Then .txtOther.Text = FullRadioSonde2$
            .chkMeters.Value = vbChecked
            .chkHgtProfile.Value = vbChecked
             DistToHug = BARParametersfm.txtDist
@@ -1812,6 +2223,68 @@ Private Sub cmdC5_Click()
            If HillHugging Then .chkDruk.Value = vbChecked
            .txtNSTEPS.Text = "1000" 'double the standard resolution //070622
            endit% = 5
+           If ChangeTerrestrialRefraction Then 'modify the viewangle by the terrestrial refraction using the sonde values
+               'now calculate the difference in terrestrial refraction from the standard atmosphere and add to viewangle in degrees
+               deltd = 754.7 - hgtpr
+               'convert height difference to kms
+               deltd = deltd * 0.001
+               'distance to obstruction
+               distd = distObs 'units of kms
+               'calculate conserved portion of Wikipedia's terrestrial refraction expression */
+               'Lapse Rate, -dt/dh, is set at 0.0065 degress K/m, i.e., the standard atmosphere */
+               'so have p * 8.15 * 1000 * (0.0343 - 0.0065)/(T * T * 3600) degrees
+               'first calculate the TR using the standard atmosphere
+                MonthN$ = Mid$(RadioSonde$, 4, 3)
+                Select Case MonthN$
+                   Case "Jan"
+                      mMonth = 1
+                   Case "Feb"
+                      mMonth = 2
+                   Case "Mar"
+                      mMonth = 3
+                   Case "Apr"
+                      mMonth = 4
+                   Case "May"
+                      mMonth = 5
+                   Case "Jun"
+                      mMonth = 6
+                   Case "Jul"
+                      mMonth = 7
+                   Case "Aug"
+                      mMonth = 8
+                   Case "Sep"
+                      mMonth = 9
+                   Case "Oct"
+                      mMonth = 10
+                   Case "Nov"
+                      mMonth = 11
+                   Case "Dec"
+                      mMonth = 12
+                End Select
+                tmin = MT(mMonth) + 273.15
+               trrbasis = 1013.25 * 8.15 * 1000 * 0.0277 / (tmin * tmin * 3600)
+               'in the winter, dt/dh will be positive for inversion layer and refraction is increased
+               'now calculate pathlength of curved ray using Lehn's parabolic approximation */
+               'Computing 2nd power */
+               d__1 = distd
+               'Computing 2nd power */
+               d__3 = distd
+               '/* Computing 2nd power */
+               d__2 = Abs(deltd) - d__3 * d__3 * 0.5 / (0.001 * Rearth) '//units of kms
+               PATHLENGTH = Sqr(d__1 * d__1 + d__2 * d__2) '//units of kms
+               'now add terrestrial refraction based on modified Wikipedia expression */
+               If (Abs(deltd) > 1000#) Then
+                  Exponent = 0.99
+               Else
+                  Exponent = 0.9965
+                  End If
+               ViewAddStnd = trrbasis * PATHLENGTH ^ Exponent
+               trrbasis = 1013.25 * 8.15 * 1000 * (0.0343 + LRate) / (tempground * tempground * 3600)
+               ViewAdd = trrbasis * PATHLENGTH ^ Exponent
+               
+               viewangle = viewangle + (ViewAdd - ViewAddStnd)
+               .txtStartAlt.Text = viewangle * 60
+               End If
            
            If Not UseMenat Then
             .cmdVDW.Value = True
@@ -1829,7 +2302,7 @@ Private Sub cmdC5_Click()
                 Exit Sub
                 End If
            Loop
-           VR1 = VRefDeg
+           VR1 = VRefDeg 'should really be REFRAC / 60#, since VRefDeg is viewangle - REFRAC/60, but keep for historical consistency
            'now redo without the sondes
            'determine temperature and pressure according to WorldClim
            'ITM coordinates of Rabbi Druk's observation point
@@ -1838,9 +2311,20 @@ Private Sub cmdC5_Click()
               'skip this search since already have the refraction value
               filout% = FreeFile
               Open FileOutName$ For Append As #filout%
-              Write #filout%, RadioSonde$, dynum, AS1, AS2, AS1 - AS2, VR1, VR2, (VR2 - VR1) * 5# 'approx conversion of refraction to minutes = * 5
-              Close #filout%
-              GoTo NextSonde
+              If chkMatch.Value = vbChecked Then
+                 Write #filout%, RadioSonde$, dynum, MatchDist, AS1 - AS2, (VR2 - VR1) * 3.3 'approx conversion of refraction to minutes = * 5
+                 If MatchDist < Val(txtDist.Text) And (VR2 - VR1) * 3.3 >= AS1 - AS2 Then
+                    Close #filout%
+                    GoTo 7
+                 Else
+                    Close #filout%
+                    GoTo NextSonde
+                    End If
+              Else
+                 Write #filout%, RadioSonde$, dynum, AS1, AS2, AS1 - AS2, VR1, VR2, (VR2 - VR1) * 5# 'approx conversion of refraction to minutes = * 5
+                 Close #filout%
+                 GoTo NextSonde
+                 End If
               End If
 
            'determine month number
@@ -1894,16 +2378,30 @@ Private Sub cmdC5_Click()
                 Exit Sub
                 End If
            Loop
-           VR2 = VRefDeg
+           VR2 = VRefDeg 'should be REFRAC / 60#, since VRefDeg is shifted by viewangle, but keep for historical consistency
        
           filout% = FreeFile
           Open FileOutName$ For Append As #filout%
-          Write #filout%, RadioSonde$, dynum, AS1, AS2, AS1 - AS2, VR1, VR2, (VR2 - VR1) * 5# 'approx conversion of refraction to minutes = * 5
+          If chkMatch.Value = vbChecked Then
+             Write #filout%, RadioSonde$, dynum, MatchDist, AS1 - AS2, (VR2 - VR1) * 3.3 'approx conversion of refraction to minutes = * 5
+             If MatchDist < Val(txtDist.Text) And (VR2 - VR1) * 3.3 >= AS1 - AS2 Then
+               Close #filout%
+               GoTo 7
+               End If
+          Else
+             Write #filout%, RadioSonde$, dynum, AS1, AS2, AS1 - AS2, VR1, VR2, (VR2 - VR1) * 5# 'approx conversion of refraction to minutes = * 5
+             End If
           Close #filout%
         
         End With
         End If
 NextSonde:
+   If SkipToNearDate And numsteps% = 9999 Then Exit Do
+   If SkipToNearDate And foundSkip% = 0 Then
+      RadioSonde$ = RadioSonde2$
+      dynum = dynum2
+      GoTo 5
+      End If
    Loop
    CalcSondes = False
    Close #filin1%
@@ -1919,6 +2417,12 @@ NextSonde:
    Exit Sub
 
 cmdC5_Click_Error:
+
+    If err.Number = 55 Then
+       Close
+       GoTo Start
+       End If
+       
     MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure cmdC5_Click of Form BARParametersfm"
 End Sub
 
@@ -2007,6 +2511,525 @@ cmdC7_Click_Error:
     Screen.MousePointer = vbDefault
     Close
     MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure cmdC7_Click of Form BARParametersfm"
+End Sub
+
+'---------------------------------------------------------------------------------------
+' Procedure : cmdC8_Click
+' Author    : chaim
+' Date      : 8/26/2022
+' Purpose   : find which observations are within 15 seconds of the predicted values
+'---------------------------------------------------------------------------------------
+'
+Private Sub cmdC8_Click()
+
+   Dim OpenCSVFile$, NewPath$, OutputCSVFile$, DiffSec As Double
+   Dim SondeDate$, ObsDif As Double, CalcDif As Double
+   Dim DefaultAcceptedTimeDif As Integer, FilterTimeDif As Integer, numFound%, numSondes%
+   Dim WinCalc As Boolean, SumCalc As Boolean, AllCalc As Boolean
+   Dim RootName$, ExcludeFileName$, ExcludeSondes As Boolean
+
+   On Error GoTo cmdC8_Click_Error
+   
+   NewPath$ = "c:\jk\Druk-Vangeld-data\"
+   DefaultAcceptedTimeDif = 15
+
+   'pick the csv file to analyze
+   With comdlgCompare
+     .CancelError = True
+     .filename = NewPath$ & "*.csv"
+     .Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*"
+     .ShowOpen
+     OpenCSVFile$ = .filename
+   End With
+   
+   lstSondes.Clear
+   
+   'ask how many seconds as accepted difference range between observation and calculations
+   FilterTimeDif = InputBox("What is accepted time difference (sec)?", "Time Diff", DefaultAcceptedTimeDif)
+   
+50:
+   'set "False" to not to show the "Don't ask again" checkbox
+   frmMsgBox.MsgCstm "Which season(s)?", "Filter and Comparison Optons", mbQuestion, 1, False, _
+                     "Winter", "Summer", "Both", "Cancel"
+   Select Case frmMsgBox.g_lBtnClicked
+          Case 0 ' 0 always indicates that the user closed the box without hitting a button
+             Call MsgBox("Please press a button!", vbInformation, "Filter Range")
+             GoTo 50
+          Case 1 'the 1st button in your list was clicked
+             WinCalc = True
+          Case 2 'the 2nd button in your list was clicked
+             SumCalc = True
+          Case 3 'ect.
+             AllCalc = True
+          Case 4 'cancel button pressed
+             Exit Sub
+   End Select
+   bDontAsk = frmMsgBox.g_bDontAsk
+   
+   filein% = FreeFile
+   Open OpenCSVFile$ For Input As #filein%
+   
+   'determine root name of the file being opened
+   pos% = InStr(1, OpenCSVFile$, ".")
+   For i% = pos% - 1 To 1 Step -1
+      If Mid$(OpenCSVFile$, i%, 1) = "\" Or Mid$(OpenCSVFile$, i%, 1) = "/" Then
+         pos2% = i%
+         Exit For
+         End If
+   Next i%
+   RootName$ = Mid$(OpenCSVFile$, pos2% + 1, pos% - pos2% - 1)
+   
+   OutputCSVFile$ = App.Path & "\" & RootName$ & "_SondeDates-within" & Trim$(Str$(FilterTimeDif)) & "sec.txt"
+   
+   Select Case MsgBox("Do you want to exclude dates analyzed for time differences" _
+                      & vbCrLf & "residing on a different folder?" _
+                      , vbYesNoCancel Or vbQuestion Or vbDefaultButton1 Or vbDefaultButton1, "Exclude sonde dates")
+   
+    Case vbYes
+        With comdlgCompare
+          .CancelError = True
+          .filename = App.Path & "\" & "*.txt"
+          .Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*"
+          .ShowOpen
+          ExcludeFileName$ = .filename
+          ExcludeSondes = True
+        End With
+    Case vbNo, vbCancel
+   
+   End Select
+   fileout% = FreeFile
+   Open OutputCSVFile$ For Output As #fileout%
+   
+   numFound% = 0
+   numSondes% = 0
+   Do Until EOF(filein%)
+      Input #filein%, SondeDate$, AAA, bbb, ccc, ObsDif, eee, fff, CalcDif
+      
+        If WinCalc Then
+           'only process winter months
+           If InStr(SondeDate$, "Jan") Or _
+              InStr(SondeDate$, "Feb") Or _
+              InStr(SondeDate$, "Nov") Or _
+              InStr(SondeDate$, "Dec") Then
+              'process these dates
+           Else
+              GoTo NextSonde
+              End If
+        ElseIf SumCalc Then
+           'only process summer months
+           If InStr(SondeDate$, "May") Or _
+              InStr(SondeDate$, "Jun") Or _
+              InStr(SondeDate$, "Jul") Then
+              'process these dates
+           Else
+              GoTo NextSonde
+              End If
+           End If
+      
+      If ExcludeSondes Then
+         found% = 0
+         filein2% = FreeFile
+         Open ExcludeFileName$ For Input As #filein2%
+         Do Until EOF(filein2%)
+            Input #filein2%, SondeDate2$, ObsDif2, AAA2
+            If InStr(SondeDate$, SondeDate2$) Then
+               'matched sonde date, so skip to next entry
+               found% = 1
+               Exit Do
+               End If
+         Loop
+         Close #filein2%
+         If found% = 1 Then GoTo NextSonde
+         End If
+
+      DiffSec = Abs(CalcDif / 1.5 - ObsDif) * 60
+      If DiffSec <= FilterTimeDif Then
+         Print #fileout%, SondeDate$ & "," & Format(Str$(ObsDif), "#0.0###") & "," & Format$(Str$(DiffSec), "#0.0#")
+         lstSondes.AddItem SondeDate$
+         numFound% = numFound% + 1
+         End If
+      numSondes% = numSondes% + 1
+NextSonde:
+   Loop
+   Close #filein%
+   Close #fileout%
+   If ExcludeSondes And filein2% > 0 Then Close #filein2%
+   
+   If numFound% > 0 Then
+      Call MsgBox("Number of sondes within range (" & Str$(FilterTimeDif) & " sec.) is: " & Str$(numFound%) & _
+      vbCrLf & vbCrLf & _
+      "Percentage of all sondes in chosen category: " & Format(Str$(100 * numFound% / numSondes%), "##0.0") & "%", vbInformation, "Sondes found to be within accepted range")
+      Select Case MsgBox("Record to the trend file?", vbYesNo Or vbQuestion Or vbDefaultButton1, "Trend")
+      
+        Case vbYes
+      
+        Case vbNo
+          Exit Sub
+      End Select
+      OutFile$ = App.Path & "\PercentageVsError.txt"
+      fileout% = FreeFile
+      Open OutFile$ For Append As #fileout%
+      Print #fileout%, Format(Str$(FilterTimeDif), "#0.0#") & "," & Format(Str$(100 * numFound% / numSondes%), "##0.0")
+      Close #fileout%
+      End If
+  
+   On Error GoTo 0
+   Exit Sub
+
+cmdC8_Click_Error:
+
+    MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure cmdC8_Click of Form BARParametersfm"
+End Sub
+
+'---------------------------------------------------------------------------------------
+' Procedure : cmdC9_Click
+' Author    : chaim
+' Date      : 10/20/2022
+' Purpose   : Open Figure8-6Z-wVA-HHDTM-Match-3.csv file, and ouput list of date,daynum,distance to match, change of viewangle from sonde measurements due to terrestrial refraction
+'---------------------------------------------------------------------------------------
+'
+Private Sub cmdC9_Click()
+
+   On Error GoTo cmdC9_Click_Error
+
+   Dim FileNameIn$, NewPath$, FileNameOut$, SondeDate$, FileName200$, InputPlFile$, FileTrajectory$
+   Dim lg1 As Double, lt1 As Double
+   Dim MT(12) As Integer, AT(12) As Integer, ier As Integer
+   Dim mMonth As Integer
+   Dim HgtoffGround$, ViewAngDif$, AzimuthCh$, latlonCh$
+   
+   Rearth = 6356766#
+   
+   If (cd = 0) Then
+       pi = 4 * Atn(1)
+       cd = pi / 180#  'conv deg to rad
+       End If
+   
+   'load up WorldClim temperatures for Rabbi Druk's coordinates
+   lg1 = 35.238133306709
+   lt1 = 31.7487155576439
+   'H11 = 756.5 <-- added 1.8, should be 754.7
+   Call Temperatures(lt1, lg1, MT, AT, ier)
+   
+   lstSondes.Clear
+   
+   NewPath$ = "c:\jk\Druk-Vangeld-data\"
+   
+   FileNameIn$ = NewPath$ & "Figure8-6Z-wVA-HHDTM-Match-3.csv"
+   FileNameOut$ = NewPath$ & "Sondes-match-VWTr.txt"
+   FileName200$ = NewPath$ & "Sondes-nomatch-VWTr.txt"
+   
+   If Dir(FileNameIn$) = sEmpty Then
+      MsgBox "Can't find: " & FileNameIn$ & vbCrLf & vbCrLf & "(Hint: run the C5 command to regenerate it)", vbInformation + vbOKOnly, "Missing File"
+      Exit Sub
+      End If
+   
+   filein% = FreeFile
+   Open FileNameIn$ For Input As #filein%
+   fileout% = FreeFile
+   Open FileNameOut$ For Output As #fileout%
+   file200% = FreeFile
+   Open FileName200$ For Output As #file200%
+   
+   numin% = 0
+   Do Until EOF(filein%)
+      'read one line at a time, determine the sonde file, find the maximum distance, record it, and record
+      'expected change in the viewangle due the inversion layer
+      If numin% = 0 Then
+         'beginning analysis on new sonde date
+         Input #filein%, SondeDate$, daynum, dist1, ref10, ref20
+         ref100 = ref10
+         ref200 = ref20
+         numin% = numin% + 1
+      Else
+         Input #filein%, SondeDate2$, daynum2, dist2, ref1, ref2
+         If SondeDate2$ = SondeDate$ And daynum2 = daynum And dist2 > dist1 And dist2 <> 200 Then
+            dist1 = dist2
+            daynum1 = daynum2
+            numin% = numin% + 1
+            ref100 = ref10
+            ref200 = ref20
+            ref10 = ref1
+            ref20 = ref2
+         ElseIf SondeDate2$ = SondeDate$ And daynum2 = daynum And dist2 = 200 Then
+            'list these separately
+            GoSub Coordinates
+            GoSub FindViewAngDif
+            GoSub FindHgtOffGround
+            Print #file200%, SondeDate$ & "," & Str$(daynum) & "," & AzimuthCh$ & "," & latlonCh$ & "," & Str$(dist2) & "," & HgtoffGround$ & "," & ViewAngDif$
+            numin% = 0 'start on next sonde date
+         Else
+            'started new sonde
+            'first record last one, as well as affect on terrestrial refraction
+            'interpolate the distance
+            dist1 = dist1 + (ref10 - ref200) * 5 / (ref20 - ref200)
+            GoSub Coordinates
+            GoSub FindViewAngDif
+            GoSub FindHgtOffGround
+            Print #fileout%, SondeDate$ & "," & Str$(daynum) & "," & AzimuthCh$ & "," & latlonCh$ & "," & Format(Str$(dist1), "##0.0##") & "," & HgtoffGround$ & "," & ViewAngDif$
+            lstSondes.AddItem SondeDate$ & "," & Str$(daynum) & "," & AzimuthCh$ & "," & latlonCh$ & "," & Format(Str$(dist1), "##0.0##") & "," & HgtoffGround$ & "," & ViewAngDif$
+            numin% = 0 'start on next sonde date
+            End If
+         End If
+   Loop
+   Close #filein%
+   Close #fileout%
+   Close #file200%
+
+   On Error GoTo 0
+   Exit Sub
+   
+Coordinates:
+'   'Rabbi Druk's shul at Armon Hanatziv
+    
+    d = dist1 * 1000 / Rearth  'units of Dist is meters
+    lat1 = lt1 * cd
+    lon1 = -lg1 * cd
+    
+    tc1 = Bearing * cd 'compass bearing = azimuth + 90 in radians
+    
+    lat = asin(Sin(lat1) * Cos(d) + Cos(lat1) * Sin(d) * Cos(tc1))
+    latt = lat / cd
+    
+'    lon = mod2(lon1 - asin(Sin(tc1) * Sin(d) / Cos(lat)) + pi, 2 * pi) - pi
+'    lontt = lon / cd
+    
+    'another, more general method
+    dlon = atan2(Sin(tc1) * Sin(d) * Cos(lat1), Cos(d) - Sin(lat1) * Sin(lat))
+    lon = mod2(lon1 - dlon + pi, 2 * pi) - pi
+    lontt = lon / cd
+    latlonCh$ = Format(Str$(latt), "##0.0####") & ", " & Format(Str$(lontt), "###0.0####")
+Return
+   
+FindViewAngDif:
+      If Not SixZCalc Then 'so far only this option is supported
+         MsgBox "Click the 6Z radio button and try again", vbOKOnly + vbInformation, "Action required"
+         Close
+         Exit Sub
+         End If
+         
+      If Len(SondeDate$) = 8 Then SondeDate$ = "0" + RadioSonde$
+      'make sure it exists
+      If AllCalc Then
+         'winter at 6Z, summer at 0Z
+         FullRadioSonde$ = NewPath$ + Mid$(SondeDate$, 1, 7) + "19" + Mid$(SondeDate$, 8, 2) + "-sondes.txt"
+      ElseIf WinCalc Then
+         'winter at 6Z
+         FullRadioSonde$ = NewPath$ + Mid$(SondeDate$, 1, 7) + "19" + Mid$(SondeDate$, 8, 2) + "-sondes.txt"
+      ElseIf SumCalc Then 'else
+         'just summer at 0Z
+         FullRadioSonde$ = NewPath$ + Mid$(SondeDate$, 1, 7) + "19" + Mid$(SondeDate$, 8, 2) + "-sondes.txt"
+      ElseIf SixZCalc Then
+        If InStr(SondeDate$, "Jan") Or _
+           InStr(SondeDate$, "Feb") Or _
+           InStr(SondeDate$, "Nov") Or _
+           InStr(SondeDate$, "Dec") Then
+           FullRadioSonde$ = NewPath$ + Mid$(SondeDate$, 1, 7) + "19" + Mid$(SondeDate$, 8, 2) + "-sondes.txt"
+        Else
+           Return
+           End If
+      ElseIf ZeroZCalc Then 'for winter, -2-sondes.txt, for summer -sondes.txt
+        If InStr(SondeDate$, "Jan") Or _
+           InStr(SondeDate$, "Feb") Or _
+           InStr(SondeDate$, "Nov") Or _
+           InStr(SondeDate$, "Dec") Then
+           FullRadioSonde$ = NewPath$ + Mid$(SondeDate$, 1, 7) + "19" + Mid$(SondeDate$, 8, 2) + "-2-sondes.txt"
+        ElseIf InStr(RadioSonde$, "May") Or _
+           InStr(SondeDate$, "Jun") Or _
+           InStr(SondeDate$, "Jul") Then
+           FullRadioSonde$ = NewPath$ + Mid$(SondeDate$, 1, 7) + "19" + Mid$(SondeDate$, 8, 2) + "-sondes.txt"
+           End If
+           
+         End If
+      
+        myfile = Dir(FullRadioSonde$)
+        If myfile <> sEmpty Then '1if
+           CalendDate$ = Mid$(SondeDate$, 4, 3) & "-" & Mid$(SondeDate$, 1, 2) & "-" & "19" & Mid$(SondeDate$, 8, 2)
+
+           InputPlFile$ = "c:/fordtm/netz/RavD19" & Mid$(SondeDate$, 8, 2) & ".pl1"
+
+           If Dir(InputPlFile$) = "" Then
+             ier = MsgBox("Can't find RavD file: " & InputPlFile$ & vbCrLf & _
+                          "You need to run the prjDruk (Druk.exe) program" & vbCrLf & _
+                          "In order to populate fordtm/netz with the Armon HaNatziv netz times!" & vbCrLf & _
+                          "Aborting run....", vbOKOnly + vbCritical, "Missing pl file")
+             Exit Sub
+             End If
+
+           filpl% = FreeFile
+           Open InputPlFile$ For Input As #filpl%
+           Do Until EOF(filpl%) '2loop
+
+            'Jan-01-1987   6:38:00   RavDrkTR.pr3    26.697     -.1769    44.83
+
+             Input #filpl%, doclin$
+             CalcDate$ = Mid$(doclin$, 1, 11)
+             azimuth = Val(Mid$(doclin$, 38, 10))
+             distObs = Val(Mid$(doclin$, 59, 9))
+             Bearing = 90# + azimuth  'Compass Bearing in degrees is 90 degrees plus the azimuth as defined -/+ around due East.
+             viewangle = Val(Mid$(doclin$, 49, 11))
+
+             If CalcDate$ = CalendDate$ Then '3if
+                'use this viewangle
+
+                'adjust the terrestrial refraction's affect on the view angle using the
+                'the observed lapse rate.
+                'determine the lapse rate, -dT/dh by following the inversion to the maximum temperature
+                'According to Young "Sunset Science Low Altitude refraction part 4" the lapse rate near the observer is
+                'the most important, so assuming that the same Beit Dagan near ground lapse rate applies to Armon Hanatziv
+                'read first two temperatures and heights to determine lapse rate p. 3636
+                filsonde% = FreeFile
+                Open FullRadioSonde$ For Input As #filsonde%
+                Input #filsonde%, hgt1, temp1, press1
+                tempground = temp1 + 273.15
+                Input #filsonde%, hgt2, temp2, press2
+                If (hgt2 = hgt1) Then 'read in another line
+                   Input #filsonde%, hgt2, temp2, press2
+                   End If
+                'determine lapse rate
+                LRate = -1# * (temp2 - temp1) / (hgt2 - hgt1) 'degrees/meter
+                Close #filsonde%
+                
+                'now adjust viewangle with estimate of the terrestrial refraction
+                RatioTR = (0.0342 - LRate) / (0.0342 - 0.0065)
+                'now find the height of the horizon at the above azimuth
+                InputPRFile$ = "c:/fordtm/netz/RavDrkTR.pr3"
+                If Dir(InputPRFile$) <> sEmpty Then '4if
+                   filpr% = FreeFile
+                   Open InputPRFile$ For Input As #filpr%
+                   Line Input #filpr%, doclin$
+                   Line Input #filpr%, doclin$
+                   numpr% = 0
+                   foundpr% = 0
+                   Do Until EOF(filpr%) '5loop
+                      If numpr% = 0 Then
+                         Input #filpr%, azii, vangii, coordx, coordy, distpr, hgtpr
+                         azii0 = azii
+                         hgtpr0 = hgtpr
+                      Else
+                         Input #filpr%, azii, vangii, coordx, coordy, distpr, hgtpr
+                         If azii >= azimuth Then
+                            hgtObs = hgtpr0 + (azimuth - azii0) * (hgtpr - hgtpr0) / (azii - azii0)
+                            AzimuthCh$ = Format(Str$(azimuth), "###0.0")
+                            foundpr% = 1
+                            Exit Do
+                            End If
+                         azii0 = azii
+                         hgtpr0 = hgtpr
+                         End If
+                       numpr% = numpr% + 1
+                   Loop '5loopend
+                   Close #filpr%
+                   If foundpr% = 1 Then
+                      Exit Do
+                   Else
+                      'failed to find the correct azimuth
+                      'report failed search and exit
+                      MsgBox "Failed to find desired azimuth for " & SondeDate$ & ", aborting...", vbOKOnly + vbInformation, "Failed search"
+                      Exit Sub
+                      End If
+                   End If '4ifend
+                End If '3ifend
+          Loop '2loopend
+          Close #ilpl%
+
+         'now calculate the difference in terrestrial refraction from the standard atmosphere and add to viewangle in degrees
+         deltd = 754.7 - hgtObs
+         'convert height difference to kms
+         deltd = deltd * 0.001
+         'distance to obstruction
+         distd = distObs 'units of kms
+         'calculate conserved portion of Wikipedia's terrestrial refraction expression */
+         'Lapse Rate, -dt/dh, is set at 0.0065 degress K/m, i.e., the standard atmosphere */
+         'so have p * 8.15 * 1000 * (0.0343 - 0.0065)/(T * T * 3600) degrees
+         'first calculate the TR using the standard atmosphere
+         MonthN$ = Mid$(SondeDate$, 4, 3)
+         Select Case MonthN$
+            Case "Jan"
+               mMonth = 1
+            Case "Feb"
+               mMonth = 2
+            Case "Mar"
+               mMonth = 3
+            Case "Apr"
+               mMonth = 4
+            Case "May"
+               mMonth = 5
+            Case "Jun"
+               mMonth = 6
+            Case "Jul"
+               mMonth = 7
+            Case "Aug"
+               mMonth = 8
+            Case "Sep"
+               mMonth = 9
+            Case "Oct"
+               mMonth = 10
+            Case "Nov"
+               mMonth = 11
+            Case "Dec"
+               mMonth = 12
+         End Select
+         tmin = MT(mMonth) + 273.15
+         trrbasis = 1013.25 * 8.15 * 1000 * 0.0277 / (tmin * tmin * 3600)
+         'in the winter, dt/dh will be positive for inversion layer and refraction is increased
+         'now calculate pathlength of curved ray using Lehn's parabolic approximation */
+         'Computing 2nd power */
+         d__1 = distd
+         'Computing 2nd power */
+         d__3 = distd
+         '/* Computing 2nd power */
+         d__2 = Abs(deltd) - (d__3 * d__3 * 0.5 / (0.001 * Rearth)) '//units of kms
+         PATHLENGTH = Sqr(d__1 * d__1 + d__2 * d__2) '//units of kms
+         'now add terrestrial refraction based on modified Wikipedia expression */
+         If (Abs(deltd) > 1000#) Then
+            Exponent = 0.99
+         Else
+            Exponent = 0.9965
+            End If
+         ViewAddStnd = trrbasis * PATHLENGTH ^ Exponent
+         trrbasis = 1013.25 * 8.15 * 1000 * (0.0343 - LRate) / (tempground * tempground * 3600)
+         ViewAdd = trrbasis * PATHLENGTH ^ Exponent
+         ViewAngDif$ = Format(Str$(ViewAdd - ViewAddStnd), "##0.0####")
+    Else '1else
+        MsgBox "Can't find the radiosode file: " & FullRadioSonde$, vbOKOnly + vbInformation, "Missing radiosonde"
+        Exit Sub
+        End If '1ifend
+
+Return
+
+FindHgtOffGround:
+  FileTrajectory$ = "c:\devstudio\vb\" & "TR_VDW_LAYERS_" & SondeDate$ & "_DTMHug_756_32-test3.dat"
+  If Dir(FileTrajectory$) <> sEmpty Then
+     filetraj% = FreeFile
+     Open FileTrajectory$ For Input As #filetraj%
+     Line Input #filetraj%, doclin$ 'documentation line
+     numtraj% = 0
+     foundtraj% = 0
+     Do Until EOF(filetraj%)
+        If numtraj% = 0 Then
+           Input #filetraj%, disttraj0, disttaj2, hgttraj0, viewatraj, reftraj1, reftraj2
+        Else
+           Input #filetraj%, disttraj1, disttaj2, hgttraj1, viewatraj, reftraj1, reftraj2
+           If disttraj1 > dist1 * 1000 Then
+              'subtract ground elevation
+              HgtoffGround$ = Format(Str$(hgttraj0 - DTMheight(dist1 * 1000) + (dist1 * 1000 - disttraj0) * (hgttraj1 - hgttraj0) / (disttraj1 - disttraj0)), "####0.0")
+              foundtraj% = 1
+              Exit Do
+              End If
+           hgttraj0 = hgttraj1
+           disttraj0 = disttraj1
+           End If
+        numtraj% = numtraj% + 1
+     Loop
+     If foundtraj% = 0 Then HgtoffGround$ = "NA"
+     Close #filetraj%
+     End If
+Return
+
+cmdC9_Click_Error:
+    Close
+    MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure cmdC9_Click of Form BARParametersfm"
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -2126,7 +3149,7 @@ Private Sub cmdCalc2_Click()
         Open FileOutName$ For Input As #filcheck%
         found% = 0
         Do Until EOF(filcheck%)
-           Input #filcheck%, RadioCheck$, AAAA, bbbb, cccc, DDdd, EEee, ffff, GGgg
+           Input #filcheck%, RadioCheck$, AAAA, bbbb, cccc, DDdd, eeee, ffff, gggg
            If RadioCheck$ = RadioSonde$ Then
               lstC2.AddItem RadioSonde$
               lstC2.Selected(lstC2.ListCount - 1) = True
@@ -3618,6 +4641,38 @@ Private Sub Form_Unload(Cancel As Integer)
    ParameterFmVis = False
 End Sub
 
+'Private Sub frmSeason_DragDrop(Source As Control, x As Single, y As Single)
+'   WinCalc = True
+'   SumCalc = False
+'   AllCalc = False
+'   ZeroZCalc = False
+'   SixZCalc = False
+'End Sub
+
+Private Sub opt0Z_Click()
+   ZeroZCalc = True
+   SixZCalc = False
+   AllCalc = False
+   WinCalc = False
+   SumCalc = False
+End Sub
+
+Private Sub opt6Z_Click()
+   SixZCalc = True
+   ZeroZCalc = False
+   AllCalc = False
+   WinCalc = False
+   SumCalc = False
+End Sub
+
+Private Sub optAllSeasons_Click()
+   AllCalc = True
+   WinCalc = False
+   SumCalc = False
+   SixZCalc = False
+   ZeroZCalc = False
+End Sub
+
 Private Sub optCalculate_Click()
    If optCalculate.Value = True Then
 '      cmdConvertSonde.Enabled = False
@@ -3659,3 +4714,18 @@ Private Sub optfit1_Click()
         End If
 End Sub
 
+Private Sub optSummer_Click()
+   SumCalc = True
+   WinCalc = False
+   AllCalc = False
+   SixZCalc = False
+   ZeroZCalc = False
+End Sub
+
+Private Sub optWinter_Click()
+   WinCalc = True
+   SumCalc = False
+   AllCalc = False
+   SixZCalc = False
+   ZeroZCalc = False
+End Sub

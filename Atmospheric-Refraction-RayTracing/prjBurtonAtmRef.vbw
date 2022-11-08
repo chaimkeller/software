@@ -1,9 +1,9 @@
-modBurtonAstRef = 130, 135, 1131, 810, 
+modBurtonAstRef = 130, 135, 1131, 810, Z
 MDIAtmRef = 0, 0, 975, 676, , 338, 338, 1313, 1014, C
 CGestionImage = 0, 0, 0, 0, C
 BARParametersfm = 104, 104, 1079, 780, , 78, 78, 1053, 754, C
 AtmRefPicSunfm = 0, 0, 0, 0, C, 52, 52, 1027, 728, C
-frmZoomPan = 286, 286, 1354, 927, , 130, 130, 1105, 806, C
-frmMsgBox = 0, 0, 0, 0, C, 104, 104, 1079, 780, C
-CurveFunctions = 0, 0, 0, 0, C
-prjAtmRefMainfm = 78, 78, 1146, 719, , 312, 312, 1287, 988, C
+frmZoomPan = 286, 286, 1330, 927, , 130, 130, 1105, 806, C
+frmMsgBox = 130, 135, 923, 607, , 104, 104, 1079, 780, C
+CurveFunctions = 182, 189, 951, 721, 
+prjAtmRefMainfm = 78, 78, 1122, 719, , 312, 312, 1287, 988, C

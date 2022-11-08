@@ -21,21 +21,22 @@ Public ELV(MaxViewSteps&) As Double, TMP(MaxViewSteps&) As Double, PRSR(MaxViewS
 Public IndexRefraction(MaxViewSteps&) As Double
 Public ALFA(82, MaxViewSteps&) As Double, ALFT(82, MaxViewSteps&) As Double, SSR(82, MaxViewSteps&) As Double
 Public AA(MaxViewSteps&) As Double, AT(MaxViewSteps&) As Double, VRefDeg As Double, CalcSondes As Boolean
-Public den As Double, RefCalcType%, RadioSonde$, SondeDayNum As Double, DifVRexpected As Double, DistMatch As Double, VRVDWcalc As Double
-Public EDIS(82) As Double, IDCT(10001) As Double, IEND(10001) As Double, ParameterFmVis
+Public den As Double, RefCalcType%, RadioSonde$, SondeDayNum As Double, DifVRexpected As Double, MatchDist As Double, VRVDWcalc As Double
+Public EDIS(82) As Double, IDCT(10001) As Double, IEND(10001) As Double, ParameterFmVis, REFRAC As Double
 Public AIRM(MaxViewSteps&) As Double, ADEN(MaxViewSteps&) As Double, RC As Double
 Public SINV As Double, EINV As Double, HGTSCALE As Double, DTINV As Double, C5Click As Boolean
 Public ALT(NumSuns + 1) As Double, AZM(NumSuns + 1) As Double ', CNST(1000) As Double
+Public WinCalc As Boolean, SumCalc As Boolean, AllCalc As Boolean, ZeroZCalc As Boolean, SixZCalc As Boolean
 
 Public KSTOP As Long, III As Long, IIS As Long, j As Long, ISSR As Integer, INVFLAG As Integer
-Public AMZOBS As Double, BETA As Double, x As Double, DIS As Double
+Public AMZOBS As Double, BETA As Double, x As Double, DIS As Double, DistMatch As Integer
 Public Theta As Double, H As Double, UP As Double, XD As Double, HD As Double
 Public R1 As Double, R2 As Double, z As Double, ARGT As Double, UsingHSatmosphere As Boolean
 Public DZ As Double, AMGAM As Double, xc As Double, YC As Double, ZC As Double
 Public ISTND As Long, BETAD As Double, Top As Double, BOT As Double, DAB As Double
 Public ZL As Double, ZR As Double, ISTOP As Long, CON As Double, U As Double
 Public RMINTMP As Double, RMAXTMP As Double, RMINELV As Double, RMAXELV As Double
-Public IJK As Long, MMM As Long, IX As Long, IY As Long, IPER As Long
+Public IJK As Long, MMM As Long, IX As Long, IY As Long, IPER As Long, ChangeTerrestrialRefraction As Boolean
 Public IG As Long, IR As Long, IB As Long, MM As Long, NN As Long, n_size As Long, msize As Long
 Public r As Double, g As Double, b As Double, CalcComplete As Boolean, SondeDate$
 Public DELALT As Double, DELAZM As Double, STARTAZM As Double, TransferCurve() As Variant
@@ -244,9 +245,16 @@ Public pbScaleWidth As Long
 Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
 Declare Function BringWindowToTop Lib "user32" (ByVal hwnd As Long) As Long
 Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
-Declare Function GetSystemDirectory Lib "kernel32" Alias "GetSystemDirectoryA" (ByVal lpBuffer As String, ByVal nsize As Long) As Long
+Declare Function GetSystemDirectory Lib "Kernel32" Alias "GetSystemDirectoryA" (ByVal lpBuffer As String, ByVal nsize As Long) As Long
 Declare Function FindWindow Lib "user32" Alias "FindWindowA" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
 Declare Function GetUserName Lib "advapi32.dll" Alias "GetUserNameA" (ByVal lpBuffer As String, nsize As Long) As Long
+Declare Function WinExec Lib "Kernel32" (ByVal lpCmdLine As String, ByVal nCmdShow As Long) As Long
+Public Const SW_MAXIMIZE = 3
+Public Const SW_MINIMIZE = 6
+Public Const SW_NORMAL = 1
+Public Const SW_SHOWMAXIMIZED = 3
+Public Const SW_SHOWMINIMIZED = 2
+Public Const SW_SHOWNORMAL = 1
 
 'Public Const SW_MAXIMIZE = 3 'defined already in other module
 'Public Const SW_MINIMIZE = 6 'defined already in other module
@@ -289,7 +297,7 @@ Private Const MAX_PATH = 260
 Private Declare Sub CoTaskMemFree Lib "ole32.dll" _
     (ByVal hMem As Long)
 
-Private Declare Function lstrcat Lib "kernel32" _
+Private Declare Function lstrcat Lib "Kernel32" _
    Alias "lstrcatA" (ByVal lpString1 As String, _
    ByVal lpString2 As String) As Long
    
@@ -1381,17 +1389,25 @@ For i = NumTemp To 1 Step -1
                InvLabels(NumInversions - 1).y = CLng(PicCenterY - Sqr((Multiplication * (RE + ELV(i - 1) * HgtMult)) ^ 2 - DeltaX ^ 2))
                ReDim Preserve InvText(NumInversions)
                InvText(NumInversions - 1) = "Inversion at: " & Str(ELV(i - 1) * HgtMult) & " meters"
-               If NumInversions > 0 And C5Click Then
+'ill defined, comment it out
+'               If NumInversions > 0 And C5Click And BARParametersfm.chkMatch.Value = vbChecked Then
+'                   SondeInversionInfoFile$ = App.Path & "\Sondes-Inversions.txt"
+'                   doclin2$ = RadioSonde$ & _
+'                              "," & Format(Str$(SondeDayNum), "##0.0##") & _
+'                              "," & Format(Str$(ELV(i - 1) * HgtMult), "####0.0###") & _
+'                              "," & Format(Str$(TMP(i - 1) - 273.15), "###0.0#") & _
+'                              "," & Format(Str$(DistMatch), "#####0.0##") & _
+'                              "," & Format(Str$(DifVRexpected * 60 * 3.3), "##0.0##")
+'                    ReDim Preserve doclinInversions(NumInversions) As String
+'                    doclinInversions(NumInversions - 1) = doclin2$
+               If NumInversions > 0 And C5Click And BARParametersfm.chkMatch.Value = vbChecked Then
                    SondeInversionInfoFile$ = App.Path & "\Sondes-Inversions.txt"
                    doclin2$ = RadioSonde$ & _
                               "," & Format(Str$(SondeDayNum), "##0.0##") & _
                               "," & Format(Str$(ELV(i - 1) * HgtMult), "####0.0###") & _
-                              "," & Format(Str$(TMP(i - 1) - 273.15), "###0.0#") & _
-                              "," & Format(Str$(DistMatch), "#####0.0##") & _
-                              "," & Format(Str$(DifVRexpected * 60 * 3.3), "##0.0##")
+                              "," & Format(Str$(TMP(i - 1) - 273.15), "###0.0#")
                     ReDim Preserve doclinInversions(NumInversions) As String
                     doclinInversions(NumInversions - 1) = doclin2$
-                              
                    If Dir(SondeInversionInfoFile$) <> sEmpty Then
                       'check if already recorded the info
                       filesonde% = FreeFile
@@ -5180,6 +5196,11 @@ Public Function DTMheight(Dist As Double)
 '   'Rabbi Druk's shul at Armon Hanatziv
     lon1 = -35.238133306709
     lat1 = 31.7487155576439
+    If (RE = 0) Then RE = 6356766#
+    If (cd = 0) Then
+        pi = 4 * Atn(1)
+        cd = pi / 180#  'conv deg to rad
+        End If
     
     d = Dist / RE  'units of Dist is meters
     

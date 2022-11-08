@@ -4970,10 +4970,10 @@ SingleCalc:
      'now open correct files and interpolate
      'determine which temperatures to interpolate
      TMax = Val(txtET)
-     TMin = Val(txtST)
+     tmin = Val(txtST)
      TSTEP = Val(txtTS)
      'determine between which temperatures to interpolate
-     TLOW = Fix((TempValue - TMin) / TSTEP) * TSTEP + TMin
+     TLOW = Fix((TempValue - tmin) / TSTEP) * TSTEP + tmin
      THIGH = TLOW + TSTEP
      JustTLOW = False
      JustTHIGH = False
@@ -6231,8 +6231,8 @@ Dim A1 As Double
 A1 = 0#
 Dim A2 As Double
 A2 = 0#
-Dim START As Boolean
-START = False
+Dim Start As Boolean
+Start = False
 '    char filnam[255] = sempty
 Dim filnam As String
 '    char chr[2] = sempty
@@ -6861,7 +6861,7 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
         d__1 = (epg2 - epg1) / estep
         nang = CInt(Abs(d__1)) + 1
 '
-        START = True
+        Start = True
 '
 '
         'for testing '<<<<<<<<<<<<<<<<<
@@ -6904,10 +6904,10 @@ For KWAV = KMIN To KMAX Step KSTEP   '<1
                Exit For
                End If
             
-            If (START) Then
+            If (Start) Then
                 'Write #fileout%, 0#, hz1 * 1000#, ALFA(KWAV, kgr), ALFA(KWAV, kgr), 0#
                 Print #fileout%, Format(0#, "######0.0####"), Format(0#, "######0.0####"), Format(hz1 * 1000#, "######0.0####"), Format(ALFA(KWAV, kgr), "######0.0####"), Format(ALFA(KWAV, kgr), "######0.0####"), Format(0#, "######0.0####")
-                START = False
+                Start = False
                 End If
             
             enm = fun_(hen1, zz_1, NumLayers, XP, Tg, Pg)
@@ -7106,7 +7106,7 @@ m100:
 '               ccc = 1
 '               End If
 
-            START = True
+            Start = True
             XP = 0#
         Next kgr
 '        If jstop <> -1 Then Exit For
@@ -10751,7 +10751,7 @@ Private Sub cmdTest_Click()
         maxva = -999999999
         minva = 999999999
         TMax = -1E+17
-        TMin = 1E+19
+        tmin = 1E+19
            
         j = 0
         Do While Not EOF(filein%)
@@ -10785,7 +10785,7 @@ Private Sub cmdTest_Click()
              '      .Plot.Axis(VtChAxisIdY).ValueScale.MinorDivision = 10
              .Plot.Axis(VtChAxisIdY).ValueScale.Maximum = 1.1 * maxva
              .Plot.Axis(VtChAxisIdY).ValueScale.Minimum = 0.9 * minva
-             .Plot.Axis(VtChAxisIdX).ValueScale.Maximum = TMin
+             .Plot.Axis(VtChAxisIdX).ValueScale.Maximum = tmin
              .Plot.Axis(VtChAxisIdX).ValueScale.Minimum = TMax
              .ChartData = TransferCurve
              
@@ -10908,7 +10908,7 @@ Dim HMAXT As Double, TLOW As Double, THIGH As Double, Press0 As Double
 Dim RELHUM As Double, BETALO As Double, BETAHI As Double, BETAST As Double, WAVELN As Double
 Dim NSTEPS As Long, i As Long, FSize As Long, BETAM As Double, StatusMes As String, NumLayers As Long
 Dim NoShow As Boolean, j As Long, jstep As Long, TempStart As Double, TempEnd As Double, TempStep As Double, TLoop As Double, NTLoop As Long
-Dim Dist As Double, REFRAC As Double, AIRDRY As Double, AIRVAP As Double, PHI1 As Double
+Dim Dist As Double, AIRDRY As Double, AIRVAP As Double, PHI1 As Double
 Dim BETA1 As Double, H1 As Double, ier As Long, PATHLENGTH As Double
 Dim Pathh As Double
 Dim FKP1 As Double, FKR1 As Double, FKB1 As Double, FKAD1 As Double, FKAV1 As Double
@@ -11920,7 +11920,7 @@ For HLoop = HgtStart To HgtEnd Step HgtStep
         fileout% = FreeFile
         If OptionSelby.Value = False And chkDucting.Value = vbUnchecked Then
             If BARParametersfm.chkUseDTM.Value And Not BARParametersfm.chkMatch Then
-                FilNm = App.Path & "\TR_VDW_LAYERS_" & RadioSonde$ & "_NoDTMHug_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
+                FilNm = App.Path & "\TR_VDW_LAYERS_" & RadioSonde$ & "_NoDTMHug_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & "-test3.dat" '"-test.dat" '".dat"
             Else
                FilNm = App.Path & "\TR_VDW_" & Trim(Str(Fix(TGROUND))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
                End If
@@ -11933,9 +11933,9 @@ For HLoop = HgtStart To HgtEnd Step HgtStep
             Print #fileout%, "Inversion layer added starting at" & Str(HL0) & " meters and ending at" & Str(TL0) & " meters, lapse rate:" & Str(LRL0) & " degrees K/meter"
         ElseIf OptionSelby.Value = True Then
             If BARParametersfm.chkUseDTM.Value And Not BARParametersfm.chkMatch Then
-                FilNm = App.Path & "\TR_VDW_LAYERS_" & RadioSonde$ & "_DTMHug_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
+                FilNm = App.Path & "\TR_VDW_LAYERS_" & RadioSonde$ & "_DTMHug_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & "-test3.dat" '"-test.dat" '".dat"
             Else
-                FilNm = App.Path & "\TR_VDW_LAYERS_" & Trim(Str(Fix(TGROUND))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & ".dat"
+                FilNm = App.Path & "\TR_VDW_LAYERS_" & Trim(Str(Fix(TGROUND))) & "_" & Trim(Str(Fix(HOBS))) & "_" & Trim(Str(Fix(OBSLAT))) & "-test3.dat" '"-test.dat" '".dat"
                 End If
             Open FilNm For Output As #fileout%
             Print #fileout%, "Custom atmospheric layer file type" & Str(AtmNumber); " used with" & Str(NumLayers) & " layers"
@@ -12940,6 +12940,7 @@ For jstep = 1 To n_size + 1
 '            Print #fileout%, Format(DIST + Rearth * (PHI2 - PHI1), "######0.0####"), Format(PATHLENGTH, "######0.0####"), Format(-1000, "######0.0####"), Format(BETAM, "######0.0####"), Format(BETA2 * 1000#, "######0.0####"), Format(REFRAC * (1000# * RADCON), "######0.0####")
 '            PATHLENGTH = Dist + Rearth * (PHI2 - PHI1) 'pathlength along the earth, Path > Pathlength
 '            Pathh = Pathh + fGUESSP(BETA2 / RADCON, H2 - H1) 'Pathh is estimate of actual distance along the ray
+            TRUALT = BETAM - REFRAC 'true altitude = what altitude would be if there was no refraction, i.e., less than the apparent altitude = BETAM
             Print #fileout%, Format(Dist + Rearth * (PHI2 - PHI1), "######0.0####"), Format(Pathh, "######0.0####"), Format(-1000, "######0.0####"), Format(BETAM, "######0.0####"), Format(BETA2 * 1000#, "######0.0####"), Format(REFRAC * (1000# * RADCON), "######0.0####")
             jstop = jstep
             GoTo NEXTRAY
@@ -12972,17 +12973,19 @@ For jstep = 1 To n_size + 1
            Print #fileout%, Format(Dist, "######0.0####"), Format(Pathh, "######0.0####"), Format(H2, "######0.0####"), Format(BETAM, "######0.0####"), Format(BETA2 * 1000#, "######0.0####"), Format(REFRAC * (1000# * RADCON), "######0.0####")
            End If
           
-        If C5Click Then
-            If BARParametersfm.chkMatch.Value Then
-    '           If VRVDWcalc - Abs(TRUALT / 60#) <= DifVRexpected Then
-                If REFRAC / 60# >= Abs(DifVRexpected) Then
-                 'reached the observed level of refraction, record the distance
-                 DistMatch = Dist
-                 jstop = -1
-                 GoTo NEXTRAY
-                 End If
-               End If
-            End If
+'ill conceived, comment out
+'        If C5Click Then
+'            If BARParametersfm.chkMatch.Value Then
+'    '           If VRVDWcalc - Abs(TRUALT / 60#) <= DifVRexpected Then
+''                If (abs(REFRAC / 60# >= Abs(DifVRexpected) Then
+'                If Abs(TRUALT / 60#) - VRVDWcalc >= Abs(DifVRexpected) Then
+'                 'reached the observed level of refraction, record the distance
+'                 DistMatch = Dist
+'                 jstop = -1
+'                 GoTo NEXTRAY
+'                 End If
+'               End If
+'            End If
            
         If H2 > HLIMIT Then
             GoTo NORAYPRINT
@@ -13274,11 +13277,12 @@ If Not CalcSondes Then Close
          prjAtmRefMainfm.lblRef.Caption = "Atms. refraction (deg.) at " & ALFA(KMIN, j) / 60 & " deg = " & Abs(ALFT(KMIN, j)) / 60# & vbCrLf & "Atms. refraction (mrad) at " & ALFA(KMIN, j) / 60 & " deg = " & Abs(ALFT(KMIN, j)) * 1000# * cd / 60#
          
          VRefDeg = Abs(ALFT(KMIN, j)) / 60#
-         If C5Click Then
-            If BARParametersfm.chkMatch.Value Then
-               VRefDeg = Abs(REFRAC / 60#)
-               End If
-            End If
+'ill conceived, comment out
+'         If C5Click Then
+'            If BARParametersfm.chkMatch.Value Then
+'               VRefDeg = Abs(TRUALT / 60#)
+'               End If
+'            End If
             
          prjAtmRefMainfm.lblRef.Refresh
          found% = 1
@@ -13802,17 +13806,22 @@ Function fSTNDATM(H As Double, Dist As Double, NumLayers As Long) As Double
      '<<<<<<<<<<<<<important change -- detect meterse or km as scale---
      HN = H * 0.001 'convert to kilometers
 '     HN = H
+    'Dist is in meters, MatchDist is in km
      'import model 2D model of ground height vs. distance Dist (m) from observer
      If chkHgtProfile.Value = vbChecked And chkDruk.Value = vbChecked And Dist <> -1 Then
 
-        If BARParametersfm.chkUseDTM.Value Then
-           GrndHgt = DTMheight(Dist) 'calculate SRTM height along the light trajectory
+        If BARParametersfm.chkMatch.Value = vbChecked And Dist * 0.001 > MatchDist Then
+           GrndHgt = 0 'reached maximum distance to use groundhugging
         Else
-           'use polynomial fit of heights along the due east trajectory
-           GrndHgt = DistModel(Dist) 'assumes that atmospheric layers are displaced vertically
-           End If
-           
-        GrndHgt = GrndHgt * 0.001
+            If BARParametersfm.chkUseDTM.Value Then
+               GrndHgt = DTMheight(Dist) 'calculate SRTM height along the light trajectory
+            Else
+               'use polynomial fit of heights along the due east trajectory
+               GrndHgt = DistModel(Dist) 'assumes that atmospheric layers are displaced vertically
+               End If
+               
+            GrndHgt = GrndHgt * 0.001
+            End If
      
      Else
         GrndHgt = 0#
