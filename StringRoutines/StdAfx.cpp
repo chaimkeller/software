@@ -550,7 +550,7 @@ short SingleYr;
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////adding cushion option variables ///////////////
-short AddCushion = 0;
+short AddCushion = 1; //110922 - adding additional cushion is now default
 short CushionAmount = 0;
 /////////////////////////////////////////////////////////////////
 
@@ -920,13 +920,15 @@ The values set for debugging the program are simply the cgi arguments that are p
 35 fixed bug that allowed program to overwrite memory when nplac > MAXNUMPLACES, which was defined before as 200 places
    for some cities with large search radii, this is easily exceeded
 36 fixed DST bug for European countries (code had %72 instead of %7) 10/28/22
+37 updated IsDST to handle countries that abolished DST like Mexico 11/09/22
+38 made AddCushion = 1 the default (adds a cushion)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 13.0f;
+float vernum = 13.1f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -1027,6 +1029,8 @@ __asm{
 
 		////added 071221///////////////////
 		AddCushion = atoi(getpair(&NumCgiInputs, "cgi_AddCushion"));
+		AddCushion -= 1; //changed on 110922 based on interface that green ->1 cushion -> 2
+		if (AddCushion == -1) AddCushion = 1; //based on 110922 interface where default -> 0
 
 		///unique to Chai tables
 		numUSAcities1 = atoi(getpair(&NumCgiInputs, "cgi_USAcities1")); //Metro area
@@ -1141,9 +1145,8 @@ __asm{
            adhocset = true; //add cushions for thermal inversion region for simsets
 
 		///////////////////////////DST support switch/////////////////////////////
-
-		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "false") )
-           DSTcheck = false; //use "Standard" times
+		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_DST") ), "Not found") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "false") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "OFF") )
+           DSTcheck = false; //ignore any DST rules
 
 		//////////////////////////////////////////////////////////////////////////
 
@@ -7609,7 +7612,7 @@ short CreateHeaders( short types )
 			}
 			else
 			{
-				sprintf( l_buffwarning, "%s", "A larger cushion has been used for days where the horizon is obstructed by near obstructions." );
+				sprintf( l_buffwarning, "%s", "A larger cushion has been used for days if and when the horizon is obstructed by near obstructions." );
 			}
 	        sprintf( l_buffazimuth, "%s", "''?'' denotes insufficient azimuth range for calculation (pick a place with an unobstructed view, or shave obstructions)" );
 			if (GoldenLight && sqrt(pow(Gold.vert[4],2.0) + pow((Gold.vert[5] - eroshgt) * 0.001,2.0)) > 1.5) 
@@ -7635,7 +7638,7 @@ short CreateHeaders( short types )
 			}
 			else
 			{
-				sprintf( l_buffwarning, "%s", "A larger cushion has been used for days where the horizon is obstructed by near obstructions." );
+				sprintf( l_buffwarning, "%s", "A larger cushion has been used for days if and when the horizon is obstructed by near obstructions." );
 			}
 	        sprintf( l_buffazimuth, "%s", "''?'' denotes insufficient azimuth range for calculation (pick a place with an unobstructed view, or shave obstructions)" );
 		}
@@ -19641,11 +19644,13 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 	short NovemberDate;
 	short yl;
 	bool PerpetualDST = false; //for countries that have adopted perpetual DST
+	bool PerpetualST = false; //for countries that abolished ST
 	char CountryBuff[255] = "";
 
 	if (strstr(country, "Israel") || strstr(city, "Israel"))
 	{
 		  PerpetualDST = false;  //set to true when perpetual DST is adopted
+		  PerpetualST = false; //set to true if abolished DST
 		  if (PerpetualDST)
 		  {
 			  StartDay[0] = 1;
@@ -19654,6 +19659,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 			  EndDay[1] = YearLength( &SecondSecularYr );
 			  return 0;
 		  }
+		  if (PerpetualST) return -1; //no DST in this country
 
 		  //first secular year
           MarchDate =   31-( (int)(floor (FirstSecularYr * 5 / 4)) + 4) % 7 - 2; //starts on Friday = 2 days before EU start on Sunday
@@ -19685,6 +19691,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 	  //the rest of the USA, Candada
 
 	  PerpetualDST = false;  //set to true when USA and Canada adopt pertual DST
+	  PerpetualST = false; //set to true if abolished DST
 	  if (PerpetualDST)
 	  {
 		  StartDay[0] = 1;
@@ -19693,6 +19700,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 		  EndDay[1] = YearLength( &SecondSecularYr );
 		  return 0;
 	  }
+	  if (PerpetualST) return -1; //no DST in this country
 
 
 	  //first secular year
@@ -19740,6 +19748,8 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 	   //countries in Europe having DST
 
 		  PerpetualDST = false;  //set to true when Europe adopts perpetual DST
+		  PerpetualST = false; //set to true if abolished DST
+	
 		  if (PerpetualDST)
 		  {
 			  StartDay[0] = 1;
@@ -19748,6 +19758,8 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 			  EndDay[1] = YearLength( &SecondSecularYr );
 			  return 0;
 		  }
+		  if (PerpetualST) return -1; //no DST in this country
+
 
 		//first secular year
 		MarchDate =   31-( (int)(floor (FirstSecularYr * 5 / 4)) + 4) % 7; //starts on Sunday = 2 days after Israel
@@ -19772,6 +19784,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 	{
 
 		  PerpetualDST = false;  //set to true when Mexico adopts perpetual DST
+		  PerpetualST = false; //set to true if abolished DST
 		  if (PerpetualDST)
 		  {
 			  StartDay[0] = 1;
@@ -19780,6 +19793,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 			  EndDay[1] = YearLength( &SecondSecularYr );
 			  return 0;
 		  }
+		if (PerpetualST) return -1; //no DST in this country
 
 
 		//first secular year
@@ -19804,6 +19818,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 	{
 
 		  PerpetualDST = false;  //set to true when Australia adopts perpetual DST
+		  PerpetualST = false; //set to true if abolished DST
 		  if (PerpetualDST)
 		  {
 			  StartDay[0] = 1;
@@ -19812,6 +19827,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 			  EndDay[1] = YearLength( &SecondSecularYr );
 			  return 0;
 		  }
+		if (PerpetualST) return -1; //no DST in this country
 
 		//first secular year
         AprilDate = (2+6 * FirstSecularYr - (int)(floor (FirstSecularYr / 4) )) % 7 + 1; //old begin DST in the USA
