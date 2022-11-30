@@ -1145,8 +1145,9 @@ __asm{
            adhocset = true; //add cushions for thermal inversion region for simsets
 
 		///////////////////////////DST support switch/////////////////////////////
-		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_DST") ), "Not found") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "false") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "OFF") )
-           DSTcheck = false; //ignore any DST rules
+		//if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_DST") ), "Not found") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "false") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "OFF") )
+ 		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "false") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "OFF") )
+          DSTcheck = false; //ignore any DST rules
 
 		//////////////////////////////////////////////////////////////////////////
 
@@ -7711,13 +7712,14 @@ short CreateHeaders( short types )
 					//nsetflag = 1; //visible sunset/astr. sunset/chazos
 					if ( InStr( &storheader[1][0][0], "NA") || strlen(Trim(&storheader[1][0][0])) <= 2 )// use defulats
 					{
-						sprintf( &storheader[1][0][0], "%s%s%s%s%s%s%s", title, &heb1[9][0], hebcityname, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
+						//wierd bug fixed 11/30/22 printed "the year xxxx" twice
+						sprintf( &storheader[1][0][0], "%s%s%s%s", title, "&nbsp;" ,&heb1[9][0], hebcityname);//, "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
 						sprintf( &storheader[1][1][0], "%s", &heb1[13][0] );
 						sprintf( &storheader[1][2][0], "%s", &heb1[21][0] );
 					}
 					else //use headers stored in the _port.sav file
 					{
-						sprintf( buff1, "%s%s%s%s%s", &storheader[1][0][0], "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal );
+						sprintf( buff1, "%s%s%s%s%s", &storheader[1][0][0], "&nbsp;", &heb2[1][0], "&nbsp;", g_yrcal ); 
 						strcpy( &storheader[1][0][0], buff1 );
 					}
 					sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -19784,7 +19786,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 	{
 
 		  PerpetualDST = false;  //set to true when Mexico adopts perpetual DST
-		  PerpetualST = false; //set to true if abolished DST
+		  PerpetualST = true; //set to true if abolished DST, Mexico stopped DST after winter of 2022
 		  if (PerpetualDST)
 		  {
 			  StartDay[0] = 1;
