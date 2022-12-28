@@ -1158,22 +1158,22 @@ __asm{
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Chai" ); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( MetroArea, "Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
 		g_yrheb = 5782; //5781; //5779;//5776; //5775;
 		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
 		typezman = 8; // acc. to which opinion
-		optionheb = false; //true; //false; //true;//false;
+		optionheb = true; //false; //true; //false; //true;//false;
 		RoundSecondsin = 5; //1;//5;
 
 		///unique to Chai tables
-		numUSAcities1 = 4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area
-		numUSAcities2 = 15; //1; //4; //1; //2; //7;//0; //75; //city area
-		searchradius = 0.4; //8; //1; //8; //1;//4;//1; //search area
-		yesmetro = 1; //0; //1; //0;  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
+		numUSAcities1 = 29; //27; //4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area  (in c:/cities Lakewood = 29, but in web it is 27)
+		numUSAcities2 = 1; //15; //1; //4; //1; //2; //7;//0; //75; //city area
+		searchradius = 3; //0.4; //8; //1; //8; //1;//4;//1; //search area
+		yesmetro = 0; //0; //1; //0;  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
 		GoldenLight = 0; //1;
 
 		//test lat,lon, hgt inputs 32.027585
@@ -1185,7 +1185,7 @@ __asm{
 		erosdiflogstr = "1"; //"2";
 
 
-		searchradiusin = 0.8; //0.4; //2; //8; //1; //8; //1;//4; //0.9;
+		searchradiusin = 3; //0.8; //0.4; //2; //8; //1; //8; //1;//4; //0.9;
 		geotz = -5; //2; //0;//-5; //2; //-5; //2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
 		sunsyes = 1;//0; //1;//0; //= 1 print individual sunrise/sunset tables
 					 //= 0 don't print individual sunrise/sunset tables
@@ -1195,8 +1195,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 0;//10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -1540,6 +1540,7 @@ __asm{
 
 			fgets_CR(doclin, 255, stream2); //read in line of text
 			strcpy( hebcityname, doclin );
+			Trim(hebcityname);
 
 			if ( ( !HebrewInterface && !strcmp(MetroArea, engcityname) ) ||
 				  (  HebrewInterface && !strcmp(MetroArea, hebcityname) )    )
@@ -7515,7 +7516,7 @@ short CreateHeaders( short types )
 	if (optionheb) // 'hebrew captions
 	{
 		/*
-		if (eros || astronplace )
+		if (eros || astronplace || types > 1)
 		{
 			sprintf( title, "%s%s%s%s", &heb1[1][0], "\"", TitleLine, "\"" );
 		}
@@ -7523,10 +7524,17 @@ short CreateHeaders( short types )
 		{
 			sprintf( title, "%s%s%s%s", &heb1[1][0], "\"", TitleLine, "\"" );
 		}
-*/
+		*/
 		//sprintf( title, "%s %s%s%s", &heb1[1][0], "\"", TitleLine, "\"" );
 		///////////////fixed missing space 120621//////////////////////
-		sprintf( title, "%s %s%s%s", &heb1[1][0], "&quot;", TitleLine, "&quot;" );
+		if (types <= 1) 
+		{
+			sprintf( title, "%s %s%s%s", &heb1[1][0], "&quot;", TitleLine, "&quot;" );
+		}
+		else
+		{
+			sprintf( title, "%s %s%s%s ", &heb1[1][0], "&quot;", TitleLine, "&quot;" );
+		}
 
 	  	//copyright and warning lines
 		if (SRTMflag > 9)
@@ -8135,9 +8143,9 @@ short CreateHeaders( short types )
 			switch (types)
 			{
 			case 0:
-			  //nsetflag = 0; //visible sunrise/astr. sunrise/chazos
+			  //nsetflag = 0; //visible sunrise/astr. sunrise/chazos  /////<<<<<fixed 12/28/22/////////////////
 			   //visible times header
-			  sprintf( &storheader[0][0][0], "%s %s%s %s %s%s", title, &heb1[10][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
+			  sprintf( &storheader[0][0][0], "%s %s %s %s %s", title, &heb1[10][0], hebcityname, &heb2[1][0], g_yrcal );
 			  sprintf( &storheader[0][1][0], "%s", buff2 );
 			  sprintf( &storheader[0][2][0], "%s", buff );
 			  sprintf( &storheader[0][3][0], "%s", &SponsorLine[0][0] );
@@ -8147,7 +8155,7 @@ short CreateHeaders( short types )
 			  break;
 			case 1:
 			  //nsetflag = 1; //visible sunset/astr. sunset/chazos
-			  sprintf( &storheader[1][0][0], "%s %s%s %s %s%s", title, &heb1[11][0], hebcityname, &heb2[1][0], "&nbsp;", g_yrcal );
+			  sprintf( &storheader[1][0][0], "%s %s %s %s %s", title, &heb1[11][0], hebcityname, &heb2[1][0], g_yrcal );
 			  sprintf( &storheader[1][1][0], "%s", buff3 );
 			  sprintf( &storheader[1][2][0], "%s", buff );
 			  sprintf( &storheader[1][3][0], "%s", &SponsorLine[0][0] );
@@ -10380,7 +10388,7 @@ short LoadTitlesSponsors()
 			if ((strstr( doclin,"[titles]")) && !optionheb)
 			{
 				//english tables' title info
-				if (!eros && !astronplace && !ast) //Eretz Yisroel tables
+				if (!eros && !astronplace && !ast && types <= 1) //Eretz Yisroel visible zemanim tables //changed 12/28/22
 				{
 					fgets_CR(doclin, 255, stream); //read in line of text
 					strcpy( TitleLine, doclin );
@@ -10410,12 +10418,12 @@ short LoadTitlesSponsors()
 			if ((strstr( doclin,"[titles]")) && optionheb)
 			{
 				//hebrew tables' title info
-				if (!eros && !astronplace && !ast) //Eretz Yisroel tables
+				if (!eros && !astronplace && !ast && types <= 1) //Eretz Yisroel visible zemanim tables //changed 12/28/22
 				{
 					fgets_CR(doclin, 255, stream); //read in line of text
 					fgets_CR(doclin, 255, stream); //read in line of text
  				}
-				else //tables for the world or astronomical tables
+				else //tables for mishor/astronomical or the world or astronomical tables //changed 12/28/22
 				{
 					fgets_CR(doclin, 255, stream); //read in line of text
 					fgets_CR(doclin, 255, stream); //read in line of text
@@ -10460,7 +10468,7 @@ short LoadTitlesSponsors()
 
 		if (optionheb)
 		{
-			if (eros)
+			if (eros || types > 1)
 			{
 				strcpy( TitleLine, &heb1[2][0] );  //Chai in Hebrew
 				strcat( TitleLine, "\0");
@@ -10478,7 +10486,7 @@ short LoadTitlesSponsors()
 		}
 		else if (! optionheb)
 		{
-			if (eros)
+			if (eros || types > 1)
 			{
 				strncpy( TitleLine, "Chai", 4);
 			}
