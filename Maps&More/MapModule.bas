@@ -4035,13 +4035,13 @@ out50: Err.Clear
          Case Else
       End Select
       
-        'now determine temperature for terrestrial refraction
-        Call Temperatures(l1, l2, MinT, AvgT, MaxT, ier)
-        MeanTemp = 0
-        For ii = 1 To 12
-           MeanTemp = AvgT(ii) + MeanTemp
-        Next ii
-        MeanTemp = MeanTemp / 12
+     'now determine temperature for terrestrial refraction
+     Call Temperatures(l1, l2, MinT, AvgT, MaxT, ier)
+     MeanTemp = 0
+     For ii = 1 To 12
+       MeanTemp = AvgT(ii) + MeanTemp
+     Next ii
+     MeanTemp = MeanTemp / 12
 '          Select Case Mode%
 '             Case Is >= 1 'sunrise
 '                'use averaged minimum temperature
@@ -4059,8 +4059,38 @@ out50: Err.Clear
 '                MeanTemp = MeanTemp / 12
 '             Case Else
 '            End Select
+         'Alternatively, set MeanTemp = 0 and let readDTM read the WorldClim files
             
-            'Alternatively, set MeanTemp = 0 and let readDTM read the WorldClim files
+          If TemperatureModel% > 2 Then 'request that user input the ground temperature
+W100:
+             NewMeanTemp$ = InputBox("Enter ground temperature (deg C)", "Ground Temperature", Val(Format(Str$(MeanTemp), "###0.0")))
+             If Val(NewMeanTemp$) <> MeanTemp Then
+                Select Case MsgBox("The entered ground temperature (deg C) is equal to: " & NewMeanTemp$ _
+                                   & vbCrLf & "" _
+                                   & vbCrLf & "Is this correct?" _
+                                   , vbYesNo Or vbQuestion Or vbDefaultButton1, "New ground temperature")
+                
+                    Case vbYes
+                        MeanTemp = Val(NewMeanTemp$)
+                        If MeanTemp < -30 Or MeanTemp > 40 Then
+                           Select Case MsgBox("The suggested range of temperatures is from -30C to 40C." _
+                                              & vbCrLf & "You inputed: " & Str$(MeanTemp) _
+                                              & vbCrLf & "Do you want to keep your inputed value?" _
+                                              , vbYesNo Or vbInformation Or vbDefaultButton2, "Ground temperature")
+                           
+                            Case vbYes
+                           
+                            Case vbNo
+                              GoTo W100
+                           End Select
+                           End If
+                           
+                    Case vbNo
+                        'try again
+                        GoTo W100
+                End Select
+                End If
+             End If
 
       Select Case viewmodess%
          Case 0
@@ -6006,7 +6036,7 @@ End Function
 Sub EYsunrisesunset(Mode%)
    On Error GoTo errcancel
    
-   Dim lon As Double, lat As Double, kmx As Double, kmy As Double
+   Dim lon As Double, lat As Double, kmx As Double, kmy As Double, TempSet As Boolean
    Dim MinT(12) As Integer, AvgT(12) As Integer, MaxT(12) As Integer, ier As Integer
    
    sunmode% = Mode%
@@ -6119,7 +6149,7 @@ Sub EYsunrisesunset(Mode%)
    ReDim FileViewFileType(UniqueRoots%)
    AbrevDir$ = sEmpty
    Do Until EOF(filin%)
-      Input #filin%, doc1$, kmx, kmy, hgt, N1, n2, n3
+      Input #filin%, doc1$, kmx, kmy, hgt, N1, n2, n3  'find way to add MeanTEmp <<<<<<<<<<<<<<<<<<<
       If sunmode% = 1 Then
          s1 = kmx
          e1 = 260
@@ -6197,6 +6227,7 @@ f50:  If Mid$(doc1$, 2, 8) <> uniqroot$ Then
          End If
          
         'now determine temperature for terrestrial refraction
+         If Not TempSet Then
          If ggpscorrection = True Then 'apply conversion from Clark geoid to WGS84
             Dim N As Long
             Dim E As Long
@@ -6214,6 +6245,8 @@ f50:  If Mid$(doc1$, 2, 8) <> uniqroot$ Then
             MeanTemp = AvgT(ii) + MeanTemp
           Next ii
           MeanTemp = MeanTemp / 12
+          End If
+             
 '          Select Case Mode%
 '             Case Is >= 1 'sunrise
 '                'use averaged minimum temperature
@@ -6231,6 +6264,43 @@ f50:  If Mid$(doc1$, 2, 8) <> uniqroot$ Then
 '                MeanTemp = MeanTemp / 12
 '             Case Else
 '            End Select
+          
+          'remove old MeanTemp.txt file
+          If Dir(drivjk_c$ & "TRLapseRate.txt") <> sEmpty Then Kill drivjk_c$ & "TRLapseRate.txt"
+          If Dir(drivjk_c$ & "MeanTemp.txt") <> sEmpty Then Kill drivjk_c$ & "MeanTemp.txt"
+          
+          If TemperatureModel% > 2 And Not TempSet Then
+EY100:
+             NewMeanTemp$ = InputBox("Enter ground temperature (deg C)", "Ground Temperature", Val(Format(Str$(MeanTemp), "###0.0")))
+             If Val(NewMeanTemp$) <> MeanTemp Then
+                Select Case MsgBox("The entered ground temperature (deg C) is equal to: " & NewMeanTemp$ _
+                                   & vbCrLf & "" _
+                                   & vbCrLf & "Is this correct?" _
+                                   , vbYesNo Or vbQuestion Or vbDefaultButton1, "New ground temperature")
+                
+                    Case vbYes
+                        MeanTemp = Val(NewMeanTemp$)
+                        If MeanTemp < -30 Or MeanTemp > 40 Then
+                           Select Case MsgBox("The suggested range of temperatures is from -30C to 40C." _
+                                              & vbCrLf & "You inputed: " & Str$(MeanTemp) _
+                                              & vbCrLf & "Do you want to keep your inputed value?" _
+                                              , vbYesNo Or vbInformation Or vbDefaultButton2, "Ground temperature")
+                           
+                            Case vbYes
+                           
+                            Case vbNo
+                              GoTo EY100
+                           End Select
+                           End If
+                           
+                        TempSet = True
+
+                    Case vbNo
+                        'try again
+                        GoTo EY100
+                End Select
+                End If
+             End If
        
       proFile$ = doc2$ & uniqroot$ & ext$
       If Trim$(proFile$) = sEmpty Then GoTo ey500
@@ -6264,6 +6334,15 @@ ey500:
    
    Close #filin%
    Close #filout%
+   
+   If TemperatureModel% > 2 Then 'added 010922
+      'record the MeanTemp to the PlacList.txt file
+      'write a MeanTemp file
+      filmt% = FreeFile
+      Open drivjk_c$ & "MeanTemp.txt" For Output As #filmt%
+      Write #filmt%, MeanTemp
+      Close #filmt%
+      End If
    
    If Dir(drivjk_c$ & "scanlist.txt") <> sEmpty Then Kill drivjk_c$ & "scanlist.txt"
    'Then run readlst3.exe
@@ -6762,7 +6841,7 @@ If Dir(FilePathBil, vbDirectory) <> sEmpty Then
     FilePathBil = DirPath$
 Else
     'first try default
-    FilePathBil = "c:\devstudio\vb" & "\WorldClim_bil"
+    FilePathBil = Mid$(USADir$, 1, 1) & "c:\devstudio\vb" & "\WorldClim_bil"
     If Dir(FilePathBil, vbDirectory) <> sEmpty Then
         DirPath$ = FilePathBil
         FilePathBil = DirPath$

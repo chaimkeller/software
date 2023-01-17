@@ -894,7 +894,7 @@ Private Sub Command1_Click()
      Close #filnum%
      End If
      
-   Call form_queryunload(i%, j%)
+   Call Form_QueryUnload(i%, j%)
 End Sub
 
 Private Sub Command2_Click()
@@ -903,11 +903,11 @@ Private Sub Command2_Click()
 End Sub
 
 'maxang%, fullrange%, diflat%, diflog%
-Private Sub form_queryunload(Cancel As Integer, UnloadMode As Integer)
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
    Unload Me
    Set mapLimitsfm = Nothing
 End Sub
-Private Sub form_load()
+Private Sub Form_Load()
    record = False
    
    If DTMflag = -1 Then
@@ -974,8 +974,10 @@ Private Sub form_load()
    With cmbModelTemp
     .AddItem "Old terrestrial refraction model"
     .AddItem "No terrestrial refraction modeling"
-    .AddItem "TR based on Avgerage Temp: don't remove from profile"
-    .AddItem "TR based on Avgerage Temp: remove from profile"
+    .AddItem "TR based on T average: don't remove from profile"
+    .AddItem "TR based on T average: remove from profile"
+    .AddItem "TR based on entered Tground: don't remove from profile"
+    .AddItem "TR based on entered Tground: remove from profile"
    End With
    
    If TemperatureModel% = -1 Then
@@ -986,6 +988,10 @@ Private Sub form_load()
       cmbModelTemp.ListIndex = 2
    ElseIf TemperatureModel% = 2 Then
       cmbModelTemp.ListIndex = 3
+   ElseIf TemperatureModel% = 3 Then
+      cmbModelTemp.ListIndex = 4
+   ElseIf TemperatureModel% = 4 Then
+      cmbModelTemp.ListIndex = 5
    Else
       cmbModelTemp.ListIndex = 1
       End If

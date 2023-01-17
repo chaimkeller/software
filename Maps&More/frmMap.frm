@@ -3,60 +3,99 @@ Object = "{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}#1.1#0"; "ieframe.dll"
 Begin VB.Form frmMap 
    AutoRedraw      =   -1  'True
    Caption         =   "Google Map"
-   ClientHeight    =   7350
+   ClientHeight    =   7875
    ClientLeft      =   5505
    ClientTop       =   3525
    ClientWidth     =   8505
    Icon            =   "frmMap.frx":0000
    LinkTopic       =   "Form1"
-   ScaleHeight     =   7350
+   LockControls    =   -1  'True
+   ScaleHeight     =   7875
    ScaleWidth      =   8505
+   Begin VB.Frame frmConv 
+      Caption         =   "ITM to Geo Conversion"
+      Height          =   495
+      Left            =   4200
+      TabIndex        =   19
+      Top             =   1000
+      Visible         =   0   'False
+      Width           =   4215
+      Begin VB.OptionButton optGeo 
+         Caption         =   "Molendensky (web)"
+         Height          =   195
+         Left            =   2040
+         TabIndex        =   21
+         ToolTipText     =   "Like used in web program"
+         Top             =   240
+         Width           =   1695
+      End
+      Begin VB.OptionButton optcasgeo 
+         Caption         =   "standard JHK"
+         Height          =   195
+         Left            =   240
+         TabIndex        =   20
+         ToolTipText     =   "use casgeo and geocasc"
+         Top             =   240
+         Value           =   -1  'True
+         Width           =   1455
+      End
+   End
+   Begin VB.CommandButton cmdGPS 
+      Height          =   375
+      Left            =   2880
+      Picture         =   "frmMap.frx":0F4A
+      Style           =   1  'Graphical
+      TabIndex        =   18
+      ToolTipText     =   "Your GPS coordinates"
+      Top             =   1560
+      Width           =   375
+   End
    Begin VB.CommandButton cmdHelp 
       Height          =   375
-      Left            =   4320
-      Picture         =   "frmMap.frx":0F4A
+      Left            =   2160
+      Picture         =   "frmMap.frx":1C44
       Style           =   1  'Graphical
       TabIndex        =   17
       ToolTipText     =   "Help"
-      Top             =   1200
+      Top             =   1560
       Width           =   495
    End
    Begin VB.CommandButton cmdMoveMaps 
       Height          =   375
-      Left            =   5040
-      Picture         =   "frmMap.frx":104C
+      Left            =   3360
+      Picture         =   "frmMap.frx":1D46
       Style           =   1  'Graphical
       TabIndex        =   16
       ToolTipText     =   "Center Maps and More to above coordinates"
-      Top             =   1200
+      Top             =   1560
       Width           =   375
    End
    Begin VB.CommandButton Mapsbut 
       Height          =   375
-      Left            =   5400
-      Picture         =   "frmMap.frx":148E
+      Left            =   3720
+      Picture         =   "frmMap.frx":2188
       Style           =   1  'Graphical
       TabIndex        =   15
       ToolTipText     =   "display map at Mapys & More's center coordinate"
-      Top             =   1200
+      Top             =   1560
       Width           =   495
    End
    Begin VB.CommandButton Command2 
       Caption         =   "Map Lat/Long"
       Height          =   375
-      Left            =   7200
+      Left            =   5640
       TabIndex        =   14
       ToolTipText     =   "move google map to the  inputed coordinates"
-      Top             =   1200
+      Top             =   1560
       Width           =   1215
    End
    Begin VB.CommandButton Command1 
       Caption         =   "Map Address"
       Height          =   375
-      Left            =   5950
+      Left            =   4440
       TabIndex        =   13
       ToolTipText     =   "Move Google map to the inputed street address"
-      Top             =   1200
+      Top             =   1560
       Width           =   1215
    End
    Begin VB.TextBox txtLong 
@@ -106,13 +145,13 @@ Begin VB.Form frmMap
       Width           =   4215
    End
    Begin SHDocVwCtl.WebBrowser WebBrowser1 
-      Height          =   5655
+      Height          =   5895
       Left            =   0
       TabIndex        =   0
-      Top             =   1680
+      Top             =   2040
       Width           =   8535
       ExtentX         =   15055
-      ExtentY         =   9975
+      ExtentY         =   10398
       ViewMode        =   0
       Offline         =   0
       Silent          =   0
@@ -185,6 +224,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Dim TypeConv As Integer
+
 Private Type ControlPositionType
     Left As Single
     Top As Single
@@ -227,6 +268,40 @@ m_FormWid = ScaleWidth
 m_FormHgt = ScaleHeight
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : cmdGPS_Click
+' Author    : chaim
+' Date      : 7/11/2022
+' Purpose   : Acquire GPS coordinates and move Google map to that position
+'---------------------------------------------------------------------------------------
+'
+Private Sub cmdGPS_Click()
+
+   On Error GoTo cmdGPS_Click_Error
+
+   If GPSconnected Then
+      txtLat = Val(GPStest.TextLat)
+      txtlon = Val(GPStest.TextLon)
+      Maps.Text5.Text = Format(lono, "###0.0#####")
+      Maps.Text6.Text = Format(lato, "##0.0#####")
+      Mapsbut.value = True
+   
+   Else
+      Call MsgBox("GPS is not avaialbe!" _
+                  & vbCrLf & "" _
+                  & vbCrLf & "To confiugre it, click on the ""GPS"" menu item above the tool bar" _
+                  , vbInformation, "GPS not configured")
+      Exit Sub
+      End If
+
+   On Error GoTo 0
+   Exit Sub
+
+cmdGPS_Click_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdGPS_Click of Form frmMap"
+End Sub
+
 Private Sub cmdHelp_Click()
   MsgBox "To retrieve coordinates on the google map," & vbCrLf & _
   "right click on the point of interest," & vbCrLf & _
@@ -245,6 +320,11 @@ End Sub
 '
 Private Sub cmdMoveMaps_Click()
     Dim StrTxt() As String
+    Dim N As Long
+    Dim E As Long
+    Dim lat As Double
+    Dim lon As Double
+    
    On Error GoTo cmdMoveMaps_Click_Error
 
     textcoord$ = Clipboard.GetText
@@ -258,17 +338,51 @@ Private Sub cmdMoveMaps_Click()
     StrTxt = Split(textcoord$, ",")
     
     If UBound(StrTxt) < 1 Then
-       MsgBox "No coordinates found!  Try again" & vbCrLf & vbCrLf & _
+       MsgBox "No coordinates found in the clipboard!  Try again" & vbCrLf & vbCrLf & _
        "Click the ""Help"" button for further information.", vbInformation + vbOKOnly, _
        "No coordinates stored to the clipboard!"
        Exit Sub
        End If
        
-    txtLat.Text = StrTxt(0)
-    txtLong.Text = StrTxt(1)
-    Maps.Text6.Text = txtLat.Text
-    Maps.Text5.Text = txtLong.Text
-    Call goto_click
+    If IsNumeric(Val(StrTxt(0))) And IsNumeric(Val(StrTxt(1))) Then
+    Else
+       MsgBox "No recognizable coordinates found in the clipboard!  Try again" & vbCrLf & vbCrLf & _
+       "Click the ""Help"" button for further information.", vbInformation + vbOKOnly, _
+       "No coordinates stored to the clipboard!"
+       Exit Sub
+       End If
+       
+    If world Then
+        txtLat.Text = StrTxt(0)
+        txtLong.Text = StrTxt(1)
+        Maps.Text6.Text = txtLat.Text
+        Maps.Text5.Text = txtLong.Text
+        Call goto_click
+    Else
+        If TypeConv = 1 Then
+            'convert geo corrdinates to ITM
+            txtLat.Text = StrTxt(0)
+            txtLong.Text = StrTxt(1)
+            lg = Val(txtLong.Text)
+            lt = Val(txtLat.Text)
+    '        ggpscorrection = False
+            Call GEOCASC(lt, lg, ITMx, ITMy)
+            Maps.Text6.Text = ITMx * 0.001
+            Maps.Text5.Text = ITMy * 0.001
+            Call goto_click
+        ElseIf TypeConv = 2 Then
+            lat = Val(txtLat.Text)
+            lon = Val(txtLong.Text)
+            'convert lat lon to ITM
+            Call wgs842ics(lat, lon, N, E)
+            kmy = N
+            kmx = E
+            Maps.Text5.Text = kmx
+            Maps.Text6.Text = kmy
+           End If
+        End If
+        
+
 
    On Error GoTo 0
    Exit Sub
@@ -341,6 +455,16 @@ End Sub
 Private Sub Form_Load()
 SaveSizes
 GoogleMapVis = True
+
+If world Then
+   frmConv.Visible = False
+Else
+   frmConv.Visible = True
+   End If
+   
+If TypeConv = 0 Then TypeConv = 1
+   
+'ggpscorrection = False
 'ret = SetWindowPos(frmMap.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
 End Sub
 
@@ -392,7 +516,47 @@ Private Sub Form_Unload(Cancel As Integer)
 End Sub
 
 Private Sub Mapsbut_Click()
-   txtLat = Maps.Text6
-   txtLong = Maps.Text5
-   Command2.value = True
+
+Dim lt2 As Double, lg2 As Double
+
+   If world Then
+      txtLat = Maps.Text6
+      txtLong = Maps.Text5
+      Command2.value = True
+   Else
+      'convert ITM to geo
+      If InStr(Maps.Text5, ".") And Val(Maps.Text5) < 1000 Then
+         lon1 = Val(Maps.Text5) * 1000
+      Else
+         lon1 = Val(Maps.Text5)
+         End If
+      If InStr(Maps.Text6, ".") And Val(Maps.Text6) < 1000 Then
+         lat1 = 1000000 + Val(Maps.Text6) * 1000
+      Else
+         lat1 = Val(Maps.Text6)
+         End If
+         
+      'convert itm coorinates to wgs34 geo
+      If TypeConv = 2 Then
+         Call ics2wgs84(CLng(lat1), CLng(lon1), lt2, lg2)
+         txtLong = lg2
+         txtLat = lt2
+         Command2.value = True
+      ElseIf TypeConv = 1 Then
+         Call casgeo(lon1, lat1, lg, lt)
+         txtLong = -lg
+         txtLat = lt
+         Command2.value = True
+         End If
+         
+       End If
+      
+End Sub
+
+Private Sub optcasgeo_Click()
+   TypeConv = 1
+End Sub
+
+Private Sub optGeo_Click()
+   TypeConv = 2
 End Sub
