@@ -922,13 +922,14 @@ The values set for debugging the program are simply the cgi arguments that are p
 36 fixed DST bug for European countries (code had %72 instead of %7) 10/28/22
 37 updated IsDST to handle countries that abolished DST like Mexico 11/09/22
 38 made AddCushion = 1 the default (adds a cushion)
+39 For SingleDay, use its ground Temperature only for figuring out the terrestrial refraction and the horizon profile
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 13.1f;
+float vernum = 14.1f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -1158,12 +1159,12 @@ __asm{
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "Chai" ); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
 		strcpy( MetroArea, "Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
-		g_yrheb = 5782; //5781; //5779;//5776; //5775;
+		g_yrheb = 5783; //5782; //5781; //5779;//5776; //5775;
 		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
 		typezman = 8; // acc. to which opinion
 		optionheb = true; //false; //true; //false; //true;//false;
@@ -1177,8 +1178,8 @@ __asm{
 		GoldenLight = 0; //1;
 
 		//test lat,lon, hgt inputs 32.027585
-		eroslatitudestr = "39.357909"; ///"55.398869"; //"31.706938"; //"30.960207"; //"37.683140"; //"30.92408"; //"31.858246"; //"31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
-		eroslongitudestr = "76.688175";//"3.388176"; //"-35.123139"; //"-35.195719"; //"119.170837"; //"-34.96542"; //"-35.158354"; //"-35.217";//"0.2074"; //"-35.201774";//"-35.217059"; //"-35.247203";//"1.11254";//"-34.841867";//"-35.004566";//"99.201608";//"-34.83177";//"74.222"; //"-34.83177"; //"-34.851612"; //-35.164481"; //-35.239226491"; //"-35.239291"; //"21.89521";
+		eroslatitudestr = "31.7487155576439"; //"39.357909"; ///"55.398869"; //"31.706938"; //"30.960207"; //"37.683140"; //"30.92408"; //"31.858246"; //"31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
+		eroslongitudestr = "-35.238133306709"; //"76.688175";//"3.388176"; //"-35.123139"; //"-35.195719"; //"119.170837"; //"-34.96542"; //"-35.158354"; //"-35.217";//"0.2074"; //"-35.201774";//"-35.217059"; //"-35.247203";//"1.11254";//"-34.841867";//"-35.004566";//"99.201608";//"-34.83177";//"74.222"; //"-34.83177"; //"-34.851612"; //-35.164481"; //-35.239226491"; //"-35.239291"; //"21.89521";
 		eroshgtstr = "0"; //"700"; //"787.23"; //"29.70"; //"2843.73"; //"495.0"; //"644.26"; //"800";//"0";//"684.3";//"164.1";//"26.93";//"68.69";//"2274.5"; //"63.5";//"22.72"; //"63.5";//"788.19"; //832.3"; //"832"; //"83.2";
 		erosaprnstr = "0.5";//"1.5";//"0.5";
 		erosdiflatstr = "1";
@@ -1186,7 +1187,7 @@ __asm{
 
 
 		searchradiusin = 3; //0.8; //0.4; //2; //8; //1; //8; //1;//4; //0.9;
-		geotz = -5; //2; //0;//-5; //2; //-5; //2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
+		geotz = 2; //-5; //2; //0;//-5; //2; //-5; //2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
 		sunsyes = 1;//0; //1;//0; //= 1 print individual sunrise/sunset tables
 					 //= 0 don't print individual sunrise/sunset tables
 
@@ -1195,8 +1196,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 0;//10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 10; //0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 10; //0;//10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -1210,11 +1211,11 @@ __asm{
 		HebrewInterface = false;// true;//false; //=true for Hebrew webpages
 
 		//////////////////added 030921 /////////////diagnostics for single day/////////////////////////////////////////
-		SingleDay = false; //true;
-		SingleYr = 2021;
-		SingleDayNum = 83; //300; //162;
-		g_Tground = -9999; //288.15;
-		g_Pressure = -9999; //1013.25;
+		SingleDay = true; //false; //true;
+		SingleYr = 2023; //2021;
+		SingleDayNum = 13; //83; //300; //162;
+		g_Tground = 277.15; //-9999; //288.15;
+		g_Pressure = 1018.96; //-9999; //1013.25;
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
 		AddCushion = true; //false; //true;
@@ -6940,11 +6941,18 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 		if (VDW_REF) {
 
 			//find average temperature to use in removing profile's TR 
-			meantemp = 0.f;
-			for (itk = 1; itk <= 12; ++itk) {
-				meantemp += AvgTemp[itk - 1];
+			if (g_Tground != -9999 && SingleDay)
+			{
+				meantemp = g_Tground;
 			}
-			meantemp = meantemp / 12.f + 273.15f;
+			else //calculate the mean average temp over the year
+			{
+				meantemp = 0.f;
+				for (itk = 1; itk <= 12; ++itk) {
+					meantemp += AvgTemp[itk - 1];
+				}
+				meantemp = meantemp / 12.f + 273.15f;
+			}
 
 		}
 
@@ -7155,11 +7163,19 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 			//read WorldClim bil files to deter__min the minimum and average temperatures of the year
 
 			//find average temperature to use in removing profile's TR 
-			meantemp = 0.f;
-			for (itk = 1; itk <= 12; ++itk) {
-				meantemp += AvgTemp[itk - 1];
+			if (g_Tground != -9999 && SingleDay)
+			{
+				meantemp = g_Tground;
 			}
-			meantemp = meantemp / 12.f + 273.15f;
+			else //calculate the mean average temp over the year
+			{
+				meantemp = 0.f;
+				for (itk = 1; itk <= 12; ++itk) {
+					meantemp += AvgTemp[itk - 1];
+				}
+				meantemp = meantemp / 12.f + 273.15f;
+			}
+
 		}
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
@@ -7325,11 +7341,19 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 			//read WorldClim bil files to deter__min the minimum and average temperatures of the year
 
 			//find average temperature to use in removing profile's TR 
-			meantemp = 0.f;
-			for (itk = 1; itk <= 12; ++itk) {
-				meantemp += AvgTemp[itk - 1];
+			if (g_Tground != -9999 && SingleDay)
+			{
+				meantemp = g_Tground;
 			}
-			meantemp = meantemp / 12.f + 273.15f;
+			else //calculate the mean average temp over the year
+			{
+				meantemp = 0.f;
+				for (itk = 1; itk <= 12; ++itk) {
+					meantemp += AvgTemp[itk - 1];
+				}
+				meantemp = meantemp / 12.f + 273.15f;
+			}
+
 		}
 
 		//N.b., if this is Golden Hour calculation, then first assume same temperatures as observer, calculate the rpfile
@@ -7410,11 +7434,19 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 			//read WorldClim bil files to deter__min the minimum and average temperatures of the year
 
 			//find average temperature to use in removing profile's TR 
-			meantemp = 0.f;
-			for (itk = 1; itk <= 12; ++itk) {
-				meantemp += AvgTemp[itk - 1];
+			if (g_Tground != -9999 && SingleDay)
+			{
+				meantemp = g_Tground;
 			}
-			meantemp = meantemp / 12.f + 273.15f;
+			else //calculate the mean average temp over the year
+			{
+				meantemp = 0.f;
+				for (itk = 1; itk <= 12; ++itk) {
+					meantemp += AvgTemp[itk - 1];
+				}
+				meantemp = meantemp / 12.f + 273.15f;
+			}
+
 		}
 
 		//now calculate the sunrise/sunset table
@@ -11436,9 +11468,16 @@ alem */
 			//////////////////////////conserved portion of atmospheric refraction//////////////////////////
 			if (VDW_REF) 
 			{
-				//assuming that the terrestrial refraction scales like the atmospheric refraction
-				//i.e., with the VDW scaling factor vdwsf, this is unproven but should be at least a close approx.
-				trbasis = vdwsf * 1013.25 * 8.15f * 1e3f * .0277f / (288.15 * 288.15 * 3600);
+				if (g_Tground != -9999 && SingleDay && SRTMflag > 9)
+				{
+					trbasis = 0; //Correct terrestrial refraction for that day is already added in the profile
+				}
+				else
+				{
+				    //assuming that the terrestrial refraction scales like the atmospheric refraction
+				    //i.e., with the VDW scaling factor vdwsf, this is unproven but should be at least a close approx.
+					trbasis = vdwsf * 1013.25 * 8.15f * 1e3f * .0277f / (288.15 * 288.15 * 3600);
+				}
 			}
 			//////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -14129,7 +14168,7 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 				ntrcalc = 2;
 			}
 		} else {
-			//new TR added, but Tground is declared, so extract it from the header string and use it as the meantemp
+			//new format, sometimes Lapse Rate declare, but Tground is always declared, so extract it from the header string and use it as the meantemp
 			ntrcalc = 3;
 			Mid( doclin,41,6, Tgroundch);
 			Tground = atof(Tgroundch);
@@ -18403,7 +18442,14 @@ L550:
 			///////////////////////////////////////////////////////
 
 			elev[nk - 1].vert[0] = xentry; //azimuth (deg)
-			elev[nk - 1].vert[1] = prof[nk].ver[0] - TRtemp; //view angle (deg) (after removing temporary TR)
+			if (g_Tground != -9999 && SingleDay)
+			{
+				elev[nk - 1].vert[1] = prof[nk].ver[0]; //don't remove the terrestrial refraction part
+			}
+			else
+			{
+				elev[nk - 1].vert[1] = prof[nk].ver[0] - TRtemp; //view angle (deg) (after removing temporary TR)
+			}
 			elev[nk - 1].vert[2] = dist; //distance to obstruction (km)
 			elev[nk - 1].vert[3] = hgt2; //height of obstruction (m)
 

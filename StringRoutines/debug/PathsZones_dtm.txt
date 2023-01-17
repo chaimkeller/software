@@ -6,7 +6,7 @@ c:/Inetpub/cgi-bin/
 c:/Inetpub/cgi-bin/
 c:/Inetpub/webpub/
 c:/jk/public_html/cities/
-f:/SRTM-world/
+c:/usa/
 c:/3AS/
 
 [zemanim_eng]

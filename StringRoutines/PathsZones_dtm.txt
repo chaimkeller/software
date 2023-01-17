@@ -5,8 +5,8 @@ Windows (10)
 c:/Inetpub/cgi-bin/
 c:/Inetpub/cgi-bin/
 c:/Inetpub/webpub/
-c:/jk/public_html/cities/
-c:/USA/
+c:/cities/
+c:/usa/
 c:/3AS/
 c:/DevStudio/Vb/WorldClim_bil/
 
