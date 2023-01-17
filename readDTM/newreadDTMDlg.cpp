@@ -251,8 +251,8 @@ w2000:
 		fscanf( stream, "%lg\n", &AzimuthStep);
 		fscanf( stream, "%d\n", &IgnoreMissingTiles);
 		fscanf( stream, "%d\n", &TemperatureModel);
-		fscanf( stream, "%lg\n", &Tground);
-		fscanf( stream, "%lg\n", &treehgt);
+		fscanf( stream, "%lg\n", &Tground); //degrees Celsius
+		fscanf( stream, "%lg\n", &treehgt); //meterse
 
 		if (Tground == 0) {
 			ier = Temperatures(lat0,lon0,MinT,AvgT,MaxT);
@@ -2541,13 +2541,13 @@ L550:
 
 		if ( f =fopen(bufFileName, "w" ) ) 
 		{
-			if (TemperatureModel == 1) { //new Wikipedia version of TR added, record the temprature used to calculate TR
-				sprintf( Header, "%s,%6.2f","Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy", Tground );
+			if (TemperatureModel == 1 || TemperatureModel == 3) { //new Wikipedia version of TR added, record the temprature used to calculate TR
+				sprintf( Header, "%s,%6.2f,%6.2f","Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy", Tground, 0.0 );
 				fprintf( f, "%s\n", Header );
 				//fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,1" );
 			}else if (TemperatureModel == -1) { //old version
 				fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR" );
-			}else if (TemperatureModel == 0 || TemperatureModel == 2) { //no added terrestrial refraction, or TR removed
+			}else if (TemperatureModel == 0 || TemperatureModel == 2 || TemperatureModel == 4) { //no added terrestrial refraction, or TR removed
 				fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0" );
 			}
 			//fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR" );
@@ -2622,7 +2622,7 @@ L550:
 		dist *= re;
 
 		//now if flagged, remove the new type of terrestrial refraction addition
-		if (TemperatureModel == 2) {
+		if (TemperatureModel == 2 || TemperatureModel == 4) {
 			//remove the terrestrial refraction addition
 			deltd = hgt0 - hgt2;
 			PATHLENGTH = sqrt(distd*distd + pow(fabs(deltd)*0.001 - 0.5*(distd*distd/RETH),2.0));
