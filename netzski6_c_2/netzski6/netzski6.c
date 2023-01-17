@@ -165,6 +165,7 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
 	    doublereal *, doublereal *, doublereal *);
     static char chd46[46];
 	static char chd48[48];
+	static char chd53[53];
     static integer nadd;
     static doublereal defm;
     static char name__[8];
@@ -372,7 +373,7 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
     static cilist io___256 = { 0, 3, 0, "(A1,A27,A1)", 0 };
 
 
-/*       Version 21 //20 //19 //18 //17 */
+/*       Version 22 //21 //20 //19 //18 //17 */
 /*       this program calculates sunrise/sunset tables for lattest format */
 /*       it is called by the WINDOWS 95 program CAL PROGRAM */
 /*       the output filenames reside on the file NETZSKIY.tm3 */
@@ -433,6 +434,7 @@ outine. */
 /*		Version 19: uses maximum WorldClim temperatures for VDW calcuations
 /*		Version 20: added option to add cushion instead of printing in green
 /*		Version 21: add final viewangle output
+/*		Version 22: added better handling of Tground as flagged in profile file, originating from Maps&More
 /*
 /* ----------------------------------------------------- */
 /*            = 20 * maxang + 1 ;number of azimuth points separated by .1 degrees */
@@ -448,6 +450,8 @@ outine. */
 /*       Version 15-etc. parameters */
 /* 		MT is Minimum Temperature Array, AT is Average Temperature Array */
 /*	    VERSION 20 -- add option to add additional cushion to times (handling problem won't print green times) */
+/*		Version 22 -- add option to change refraction based on inputed Lapse Rate
+*/
     pi = acos(-1.);
     cd = pi / 180.;
     dcmrad = 1 / (cd * 1e3); //converts mrads to degrees
@@ -599,6 +603,7 @@ L7:
 	}
 	fclose( stream );
 	*/
+
 /* 'summer and winter refraction values for heights 1 m to 999 m */
 /* 'as calculated by MENAT.FOR */
 /*       opening file netzskiy.tm3 */
@@ -871,6 +876,7 @@ L7:
 		    do_fio(&c__1, (char *)&nplac[0], (ftnlen)sizeof(integer));
 		    e_wsfi();
 			*/
+			sprintf(ch1, "%d", nplac[0]);
 			sprintf(ext1 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), "%s%s%s", ".pl", ch1, "\0");
 			/*
 		    s_copy(ext1 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), 
@@ -884,6 +890,7 @@ L7:
 		    do_fio(&c__1, (char *)&nplac[0], (ftnlen)sizeof(integer));
 		    e_wsfi();
 			*/
+			sprintf(ch2, "%d", nplac[0]);
 			sprintf(ext1 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), "%s%s%s", ".p", ch2, "\0");
 			/*
 		    s_copy(ext1 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), 
@@ -897,6 +904,7 @@ L7:
 		    do_fio(&c__1, (char *)&nplac[0], (ftnlen)sizeof(integer));
 		    e_wsfi();
 			*/
+			sprintf(ch3, "%d", nplac[0]);
 			sprintf(ext1 + (nsetflag + 1 + (nplac[0] << 1) - 3 << 2), "%s%s%s", ".", ch3, "\0");
 			/*
 		    *(unsigned char *)&ext1[(nsetflag + 1 + (nplac[0] << 1) - 
@@ -931,6 +939,7 @@ L7:
 		    do_fio(&c__1, (char *)&nplac[1], (ftnlen)sizeof(integer));
 		    e_wsfi();
 			*/
+			sprintf(ch1, "%d", nplac[1]);
 			sprintf(ext1 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), "%s%s%s", ".pl", ch1, "\0");
 			/*
 		    s_copy(ext1 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), 
@@ -944,6 +953,7 @@ L7:
 		    do_fio(&c__1, (char *)&nplac[1], (ftnlen)sizeof(integer));
 		    e_wsfi();
 			*/
+			sprintf(ch2, "%d", nplac[1]);
 			sprintf(ext1 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), "%s%s%s", ".p", ch2, "\0");
 			/*
 		    s_copy(ext1 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), 
@@ -957,6 +967,7 @@ L7:
 		    do_fio(&c__1, (char *)&nplac[1], (ftnlen)sizeof(integer));
 		    e_wsfi();
 			*/
+			sprintf(ch3, "%d", nplac[1]);
 			sprintf(ext1 + (nsetflag + 1 + (nplac[1] << 1) - 3 << 2), "%s%s%s", ".", ch3, "\0");
 			/*
 		    *(unsigned char *)&ext1[(nsetflag + 1 + (nplac[1] << 1) - 
@@ -1200,22 +1211,26 @@ ns) */
 	    o__1.oblnk = 0;
 	    f_open(&o__1);
 	    s_rsfe(&io___93);
-	    do_fio(&c__1, chd48, (ftnlen)48);
+	    //do_fio(&c__1, chd48, (ftnlen)48);
+	    do_fio(&c__1, chd53, (ftnlen)53);  //changed 12/01/22 to accomadate Tfudge
 	    e_rsfe();
 /* 		check if this is old format profile file, if so, set flag to remove */
 /* 		old form of terrestrial refraction contribution */
 		//first look for word "APPRNR"
 
-		pos = InStr(1, chd48, "APPRNR");
+		//pos = InStr(1, chd48, "APPRNR");
+		pos = InStr(1, chd53, "APPRNR");
 		if (pos > 0) {
 			//can either be old form of TR, or no TR added or unknown mean added (depricated, but treat anyways)
-			pos = InStr(1, chd48, ",0");
+			//pos = InStr(1, chd48, ",0");
+			pos = InStr(1, chd53, ",0");
 			if (pos > 0 ) {
 				//new format without any TR added, or TR was subtracted out
 				ntrcalc = 0;
 			} else {
-				pos = InStr(1, chd48, ",1");
-				if (pos > 0) {
+				//pos = InStr(1, chd48, ",1");
+				pos = InStr(1, chd53, ",1");
+			if (pos > 0) {
 					//old depricated format using TR with undeclared mean ground temperature, so calculate it using the WorldClim
 					ntrcalc = 1;
 				} else {
@@ -1224,9 +1239,12 @@ ns) */
 				}
 			}
 		} else {
-			//TR calculated with decalred ground temparature written into the header as the last number, so extract it
+			//TR calculated with declalred ground temparature written into the header as the last number, so extract it
 			char Tgroundch[7] = "\0";
-			strncpy(Tgroundch, chd48 + 40, 6);
+			char TRfudgech[7] = "\0"; //qdded 12/1/22
+
+			//strncpy(Tgroundch, chd48 + 40, 6);
+			strncpy(Tgroundch, chd53 + 40, 6);
 			Tground = atof(Tgroundch);
 			if (Tground == 0.0)
 			{
@@ -1237,9 +1255,16 @@ ns) */
 			}
 			else
 			{
-				ntrcalc = 3;
+				ntrcalc = 3;  //flag to remove the added TR component before beginning visible calculations
 			}
 
+			////////////added 12/1/22///////////////////
+			strncpy(TRfudgech, chd53 + 48, 6);
+			TRfudge = atof(TRfudgech);
+			if (TRfudge == 0.0) //profile calculated with Tground but with standard Lapse Rate
+			{
+				TRfudge = 1.0;
+			}
 		}
 
 		/*
@@ -1434,7 +1459,7 @@ L40:
 				}
 				meantemp = meantemp / 12.f + 273.15f;
 			} else {
-				meantemp = Tground;
+				meantemp = Tground + 273.15f;
 			}
 
 			/*
@@ -1461,7 +1486,7 @@ L40:
 			//distance to obstruction 
 			distd = elev[(nazn << 2) - 2]; //units of kms
 	/* 		calculate conserved portion of Wikipedia's terrestrial refraction expression */
-	/* 		Lapse Rate, dt/dh, is set at -0.0065 degress K/m, i.e., the standard atmosphere */
+	/* 		Lapse Rate, -dt/dh, is set at 0.0065 degress K/m, i.e., the standard atmosphere */
 			//so have p * 8.15 * 1000 * (0.0343 - 0.0065)/(T * T * 3600) degrees
 			trrbasis = p * 8.15f * 1e3f * .0277f / (meantemp * meantemp * 3600);
 			//in the winter, dt/dh will be positive for inversion layer and refraction is increased
@@ -1868,7 +1893,7 @@ L500:
 		d__2 = 288.15f / tk;
 		vbweps = pow_dd(&d__2, &c_b181); //<-----
 /* 			calculate conserved portion of Wikipedia's terrestrial refraction expression */
-/* 			Lapse Rate, dt/dh, is set at -0.0065 degress K/m, i.e., the standard atmosphere */
+/* 			Lapse Rate, -dt/dh, is set at 0.0065 degress K/m, i.e., the standard atmosphere */
 		//trbasis = p * 8.15f * 1e3f * .0277f / (tk * tk * 3600);
 		trbasis = vdwsf * p * 8.15f * 1e3f * .0277f / (288.15 * 288.15 * 3600);
 		//trbasis = p * 8.15f * 1e3f * .0277f / (tk * tk * 3600);
@@ -2430,6 +2455,11 @@ L692:
 				vdwsf = pow_dd(&d__2, &vbwexp); 
 			}
 			refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
+			///////////////TO DO///////////////////////////////////////////
+			//if TRfudge != 1, then refraction is not ideal, need to figure out 
+			//how to account for this, i.e., refvdw_ = refvdw_ + func(T,P,layers, hgts,dist, viewangle)
+			/////////////////////////////////////////////////////////////////
+
 /*              first iteration to find position of upper limb of sun */
 			//al1 = alt1 / cd + .2667f + pt * vdwsf * refrac1 * dcmrad;
 			//al1 = alt1 / cd + .2667f + pt * refrac1 * dcmrad;
@@ -2505,6 +2535,12 @@ L695:
 			    exponent = .9965f;
 			}
 			//ViewAdd = TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
+
+			/////////////////////////////////////////////////////////////////////////////
+			//in case terrestrial refraction altered from ideal atmosphere, then
+			//the refraction will also be increased by terrestrial refraction term,
+			//so it will cancel the change in view angle due to TR, so use TRfudgeVis = 1
+			///////////////////////////////////////////////////////////////////
 			elevint += TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
 /* //////////////////////////////////////////////////////////////////////////////////////// */
 			if ((elevint >= al1 || nloops <= 0) && nabove == 1) {
@@ -2681,6 +2717,11 @@ L695:
 				//now multiply by pressure scaling law
 			}
 			refvdw_(&hgt, &al1, &refrac1, &nweatherflag, &vdwsf);
+			///////////////TO DO///////////////////////////////////////////
+			//if TRfudge != 1, then refraction is not ideal, need to figure out 
+			//how to account for this, i.e., refvdw_ = refvdw_ + func(T,P,layers, hgts,dist, viewangle)
+			/////////////////////////////////////////////////////////////////
+
 			if (showCalc) //diagnostics
 			{
 				refvdw_(&hgt, &al1_2, &refrac1_2, &nweatherflag, &vdwsf_2);
@@ -2792,6 +2833,13 @@ L760:
 			    exponent = .9965f;
 			}
 			//ViewAdd = TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent)
+
+			//////////////////////////////////////////////////////////////
+			//in case terrestrial refraction altered from ideal atmosphere, then
+			//the refraction will also be increased by terrestrial refraction term,
+			//so it will cancel the change in view angle due to TR, so use only TRfudgeVis = 1.0
+			///////////////////////////////////////////////////////////////////
+
 			elevint += TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
 /* //////////////////////////////////////////////////////////////////////////////////////// */
 			if (elevint <= alt1_2 && elevint > alt1 && showCalc)
