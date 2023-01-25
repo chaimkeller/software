@@ -11,11 +11,19 @@ Begin VB.Form previewfm
    ClientWidth     =   11865
    Icon            =   "previewfm.frx":0000
    LinkTopic       =   "Form1"
-   LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
    ScaleHeight     =   8085
    ScaleWidth      =   11865
+   Begin VB.ComboBox cmbPrint 
+      Height          =   315
+      Left            =   11640
+      TabIndex        =   15
+      Text            =   "cmbPrint"
+      Top             =   3120
+      Visible         =   0   'False
+      Width           =   390
+   End
    Begin VB.CommandButton schultimbut 
       BackColor       =   &H00FFFFFF&
       Caption         =   "Shul  &times"
@@ -1403,16 +1411,19 @@ Private Sub PreviewPrinterbut_Click()
     ' Display the Print Setup dialog box.
     CommonDialog1.Flags = cdlPDPrintSetup
     CommonDialog1.ShowPrinter
+  
+    Dim x As Printer
     
-    Dim X As Printer
-    For Each X In Printers
-        If X.DeviceName = Printer.DeviceName Then
+    For Each x In Printers
+        If x.DeviceName = Printer.DeviceName Then
            'this is default printer
-           Set Printer = X
+           SetDefaultPrinter x
+           Set Printer = x
            Exit For
            End If
     Next
-   
+    
+  
 errhandler:
 End Sub
 

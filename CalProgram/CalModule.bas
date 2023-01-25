@@ -2,7 +2,7 @@ Attribute VB_Name = "CalProgram"
 'Option Explicit
    'version: 04/08/2003
   
-Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal X As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
+Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
 Public Const HWND_NOTOPMOST = -2
 Public Const HWND_TOPMOST = -1
 Public Const SWP_NOSIZE = &H1
@@ -19,7 +19,7 @@ Declare Sub keybd_event Lib "user32" (ByVal bVk As Byte, ByVal bScan As Byte, By
 Declare Function SetTimer Lib "user32" (ByVal hwnd As Long, ByVal nIDEvent As Long, ByVal uElapse As Long, ByVal lpTimerFunc As Long) As Long
 Declare Function KillTimer Lib "user32" (ByVal hwnd As Long, ByVal nIDEvent As Long) As Long
 Public lngTimerID As Long 'Timer ID that kills internet process if necessary
-Declare Sub Sleep Lib "Kernel32" (ByVal dwMilliseconds As Long)
+Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 
 Public Const VK_SNAPSHOT = &H2C
 Public Const VK_RETURN = &HD
@@ -103,7 +103,7 @@ Public Const MAX_PATH = 260
 Public Declare Sub CoTaskMemFree Lib "ole32.dll" _
     (ByVal hMem As Long)
 
-Public Declare Function lstrcat Lib "Kernel32" _
+Public Declare Function lstrcat Lib "kernel32" _
    Alias "lstrcatA" (ByVal lpString1 As String, _
    ByVal lpString2 As String) As Long
    
@@ -122,6 +122,20 @@ Public CHMNE As String * 2, CHMNEO As String * 2, SF As String * 2
 Public Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hwnd As Long, ByVal lpOperation As String, ByVal lpFile As String, ByVal lpParameters As String, ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
 Public Const SW_SHOWNORMAL = 1
 Public Const SW_SHOWMAXIMIZED = 3
+
+'setting printer default, ref: https://bytes.com/topic/visual-basic/insights/641541-set-default-printer
+Public Declare Function WriteProfileString Lib "kernel32" Alias "WriteProfileStringA" (ByVal lpszSection As String, ByVal lpszKeyName As String, ByVal lpszString As String) As Long
+ 
+Public Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+    Public Const HWND_BROADCAST = &HFFFF&
+    Public Const WM_WININICHANGE = &H1A
+     
+ Public Function SetDefaultPrinter(objPrn As Printer) As Boolean
+    Dim x As Long, sztemp As String
+    sztemp = objPrn.DeviceName & "," & objPrn.DriverName & "," & objPrn.Port
+    x = WriteProfileString("windows", "device", sztemp)
+    x = SendMessage(HWND_BROADCAST, WM_WININICHANGE, 0&, "windows")
+End Function
 
 Public Function BrowseForFolder(ByVal lngHwnd As Long, ByVal strPrompt As String) As String
 
@@ -177,9 +191,9 @@ End Function
 
 
 
-Public Function FNarsin(X As Double) As Double
+Public Function FNarsin(x As Double) As Double
    On Error GoTo sin50
-   FNarsin = Atn(X / Sqr(-X * X + 1))
+   FNarsin = Atn(x / Sqr(-x * x + 1))
    Exit Function
 sin50: If internet = True Then
           lognum% = FreeFile
@@ -200,9 +214,9 @@ sin50: If internet = True Then
           End
           End If
 End Function
-Public Function FNarco(X As Double) As Double
+Public Function FNarco(x As Double) As Double
    On Error GoTo cos50
-   FNarco = -Atn(X / Sqr(-X * X + 1)) + 2 * Atn(1#)
+   FNarco = -Atn(x / Sqr(-x * x + 1)) + 2 * Atn(1#)
    Exit Function
 cos50: If internet = True Then
           lognum% = FreeFile
@@ -2145,12 +2159,23 @@ DSTPerpetualUSA = False
 If CalMDIform.mnuDST.Checked = True Then
    DSTadd = True
    End If
+   
+If Option2b Then
+   If yrheb% < 1918 Then DSTadd = False
+Else
+   If yrheb% < 5678 Then DSTadd = False
+   End If
   
 If DSTadd Then
 
-   stryrDST% = yrheb% + RefCivilYear% - RefHebYear% '(yrheb% - 5758) + 1997
-   endyrDST% = yrheb% + RefCivilYear% - RefHebYear% + 1 '(yrheb% - 5758) + 1998
-   
+   If Not Option2b Then 'hebrew years
+      stryrDST% = yrheb% + RefCivilYear% - RefHebYear% '(yrheb% - 5758) + 1997
+      endyrDST% = yrheb% + RefCivilYear% - RefHebYear% + 1 '(yrheb% - 5758) + 1998
+   Else
+      stryrDST% = yrheb%
+      endyrDST% = yrheb%
+      End If
+      
    'find beginning and ending day numbers for each civil year
    Select Case eroscountry$
    
@@ -2179,7 +2204,12 @@ If DSTadd Then
              End If
         
       
-      Case "USA" 'English {USA DST rules}
+      Case "USA", "Canada" 'English {USA DST rules}
+      
+        'not all states in the US have DST
+        If InStr(eroscity$, "Phoenix") Or InStr(eroscity$, "Honolulu") Or InStr(eroscity$, "Regina") Then
+           DSTadd = False
+        Else
       
           MarchDate = 14 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
           NovemberDate = 7 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
@@ -2203,6 +2233,36 @@ If DSTadd Then
              enddaynum(1) = YearLength%
              End If
              
+          End If
+             
+      Case "England", "UK", "France", "Germany", "Netherlands", "Belgium", _
+           "Northern_Ireland", "Yugoslavia", "Slovakia", "Romania", "Hungary", _
+           "Denmark", "Ireland", "Switzerland", "Finland", "Ukraine", "Norway", _
+           "France", "Czechoslovakia", "Sweden", "Italy", "Europe"
+
+          MarchDate = (31 - (Fix(stryrDST% * 5 / 4) + 4) Mod 7) 'starts on Sunday, 2 days after EY
+          OctoberDate = (31 - (Fix(stryrDST% * 5 / 4) + 1) Mod 7)
+          YearLength% = DaysinYear(stryrDST%)
+          strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
+          enddaynum(0) = DayNumber(YearLength%, 10, OctoberDate)
+          
+          If DSTPerpetualIsrael Then
+             strdaynum(0) = 1
+             enddaynum(0) = YearLength%
+             End If
+             
+          MarchDate = (31 - (Fix(endyrDST% * 5 / 4) + 4) Mod 7) 'starts on Sunday = 2 days after EY
+          OctoberDate = (31 - (Fix(endyrDST% * 5 / 4) + 1) Mod 7)
+          YearLength% = DaysinYear(endyrDST%)
+          strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
+          enddaynum(1) = DayNumber(YearLength%, 10, OctoberDate)
+
+          If DSTPerpetualIsrael Then
+             strdaynum(1) = 1
+             enddaynum(1) = YearLength%
+             End If
+
+      
       Case Else 'not implemented yet for other countries
          DSTadd = False
       
@@ -4210,7 +4270,7 @@ nhe50:
     End
 tableerror:
    Screen.MousePointer = vbDefault
-   Resume
+'   Resume
    If Err.Number >= 52 And Err.Number <= 63 Then
       MsgBox "Newhebcalfm requests that you PLEASE wait until the NETZSKI3 button on the Menu bar is cleared.", vbInformation, "Cal Program"
       waiterror = True
@@ -5387,27 +5447,27 @@ Public Function PrinterIndex(ByVal printerName As String) As Integer
 End Function
 
 
-Public Function FNms(X As Double) As Double
-    FNms = mp + mc * X
+Public Function FNms(x As Double) As Double
+    FNms = mp + mc * x
 End Function
 
-Public Function FNaas(X As Double) As Double
-    FNaas = ap + ac * X
+Public Function FNaas(x As Double) As Double
+    FNaas = ap + ac * x
 End Function
 Public Function FNes(aas As Double) As Double
     FNes = ms + ec * Sin(aas) + e2c * Sin(2 * aas)
 End Function
-Public Function FNha(X As Double) As Double
-    FNha = FNarco((-Tan(lr) * Tan(D)) + (Cos(X) / Cos(lr) / Cos(D))) * ch
+Public Function FNha(x As Double) As Double
+    FNha = FNarco((-Tan(lr) * Tan(D)) + (Cos(x) / Cos(lr) / Cos(D))) * ch
 End Function
-Public Function FNfrsum(X As Double) As Double
-    FNfrsum = (P / (t + 273)) * (0.1419 - 0.0073 * X + 0.00005 * X * X) / (1 + 0.3083 * X + 0.01011 * X * X)
+Public Function FNfrsum(x As Double) As Double
+    FNfrsum = (P / (t + 273)) * (0.1419 - 0.0073 * x + 0.00005 * x * x) / (1 + 0.3083 * x + 0.01011 * x * x)
 End Function
-Public Function FNfrwin(X As Double) As Double
-    FNfrwin = (P / (t + 273)) * (0.1561 - 0.0082 * X + 0.00006 * X * X) / (1 + 0.3254 * X + 0.01086 * X * X)
+Public Function FNfrwin(x As Double) As Double
+    FNfrwin = (P / (t + 273)) * (0.1561 - 0.0082 * x + 0.00006 * x * x) / (1 + 0.3254 * x + 0.01086 * x * x)
 End Function
-Public Function FNref(X As Double) As Double
-    FNref = (P / (t + 273)) * (0.1594 + 0.0196 * X + 0.00002 * X * X) / (1 + 0.505 * X + 0.0845 * X * X)
+Public Function FNref(x As Double) As Double
+    FNref = (P / (t + 273)) * (0.1594 + 0.0196 * x + 0.00002 * x * x) / (1 + 0.505 * x + 0.0845 * x * x)
 End Function
 Public Sub Temperatures(lat As Double, lon As Double, MinTemp() As Integer, AvgTemp() As Integer, MaxTemp() As Integer, ier As Integer)
 
@@ -5495,10 +5555,10 @@ T50:
        Open FilePathBil For Binary As #filein%
    
         Y = lat
-        X = lon
+        x = lon
         
         IKMY& = CLng((ULYMAP - Y) / YDIM) + 1
-        IKMX& = CLng((X - ULXMAP) / XDIM) + 1
+        IKMX& = CLng((x - ULXMAP) / XDIM) + 1
         tncols = NCOLS
         numrec& = (IKMY& - 1) * tncols + IKMX&
         Get #filein%, (numrec& - 1) * 2 + 1, IO%
