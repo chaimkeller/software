@@ -2,7 +2,7 @@ Attribute VB_Name = "CalProgram"
 'Option Explicit
    'version: 04/08/2003
   
-Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
+Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal X As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
 Public Const HWND_NOTOPMOST = -2
 Public Const HWND_TOPMOST = -1
 Public Const SWP_NOSIZE = &H1
@@ -131,10 +131,10 @@ Public Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hwn
     Public Const WM_WININICHANGE = &H1A
      
  Public Function SetDefaultPrinter(objPrn As Printer) As Boolean
-    Dim x As Long, sztemp As String
+    Dim X As Long, sztemp As String
     sztemp = objPrn.DeviceName & "," & objPrn.DriverName & "," & objPrn.Port
-    x = WriteProfileString("windows", "device", sztemp)
-    x = SendMessage(HWND_BROADCAST, WM_WININICHANGE, 0&, "windows")
+    X = WriteProfileString("windows", "device", sztemp)
+    X = SendMessage(HWND_BROADCAST, WM_WININICHANGE, 0&, "windows")
 End Function
 
 Public Function BrowseForFolder(ByVal lngHwnd As Long, ByVal strPrompt As String) As String
@@ -191,9 +191,9 @@ End Function
 
 
 
-Public Function FNarsin(x As Double) As Double
+Public Function FNarsin(X As Double) As Double
    On Error GoTo sin50
-   FNarsin = Atn(x / Sqr(-x * x + 1))
+   FNarsin = Atn(X / Sqr(-X * X + 1))
    Exit Function
 sin50: If internet = True Then
           lognum% = FreeFile
@@ -214,9 +214,9 @@ sin50: If internet = True Then
           End
           End If
 End Function
-Public Function FNarco(x As Double) As Double
+Public Function FNarco(X As Double) As Double
    On Error GoTo cos50
-   FNarco = -Atn(x / Sqr(-x * x + 1)) + 2 * Atn(1#)
+   FNarco = -Atn(X / Sqr(-X * X + 1)) + 2 * Atn(1#)
    Exit Function
 cos50: If internet = True Then
           lognum% = FreeFile
@@ -5447,27 +5447,27 @@ Public Function PrinterIndex(ByVal printerName As String) As Integer
 End Function
 
 
-Public Function FNms(x As Double) As Double
-    FNms = mp + mc * x
+Public Function FNms(X As Double) As Double
+    FNms = mp + mc * X
 End Function
 
-Public Function FNaas(x As Double) As Double
-    FNaas = ap + ac * x
+Public Function FNaas(X As Double) As Double
+    FNaas = ap + ac * X
 End Function
 Public Function FNes(aas As Double) As Double
     FNes = ms + ec * Sin(aas) + e2c * Sin(2 * aas)
 End Function
-Public Function FNha(x As Double) As Double
-    FNha = FNarco((-Tan(lr) * Tan(D)) + (Cos(x) / Cos(lr) / Cos(D))) * ch
+Public Function FNha(X As Double) As Double
+    FNha = FNarco((-Tan(lr) * Tan(D)) + (Cos(X) / Cos(lr) / Cos(D))) * ch
 End Function
-Public Function FNfrsum(x As Double) As Double
-    FNfrsum = (P / (t + 273)) * (0.1419 - 0.0073 * x + 0.00005 * x * x) / (1 + 0.3083 * x + 0.01011 * x * x)
+Public Function FNfrsum(X As Double) As Double
+    FNfrsum = (P / (t + 273)) * (0.1419 - 0.0073 * X + 0.00005 * X * X) / (1 + 0.3083 * X + 0.01011 * X * X)
 End Function
-Public Function FNfrwin(x As Double) As Double
-    FNfrwin = (P / (t + 273)) * (0.1561 - 0.0082 * x + 0.00006 * x * x) / (1 + 0.3254 * x + 0.01086 * x * x)
+Public Function FNfrwin(X As Double) As Double
+    FNfrwin = (P / (t + 273)) * (0.1561 - 0.0082 * X + 0.00006 * X * X) / (1 + 0.3254 * X + 0.01086 * X * X)
 End Function
-Public Function FNref(x As Double) As Double
-    FNref = (P / (t + 273)) * (0.1594 + 0.0196 * x + 0.00002 * x * x) / (1 + 0.505 * x + 0.0845 * x * x)
+Public Function FNref(X As Double) As Double
+    FNref = (P / (t + 273)) * (0.1594 + 0.0196 * X + 0.00002 * X * X) / (1 + 0.505 * X + 0.0845 * X * X)
 End Function
 Public Sub Temperatures(lat As Double, lon As Double, MinTemp() As Integer, AvgTemp() As Integer, MaxTemp() As Integer, ier As Integer)
 
@@ -5555,10 +5555,10 @@ T50:
        Open FilePathBil For Binary As #filein%
    
         Y = lat
-        x = lon
+        X = lon
         
         IKMY& = CLng((ULYMAP - Y) / YDIM) + 1
-        IKMX& = CLng((x - ULXMAP) / XDIM) + 1
+        IKMX& = CLng((X - ULXMAP) / XDIM) + 1
         tncols = NCOLS
         numrec& = (IKMY& - 1) * tncols + IKMX&
         Get #filein%, (numrec& - 1) * 2 + 1, IO%
