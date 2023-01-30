@@ -2045,8 +2045,8 @@ L687:
 
 		if (nweatherflag == 1) //using standard refraction ESAA 9.331
 		{
-			ref = sqrt(hgt) * 1.75/60.0;  //standard refraction from observer to horizon
-			eps = sqrt(hgt) * 0.37/60.0; //geometrical dip angle from observer to horizon
+			eps = sqrt(hgt) * 1.75/60.0;  //geometrical dip angle from observer to horizon
+			ref = sqrt(hgt) * 0.37/60.0; //standard refraction from observer to horizon
 			refrac1 = 34.0/60.0;   //standard refraction from horizon to inifinity	
 			//air = (90 + eps + ref) * cd; //air in radians
 			vdwsf = p  / tk; //pressure and temeprature dependence of ESAA 3.283 
