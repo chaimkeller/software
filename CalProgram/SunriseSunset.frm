@@ -3366,12 +3366,10 @@ newdate:
 Return
 
 lpyrcivil:
-'      yd% = yrheb% - 1988
-'      yl% = 365
-'      If yd% Mod 4 = 0 Then yl% = 366
-'      If yd% Mod 4 = 0 And yd% Mod 100 = 0 And yd% Mod 400 <> 0 Then yl% = 365
-       If yrheb% Mod 4 = 0 Then yl% = 366
-       If yrheb% Mod 4 = 0 And yrheb% Mod 100 = 0 And yrheb% Mod 400 <> 0 Then yl% = 365
+      yd% = yrheb% - 1988
+      yl% = 365
+      If yd% Mod 4 = 0 Then yl% = 366
+      If yd% Mod 4 = 0 And yrheb% Mod 100 = 0 And yrheb% Mod 400 <> 0 Then yl% = 365 'fixed 020123
 Return
 
 engdate:
