@@ -1,6 +1,10 @@
 /* rdhalba6.f -- translated by f2c (version 20021022).
    You must link the resulting object file with the libraries:
 	-lf2c -lm   (in that order)
+
+  VERSION 19 061120 -- added read Maps & More TerrestrialRefraction flag on scanlist.txt line
+  VERSION 20 050622 -- added support for running the program on other drive letters
+  VERSION 21 01/08/23 -- added support for inputed MeanTemp, recorded in Scanlist.txt
 */
 
 #include <math.h>
@@ -12,6 +16,18 @@
 //missing intrinisic function from the f2c library
 #define hfix_(x) ((shortint)x) //short integer cast
 #define jfix_(x) ((integer)x) //long integer cast
+
+short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] );
+int WhichJKC();
+int WhichVB();
+int WhichDTM();
+
+//globals
+char testdrv[13] = "cdefghijklmn";
+char drivlet[2] = "c";
+char dtmfile[255] = "";
+
+int WhereJKC,WhereWorldClim,WhereDTM;
 
 
 /* Table of constant values */
@@ -50,8 +66,7 @@ static integer c__512 = 512;
     double tan(doublereal), cos(doublereal), sin(doublereal), atan(doublereal);
     integer s_wsfe(cilist *), do_fio(integer *, char *, ftnlen), e_wsfe(void),
 	     f_inqu(inlist *);
-	short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[] );
-
+	short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] );
     /* Local variables */
     static doublereal startkmx, d__;
     static integer i__, j;
@@ -73,14 +88,14 @@ static integer c__512 = 512;
 	    14000] */;
     static integer ikmx, ikmy;
     extern /* Subroutine */ int getz_(integer *, integer *, doublereal *, 
-	    integer *);
+	    integer *, char *);
     static doublereal kmxo, kmyo;
     static logical netz;
     static doublereal kmxp, kmyp;
     static integer nrow;
     static doublereal vang1, vang2, dist1, dist2;
     static integer nkmx1, ndela;
-    static char fnam32[32], fnam33[33], fnam34[34], fnam35[35], fnam36[36];
+    //static char fnam32[32], fnam33[33], fnam34[34], fnam35[35], fnam36[36];
     static doublereal fudge, deltd, angle, avref, kmycc, distd;
     static logical found;
     static integer nntil, nloop;
@@ -93,7 +108,8 @@ static integer c__512 = 512;
     static char placen[36];
     static integer nocean;
     static doublereal azibeg, delazi, aziend, maxang, begkmx, kmybeg;
-    static integer nlenfn, nkmycc;
+    //static integer nlenfn, 
+	static integer nkmycc;
     static doublereal delkmy, hgtobs, endkmx, kmyend, azicos, azisin, apprnr;
     static integer numazi, numdtm;
     static doublereal sofkmx;
@@ -107,15 +123,23 @@ static integer c__512 = 512;
     static doublereal skipkmx, skipkmy;
     static integer numskip;
     static doublereal proftmp;
+	char buff[255] = "";
 
-	short MT[12],AT[12],ier = 0, iTK;
-	float MeanTemp = 0;
+	short MinT[12],AvgT[12],MaxT[12],ier = 0, iTK;
+	double MeanTemp = 0;
 	double PATHLENGTH = 0.0;
 	double RETH = 6356.766;
 	double TRpart = 0.0;	
 	double Exponent = 1.0;
-	logical TerrestrialRefraction = TRUE_; //TRUE_; //set to true to model the terrestrial refraction (default)
+	logical TerrestrialRefraction = FALSE_; //TRUE_; //set to true to model the terrestrial refraction (default)
 	logical TROld_Type = FALSE_; //True to use old terrestrial refraction, False to use new wikipedia expression
+	static integer TemperatureModel = 1;  // flag for terrestrial refraction type written to end of each
+										  // scanlist.txt line by Maps & MOre /////added 061120///////////
+	double TRfudge = 1.0; //5.0; //increase TR to mimic inversion layers, usually set = 1.0
+	double Tground = 15; //degrees Celsius, temperature at ground elevation of observer
+	char Header[255] = "";
+
+	FILE *stream, *stream2;
 
     /* Fortran I/O blocks */
     static cilist io___16 = { 0, 1, 0, 0, 0 };
@@ -221,11 +245,27 @@ L8:
     }
 	*/
 
+	WhereJKC = WhichJKC();
+	if (WhereJKC == 0)
+	{
+		printf("Can't find the jk_c directory, aborting...");
+		exit(1);
+	}
+	else
+	{
+		drivlet[0] = testdrv[WhereJKC - 1];
+		drivlet[1] = 0;
+	}
+
 	//////////////////////////////////////////////////////
     o__1.oerr = 0;
     o__1.ounit = 1;
     o__1.ofnmlen = 18;
-    o__1.ofnm = "C:\\jk_c\\STATUS.TXT";
+	//strcpy(o__1.ofnm, drivlet[0]);
+	//strcat(o__1.ofnm, ":\\jk_c\\STATUS.TXT" );
+	buff[0] = 0;
+	sprintf(buff,"%s%s", drivlet, ":\\jk_c\\STATUS.TXT" );
+    o__1.ofnm = buff; //"C:\\jk_c\\STATUS.TXT";
     o__1.orl = 0;
     o__1.osta = "OLD";
     o__1.oacc = 0;
@@ -249,7 +289,11 @@ L8:
     o__1.oerr = 0;
     o__1.ounit = 1;
     o__1.ofnmlen = 20;
-    o__1.ofnm = "C:\\jk_c\\SCANLIST.TXT";
+	buff[0] = 0;
+	sprintf(buff, "%s%s", drivlet, ":\\jk_c\\SCANLIST.TXT" );
+    o__1.ofnm = buff; // "C:\\jk_c\\SCANLIST.TXT";
+	//strcpy(o__1.ofnm, drivlet[0]);
+	//strcat(o__1.ofnm, ":\\jk_c\\SCANLIST.TXT" );
     o__1.orl = 0;
     o__1.osta = "OLD";
     o__1.oacc = 0;
@@ -269,7 +313,80 @@ L8:
 	do_lio(&c__3, &c__1, (char *)&nnetz, (ftnlen)sizeof(integer));
 	do_lio(&c__5, &c__1, (char *)&mang, (ftnlen)sizeof(doublereal));
 	do_lio(&c__5, &c__1, (char *)&aprn, (ftnlen)sizeof(doublereal));
-	e_rsle();
+	do_lio(&c__3, &c__1, (char *)&TemperatureModel, (ftnlen)sizeof(integer));
+	e_rsle(); //close the scanlist.txt file
+
+	////////////////added 10/30/22/////////////////////////////////////////////
+	//look for file containing TRfudge value, i.e.,
+	//ratio of TR coefficient with different Lapse rate/ over standard atmosphere 
+	buff[0] = 0;
+	sprintf(buff,"%s%s", drivlet, ":\\jk_c\\TRLapseRate.txt" );
+
+	if ( (stream = fopen(buff, "r")) != NULL)
+	{
+		fscanf(stream, "%lf", &TRfudge);
+		fscanf(stream, "%lf", &Tground );
+		Tground += 273.15; //convert Celsius to Kelvin
+		fclose(stream);
+		//this automatically implies to add terrestrial refraction and not remove it
+		TemperatureModel = 1;
+	}
+	/////////////////////////////////////////////////////////////////////////////////////
+
+	//////////////////added 01/09/23////////////////////////////////////
+	if (TemperatureModel > 2)
+	{
+		//look for MeanTemp file
+		buff[0] = 0;
+		sprintf(buff,"%s%s", drivlet, ":\\jk_c\\MeanTemp.txt" );
+
+		if ( (stream = fopen(buff, "r")) != NULL)
+		{
+			fscanf(stream, "%lf", &MeanTemp);  //MeanTemp is in units of degrees C
+			MeanTemp += 273.15; //convert Celsius to Kelvin
+			fclose(stream);
+		}
+	}
+	//////////////////////////////////////////////////////////////////////
+
+
+	switch (TemperatureModel) 
+	{
+	case -1:
+		//old terrestrial refraction model
+		TerrestrialRefraction = TRUE_;
+		TROld_Type = TRUE_;
+		break;
+	case 0:
+		//no terrestrial refraction
+		TerrestrialRefraction = FALSE_;
+		TROld_Type = FALSE_;
+		break;
+	case 1:
+		//new terrestrial refraction model of Bomford - Wikipedia model
+		//using mean temperature
+		TerrestrialRefraction = TRUE_;
+		TROld_Type = FALSE_;
+		break;
+	case 2:
+		//new terrestrial refraction model of Bomford but remove from profile file
+		TerrestrialRefraction = TRUE_;
+		TROld_Type = FALSE_;
+		break;
+	case 3:
+		//new terrestrial refraction model of Bomford with inputed MeanTemp
+		TerrestrialRefraction = TRUE_;
+		TROld_Type = FALSE_;
+	case 4:
+		//new terrestrial refraction model of Bomford with inputed MeanTemp but remove from profile file
+		TerrestrialRefraction = TRUE_;
+		TROld_Type = FALSE_;
+	default:
+		TerrestrialRefraction = TRUE_;
+		TROld_Type = FALSE_;
+		break;
+	}
+
 /*           READ(1,27)NN,PLACEN,KMXO,KMYO,HGT,STARTKMX,SOFKMX,NNETZ, */
 /*     *              MANG,APRN */
 /* L25: */
@@ -307,6 +424,7 @@ L8:
 	}
 /* L29: */
     }
+	/*
     nlenfn = 36;
     for (i__ = 1; i__ <= 36; ++i__) {
 	if (i__ <= 32) {
@@ -342,13 +460,38 @@ L8:
 	    }
 	    goto L32;
 	}
-/* L30: */
+// L30: 
     }
+	*/
 L32:
+	/* 
     s_wsle(&io___40);
     do_lio(&c__9, &c__1, "SCAN: ", (ftnlen)6);
     do_lio(&c__9, &c__1, placen, (ftnlen)36);
     e_wsle();
+	*/
+	//determine drive information for dtm files
+	//this can be searched for using wheredtm or read from the mapcd file
+	//use both
+	//first mapcd
+	//mapcdfile[0] = 0;
+	//sprintf(mapcdfile, drivlet, ":\\jk_c\\mapcdinfo.sav" );
+	//char *drivemapcd;
+	//int drivnum = 0;
+	/*
+	if ( (stream2 = fopen( mapcdfile, "r" )) != NULL )
+	{
+		fscanf(stream2, "%s,%d/n", drivemapcd, &drivnum);
+		fclose(stream2);
+	}
+	*/
+
+	WhereDTM = WhichDTM();
+	drivlet[0] = testdrv[WhereDTM - 1];
+	drivlet[1] = 0;
+	dtmfile[0] = 0;
+	sprintf(dtmfile, "%s%s", drivlet, ":/DTM/DTM-MAP.LOC" );
+
     kmyoo = kmyo;
     kmxoo = kmxo;
     if (gridcd) {
@@ -356,39 +499,60 @@ L32:
 	/*          this subroutine converts the ISREAL grid coordinates to lt,lg */
 	/*          using the Cassini (Transverse Cylindrical) Projection */
 
-		//now determine the mean average temperatures
-		ier = Temperatures(lt,-lg, MT, AT);
+	    if (TRfudge == 1) 
+		{
+			if (TemperatureModel <= 2)
+			{
+				//now determine the mean average temperatures
+				ier = Temperatures(lt,-lg, MinT, AvgT, MaxT);
 
-		if (ier == 0) {
+				if (ier == 0) {
 
-			MeanTemp = 0.0;
+					MeanTemp = 0.0;
+					for (iTK = 0; iTK < 12; iTK++) {
+						MeanTemp += AvgT[iTK];
 
-			if (nnetz == 1) { 
-				//sunrise horizon, use minimum temperatures
-				for (iTK = 0; iTK < 12; iTK++) {
-					MeanTemp += MT[iTK];
-				}
-			}else{
-				//sunset horizon, use average temperatures
-				for (iTK = 0; iTK < 12; iTK++) {
-					MeanTemp += AT[iTK];
+					/*
+					if (nnetz == 1) { 
+						//sunrise horizon, use minimum temperatures
+						for (iTK = 0; iTK < 12; iTK++) {
+							MeanTemp += MinT[iTK];
+						}
+					}else{
+						//sunset horizon, use average temperatures
+						for (iTK = 0; iTK < 12; iTK++) {
+							MeanTemp += AvgT[iTK];
+						}
+					*/
+					}
+
+					MeanTemp /= 12.0; //take average over year
+					MeanTemp += 273.15; //convert to degrees Kelvin
+					/* diagnostics
+					printf("latitude, longitude, Mean Temperatures = %lg,%lg,%lg\n",lt,-lg,MeanTemp);
+					getch(); */
+
+				} else {
+					//use default mean temperatures of 15 degrees Celsius
+					MeanTemp = 288.15;
 				}
 			}
+			//else if (TemperatureModel > 2) // use the inputed MeanTemp
+			//{
+				//nothing to do
+			//}
 
-			MeanTemp /= 12.0; //take average over year
-			MeanTemp += 273.15; //convert to degrees Kelvin
-			/* diagnostics
-			printf("latitude, longitude, Mean Temperatures = %lg,%lg,%lg\n",lt,-lg,MeanTemp);
-			getch(); */
+			//calculate conserved portion of terrain refraction based on Wikipedia's expression
+			//lapse rate is set at -0.0065 K/m, Ground Pressure = 1013.25 mb
+			TRpart = TRfudge * 8.15 * 1013.25 * 1000.0 * (0.0342 - 0.0065)/(MeanTemp * MeanTemp * 3600); //units of deg/km
 
-		} else {
-			//use default mean temperatures of 15 degrees Celsius
-			MeanTemp = 288.15;
 		}
-
-		//calculate conserved portion of terrain refraction based on Wikipedia's expression
-		//lapse rate is set at -0.0065 K/m, Ground Pressure = 1013.25 mb
-		TRpart = 8.15 * 1013.25 * 1000.0 * (0.0342 - 0.0065)/(MeanTemp * MeanTemp * 3600); //units of deg/km
+		else //using actual radiosonde ground temperature and radiosonde measured Lapse rate
+		{
+			//calculate conserved portion of terrain refraction based on Wikipedia's expression
+			//lapse rate is set at -0.0065 K/m, Ground Pressure = 1013.25 mb
+			TRpart = TRfudge * 8.15 * 1013.25 * 1000.0 * (0.0342 - 0.0065)/(Tground * Tground * 3600); //units of deg/km
+		}
 
 		//diagnostics
 		/*
@@ -497,7 +661,7 @@ L40:
 /*             this subroutine reads J.K. Hall's DTM at any (kmy,kmx) and returns the altitude */
 	nrow = ikmy;
 	ncol = ikmx;
-	getz_(&ikmy, &ikmx, &hgt2, &nntil);
+	getz_(&ikmy, &ikmx, &hgt2, &nntil, dtmfile);
 /*             ignore ocean depths for sunset calculations */
 	if (hgt2 < 0. && (kmx < 160. || kmy >= 260.)) {
 	    if (! netz) {
@@ -704,6 +868,7 @@ L180:
     if (i__ <= numkmx) {
 	goto L40;
     }
+	/*
     if (nlenfn == 32) {
 	ioin__1.inerr = 0;
 	ioin__1.infilen = 32;
@@ -915,24 +1080,59 @@ L180:
 	    f_open(&o__1);
 	}
     }
+	*/
 
-    s_wsfe(&io___133);
+   /* Open for write */
+   if( (stream = fopen( placen, "w+" )) == NULL )
+   {
+	   buff[0] = 0;
+	   sprintf(buff, "%s%s%s", "couldn't open the file: ", placen, " aborting..." );
+	   printf(buff);
+	   exit(-1);
+   }
+   else
+   {
+	   buff[0] = 0;
+	   sprintf(buff, "%s%s%s", "Opened profile file: ", placen, " for writing..." );
+	   printf(buff);
+   }
+
+    //s_wsfe(&io___133);
+
+	/////////////////////////////////////comment 101520/////////////////////////////////////
+	//			rdhalba4 correctly records the calculation hgt and not the ground height
+	///////////////////////////////////////////////////////////////////////////////////////
 
 	if (TerrestrialRefraction) {
 		if (TROld_Type) { //old version of refraction
-		    do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR", (ftnlen)46);
+		    //do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR", (ftnlen)46);
+			fprintf(stream, "%s\n", "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR" );
 		}else{ //new Wikipedia version
-		    do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,1", (ftnlen)48);
+			if (TemperatureModel == 0 || TemperatureModel == 2 || TemperatureModel == 4) {
+				//do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0", (ftnlen)48);
+				fprintf(stream, "%s\n", "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0" );
+			} else if ((TemperatureModel == 1 || TemperatureModel == 3) && TRfudge == 1) {
+				//fprintf(stream, "%s\n", "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,1" ); //depricated
+				sprintf( Header, "%s,%6.2f,%6.2f","kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy", MeanTemp, 0.0 );
+				//do_fio(&c__1, Header, (ftnlen)46 );
+				fprintf(stream, "%s\n", Header );
+			} else if (TemperatureModel == 1 && TRfudge != 1) {
+				sprintf( Header, "%s,%6.2f,%6.2f","kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy", Tground, TRfudge );
+				//do_fio(&c__1, Header, (ftnlen)46 );
+				fprintf(stream, "%s\n", Header );
+			}
 		}
 	}else{ //no terrestrial refraction added
-		    do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0", (ftnlen)48);
+		    //do_fio(&c__1, "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0", (ftnlen)48);
+			fprintf(stream, "%s\n", "kmxo,kmyo,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR,0" );
 	}
 
-    e_wsfe();
+    //e_wsfe();
     d1 = dstpointx;
     d2 = dstpointy;
     s1 = startkmx;
     s2 = sofkmx;
+	/*
     s_wsfe(&io___138);
     do_fio(&c__1, (char *)&kmxo, (ftnlen)sizeof(doublereal));
     do_fio(&c__1, (char *)&kmyo, (ftnlen)sizeof(doublereal));
@@ -943,6 +1143,10 @@ L180:
     do_fio(&c__1, (char *)&d2, (ftnlen)sizeof(doublereal));
     do_fio(&c__1, (char *)&apprnr, (ftnlen)sizeof(doublereal));
     e_wsfe();
+	*/
+	buff[0] = 0; //zero the buffer
+	sprintf(buff, "%7.3f,%7.3f,%6.1f,%7.3f,%7.3f,%7.3f,%7.3f,%7.3f", kmxo,kmyo,hgt,s1,s2,d1,d2,apprnr);
+	fprintf(stream, "%s\n", buff );
     i__2 = nomentr;
     for (nk = 1; nk <= i__2; ++nk) {
 	xentry = -mang + (nk - 1) / 10.f;
@@ -953,7 +1157,7 @@ L180:
 	ikmy = (integer) ((380 - kmyp) * 40) + 1;
 	nrow = ikmy;
 	ncol = ikmx;
-	getz_(&ikmy, &ikmx, &hgt2, &nntil);
+	getz_(&ikmy, &ikmx, &hgt2, &nntil, dtmfile);
 	if (hgt2 < 0. && (kmxp < 185. || kmyp >= 260.)) {
 	    if (! netz) {
 		hgt2 = 0.f;
@@ -961,9 +1165,9 @@ L180:
 	}
 	if (hgt2 < 0. && netz) {
 	    i__1 = ikmy - 1;
-	    getz_(&i__1, &ikmx, &hgt21, &nntil);
+	    getz_(&i__1, &ikmx, &hgt21, &nntil, dtmfile);
 	    i__1 = ikmy + 1;
-	    getz_(&i__1, &ikmx, &hgt22, &nntil);
+	    getz_(&i__1, &ikmx, &hgt22, &nntil, dtmfile);
 	    hgt2 = (hgt21 + hgt22) / 2;
 	}
 /* Computing 2nd power */
@@ -971,6 +1175,21 @@ L180:
 /* Computing 2nd power */
 	d__2 = kmyo - kmyp;
 	dist = sqrt(d__1 * d__1 + d__2 * d__2);
+	distd = hgt - hgt2;
+
+	if (TerrestrialRefraction && (TemperatureModel == 2 || TemperatureModel == 4) ) { //remove the added terrestrial refraction
+		PATHLENGTH = sqrt(dist*dist + pow(fabs(deltd)*0.001 - 0.5*(dist*dist/RETH),2.0));
+		if (fabs(deltd) > 1000.0) {
+			Exponent = 0.99;
+		}else{
+			Exponent = 0.9965;
+		}
+
+		avref = TRpart * pow(PATHLENGTH, Exponent); //degrees
+		prof[nk * 3 - 3] -= avref;
+	}
+
+	/*
 	s_wsfe(&io___146);
 	do_fio(&c__1, (char *)&xentry, (ftnlen)sizeof(doublereal));
 	do_fio(&c__1, (char *)&prof[nk * 3 - 3], (ftnlen)sizeof(real));
@@ -979,22 +1198,50 @@ L180:
 	do_fio(&c__1, (char *)&dist, (ftnlen)sizeof(doublereal));
 	do_fio(&c__1, (char *)&hgt2, (ftnlen)sizeof(doublereal));
 	e_wsfe();
+	*/
+	buff[0] = 0; //zero the buffer
+	sprintf(buff, "%9.4f,%8.4f,%7.3f,%7.3f,%7.2f,%6.1f",xentry,prof[nk * 3 - 3],prof[nk * 3 - 2],prof[nk * 3 - 1],dist,hgt2);
+	fprintf(stream,"%s\n", buff); 
 /* L300: */
     }
+	/*
     cl__1.cerr = 0;
     cl__1.cunit = 3;
     cl__1.csta = 0;
     f_clos(&cl__1);
+	*/
+	fclose(stream);
+
+	/*
     s_wsle(&io___147);
     do_lio(&c__9, &c__1, " profile copied to permanent file: ", (ftnlen)35);
     do_lio(&c__9, &c__1, placen, (ftnlen)36);
     e_wsle();
+	*/
+	buff[0] = 0;
+	sprintf(buff, "%s%s\n", "profile copied to permanent file: ", placen );
+	printf(buff);
 /*       Update STATUS.TXT file */
 L500:
     o__1.oerr = 0;
     o__1.ounit = 1;
     o__1.ofnmlen = 18;
-    o__1.ofnm = "C:\\jk_c\\STATUS.TXT";
+	//strcpy(o__1.ofnm, drivlet[0]);
+	//strcat(o__1.ofnm, ":\\jk_c\\STATUS.TXT" );
+	WhereJKC = WhichJKC();
+	if (WhereJKC == 0)
+	{
+		printf("Can't find the jk_c directory, aborting...");
+		exit(1);
+	}
+	else
+	{
+		drivlet[0] = testdrv[WhereJKC - 1];
+		drivlet[1] = 0;
+	}
+	buff[0] = 0;
+	sprintf(buff, "%s%s", drivlet, ":\\jk_c\\STATUS.TXT" );
+    o__1.ofnm = buff; //"C:\\jk_c\\STATUS.TXT";
     o__1.orl = 0;
     o__1.osta = "OLD";
     o__1.oacc = 0;
@@ -1011,7 +1258,9 @@ L500:
     cl__1.csta = 0;
     f_clos(&cl__1);
     if (nloop > numtot) {
-	s_paus("!!CALCULATIONS COMPLETED!!", (ftnlen)26);
+	//s_paus("!!CALCULATIONS COMPLETED!!", (ftnlen)26);
+	printf( "\n!!CALCULATIONS COMPLETED!!\n" );
+	exit(0);
     } else {
 /*          go back to do next place */
 	goto L8;
@@ -1021,7 +1270,7 @@ L999:
 } /* MAIN__ */
 
 /* Subroutine */ int getz_(integer *nrow, integer *ncol, doublereal *zm, 
-	integer *nntil)
+	integer *nntil, char *dtmfn)
 {
     /* Initialized data */
 
@@ -1064,7 +1313,9 @@ L999:
     static integer nn1, nn2, ifn, ios, nrec;
     //extern doublereal hfix_(integer *);
     //extern integer jfix_(integer *);
-    static char chmap[2*14*26], chmne[2], dtmfn[18], doclin[78], dtmdrv[4];
+    static char chmap[2*14*26], chmne[2];
+	//static char dtmfn[18];
+	static char doclin[78], dtmdrv[4];
     static logical exists;
 
     /* Fortran I/O blocks */
@@ -1081,8 +1332,10 @@ L999:
 	goto L15;
     }
 /*       PULL IN THE DTM TILE SCHEMATIC */
+
+	/*
     s_copy(dtmfn + 1, ":\\dtm\\dtm-map.loc", (ftnlen)17, (ftnlen)17);
-/*       Its location should be in c:\jk_c\mapcdi~1.sav */
+//       Its location should be in c:\jk_c\mapcdi~1.sav 
     ioin__1.inerr = 0;
     ioin__1.infilen = 20;
     ioin__1.infile = "C:\\jk_c\\MAPCDI~1.SAV";
@@ -1122,7 +1375,7 @@ L999:
 	cl__1.csta = 0;
 	f_clos(&cl__1);
     } else {
-/*          search for it (assumes contiguous acessible drives) */
+//          search for it (assumes contiguous acessible drives) 
 	s_copy(testdriv, "cdefghijkl", (ftnlen)10, (ftnlen)10);
 	for (i__ = 1; i__ <= 10; ++i__) {
 	    *(unsigned char *)dtmfn = *(unsigned char *)&testdriv[i__ - 1];
@@ -1146,12 +1399,13 @@ L999:
 	    ioin__1.inblank = 0;
 	    f_inqu(&ioin__1);
 	    if (exists) {
-/*                found default drive */
+//                found default drive 
 		goto L3;
 	    }
-/* L2: */
+// L2: 
 	}
     }
+	*/
 L3:
     o__1.oerr = 0;
     o__1.ounit = 5;
@@ -1342,13 +1596,14 @@ L35:
     doublereal d__1;
 
     /* Builtin functions */
-    double sin(doublereal), sqrt(doublereal), tan(doublereal), cos(doublereal)
-	    ;
+    double sin(doublereal), sqrt(doublereal), tan(doublereal), cos(doublereal);
 
     /* Local variables */
     static doublereal r__, a2, b2, c1, c2, f1, g1, g2, e4, c3, d1, a3, o1, o2,
 	     a4, b3, s1, s2, b4, c4, c5, x1, y1, y2, x2, c6, d2, r3, r4, r2, 
 	    a5, d3;
+	static logical ggpscorrection = TRUE_;
+
 
 /*        REAL*4 GN,GE */
 /*        PRINT *,'cas',GN,GE */
@@ -1415,13 +1670,20 @@ L10:
     *l2 = r__ * ((s1 + d3) / f1);
 /*       THIS IS THE EASTERN HEMISPHERE! */
     *l2 = -(*l2);
+    if (ggpscorrection) {
+        //Use the approximate correction factor
+        //in order to agree with GPS.
+        *l2 -= 0.0013;
+        *l1 += 0.0013;
+	}
+
     return 0;
 } /* casgeo_ */
 
 /* Main program alias */ int rdhalba6_ () { MAIN__ (); return 0; }
 
 
-short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[] )
+short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] )
 {
 
 	//extract the WorldClim averaged minimum and average temperature for months 1-12 for this lat,lon
@@ -1440,12 +1702,26 @@ short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[] )
 
     int tncols, IKMY, IKMX, numrec,pos, i;
 	short IO = 0, Tempmode = 0;
-	double lat = 32.0, lon = 35.0, X, Y;
+	double X, Y;
 	//short MinTemp[12], AvgTemp[12];
 
 	FILE *stream;
 
-	strcpy(FilePathBil,"c:\\DevStudio\\Vb\\WorldClim_bil");
+	WhereWorldClim = WhichVB();
+	if (WhereWorldClim != 0)
+	{
+		drivlet[1] = testdrv[WhereWorldClim - 1];
+		drivlet[2] = 0;
+		strcpy(FilePathBil, (const char *)drivlet);
+		strcat(FilePathBil,":\\DevStudio\\Vb\\WorldClim_bil");
+	}
+	else
+	{
+		printf("Can't find the WorldClim files");
+		exit(1);
+	}
+
+	//strcpy(FilePathBil,"c:\\DevStudio\\Vb\\WorldClim_bil");
 
 	/*
 	DIR* dir = opendir("FilePathBil");
@@ -1464,13 +1740,16 @@ short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[] )
 	//first extract minimum temperatures, then average temperatures
 
 T50:
+	//find drive letter where the WorldClim_bil folder resides
 
-	if (Tempmode == 0) { // Then 'minimum temperatures to be used for sunrise calculations
+	if (Tempmode == 0) { // read the minimum temperatures for this lat,lon
 		strcat(FilePathBil,"//min_");
 	}
-	else if ( Tempmode == 1) { // Then 'average temperatures to be used for sunset calculations
-		strcpy(FilePathBil,"c:\\DevStudio\\Vb\\WorldClim_bil");
+	else if ( Tempmode == 1) { // read the average temperatures for this lat, lon
 		strcat(FilePathBil,"//avg_");
+	}
+	else if ( Tempmode == 2) { // read the maximum temperatures for this lat, lon
+		strcat(FilePathBil,"//max_");
 	}
 
 	for( i = 1; i<=12; i++ ) {
@@ -1522,8 +1801,8 @@ T50:
 		if ((stream = fopen( (const char*)FileNameBil, "rb" )) != NULL)
 		{
 
-			Y = lat;
-			X = lon;
+			Y = lt;
+			X = lg;
     
 			IKMY = (int)((ULYMAP - Y) / YDIM) + 1;
 			IKMX = (int)((X - ULXMAP) / XDIM) + 1;
@@ -1537,6 +1816,8 @@ T50:
 				MinTemp[i - 1] = IO;
 			} else if(Tempmode == 1) {
 				AvgTemp[i - 1] = IO;
+			} else if(Tempmode == 2) {
+				MaxTemp[i - 1] = IO;
 			}
         
 			fclose(stream);
@@ -1551,7 +1832,83 @@ T50:
 	if ( Tempmode == 0) {
        Tempmode = 1;
        goto T50;
+	} else if ( Tempmode == 1) {
+	   Tempmode = 2;
+	   goto T50;
 	}
 
 	return 0;
 }
+
+//////////////////////////////////////////////////
+//function determine on which drive letter jk_c directory resides
+int WhichJKC()
+{
+	FILE *stream;
+	char drivlet[2] = "c";
+	char jkdir[255] = "";
+	int i;
+	for (i=1; i<= strlen(testdrv); i++)
+	{
+		drivlet[0] = testdrv[i - 1];
+		drivlet[1] = 0;
+		strcpy(jkdir, (const char *)drivlet);
+		strcat(jkdir, ":\\jk_c\\mapcdinfo.sav" );
+		if ( (stream = fopen( jkdir, "r" )) != NULL )
+		{
+		   fclose(stream);
+		   return i;
+		}
+	}
+	return 0; //return 0 if didn't find anything
+}
+////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////
+//function determine on which drive letter the /devstudio/vb/WorldClim directory resides
+int WhichVB()
+{
+	FILE *stream;
+	char drivlet[2] = "c";
+	char climdir[255] = "";
+	int i;
+	for (i=1; i<= strlen(testdrv); i++)
+	{
+		drivlet[0] = testdrv[i - 1];
+		drivlet[1] = 0;
+		strcpy(climdir, (const char *)drivlet);
+		strcat(climdir, ":\\devstudio\\vb\\WorldClim_bil\\avg_Apr.bil" );
+		if ( (stream = fopen( climdir, "r" )) != NULL )
+		{
+		   fclose(stream);
+		   return i;
+		}
+	}
+	return 0; //return 0 if didn't find anything
+}
+////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+//function determine on which drive letter jk_c directory resides
+int WhichDTM()
+{
+	FILE *stream;
+	char drivlet[2] = "c";
+	char jkdir[255] = "";
+	int i;
+	for (i=1; i<= strlen(testdrv); i++)
+	{
+		drivlet[0] = testdrv[i - 1];
+		drivlet[1] = 0;
+		strcpy(jkdir, (const char *)drivlet);
+		strcat(jkdir, ":\\DTM\\DTM-MAP.LOC" );
+		if ( (stream = fopen( jkdir, "r" )) != NULL )
+		{
+		   fclose(stream);
+		   return i;
+		}
+	}
+	return 0; //return 0 if didn't find anything
+}
+////////////////////////////////////////////////////////////
