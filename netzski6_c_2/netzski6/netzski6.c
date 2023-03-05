@@ -1366,14 +1366,15 @@ L40:
 			else
 			{
 
-				if (maxang != maxang0)  //reallocate the memory
+				if (maxang > maxang0)  //reallocate the memory
 				{
 
-					free(elev); //release the allocated memory for elev and reallocate
+					//elev = (real *) calloc(80 * maxang + 1, sizeof(real));  //old way of reallocating memory
 
-					elev = (real *) calloc(80 * maxang + 1, sizeof(real));
+					//reallocate memory for elev  //added on 030523
+					elev = realloc(elev, 80 * maxang + 1 * sizeof(real));  
 
-					if (elev == NULL) //memory allocation failes
+					if (elev == NULL) //memory reallocation failes
 					{
 						printf("Memory reallocation failed, aborting....\n");
 						return -1;
@@ -1433,20 +1434,28 @@ L40:
 		//remove terrestrial refraction additon used by rdhalba4 to create the profile
 	    if (ntrcalc == 2) {
 			//old TR based on Menat ray tracing, for old profile files using old versions 
-			deltd = hgt - elev[(nazn << 2) - 1];
-			distd = elev[(nazn << 2) - 2];
-			if (deltd <= 0.f) {
-				defm = 7.82e-4 - deltd * 3.11e-7;
-				defb = deltd * 3.4e-5 - .0141;
-			} else if (deltd > 0.f) {
-				defm = deltd * 3.09e-7 + 7.64e-4;
-				defb = -.00915 - deltd * 2.69e-5;
+			//check first that this isn't actual surveyor data, in which case leave it alone
+			if (elev[(nazn << 2) - 1] == 0 && elev[(nazn << 2) - 2] == 100)
+			{
+				//this is surveyor's actual measurements, so leave view angles alone
 			}
-			avref = defm * distd + defb;
-			if (avref < 0.f) {
-				avref = 0.f;
+			else
+			{
+				deltd = hgt - elev[(nazn << 2) - 1];
+				distd = elev[(nazn << 2) - 2];
+				if (deltd <= 0.f) {
+					defm = 7.82e-4 - deltd * 3.11e-7;
+					defb = deltd * 3.4e-5 - .0141;
+				} else if (deltd > 0.f) {
+					defm = deltd * 3.09e-7 + 7.64e-4;
+					defb = -.00915 - deltd * 2.69e-5;
+				}
+				avref = defm * distd + defb;
+				if (avref < 0.f) {
+					avref = 0.f;
+				}
+				elev[(nazn << 2) - 3] -= avref;
 			}
-			elev[(nazn << 2) - 3] -= avref;
 	    } else if (ntrcalc == 1 || ntrcalc == 3) {
 			//remove terrestrial refraction addition used by program rdhalba4 to create the profile
 			//rdhalbat now uses the average temperature both for sunrise and sunset profiles
