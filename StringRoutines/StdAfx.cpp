@@ -34,7 +34,7 @@
 //////////////////////global array bounds///////////////////////////////////////
 #define MAXCGIVARS 37 //maximum number of cgi variables
 #define MAXDBLSIZE 100 //maximum character size of data elements to be read using ParseString
-#define WIDTHFIELD 0 //0 for false - use predeter__mind html cell widths, = 1 for letting program deter__min it
+#define WIDTHFIELD 0 //0 for false - use predetermined html cell widths, = 1 for letting program determine it
 #define INPUT_TYPE 1 //0 for post, 1 for get
 #define MAX_NUM_TILES 15 //maximum possible number of tiles due to webmaster's memory limitiation for this thread
 #define MAX_HEIGHT_DISCREP 1000 //maximum acceptable height discrepency between inputed and DTM's height at chosen coords.
@@ -829,7 +829,7 @@ double MaxWinLen;  //minimum length of day for adding inversion fix
 This global is for CGI -- Yedidia
 ********************************/
 char *vars[2][MAXCGIVARS]; //<--up to 2*MAXCGIVARS + 2 of inputs
-bool CGI; //flag that deter__mins if using CGI input and output
+bool CGI; //flag that determines if using CGI input and output
 bool Windows = false; //debugging flag, if Windows always write out output file when generating Astro profiles
 /////////////////////////////////////////////////////////////////////
 
@@ -1159,10 +1159,10 @@ __asm{
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
-		strcpy( country, "USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
+		strcpy( MetroArea, "beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( country, "Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
 		g_yrheb = 5783; //5782; //5781; //5779;//5776; //5775;
 		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
@@ -1196,8 +1196,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 10; //0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 10; //0;//10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 0; //10; //0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 0; //10; //0;//10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -1211,7 +1211,7 @@ __asm{
 		HebrewInterface = false;// true;//false; //=true for Hebrew webpages
 
 		//////////////////added 030921 /////////////diagnostics for single day/////////////////////////////////////////
-		SingleDay = true; //false; //true;
+		SingleDay = false; //true; //false; //true;
 		SingleYr = 2023; //2021;
 		SingleDayNum = 13; //83; //300; //162;
 		g_Tground = 277.15; //-9999; //288.15;
@@ -1506,7 +1506,7 @@ __asm{
 	steps[0] = RoundSeconds;
 	steps[1] = RoundSeconds;
 
-///////////////////deter__min which table will be generated///////////////////////
+///////////////////determine which table will be generated///////////////////////
 
 	//short langMetro = 0;
 
@@ -1978,7 +1978,7 @@ __asm{
 			*/
 
 			//at different latitudes, spacing between 1 arcsec data points in longitude is about half of 30 m
-			//so deter__min the distance corresponding to 1 arcsec at the relevant latitude
+			//so determine the distance corresponding to 1 arcsec at the relevant latitude
 			//and adjust the cushions accordingly.
 			//The calculation is as follows:
 			//2*pi*cos(lat) * Re is distance corresponding to 2*pi radians
@@ -2433,7 +2433,7 @@ short LoadParshiotNames()
 	char Iparsha[255] = ""; // Torah reading for Eretz Yisroel
 	FILE *stream;
 
-	//deter__min cycle name
+	//determine cycle name
 	switch (g_hebleapyear)
 	{
 		case false: //Hebrew calendar non-leapyear
@@ -2772,7 +2772,7 @@ void InsertHolidays(char *caldayHeb, char *caldayEng, char *calday, char *calheb
 
 	//passed variables are:
 	//(1) the day field = calday$
-	//(2) the increment variables i,k used to deter__min
+	//(2) the increment variables i,k used to determine
 	//    (a) the date field = CalDate$
 	//    (b) the Shabbos Parsha field = CalParsha$
 	//(3) variables that keep track of year, year length, day of week and shabbos:
@@ -3329,7 +3329,7 @@ char *hebyear(char *yrcal, short yr)
 	short hunds[4] = { 0,0,0,0 }; //if hunds[i] == 0 then blank
 	short tenss = 0;
 
-	//deter__min the hundreds, tens, ones that compose the Hebrew Year
+	//determine the hundreds, tens, ones that compose the Hebrew Year
 	hund = (int)Fix((yr - 5000) * 0.01);
 	tens = (int)Fix((yr - 5000 - hund * 100) * 0.1);
 	ones = (int)Fix(yr - 5000 - hund * 100 - tens * 10);
@@ -4015,7 +4015,7 @@ void parseit( char outdoc[], bool *closerow, short linnum, short mode)
 
 	if (WIDTHFIELD)
 	{
-		//program will independently deter__min witdth field
+		//program will independently determine witdth field
 		itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
 	}
 	else
@@ -4362,7 +4362,7 @@ void heb12monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\" bgcolor=\"#ffff00\">");
-				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
+				//now determine if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 0, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"46\" bgcolor=\"#ffff00\">");
 				timestring( ii, 1, iii );
@@ -4413,7 +4413,7 @@ void heb12monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\" >");
-				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
+				//now determine if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 0, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"46\">");
 				timestring( ii, 1, iii );
@@ -4470,7 +4470,7 @@ void heb12monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\" bgcolor=\"#ffff00\">");
-				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
+				//now determine if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 11, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"41\" bgcolor=\"#ffff00\">");
 				timestring( ii, 10, iii );
@@ -4520,7 +4520,7 @@ void heb12monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\" >");
-				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
+				//now determine if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 11, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"41\">");
 				timestring( ii, 10, iii );
@@ -4942,7 +4942,7 @@ void heb13monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"40\" bgcolor=\"#ffff00\">");
-				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
+				//now determine if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 0, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"51\" bgcolor=\"#ffff00\">");
 				timestring( ii, 1, iii );
@@ -4994,7 +4994,7 @@ void heb13monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"40\">");
-				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
+				//now determine if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 0, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"51\">");
 				timestring( ii, 1, iii );
@@ -5055,7 +5055,7 @@ void heb13monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\" bgcolor=\"#ffff00\">");
-				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
+				//now determine if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 12, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"42\" bgcolor=\"#ffff00\">");
 				timestring( ii, 11, iii );
@@ -5107,7 +5107,7 @@ void heb13monthHTML(short setflag)
 				fprintf(stdout, "%s\n", buff1 );
 				fprintf(stdout, "%s\n", "        </td>");
 				fprintf(stdout, "%s\n", "        <td width=\"39\">");
-				//now deter__min if this time is underlined or shabbos and add appropriate HTML ******
+				//now determine if this time is underlined or shabbos and add appropriate HTML ******
 				timestring( ii, 12, iii );
 				fprintf(stdout, "%s\n", "        <td width=\"42\">");
 				timestring( ii, 11, iii );
@@ -6236,8 +6236,8 @@ short Caldirectories()
 
 	//Hebrew calendar calculations///////////////////////////////////////
 
-	HebCal(g_yrheb); //deter__min if it is hebrew leap year
-			//and deter__min the beginning and ending daynumbers of the Hebrew year
+	HebCal(g_yrheb); //determine if it is hebrew leap year
+			//and determine the beginning and ending daynumbers of the Hebrew year
 	FirstSecularYr = (g_yrheb - 5758) + 1997;
 	SecondSecularYr = (g_yrheb - 5758) + 1998;
 	StartYr = FirstSecularYr; //default start year for calculations
@@ -6295,7 +6295,7 @@ short calnearsearch( char *bat, char *sun )
 
 	FILE *stream, *stream2;
 
-	//open bat file and deter__min which vantage points are within the search radiusAstroNoon(
+	//open bat file and determine which vantage points are within the search radiusAstroNoon(
 	//try all case version of the bat file
 
 	//first make copy of original filename for manipulations
@@ -6314,7 +6314,7 @@ short calnearsearch( char *bat, char *sun )
 			{
 				if (InStr( sun, "skiy" ) && findnetz == 0 && types != 1 && types != 5 && types != 7)
 				//probably eros place outside of USA or Eretz Yisroel and calculating mishor/astro times
-				//so try using sunrise bat file instead to deter__min the average coordinates of vantage points
+				//so try using sunrise bat file instead to determine the average coordinates of vantage points
 				{
 					char * pch;
 					pch = strstr (bat,"skiy");
@@ -6937,7 +6937,7 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
      						&ns1, &ns2, &ns3, &ns4, &WinTemp,
 							MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
-		//for new calcualtion method, deter__min the ground temperatures, minimum, average, and yearly mean
+		//for new calcualtion method, determine the ground temperatures, minimum, average, and yearly mean
 		if (VDW_REF) {
 
 			//find average temperature to use in removing profile's TR 
@@ -7158,9 +7158,9 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
      						&ns1, &ns2, &ns3, &ns4, &WinTemp,
 							MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
-		//for new calcualtion method, deter__min the ground temperatures, minimum, average, and yearly mean
+		//for new calcualtion method, determine the ground temperatures, minimum, average, and yearly mean
 		if (VDW_REF) {
-			//read WorldClim bil files to deter__min the minimum and average temperatures of the year
+			//read WorldClim bil files to determine the minimum and average temperatures of the year
 
 			//find average temperature to use in removing profile's TR 
 			if (g_Tground != -9999 && SingleDay)
@@ -7336,9 +7336,9 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
      						&ns1, &ns2, &ns3, &ns4, &WinTemp,
 							MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
-		//for new calcualtion method, deter__min the ground temperatures, minimum, average, and yearly mean
+		//for new calcualtion method, determine the ground temperatures, minimum, average, and yearly mean
 		if (VDW_REF) {
-			//read WorldClim bil files to deter__min the minimum and average temperatures of the year
+			//read WorldClim bil files to determine the minimum and average temperatures of the year
 
 			//find average temperature to use in removing profile's TR 
 			if (g_Tground != -9999 && SingleDay)
@@ -7359,7 +7359,7 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 		//N.b., if this is Golden Hour calculation, then first assume same temperatures as observer, calculate the rpfile
 		//find the coordinates of the first golden light, then go back and use this point to define the ground temperature, etc.
 
-		//deter__min maximum angular range from latitude
+		//determine maximum angular range from latitude
 		maxdecl = (66.5 - fabs(lt)) + 23.5; //approximate formula for maximum declination as function of latitude (kmyo)
 		//source: chart of declination range vs latitude from http://en.wikipedia.org/wiki/Declination
 		maxang = (int)(fabs(asin(cos(maxdecl * cd)))/cd); //approximate formula for half maximum angle range as function of declination
@@ -7429,9 +7429,9 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
      						&ns1, &ns2, &ns3, &ns4, &WinTemp,
 							MinTemp, AvgTemp, MaxTemp, ExtTemp);
 
-		//for new calcualtion method, deter__min the ground temperatures, minimum, average, and yearly mean
+		//for new calcualtion method, determine the ground temperatures, minimum, average, and yearly mean
 		if (VDW_REF) {
-			//read WorldClim bil files to deter__min the minimum and average temperatures of the year
+			//read WorldClim bil files to determine the minimum and average temperatures of the year
 
 			//find average temperature to use in removing profile's TR 
 			if (g_Tground != -9999 && SingleDay)
@@ -8993,7 +8993,7 @@ void HebCal(short yrheb)
 	yrstep = yrheb - sthebyr;
 
 	//add synodic periods from the reference year in order to
-	//deter__min moladim of desired Hebrew Year
+	//determine moladim of desired Hebrew Year
 	nyear = 0;
 	flag = 0;
 	for (kyr = 1; kyr <= yrstep; kyr++)
@@ -9004,7 +9004,7 @@ void HebCal(short yrheb)
 		g_n1rhooo = g_n1rho;
 	}
 	//now calculate molad of Tishri 1 of year after the desired Hebrew Year in order to
-	//deter__min if the desired year is choser,kesidrah, or sholem
+	//determine if the desired year is choser,kesidrah, or sholem
 	g_leapyr2 = g_leapyear;
 	nyear = nyear + 1;
 	flag = 1;
@@ -9307,7 +9307,7 @@ void newdate(short &nyear, short nnew, short flag, short kyr, short yrstep)
 	g_n3rh = g_n33;
 	g_n1rho = g_n1rh;
 
-	//now use dechiyos to deter__min which day of week Rosh Hashanoh falls on
+	//now use dechiyos to determine which day of week Rosh Hashanoh falls on
 	//////////////////////dechiyos//////////////////////////////////////////
 	switch (nyear)
 	{
@@ -11169,7 +11169,7 @@ char *IsoToUnicode( char *str )
 	double trbasis, d__3;
 	double hgtdifx = 0., hgtdif = 0., pathlength = 0., exponent = 0., dist = 0., distx = 0.;
 
-	short PartOfDay = 0; //where is zman in the diurnal cycle flag -- deter__mins what temperature is used to calculate the refraction for nweather = 5
+	short PartOfDay = 0; //where is zman in the diurnal cycle flag -- determines what temperature is used to calculate the refraction for nweather = 5
 						   //= 1 for using minimum @orldClim temperatures
 						   //  2 for using average WorldClim temperatures
 						   //  3 for using maximum WorldClim temperatures
@@ -11276,9 +11276,9 @@ alem */
      		            &ns1, &ns2, &ns3, &ns4, &WinTemp,
 						mint, avgt, maxt, ExtTemp);
 
-	//for new calcualtion method, deter__min the ground temperatures, minimum, average, and yearly mean
+	//for new calcualtion method, determine the ground temperatures, minimum, average, and yearly mean
 	if (VDW_REF) {
-		//read WorldClim bil files to deter__min the minimum and average temperatures of the year
+		//read WorldClim bil files to determine the minimum and average temperatures of the year
 
 		if (nsetflag == 0) {
 			//sunrise 
@@ -11312,7 +11312,7 @@ alem */
 		//N.b., if this is Golden Hour calculation, then first assume same temperatures as observer, calculate the rpfile
 		//find the coordinates of the first golden light, then go back and use this point to define the ground temperature, etc.
 
-		//deter__min maximum angular range from latitude
+		//determine maximum angular range from latitude
 		maxdecl = (66.5 - fabs(lt)) + 23.5; //approximate formula for maximum declination as function of latitude (kmyo)
 		//source: chart of declination range vs latitude from http://en.wikipedia.org/wiki/Declination
 		maxang = (int)(fabs(asin(cos(maxdecl * cd)))/cd); //approximate formula for half maximum angle range as function of declination
@@ -11772,7 +11772,7 @@ L692:
 					vdwsf *= pow( p / 1013.25, vdwconst[4]); //pressure scalintg law VDW graph 5a
 
 
-					//deter__min refraction for this solar altitude
+					//determine refraction for this solar altitude
 					//first iteration to find top of sun with refraction
 					if (!VDW_REF) {
 						refract_(&al1, &p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
@@ -11926,7 +11926,7 @@ L692:
 				vdwsf = pow(288.15f / t, vbwexp);
 				vdwsf *= pow( p / 1013.25, vdwconst[4]); //pressure scalintg law VDW graph 5a
 
-				//deter__min refraction for this solar altitude
+				//determine refraction for this solar altitude
 				//also first iteration to find top of sun with refraction
 				if (!VDW_REF) {
 					refract_(&al1, &p, &t, &hgt, nweather, &dy, &refrac1, ns1, ns2);
@@ -13487,7 +13487,7 @@ double tk, d__2, refrac1;
 	if (VDW_REF) 
 	{
 		//using van der Werf raytracing and standard atmosphere
-		//first deter__min the temperature scaling factor for this day
+		//first determine the temperature scaling factor for this day
 		short nyl = YearLength( nyr );
 		m = MonthFromDay(&nyl, dy);
 
@@ -13762,7 +13762,7 @@ void InitWeatherRegions( double *lg, double *lt,
 				if (MaxMinTemp < MinTemp[iTemp] ) MaxMinTemp = MinTemp[iTemp];
 			}
 
-			//WinTemp deter__mins range of witner daynumbers that are likely to have inversion layers
+			//WinTemp determines range of witner daynumbers that are likely to have inversion layers
 			*WinTemp = WinterPercent * MaxMinTemp; //winter is defined as months whose mean min temperature less than WinterPercent of maximium min temp of the year
 
 		}
@@ -13793,7 +13793,7 @@ void InitWeatherRegions( double *lg, double *lt,
 				if (MaxMinTemp < MinTemp[iTemp] ) MaxMinTemp = MinTemp[iTemp];
 			}
 
-			//WinTemp deter__mins range of winter daynumbers that are likely to have inversion layers
+			//WinTemp determines range of winter daynumbers that are likely to have inversion layers
 			*WinTemp = WinterPercent * MaxMinTemp; //winter is defined as months whose mean min temperature less than WinterPercent of maximium min temp of the year
 
 		}
@@ -14153,7 +14153,7 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 									 //used for calculating the terrestrial refraction
 
 	if (VDW_REF) {
-		//deter__min version of profile file in order to remove the terrestrial refraction
+		//determine version of profile file in order to remove the terrestrial refraction
 		if (InStr(doclin, "APPRNR")) {
 			if (InStr(doclin, ",0")) {
 				//new format w/o TR calculated, no need to renormalize the view angles
@@ -14163,7 +14163,8 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 				//this assumes that the change in the horizon profile will be small when changing the temperature
 				ntrcalc = 1;
 			}else{
-				//old profile file with old TR calculation, so remove it from the view angles
+				//can be surveyor measurements, in which case leave it alone
+				//or it is old profile file with old TR calculation, so remove it from the view angles
 				//Note: assumption that the horizon profile will not change is more iffy in this case */
 				ntrcalc = 2;
 			}
@@ -14192,7 +14193,7 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 	*/
 
 	doclin[0] = 0;
-	fgets_CR( doclin, 255, stream ); //read first line of data to deter__min angle range
+	fgets_CR( doclin, 255, stream ); //read first line of data to determine angle range
 	short doclen = strlen(doclin);
 	//doclin[doclen - 1] = 0; //remove carriage return
 
@@ -14219,6 +14220,9 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 
 		if (elev == NULL) return -3; //memory allocation failed
 
+		//record the maximum azimuth for future reallocations of dynamic memory
+		maxangElev = *maxang;
+
 	}
 	else if (maxangElev != 0 && *maxang > maxangElev)
 	{
@@ -14227,10 +14231,11 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 		
 		if (elev = NULL) return -3; //remory reallocation failed
 
+		//record the maximum azimuth for future reallocations of dynamic memory
+		maxangElev = *maxang;
+
 	}
 
-	//record the maximum azimuth for future reallocations of dynamic memory
-	maxangElev = *maxang;
 
 
 	//now remove the terrestrial refraction value of this first line of data
@@ -14240,21 +14245,28 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 
 	if (VDW_REF) {
 		if (ntrcalc == 2) {
-/* 		   remove old terrestrial refraction values from the view angle */
-			deltd = *hgt - tmp4;
-			distd = tmp3;
-			if (deltd <= 0.f) {
-				defm = 7.82e-4 - deltd * 3.11e-7;
-				defb = deltd * 3.4e-5 - .0141;
-			} else if (deltd > 0.f) {
-				defm = deltd * 3.09e-7 + 7.64e-4;
-				defb = -.00915 - deltd * 2.69e-5;
+		    if (tmp4 == 0 && tmp3 == 100)
+			{
+				//this is old surveyor data, leave view angles alone
 			}
-			avref = defm * distd + defb;
-			if (avref < 0.f) {
-				avref = 0.f;
+			else
+			{
+/* 				remove old terrestrial refraction values from the view angle */
+				deltd = *hgt - tmp4;
+				distd = tmp3;
+				if (deltd <= 0.f) {
+					defm = 7.82e-4 - deltd * 3.11e-7;
+					defb = deltd * 3.4e-5 - .0141;
+				} else if (deltd > 0.f) {
+					defm = deltd * 3.09e-7 + 7.64e-4;
+					defb = -.00915 - deltd * 2.69e-5;
+				}
+				avref = defm * distd + defb;
+				if (avref < 0.f) {
+					avref = 0.f;
+				}
+				tmp2 -= avref;
 			}
-			tmp2 -= avref;
 		} else if (ntrcalc == 1 || ntrcalc == 3) {
 
 			deltd = *hgt - tmp4;
@@ -14322,21 +14334,29 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 
 				if (VDW_REF) {
 					if (ntrcalc == 2) {
-			/* 		   remove old terrestrial refraction values from the view angle */
-						deltd = *hgt - tmp4;
-						distd = tmp3;
-						if (deltd <= 0.f) {
-							defm = 7.82e-4 - deltd * 3.11e-7;
-							defb = deltd * 3.4e-5 - .0141;
-						} else if (deltd > 0.f) {
-							defm = deltd * 3.09e-7 + 7.64e-4;
-							defb = -.00915 - deltd * 2.69e-5;
+						if (tmp4 == 0 && tmp3 == 100)
+						{
+							//this is old surveyor data, leave view angles alone
 						}
-						avref = defm * distd + defb;
-						if (avref < 0.f) {
-							avref = 0.f;
+						else
+						{
+
+				/* 		   remove old terrestrial refraction values from the view angle */
+							deltd = *hgt - tmp4;
+							distd = tmp3;
+							if (deltd <= 0.f) {
+								defm = 7.82e-4 - deltd * 3.11e-7;
+								defb = deltd * 3.4e-5 - .0141;
+							} else if (deltd > 0.f) {
+								defm = deltd * 3.09e-7 + 7.64e-4;
+								defb = -.00915 - deltd * 2.69e-5;
+							}
+							avref = defm * distd + defb;
+							if (avref < 0.f) {
+								avref = 0.f;
+							}
+							tmp2 -= avref;
 						}
-						tmp2 -= avref;
 					} else if (ntrcalc == 1 || ntrcalc == 3) {
 
 						deltd = *hgt - tmp4;
@@ -14514,7 +14534,7 @@ short AstronSunset(short *ndirec, double *dy, double *lr, double *lt, double *t6
 			nacurr = nacurrFix; //15;
 		}
 	} else {
-		//new of version 18 -- deter__min portion of year prone to inversion layers using daylength
+		//new of version 18 -- determine portion of year prone to inversion layers using daylength
 		nacurr = 0; //add the adhoc fix in the calling module if not calculating the visible sunset
 		if (*adhocset) {
 			if (*FindWinter) {
@@ -14670,7 +14690,7 @@ short AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t
 			nacurr = nacurrFix; //15;
 		}
 	} else {
-		//new of version 18 -- deter__min portion of year prone to inversion layers using daylength
+		//new of version 18 -- determine portion of year prone to inversion layers using daylength
 		nacurr = 0;  //only add fix in calling module if not calculating the visible sunset
 		if (*adhocrise) {
 			if (*FindWinter) {
@@ -16818,7 +16838,7 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
 	xdim = xdim/30.0; // 30m DTM
 	ydim = ydim/30.0;
 
-	//deter__min number of columns of rows to be extracted
+	//determine number of columns of rows to be extracted
 	numstepkmy = Nint(fabs(beglat - endlat) / ydim) + 1;
 	numstepkmx = Nint(fabs(endlog - beglog) / xdim) + 1;
 	//will need to allocate maxrange = numstepkmx * numstepkmy * 4 byte integer memory
@@ -16904,7 +16924,7 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
 
     //*********************************************************************************//
 
-		// deter__min if need to read multiple tiles
+		// determine if need to read multiple tiles
 		gototag = 1;
 		goto findtile;
 
@@ -17057,7 +17077,7 @@ ret4:		;	//manytiles = TRUE;
     				numrec = (ikmy - 1) * ncols + ikmx - 1;
     				//position DEM file at starting coordinate for reading
     				pos = fseek( stream, numrec * 2L, SEEK_SET );
-    				//deter__min beginning record number of BIN file to write to
+    				//determine beginning record number of BIN file to write to
     				iikmx = Nint((kmx - beglog)/xdim) + 1;
     				iikmy = Nint((endlat - kmy)/ydim) + 1;
     				numrc = (iikmy - 1) * numstepkmx + iikmx - 1;
@@ -17305,7 +17325,7 @@ if (DTMflag == 0) //GTOPO30 DTM
 			ncols = 4800;
 			whichCDs[itnum] = worldCD[ny * 9 + (int)ntmp + 1];
 
-			//deter__min kmx,kmy boundaries of analysis within this tile
+			//determine kmx,kmy boundaries of analysis within this tile
 			kmxb1[itnum] = __max(lg1, beglog);
 			kmxb2[itnum] = __min(lg1 + 40, endlog);
 			kmyb1[itnum] = __min(lt1 ,endlat);
@@ -17387,7 +17407,7 @@ if (DTMflag == 0) //GTOPO30 DTM
 			ncols = 7200;
 			whichCDs[itnum] = 5;
 
-			//deter__min kmx,kmy boundaries of analysis within this tile
+			//determine kmx,kmy boundaries of analysis within this tile
 			kmxb1[itnum] = __max(lg1, beglog);
 			kmxb2[itnum] = __min(lg1 + 60, endlog);
 			kmyb1[itnum] = __min(lt1 ,endlat);
@@ -17398,7 +17418,7 @@ if (DTMflag == 0) //GTOPO30 DTM
 		lt1chk[itnum] = lt1;
 		lg1chk[itnum] = lg1;
 
-        //deter__min number of steps in this tile
+        //determine number of steps in this tile
 		numstepkmyt[itnum] = Nint((fabs(kmyb1[itnum] - kmyb2[itnum])) / ydim) + 1;
 		numstepkmxt[itnum] = Nint((fabs(kmxb1[itnum] - kmxb2[itnum])) / xdim) + 1;
 
@@ -17450,10 +17470,10 @@ if (DTMflag == 0) //GTOPO30 DTM
 
 }
 
-else if (DTMflag > 0) //SRTM data, deter__min number of tiles
+else if (DTMflag > 0) //SRTM data, determine number of tiles
 
 {
-	  //now deter__min the tile names
+	  //now determine the tile names
 	  itnum = 0;
 	  for ( itnum1 = 0; itnum1 <= abs(lg2SRTM - lg1SRTM); itnum1++ )
 	  {
@@ -17562,7 +17582,7 @@ else if (DTMflag > 0) //SRTM data, deter__min number of tiles
 
             lg1chk[itnum] = lg1;
 
-			//deter__min kmx,kmy boundaries of analysis within this tile
+			//determine kmx,kmy boundaries of analysis within this tile
 			//and the number of steps in xdim,ydim within this tile
 			kmxb1[itnum] = __max(lg1, beglog);
 			kmxb2[itnum] = __min(lg1 + 1, endlog);
@@ -17897,7 +17917,7 @@ Profiles:
 
 
 	if (VDW_REF) {
-		//deter__min the mean ground temperature to be used for calculating the terrestrial refraction
+		//determine the mean ground temperature to be used for calculating the terrestrial refraction
 
 		//calculate conserved portion of terrain refraction based on Wikipedia's expression
 		//lapse rate is set at -0.0065 K/m, Ground Pressure = *p = 1013.25 mb
@@ -17958,7 +17978,7 @@ Profiles:
 		if (ikmx == 0) {
 			goto L550;
 		}
-/*      now deter__min optimized kmy angular range */
+/*      now determine optimized kmy angular range */
 /*      first convert longitude range into kilometers */
 		range = fabs(kmx - kmxo) * cd * rekm * cos(kmyo * cd);
 		if (nnetz == 1 || SRTMflag == 11) {
@@ -18074,7 +18094,7 @@ Profiles:
 
 
 			//further optimization: use crude approximation of azimuth to
-			//deter__min if data will lie within the required azimuth range
+			//determine if data will lie within the required azimuth range
 			if (kmx != lg)
 			{
 				testazi = (kmy - lt)/(kmx - lg);
@@ -18488,11 +18508,11 @@ L550:
 
 		if (dist_max < MinGoldenDist || vang_max > MaxGoldenViewAng) {
 			if (SRTMflag == 10) {
-				//Eastern horizon too close to accuratly deter__min Golden Light horizon for sunsets
+				//Eastern horizon too close to accuratly determine Golden Light horizon for sunsets
 				ier_max = -10;
 			}
 			else if (SRTMflag == 11) {
-				//Western horizon too close to accurately deter__min Golden Light horizon for sunrises
+				//Western horizon too close to accurately determine Golden Light horizon for sunrises
 				ier_max = -11;
 			}
 		}
@@ -19387,7 +19407,7 @@ double Decl3(double *jdn, double *hrs, double *dy, double *td, short *mday, shor
 
 	if (mode == 0) //calculate the month and day
 	{
-		//deter__min if leap year
+		//determine if leap year
 		*yl = 365;
 		if (*year % 4 == 0) {
 		*yl = 366;
@@ -19434,7 +19454,7 @@ double Decl3(double *jdn, double *hrs, double *dy, double *td, short *mday, shor
 			m += 12;
 		}
 
-		/* Deter__min whether date is in Julian or Gregorian calendar based on
+		/* Determine whether date is in Julian or Gregorian calendar based on
 		   canonical date of calendar reform. */
 
 		if ((*year < 1582) || ((*year == 1582) && ((*mon < 9) || (*mon == 9 && *mday < 5)))) {
@@ -19519,7 +19539,7 @@ double Decl3(double *jdn, double *hrs, double *dy, double *td, short *mday, shor
     //*slong = theta; //this routine doesn't need to return the solar longitude
     *rv = (1.0000002 * (1 - e * e)) / (1 + e * cos(dtr(v)));
 
-    /* Deter__min solar co-ordinates in radians. */
+    /* Determine solar co-ordinates in radians. */
 
     *ra =
 	fixangr(atan2(cos(dtr(eps)) * sin(dtr(theta)), cos(dtr(theta)))); //in radians
@@ -19931,7 +19951,7 @@ short DayNumber(short ylyd, short mon, short mday)
 }
 /////////////////////////////////////////////////////
 
-//////////////lenMonth(x) deter__mins number of days in month x, 1<=x<=12////////////////////
+//////////////lenMonth(x) determines number of days in month x, 1<=x<=12////////////////////
 //source: https://cmcenroe.me/2014/12/05/days-in-month-formula.html
 short lenMonth( short x) {
 	return 28 + (short)(x + floor(x/8)) % 2 + 2 % x + 2 * floor(1/x);
