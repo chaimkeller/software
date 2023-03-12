@@ -8963,7 +8963,7 @@ void HebCal(short yrheb)
 	g_ncal2 = 4;
 	g_ncal3 = 129;
 
-	if (PROVIDEALLHEBYEARSUPPORT)
+	if (PROVIDEALLHEBYEARSUPPORT && yrheb < 5758)
 	{
 	    //To provide support for all years in past, use Year 1 as the reference:
 		g_stdyy = 299; //English date paramters of Rosh Hashanoh year 1
