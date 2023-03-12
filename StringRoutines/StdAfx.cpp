@@ -43,6 +43,7 @@
 #define MinGoldenDist 1 //minimum distance to Golden Horizon point to enable calculations
 #define MaxGoldenViewAng 50 //maximum view angle to allow Golden Horizon calculations
 #define MAXNUMPLACES 1000 //maximum number of places to process.
+#define PROVIDEALLHEBYEARSUPPORT 1 //if want to provide support for all Hebrew Years in past, set to 1
 
 //#define MAX_ANGULAR_RANGE 45 //maximum azimuth range from -MAX_ANGULAR_RANGE to MAX_ANGULAR_RANGE
 
@@ -1159,12 +1160,12 @@ __asm{
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
 		strcpy( MetroArea, "beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
-		g_yrheb = 5783; //5782; //5781; //5779;//5776; //5775;
+		g_yrheb = 5758; //5783; //5782; //5781; //5779;//5776; //5775;
 		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
 		typezman = 8; // acc. to which opinion
 		optionheb = true; //false; //true; //false; //true;//false;
@@ -1178,8 +1179,8 @@ __asm{
 		GoldenLight = 0; //1;
 
 		//test lat,lon, hgt inputs 32.027585
-		eroslatitudestr = "31.7487155576439"; //"39.357909"; ///"55.398869"; //"31.706938"; //"30.960207"; //"37.683140"; //"30.92408"; //"31.858246"; //"31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
-		eroslongitudestr = "-35.238133306709"; //"76.688175";//"3.388176"; //"-35.123139"; //"-35.195719"; //"119.170837"; //"-34.96542"; //"-35.158354"; //"-35.217";//"0.2074"; //"-35.201774";//"-35.217059"; //"-35.247203";//"1.11254";//"-34.841867";//"-35.004566";//"99.201608";//"-34.83177";//"74.222"; //"-34.83177"; //"-34.851612"; //-35.164481"; //-35.239226491"; //"-35.239291"; //"21.89521";
+		eroslatitudestr = "31.754"; //"31.7487155576439"; //"39.357909"; ///"55.398869"; //"31.706938"; //"30.960207"; //"37.683140"; //"30.92408"; //"31.858246"; //"31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
+		eroslongitudestr = "-35.165"; //"-35.238133306709"; //"76.688175";//"3.388176"; //"-35.123139"; //"-35.195719"; //"119.170837"; //"-34.96542"; //"-35.158354"; //"-35.217";//"0.2074"; //"-35.201774";//"-35.217059"; //"-35.247203";//"1.11254";//"-34.841867";//"-35.004566";//"99.201608";//"-34.83177";//"74.222"; //"-34.83177"; //"-34.851612"; //-35.164481"; //-35.239226491"; //"-35.239291"; //"21.89521";
 		eroshgtstr = "0"; //"700"; //"787.23"; //"29.70"; //"2843.73"; //"495.0"; //"644.26"; //"800";//"0";//"684.3";//"164.1";//"26.93";//"68.69";//"2274.5"; //"63.5";//"22.72"; //"63.5";//"788.19"; //832.3"; //"832"; //"83.2";
 		erosaprnstr = "0.5";//"1.5";//"0.5";
 		erosdiflatstr = "1";
@@ -1196,8 +1197,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 0; //10; //0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 0; //10; //0;//10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 10; //0; //10; //0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 10; //0; //10; //0;//10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -8951,24 +8952,32 @@ void HebCal(short yrheb)
 //	lpyr:
 
 	//difdec = 0;
-	//stdyy = 299; //English date paramters of Rosh Hashanoh year 1
 	g_stdyy = 275;   //'English date paramters of Rosh Hashanoh 5758
-	//styr = -3760;
-	//sthebyr = 1;
 	sthebyr = 5758; //starting reference year acc. to Hebrew Calendar
 	g_styr = 1997; //starting Reference Year acc. to civil Calendar
-	//yl = 366;
 	g_yl = 365;
-	//rh2 = 2; //Rosh Hashanoh year 1 is on day 2 (Monday)
 	g_rh2 = 5;      //'Rosh Hashanoh 5758 is on day 5 (Thursday)
 	g_yrr = 2; //5758 is a regular kesidrah year of 354 days
 	g_leapyear = 0;
-	//ncal1 = 2; //molad of Tishri 1 year 1-- day;hour;chelakim
-	//ncal2 = 5;
-	//ncal3 = 204;
 	g_ncal1 = 5; //molad of Tishri 1 5758 day;hour;chelakim
 	g_ncal2 = 4;
 	g_ncal3 = 129;
+
+	if (PROVIDEALLHEBYEARSUPPORT)
+	{
+	    //To provide support for all years in past, use Year 1 as the reference:
+		g_stdyy = 299; //English date paramters of Rosh Hashanoh year 1
+		g_styr = -3760;
+		sthebyr = 1;
+		g_yl = 366;
+		g_rh2 = 2; //Rosh Hashanoh year 1 is on day 2 (Monday)
+		g_yrr = 2; //Year 1 is a regular kesidrah year of 354 days
+		g_leapyear = 0;
+		g_ncal1 = 2; //molad of Tishri 1 year 1-- day;hour;chelakim
+		g_ncal2 = 5;
+		g_ncal3 = 204;
+	}
+
 	g_nt1 = g_ncal1;
 	g_nt2 = g_ncal2;
 	g_nt3 = g_ncal3;
@@ -11402,7 +11411,8 @@ alem */
 	}
 
     //loop over civil years comprising Hebrew year
-		d__1 = (double) yrend[nyear - FirstSecularYr];
+
+	d__1 = (double) yrend[nyear - FirstSecularYr];
 		//-----------------------------------------------------
 		for ( dy = (double) yrstrt[nyear - FirstSecularYr]; dy <= d__1; dy++)
 		{
