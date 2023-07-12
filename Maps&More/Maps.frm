@@ -1497,7 +1497,7 @@ mapinfobegin:
         Open drivjk_c$ + "skyworld.sav" For Input As #filsav%
         Do Until EOF(filsav%)
            oldplacnam$ = placnam$
-           Input #filsav%, placnam$, itmx, itmy, itmhgt
+           Input #filsav%, placnam$, ITMx, ITMy, itmhgt
            If InStr("abcdefghijklmnopqrstuvwxyz", LCase(Mid$(placnam$, 1, 1))) = 0 Then
               response = MsgBox("Error in skyworld.sav detected after entry: " + oldplacnam$, vbCritical + vbOKOnly, "Maps & More")
               Close #filsav%
@@ -1507,8 +1507,8 @@ mapinfobegin:
 '              ccc = 1
 '              End If
            If UCase(Mid$(placnam$, 1, Len(rootname$))) = UCase(rootname$) Then
-              MapLonCenter = itmx
-              MapLatCenter = itmy
+              MapLonCenter = ITMx
+              MapLatCenter = ITMy
               MapInfo.loncenter = MapLonCenter
               MapInfo.latcenter = MapLatCenter
               foundentry% = 1
@@ -1569,7 +1569,7 @@ mapinfobegin:
                     Open drivjk_c$ + "skyworld.sav" For Input As #filsav%
                     Do Until EOF(filsav%)
                        oldplacnam$ = placnam$
-                       Input #filsav%, placnam$, itmx, itmy, itmhgt
+                       Input #filsav%, placnam$, ITMx, ITMy, itmhgt
                        If InStr("abcdefghijklmnopqrstuvwxyz", LCase(Mid$(placnam$, 1, 1))) = 0 Then
                           response = MsgBox("Error in skyworld.sav detected after entry: " + oldplacnam$, vbCritical + vbOKOnly, "Maps & More")
                           Close #filsav%
@@ -2692,7 +2692,7 @@ errorload:
    Unload mapsplash
    If filnum% > 0 Then Close #filnum%
    If Err.Number = 71 Then
-      response = MsgBox("Drive not ready, try again?", vbCritical + vbOKCancel, "SkyLight")
+      response = MsgBox("Drive not ready, try again?", vbCritical + vbOKCancel, "Maps&More")
       If response = vbOK Then
          Resume
       Else
@@ -5458,9 +5458,14 @@ d100:   Next i%
                       Close #obsfilnum%
                       Exit Sub
                       End If
-                   If world = False And (Abs(kmxob) < 90 And Abs(kmyob) < 90) Then
+                   If world = False And (Abs(kmxob) < 70 And Abs(kmyob) < 70) Then
                       'obstruction coordinates are in geo coordinates, convert to itm
                       Call GEOCASC(kmyob, kmxob, G11, G22)
+                      If Val(G11) = 0 And Val(G22) = 0 Then
+                         Screen.MousePointer = vbDefault
+                         response = MsgBox("CASGEO failed to converge...", vbCritical + vbOKOnly)
+                         Exit Sub
+                         End If
                       kmyob = G11 * 0.001
                       kmxob = G22 * 0.001
                       End If

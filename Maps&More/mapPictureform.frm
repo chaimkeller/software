@@ -787,7 +787,7 @@ mup50:         If impcenter = True Then
                       ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
                       End If
                   response = MsgBox("You can't jump around with the Terra Viewer until" + _
-                           " you close the Magnifaction box.  Close it now?", vbInformation + vbYesNo, "Skylight")
+                           " you close the Magnifaction box.  Close it now?", vbInformation + vbYesNo, "Maps&More")
                   If lResult > 0 Then
 '                     ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
                      BringWindowToTop (lResult)

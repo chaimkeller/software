@@ -467,7 +467,7 @@ End Sub
 
 Private Sub rightPLACEbut_Click()
    If world = True And Val(Text4.Text) = 0 Then
-      response = MsgBox("You must enter a non-zero height for the chosen place!", vbExclamation + vbOKOnly, "SkyLight")
+      response = MsgBox("You must enter a non-zero height for the chosen place!", vbExclamation + vbOKOnly, "Maps&More")
       Exit Sub
       End If
    Screen.MousePointer = vbHourglass

@@ -577,13 +577,14 @@ Public Sub GEOCASC(L11, L22, G11, G22)
       Exit Sub
 15    If world = False Then
          lResult = FindWindow(vbNullString, terranam$)
-         If lResult > 0 Then
+         If lResult > 0 And terranam$ <> "" Then
 '            ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
             BringWindowToTop (lResult)
             End If
          End If
-      response = MsgBox("Routine GEOCASC failed to Converge", vbCritical + vbOKOnly, "SkyLight")
-      If world = False And lResult > 0 Then
+      Screen.MousePointer = vbDefault
+      response = MsgBox("Routine GEOCASC failed to Converge", vbCritical + vbOKOnly, "Maps&More")
+      If world = False And lResult > 0 And terranam$ <> "" Then
 '         ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
          BringWindowToTop (lResult)
          End If
@@ -2819,7 +2820,7 @@ Public Sub goto_click()
 '               ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
                BringWindowToTop (lResult)
                End If
-           response = MsgBox("The coordinates are not in the appropriate format, try again!", vbExclamation + vbOKOnly, "SkyLight")
+           response = MsgBox("The coordinates are not in the appropriate format, try again!", vbExclamation + vbOKOnly, "Maps&More")
 '           ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
            BringWindowToTop (lResult)
            Exit Sub
