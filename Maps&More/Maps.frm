@@ -2566,11 +2566,11 @@ map50:
       filnum% = FreeFile
       hgtpos = 0: hgtworld = 0
       Open drivjk$ + "mapposition.sav" For Input As #filnum%
+      Input #filnum%, kmxc, kmyc, hgtpos
       If kmxc < 70000 Or kmxc > 400000 Or kmyc < 70000 Or kmyc > 1400000 Then
          kmxc = 172352
          kmyc = 1131700
          End If
-      Input #filnum%, kmxc, kmyc, hgtpos
       If kmxc = 0 And kmyc = 0 Then
          kmxc = 172352
          kmyc = 1131700

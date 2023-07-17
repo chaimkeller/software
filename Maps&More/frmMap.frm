@@ -1,8 +1,9 @@
 VERSION 5.00
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
 Object = "{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}#1.1#0"; "ieframe.dll"
 Begin VB.Form frmMap 
    AutoRedraw      =   -1  'True
-   Caption         =   "Google Map"
+   Caption         =   "Map"
    ClientHeight    =   7875
    ClientLeft      =   5505
    ClientTop       =   3525
@@ -12,6 +13,22 @@ Begin VB.Form frmMap
    LockControls    =   -1  'True
    ScaleHeight     =   7875
    ScaleWidth      =   8505
+   Begin MSComDlg.CommonDialog comdlgJSON 
+      Left            =   840
+      Top             =   1440
+      _ExtentX        =   847
+      _ExtentY        =   847
+      _Version        =   393216
+   End
+   Begin VB.CommandButton Command3 
+      Caption         =   "JASON addess"
+      Height          =   375
+      Left            =   5640
+      TabIndex        =   22
+      ToolTipText     =   "Read Jason coordinates and move map to address' coordinates"
+      Top             =   1560
+      Width           =   1335
+   End
    Begin VB.Frame frmConv 
       Caption         =   "ITM to Geo Conversion"
       Height          =   495
@@ -83,18 +100,18 @@ Begin VB.Form frmMap
    Begin VB.CommandButton Command2 
       Caption         =   "Map Lat/Long"
       Height          =   375
-      Left            =   5640
+      Left            =   7200
       TabIndex        =   14
-      ToolTipText     =   "move google map to the  inputed coordinates"
+      ToolTipText     =   "move map to the  inputed coordinates"
       Top             =   1560
       Width           =   1215
    End
    Begin VB.CommandButton Command1 
-      Caption         =   "Map Address"
+      Caption         =   "JASON file"
       Height          =   375
       Left            =   4440
       TabIndex        =   13
-      ToolTipText     =   "Move Google map to the inputed street address"
+      ToolTipText     =   "Download JASON file from BING REST service"
       Top             =   1560
       Width           =   1215
    End
@@ -242,6 +259,8 @@ Private Sub SaveSizes()
 Dim i As Integer
 Dim ctl As Control
 ' Save the controls' positions and sizes.
+   On Error GoTo SaveSizes_Error
+
 ReDim m_ControlPositions(1 To Controls.count)
 i = 1
 For Each ctl In Controls
@@ -266,6 +285,13 @@ Next ctl
 ' Save the form's size.
 m_FormWid = ScaleWidth
 m_FormHgt = ScaleHeight
+
+   On Error GoTo 0
+   Exit Sub
+
+SaveSizes_Error:
+
+'    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure SaveSizes of Form frmMap"
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -303,10 +329,10 @@ cmdGPS_Click_Error:
 End Sub
 
 Private Sub cmdHelp_Click()
-  MsgBox "To retrieve coordinates on the google map," & vbCrLf & _
+  MsgBox "To retrieve coordinates on the BING map," & vbCrLf & _
   "right click on the point of interest," & vbCrLf & _
-  "then click on the coordinates." & vbCrLf & _
-  "The Google map will confirm that the coordinates have been saved to the clipboard." & vbCrLf & vbCrLf & _
+  "then click on the COPY coordinates link." & vbCrLf & _
+  "The BING map will confirm that the coordinates have been saved to the clipboard." & vbCrLf & vbCrLf & _
   "Now you can send those coordinates to the main program via the bullseye button." & vbCrLf & vbCrLf & _
   "(N.b., the position that will be shon the imported maps is only approximate)", vbOKOnly + vbInformation, "Google Map Help"
 End Sub
@@ -399,29 +425,46 @@ Dim city As String
 Dim state As String
 Dim zip As String
 Dim queryAddress As String
-queryAddress = "http://maps.google.com/maps?q="
+Dim BingKeyCoad As String
+
+If Trim$(txtStreet.Text) = "" And Trim$(txtCity.Text) = "" And Trim$(txtState.Text) = "" Then
+   MsgBox "You first need to add an address to the adress boxes", vbOKOnly + vbInformation, "Maps&More"
+   Exit Sub
+   End If
+
+BingKeyCoad = "&key=AnImm57iA90PhX2Ou3jl7l5o-PxhM0bazl9l5yCePLauUP55_MesJClgmRte5ch0"
+
+'queryAddress = "http://google.com/maps?q="
+'queryAddress = "https://www.bing.com/maps?cp="
+queryAddress = "http://dev.virtualearth.net/REST/v1/Locations?countryRegion=&locality=&addressLine="
 ' build street part of query string
 If txtStreet.Text <> "" Then
     street = txtStreet.Text
     If Trim$(street) = sEmpty Then
-       Call MsgBox("Enter a valid street address in the box provided!", vbInformation, "Google Map Interface")
+       'Call MsgBox("Enter a valid street address in the box provided!", vbInformation, "Google Map Interface")
+       Call MsgBox("Enter a valid street address in the box provided!", vbInformation, "Bing Map Interface")
        Exit Sub
        End If
-    queryAddress = queryAddress & street + "," & "+"
+    'queryAddress = queryAddress & street + "," & "+"
+    queryAddress = queryAddress & street + ","
+
 End If
 ' build city part of query string
 If txtCity.Text <> "" Then
     city = txtCity.Text
     If Trim$(city) = sEmpty Then
-       Call MsgBox("Enter a valid city in the box provided!", vbInformation, "Google Map Interface")
+       'Call MsgBox("Enter a valid city in the box provided!", vbInformation, "Google Map Interface")
+       Call MsgBox("Enter a valid city in the box provided!", vbInformation, "Bing Map Interface")
        Exit Sub
        End If
-    queryAddress = queryAddress & city + "," & "+"
+'    queryAddress = queryAddress & city + "," & "+"
+    queryAddress = queryAddress & city + ","
 End If
 ' build state part of query string
 If txtState.Text <> "" Then
     state = txtState.Text
-    queryAddress = queryAddress & state + "," & "+"
+'    queryAddress = queryAddress & state + "," & "+"
+    queryAddress = queryAddress & state + ","
 End If
 ' build zip code part of query string
 If txtZipCode.Text <> "" Then
@@ -429,7 +472,22 @@ If txtZipCode.Text <> "" Then
     queryAddress = queryAddress & zip
 End If
 ' pass the url with the query string to web browser control
+queryAddress = queryAddress & BingKeyCoad
+
 WebBrowser1.Navigate queryAddress
+'source: https://www.tek-tips.com/viewthread.cfm?qid=1807492
+'shows route on static map
+'WebBrowser1.Navigate "http://dev.virtualearth.net/REST/v1/Imagery/Map/Road/Routes?wp.0=Seattle,WA;64;1&wp.1=Redmond,WA;66;2&key=AnImm57iA90PhX2Ou3jl7l5o-PxhM0bazl9l5yCePLauUP55_MesJClgmRte5ch0"
+'WebBrowser1.Navigate "http://dev.virtualearth.net/REST/v1/Locations?countryRegion={countryRegion}&adminDistrict={adminDistrict}&locality={locality}&postalCode={postalCode}&addressLine={addressLine}&userLocation={userLocation}&userIp={userIp}&usermapView={usermapView}&includeNeighborhood={includeNeighborhood}&maxResults={maxResults}&key={BingMapsKey}"
+
+'downloads json!
+WebBrowser1.Navigate queryAddress
+'WebBrowser1.Navigate "http://dev.virtualearth.net/REST/v1/Locations?countryRegion=&locality=&addressLine=12531 Collins St., Valley Village, CA&key=AnImm57iA90PhX2Ou3jl7l5o-PxhM0bazl9l5yCePLauUP55_MesJClgmRte5ch0"
+
+'following don't work
+'WebBrowser1.Navigate "http://dev.virtualearth.net/REST/v1/Imagery/Map/Road/&addressLine=12531 Collins St., Valley Village, CA&key=AnImm57iA90PhX2Ou3jl7l5o-PxhM0bazl9l5yCePLauUP55_MesJClgmRte5ch0"
+'WebBrowser1.Navigate "https://dev.virtualearth.net/REST/v1/Imagery/Map/Streetside/12531 Collins St., Valley Village, CA;&key=AnImm57iA90PhX2Ou3jl7l5o-PxhM0bazl9l5yCePLauUP55_MesJClgmRte5ch0"
+
 End Sub
 
 Private Sub Command2_Click()
@@ -439,22 +497,68 @@ End If
 Dim lat As String
 Dim lon As String
 Dim queryAddress As String
-queryAddress = "http://maps.google.com/maps?q="
+'https://www.bing.com/maps/?cp=32.093046%7E34.784775&lvl=15.0
+'https://www.bing.com/maps/?cp=23.523462%7E-50.976065&lvl=3.0
+'querAddress = "http:/google.com/maps?q="
+queryAddress = "https://www.bing.com/maps?cp="
 If txtLat.Text <> "" Then
     lat = txtLat.Text
-    queryAddress = queryAddress & lat + "%2C"
+    'queryAddress = queryAddress & lat + "%2C"
+    queryAddress = queryAddress & lat + "%7E"
 End If
 ' build longitude part of query string
 If txtLong.Text <> "" Then
     lon = txtLong.Text
     queryAddress = queryAddress & lon
 End If
-WebBrowser1.Navigate queryAddress
+WebBrowser1.Navigate queryAddress & "&lvl=15.0"
+End Sub
+
+Private Sub Command3_Click()
+  'open JASON file and read the coordinates
+   On Error GoTo Command3_Click_Error
+   
+   Dim StrngSplit() As String
+
+  With comdlgJSON
+    .CancelError = True
+    .Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*|"
+    .FilterIndex = 1
+    .FileName = App.Path + "\*.json"
+    .ShowOpen
+    JASONfile$ = .FileName
+  End With
+  
+  FileJSN% = FreeFile
+  Open JASONfile$ For Input As #FileJSN%
+  'search for string: "coordinates":"
+  Line Input #FileJSN%, doclin$
+  pos% = InStr(doclin$, """coordinates""")
+  If pos% > 0 Then
+     pos2% = InStr(pos% + 15, doclin$, "]},")
+     If pos2% > 0 Then
+        CoordStr$ = Mid$(doclin$, pos% + 15, pos2% - pos% - 15)
+        StrngSplit = Split(CoordStr$, ",")
+        If UBound(StrngSplit) > 0 Then
+           txtLat = StrngSplit(0)
+           txtLong = StrngSplit(1)
+           Command2.value = True 'move the BING map to those coordinates
+           End If
+        End If
+    End If
+  
+   On Error GoTo 0
+   Exit Sub
+
+Command3_Click_Error:
+
+'    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Command3_Click of Form frmMap"
 End Sub
 
 Private Sub Form_Load()
 SaveSizes
 GoogleMapVis = True
+WebBrowser1.Silent = True
 
 If world Then
    frmConv.Visible = False
@@ -478,6 +582,8 @@ Dim ctl As Control
 Dim x_scale As Single
 Dim y_scale As Single
 ' Don't bother if we are minimized.
+   On Error GoTo ResizeControls_Error
+
 If WindowState = vbMinimized Then Exit Sub
 ' Get the form's current scale factors.
 x_scale = ScaleWidth / m_FormWid
@@ -506,6 +612,13 @@ For Each ctl In Controls
     End With
     i = i + 1
 Next ctl
+
+   On Error GoTo 0
+   Exit Sub
+
+ResizeControls_Error:
+
+'    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure ResizeControls of Form frmMap"
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
