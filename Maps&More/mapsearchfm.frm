@@ -1197,7 +1197,7 @@ Private Sub cmdCheckSkipped_Click()
       
 uoa100:
       
-   If world = False Then GoTo w100
+   If world = False Then GoTo W100
    
    'create eros.tm6 file
    dtmfile% = FreeFile
@@ -1265,7 +1265,7 @@ uoa100:
    skymove = False
    worldmove = False
    Skycoord% = 0
-   Call BringWindowToTop(mapsearchfm.hWnd)
+   Call BringWindowToTop(mapsearchfm.hwnd)
    searchhgt = savhgt
    viewsearch = True
    Call sunrisesunset(sunmode%)
@@ -1278,7 +1278,7 @@ uoa100:
    On Error GoTo 0
    Exit Sub
    
-w100: 'run analysis of Eretz Yisroel places
+W100: 'run analysis of Eretz Yisroel places
    'ask for a default name
    Unload mapsearchfm
    Set mapsearchfm = Nothing
@@ -1315,7 +1315,7 @@ Private Sub cmdMoveGoogleMap_Click()
       frmMap.Command2.value = True
    Else
       frmMap.Visible = True
-      Call BringWindowToTop(frmMap.hWnd)
+      Call BringWindowToTop(frmMap.hwnd)
       frmMap.txtLat.Text = Text1.Text
       frmMap.txtLong.Text = Text2.Text
       frmMap.Command2.value = True
@@ -1376,7 +1376,7 @@ p500:
     
     SearchVis = True
 
-Call BringWindowToTop(mapsearchfm.hWnd)
+Call BringWindowToTop(mapsearchfm.hwnd)
 
    On Error GoTo 0
    Exit Sub
@@ -1607,7 +1607,7 @@ Private Sub cmdSaveAll_Click()
    
    'new interface 061422 //////////////////////////////////////////////
    
-   ret = SetWindowPos(mapsearchfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   ret = SetWindowPos(mapsearchfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 
    frmMsgBox.MsgCstm "Do you want to append these points to the former list?", "Saving search results", mbQuestion, 1, False, _
                      "Yes, append", "No, start a new list", "Cancel"
@@ -1682,7 +1682,7 @@ Private Sub cmdSaveAll_Click()
               worldmove = False
               End If
            Skycoord% = 0
-           Call BringWindowToTop(mapsearchfm.hWnd)
+           Call BringWindowToTop(mapsearchfm.hwnd)
            response = MsgBox("Record this point in the buffer?", _
                        vbQuestion + vbYesNoCancel, "Maps & More")
            If response = vbYes Then
@@ -2224,7 +2224,7 @@ Private Sub Command10_Click()
    viewsearch = False
 '   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    BringWindowToTop (OverhWnd)
-   Call BringWindowToTop(mapsearchfm.hWnd)
+   Call BringWindowToTop(mapsearchfm.hwnd)
 End Sub
 
 Private Sub Command11_Click()
@@ -2286,7 +2286,7 @@ Private Sub Command12_Click()
       Maps.Text6.Text = sky2.TextArray(skyp2(nplachos&, 1))
       Maps.Text5.Text = sky2.TextArray(skyp2(nplachos&, 2))
       Call goto_click
-      Call BringWindowToTop(mapsearchfm.hWnd)
+      Call BringWindowToTop(mapsearchfm.hwnd)
       OverhWnd = FindWindow(vbNullString, "Overview")
       If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
       End If
@@ -2296,7 +2296,7 @@ Private Sub Command13_Click()
     Maps.Text6.Text = Text1.Text
     Maps.Text5.Text = Text2.Text
     Call goto_click
-    Call BringWindowToTop(mapsearchfm.hWnd)
+    Call BringWindowToTop(mapsearchfm.hwnd)
     OverhWnd = FindWindow(vbNullString, "Overview")
 '    If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 End Sub
@@ -2376,7 +2376,7 @@ Private Sub Command15_Click()
       For i% = 0 To nncity%
          If Combo1.Text = subcitnams(i%) Then
             Beep
-            ret = SetWindowPos(mapsearchfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            ret = SetWindowPos(mapsearchfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
             'lResult = FindWindow(vbNullString, mapsearchfm.hWnd)
             'Call BringWindowToTop(lResult)
             response = MsgBox("Neighborhood has already been recorded, do you wan't to overwrite?", vbExclamation + vbYesNo, "Maps & More Warning")
@@ -2384,13 +2384,13 @@ Private Sub Command15_Click()
 '               ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
                BringWindowToTop (OverhWnd)
-               BringWindowToTop (mapPictureform.hWnd)
+               BringWindowToTop (mapPictureform.hwnd)
                Exit Sub
             Else
 '               ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
                BringWindowToTop (OverhWnd)
-               BringWindowToTop (mapPictureform.hWnd)
+               BringWindowToTop (mapPictureform.hwnd)
                Exit For
                End If
             End If
@@ -2544,7 +2544,7 @@ Private Sub Command5_Click()
    viewsearch = False
 '   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    BringWindowToTop (OverhWnd)
-   Call BringWindowToTop(mapsearchfm.hWnd)
+   Call BringWindowToTop(mapsearchfm.hwnd)
 End Sub
 
 Private Sub Command6_Click()
@@ -2558,7 +2558,7 @@ Private Sub Command6_Click()
    viewsearch = False
 '   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    BringWindowToTop (OverhWnd)
-   Call BringWindowToTop(mapsearchfm.hWnd)
+   Call BringWindowToTop(mapsearchfm.hwnd)
 End Sub
 
 Private Sub Command7_Click()
@@ -2639,8 +2639,8 @@ Private Sub Command8_Click()
            frmMap.Command2.value = True
            
            Call goto_click
-           Call BringWindowToTop(mapsearchfm.hWnd)
-           OverhWnd = FindWindow(vbNullString, "Google Map")
+           Call BringWindowToTop(mapsearchfm.hwnd)
+           OverhWnd = FindWindow(vbNullString, "Map")
 '           If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
            End If
            
@@ -2664,7 +2664,7 @@ Private Sub Command9_Click()
    viewsearch = False
 '   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    BringWindowToTop (overhtwnd)
-   Call BringWindowToTop(mapsearchfm.hWnd)
+   Call BringWindowToTop(mapsearchfm.hwnd)
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -2735,7 +2735,7 @@ Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     OverhWnd = FindWindow(vbNullString, "Overview")
     If OverhWnd = 0 Then
 '       ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-       BringWindowToTop (mapPictureform.hWnd)
+       BringWindowToTop (mapPictureform.hwnd)
        End If
     If world = False Then
       lResult = FindWindow(vbNullString, terranam$)
@@ -2843,7 +2843,7 @@ Private Sub sky2_DblClick()
 '            ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
             BringWindowToTop (OverhWnd)
 '            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            BringWindowToTop (mapPictureform.hWnd)
+            BringWindowToTop (mapPictureform.hwnd)
             'Call BringWindowToTop(OverhWnd)
             dx1 = -1000 '-30 '30
             dy1 = -1000 '-240 '60
@@ -2864,12 +2864,12 @@ Private Sub sky2_DblClick()
             Call mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0) 'move mouse to Location item
             Call mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0) 'move mouse to Location item
 '            ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            BringWindowToTop (mapsearchfm.hWnd)
+            BringWindowToTop (mapsearchfm.hwnd)
             waitime = Timer + 2
             Do Until Timer > waitime
                DoEvents
             Loop
-            Call BringWindowToTop(mapsearchfm.hWnd)
+            Call BringWindowToTop(mapsearchfm.hwnd)
             Exit Sub
             End If
          End If
@@ -2885,7 +2885,7 @@ Private Sub sky2_DblClick()
      'Call BringWindowToTop(OverhWnd)
      'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
      'ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-     Call BringWindowToTop(mapsearchfm.hWnd)
+     Call BringWindowToTop(mapsearchfm.hwnd)
      Exit Sub
      End If
   'Call form_queryunload(i%, j%)
@@ -2894,7 +2894,7 @@ Private Sub sky2_DblClick()
   worldmove = False
   skymove = False
   Skycoord% = 0
-  Call BringWindowToTop(mapsearchfm.hWnd)
+  Call BringWindowToTop(mapsearchfm.hwnd)
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -2937,7 +2937,7 @@ Sub RunOnAutomatic()
 
    'New interface
 '   ret = SetWindowPos(mapsearchfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-   BringWindowToTop (mapsearchfm.hWnd)
+   BringWindowToTop (mapsearchfm.hwnd)
    
    frmMsgBox.MsgCstm "Click sunrise or sunset horizon profile buttons:", "Horizon calculations", mbInformation, 1, False, _
                      "Sunrise profiles", "Sunset profiles", "Cancel"
@@ -2997,7 +2997,7 @@ uoa100:
    mapsearchfm.cmdCheckSkipped.Visible = False
    mapsearchfm.ProgressBarProfs.Visible = True
    
-   If world = False Then GoTo w100
+   If world = False Then GoTo W100
    
    'create eros.tm6 file
    dtmfile% = FreeFile
@@ -3074,7 +3074,7 @@ uoa100:
    skymove = False
    worldmove = False
    Skycoord% = 0
-   Call BringWindowToTop(mapsearchfm.hWnd)
+   Call BringWindowToTop(mapsearchfm.hwnd)
    searchhgt = savhgt
    viewsearch = True
    Call sunrisesunset(sunmode%)
@@ -3086,7 +3086,7 @@ uoa100:
    On Error GoTo 0
    Exit Sub
    
-w100: 'run analysis of Eretz Yisroel places
+W100: 'run analysis of Eretz Yisroel places
    'ask for a default name
    Unload mapsearchfm
    Set mapsearchfm = Nothing

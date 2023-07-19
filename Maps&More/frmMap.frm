@@ -4,15 +4,35 @@ Object = "{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}#1.1#0"; "ieframe.dll"
 Begin VB.Form frmMap 
    AutoRedraw      =   -1  'True
    Caption         =   "Map"
-   ClientHeight    =   7875
+   ClientHeight    =   8880
    ClientLeft      =   5505
    ClientTop       =   3525
-   ClientWidth     =   8505
+   ClientWidth     =   8595
    Icon            =   "frmMap.frx":0000
    LinkTopic       =   "Form1"
-   LockControls    =   -1  'True
-   ScaleHeight     =   7875
-   ScaleWidth      =   8505
+   ScaleHeight     =   8880
+   ScaleWidth      =   8595
+   Begin VB.ComboBox cboGoogle 
+      Height          =   315
+      ItemData        =   "frmMap.frx":0F4A
+      Left            =   5640
+      List            =   "frmMap.frx":0F57
+      TabIndex        =   24
+      Text            =   "cboGoogle"
+      Top             =   1560
+      Visible         =   0   'False
+      Width           =   1335
+   End
+   Begin VB.CheckBox chkGoogle 
+      Caption         =   "Use Google Maps w/ Browser"
+      Height          =   435
+      Left            =   120
+      Style           =   1  'Graphical
+      TabIndex        =   23
+      ToolTipText     =   "Use Google Maps on the default browser"
+      Top             =   1560
+      Width           =   1935
+   End
    Begin MSComDlg.CommonDialog comdlgJSON 
       Left            =   840
       Top             =   1440
@@ -21,7 +41,7 @@ Begin VB.Form frmMap
       _Version        =   393216
    End
    Begin VB.CommandButton Command3 
-      Caption         =   "JASON addess"
+      Caption         =   "JSON addess"
       Height          =   375
       Left            =   5640
       TabIndex        =   22
@@ -60,7 +80,7 @@ Begin VB.Form frmMap
    Begin VB.CommandButton cmdGPS 
       Height          =   375
       Left            =   2880
-      Picture         =   "frmMap.frx":0F4A
+      Picture         =   "frmMap.frx":0F74
       Style           =   1  'Graphical
       TabIndex        =   18
       ToolTipText     =   "Your GPS coordinates"
@@ -69,8 +89,8 @@ Begin VB.Form frmMap
    End
    Begin VB.CommandButton cmdHelp 
       Height          =   375
-      Left            =   2160
-      Picture         =   "frmMap.frx":1C44
+      Left            =   2280
+      Picture         =   "frmMap.frx":1C6E
       Style           =   1  'Graphical
       TabIndex        =   17
       ToolTipText     =   "Help"
@@ -80,7 +100,7 @@ Begin VB.Form frmMap
    Begin VB.CommandButton cmdMoveMaps 
       Height          =   375
       Left            =   3360
-      Picture         =   "frmMap.frx":1D46
+      Picture         =   "frmMap.frx":1D70
       Style           =   1  'Graphical
       TabIndex        =   16
       ToolTipText     =   "Center Maps and More to above coordinates"
@@ -90,7 +110,7 @@ Begin VB.Form frmMap
    Begin VB.CommandButton Mapsbut 
       Height          =   375
       Left            =   3720
-      Picture         =   "frmMap.frx":2188
+      Picture         =   "frmMap.frx":21B2
       Style           =   1  'Graphical
       TabIndex        =   15
       ToolTipText     =   "display map at Mapys & More's center coordinate"
@@ -107,7 +127,7 @@ Begin VB.Form frmMap
       Width           =   1215
    End
    Begin VB.CommandButton Command1 
-      Caption         =   "JASON file"
+      Caption         =   "JSON file"
       Height          =   375
       Left            =   4440
       TabIndex        =   13
@@ -162,13 +182,13 @@ Begin VB.Form frmMap
       Width           =   4215
    End
    Begin SHDocVwCtl.WebBrowser WebBrowser1 
-      Height          =   5895
+      Height          =   6855
       Left            =   0
       TabIndex        =   0
       Top             =   2040
       Width           =   8535
       ExtentX         =   15055
-      ExtentY         =   10398
+      ExtentY         =   12091
       ViewMode        =   0
       Offline         =   0
       Silent          =   0
@@ -254,6 +274,7 @@ End Type
 Private m_ControlPositions() As ControlPositionType
 Private m_FormWid As Single
 Private m_FormHgt As Single
+Private b_Google As Boolean
 
 Private Sub SaveSizes()
 Dim i As Integer
@@ -263,25 +284,25 @@ Dim ctl As Control
 
 ReDim m_ControlPositions(1 To Controls.count)
 i = 1
-For Each ctl In Controls
-    With m_ControlPositions(i)
-        If TypeOf ctl Is Line Then
-            .Left = ctl.X1
-            .Top = ctl.Y1
-            .Width = ctl.X2 - ctl.X1
-            .Height = ctl.Y2 - ctl.Y1
-        Else
-            .Left = ctl.Left
-            .Top = ctl.Top
-            .Width = ctl.Width
-            .Height = ctl.Height
-            On Error Resume Next
-            .FontSize = ctl.Font.size
-            On Error GoTo 0
-        End If
-    End With
-    i = i + 1
-Next ctl
+'For Each ctl In Controls
+'    With m_ControlPositions(i)
+'        If TypeOf ctl Is Line Then
+'            .Left = ctl.X1
+'            .Top = ctl.Y1
+'            .Width = ctl.X2 - ctl.X1
+'            .Height = ctl.Y2 - ctl.Y1
+'        Else
+'            .Left = ctl.Left
+'            .Top = ctl.Top
+'            .Width = ctl.Width
+'            .Height = ctl.Height
+'            On Error Resume Next
+'            .FontSize = ctl.Font.size
+'            On Error GoTo 0
+'        End If
+'    End With
+'    i = i + 1
+'Next ctl
 ' Save the form's size.
 m_FormWid = ScaleWidth
 m_FormHgt = ScaleHeight
@@ -292,6 +313,24 @@ m_FormHgt = ScaleHeight
 SaveSizes_Error:
 
 '    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure SaveSizes of Form frmMap"
+End Sub
+
+Private Sub chkGoogle_Click()
+  With chkGoogle
+    If .value = vbChecked Then
+       b_Google = True
+       Command1.Caption = "Move to address"
+       Command1.ToolTipText = "Click to move the map to the inputed address"
+       Command3.Enabled = False
+       cboGoogle.Visible = True
+    Else
+       b_Google = False
+       Command1.Caption = "JSON file"
+       Command1.ToolTipText = "Click to create/store JSON file for address"
+       Command3.Enabled = True
+       cboGoogle.Visible = False
+       End If
+  End With
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -329,10 +368,10 @@ cmdGPS_Click_Error:
 End Sub
 
 Private Sub cmdHelp_Click()
-  MsgBox "To retrieve coordinates on the BING map," & vbCrLf & _
-  "right click on the point of interest," & vbCrLf & _
+  MsgBox "To retrieve coordinates on the map," & vbCrLf & _
+  "right click (double right click for BING maps) on the point of interest," & vbCrLf & _
   "then click on the COPY coordinates link." & vbCrLf & _
-  "The BING map will confirm that the coordinates have been saved to the clipboard." & vbCrLf & vbCrLf & _
+  "The map will confirm that the coordinates have been saved to the clipboard." & vbCrLf & vbCrLf & _
   "Now you can send those coordinates to the main program via the bullseye button." & vbCrLf & vbCrLf & _
   "(N.b., the position that will be shon the imported maps is only approximate)", vbOKOnly + vbInformation, "Google Map Help"
 End Sub
@@ -419,6 +458,13 @@ cmdMoveMaps_Click_Error:
 
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : Command1_Click
+' Author    : chaim
+' Date      : 7/19/2023
+' Purpose   : originally based on: http://www.vb-helper.com/howto_google_map.html
+'---------------------------------------------------------------------------------------
+'
 Private Sub Command1_Click()
 Dim street As String
 Dim city As String
@@ -434,9 +480,13 @@ If Trim$(txtStreet.Text) = "" And Trim$(txtCity.Text) = "" And Trim$(txtState.Te
 
 BingKeyCoad = "&key=AnImm57iA90PhX2Ou3jl7l5o-PxhM0bazl9l5yCePLauUP55_MesJClgmRte5ch0"
 
-'queryAddress = "http://google.com/maps?q="
+If b_Google Then
+   queryAddress = "http://google.com/maps?q="
 'queryAddress = "https://www.bing.com/maps?cp="
-queryAddress = "http://dev.virtualearth.net/REST/v1/Locations?countryRegion=&locality=&addressLine="
+Else 'using BING maps REST service, creates JSON file
+   queryAddress = "http://dev.virtualearth.net/REST/v1/Locations?countryRegion=&locality=&addressLine="
+   End If
+   
 ' build street part of query string
 If txtStreet.Text <> "" Then
     street = txtStreet.Text
@@ -445,8 +495,11 @@ If txtStreet.Text <> "" Then
        Call MsgBox("Enter a valid street address in the box provided!", vbInformation, "Bing Map Interface")
        Exit Sub
        End If
-    'queryAddress = queryAddress & street + "," & "+"
-    queryAddress = queryAddress & street + ","
+    If b_Google Then
+       queryAddress = queryAddress & street + "," & "+"
+    Else
+       queryAddress = queryAddress & street + ","
+       End If
 
 End If
 ' build city part of query string
@@ -457,14 +510,20 @@ If txtCity.Text <> "" Then
        Call MsgBox("Enter a valid city in the box provided!", vbInformation, "Bing Map Interface")
        Exit Sub
        End If
-'    queryAddress = queryAddress & city + "," & "+"
-    queryAddress = queryAddress & city + ","
+    If b_Google Then
+       queryAddress = queryAddress & city + "," & "+"
+    Else
+       queryAddress = queryAddress & city + ","
+       End If
 End If
 ' build state part of query string
 If txtState.Text <> "" Then
     state = txtState.Text
-'    queryAddress = queryAddress & state + "," & "+"
-    queryAddress = queryAddress & state + ","
+    If b_Google Then
+       queryAddress = queryAddress & state + "," & "+"
+    Else
+       queryAddress = queryAddress & state + ","
+       End If
 End If
 ' build zip code part of query string
 If txtZipCode.Text <> "" Then
@@ -472,9 +531,14 @@ If txtZipCode.Text <> "" Then
     queryAddress = queryAddress & zip
 End If
 ' pass the url with the query string to web browser control
-queryAddress = queryAddress & BingKeyCoad
 
-WebBrowser1.Navigate queryAddress
+If Not b_Google Then
+   queryAddress = queryAddress & BingKeyCoad
+
+   WebBrowser1.Navigate queryAddress
+Else
+   ShellExecute ByVal 0&, "open", queryAddress, vbNullString, vbNullString, SW_SHOWMAXIMIZED
+   End If
 'source: https://www.tek-tips.com/viewthread.cfm?qid=1807492
 'shows route on static map
 'WebBrowser1.Navigate "http://dev.virtualearth.net/REST/v1/Imagery/Map/Road/Routes?wp.0=Seattle,WA;64;1&wp.1=Redmond,WA;66;2&key=AnImm57iA90PhX2Ou3jl7l5o-PxhM0bazl9l5yCePLauUP55_MesJClgmRte5ch0"
@@ -497,21 +561,69 @@ End If
 Dim lat As String
 Dim lon As String
 Dim queryAddress As String
+
+Const URL_BASE As String = "http://maps.google.com/maps?f=q&hl=en&geocode=&time=&date=&ttype=&q=@ADDR@&ie=UTF8&t=@TYPE@"
+
+Dim addr As String
+Dim url As String
+
 'https://www.bing.com/maps/?cp=32.093046%7E34.784775&lvl=15.0
 'https://www.bing.com/maps/?cp=23.523462%7E-50.976065&lvl=3.0
-'querAddress = "http:/google.com/maps?q="
-queryAddress = "https://www.bing.com/maps?cp="
+If b_Google Then
+   querAddress = "http:/google.com/maps/place/40%C2%B005'"
+'Else
+'   queryAddress = "https://www.bing.com/maps?cp="
+   End If
 If txtLat.Text <> "" Then
     lat = txtLat.Text
-    'queryAddress = queryAddress & lat + "%2C"
-    queryAddress = queryAddress & lat + "%7E"
+    If b_Google Then
+       queryAddress = queryAddress & lat + "%2C"
+    Else
+       queryAddress = queryAddress & lat + "%7E"
+       End If
 End If
 ' build longitude part of query string
 If txtLong.Text <> "" Then
     lon = txtLong.Text
     queryAddress = queryAddress & lon
 End If
-WebBrowser1.Navigate queryAddress & "&lvl=15.0"
+
+If b_Google Then
+    addr = Str$(lat) & "," & Str$(lon)
+    '**********************************************************
+    addr = Replace$(addr, " ", "+")
+    addr = Replace$(addr, ",", "%2c")
+
+    ' Insert the encoded address into the base URL.
+    url = Replace$(URL_BASE, "@ADDR@", addr)
+
+    ' Insert the proper type.
+    Select Case cboGoogle.Text
+        Case "Map"
+            url = Replace$(url, "@TYPE@", "m")
+        Case "Satellite"
+            url = Replace$(url, "@TYPE@", "h")
+        Case "Terrain"
+            url = Replace$(url, "@TYPE@", "p")
+    End Select
+    
+    'now add pushpin
+    addr = adr + "%2c" + "pp=" + lat + "%2c" + lon
+
+    ' "Execute" the URL to make the default browser display it.
+    ShellExecute ByVal 0&, "open", url, _
+        vbNullString, vbNullString, SW_SHOWMAXIMIZED
+
+'   ShellExecute ByVal 0&, "open", queryAddress, vbNullString, vbNullString, SW_SHOWMAXIMIZED
+'   https://www.google.com/maps/place/40%C2%B005'44.9%22N+74%C2%B012'56.5%22W/@40.0958,-74.2178887,17z/data=!3m1!4b1!4m4!3m3!8m2!3d40.0958!4d-74.2157?hl=en&entry=ttu
+'   https://www.google.com/maps?q=12531%20Collins%20St.,+Valley%20Village,+CA,+
+Else
+   'followed example at https://stackoverflow.com/questions/18900544/bing-maps-how-to-set-a-pin-on-a-map-url
+   'last answer of vitale232
+   queryAddress = "https://www.bing.com/maps?sp=point." & Trim$(lat) & "_" & Trim$(lon) & "_Center+Point&cp=" & Trim$(lat) & "%7E" & Trim$(lon) & "&lvl=16.0"
+   'https://www.bing.com/maps?sp=point.45.23423_-122.1232_Some+Point_WhereAmI&cp=45.234223%7E-122.128916&lvl=16.0
+   WebBrowser1.Navigate queryAddress
+   End If
 End Sub
 
 Private Sub Command3_Click()
@@ -567,6 +679,8 @@ Else
    End If
    
 If TypeConv = 0 Then TypeConv = 1
+
+cboGoogle.ListIndex = 0
    
 'ggpscorrection = False
 'ret = SetWindowPos(frmMap.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
@@ -586,39 +700,47 @@ Dim y_scale As Single
 
 If WindowState = vbMinimized Then Exit Sub
 ' Get the form's current scale factors.
+If m_FormWid = 0 Then m_FormWid = ScaleWidth
+If m_FormHgt = 0 Then m_FormHgt = ScaleHeight
+
 x_scale = ScaleWidth / m_FormWid
 y_scale = ScaleHeight / m_FormHgt
+
+WebBrowser1.Width = x_scale * WebBrowser1.Width
+WebBrowser1.Height = y_scale * WebBrowser1.Height
+'x = frmMap.Width
+'frmMap.Width = WebBrowser1.Width
 ' Position the controls.
-i = 1
-For Each ctl In Controls
-    With m_ControlPositions(i)
-        If TypeOf ctl Is Line Then
-            ctl.X1 = x_scale * .Left
-            ctl.Y1 = y_scale * .Top
-            ctl.X2 = ctl.X1 + x_scale * .Width
-            ctl.Y2 = ctl.Y1 + y_scale * .Height
-        Else
-            ctl.Left = x_scale * .Left
-            ctl.Top = y_scale * .Top
-            ctl.Width = x_scale * .Width
-            If Not (TypeOf ctl Is ComboBox) Then
-                ' Cannot change height of ComboBoxes.
-                ctl.Height = y_scale * .Height
-            End If
-            On Error Resume Next
-            ctl.Font.size = y_scale * .FontSize
-            On Error GoTo 0
-        End If
-    End With
-    i = i + 1
-Next ctl
+'i = 1
+'For Each ctl In Controls
+'    With m_ControlPositions(i)
+'        If TypeOf ctl Is Line Then
+'            ctl.X1 = x_scale * .Left
+'            ctl.Y1 = y_scale * .Top
+'            ctl.X2 = ctl.X1 + x_scale * .Width
+'            ctl.Y2 = ctl.Y1 + y_scale * .Height
+'        Else
+'            ctl.Left = x_scale * .Left
+'            ctl.Top = y_scale * .Top
+'            ctl.Width = x_scale * .Width
+'            If Not (TypeOf ctl Is ComboBox) Then
+'                ' Cannot change height of ComboBoxes.
+'                ctl.Height = y_scale * .Height
+'            End If
+'            On Error Resume Next
+'            ctl.Font.size = y_scale * .FontSize
+'            On Error GoTo 0
+'        End If
+'    End With
+'    i = i + 1
+'Next ctl
 
    On Error GoTo 0
    Exit Sub
 
 ResizeControls_Error:
 
-'    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure ResizeControls of Form frmMap"
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure ResizeControls of Form frmMap"
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -673,3 +795,4 @@ End Sub
 Private Sub optGeo_Click()
    TypeConv = 2
 End Sub
+
