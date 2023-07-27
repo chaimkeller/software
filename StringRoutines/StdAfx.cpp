@@ -399,6 +399,7 @@ char filroot[255] = "";
 char myfile[255] = "";
 
 //////global non string variables///////
+short ntrcalc = 5;  //used for ReadProfile and netzskiy calculations, if = 4 then flags surveyor data, and no TR modifications
 short sortzman[50];
 short datavernum = 0;
 short progvernum = 0;
@@ -924,13 +925,13 @@ The values set for debugging the program are simply the cgi arguments that are p
 37 updated IsDST to handle countries that abolished DST like Mexico 11/09/22
 38 made AddCushion = 1 the default (adds a cushion)
 39 For SingleDay, use its ground Temperature only for figuring out the terrestrial refraction and the horizon profile
-
+40 fixed bug that didn't detect surveyor EY measurements, if detected now won't modify view angles with TR
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 14.1f;
+float vernum = 15.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -11821,27 +11822,30 @@ L692:
 				elevintx = elev[ne + 1].vert[0] - elev[ne].vert[0]; //difference of adjoining aximuths
 				elevint = (elevinty / elevintx) * (azi1 - elev[ne].vert[0]) + elev[ne].vert[1]; //extrapolated view angle
 
-				//now modify apparent elevention, elevint, with terrestrial refraction
-				//first calculate interpolated difference of heights
-				hgtdifx = elev[ne + 1].vert[3] - elev[ne].vert[3]; //difference of neighboring obstruction heights
-				hgtdif = (hgtdifx / elevintx) * (azi1 - elev[ne].vert[0]) + elev[ne].vert[3];
-				hgtdif -= hgt;
-				//convert to kms
-				hgtdif *= .001f;
-				//now calculate the interpolated distance to obstruction along earth
-				distx = elev[ne + 1].vert[2] - elev[ne].vert[2];
-				dist = (distx / elevintx) * (azi1 - elev[ne].vert[0]) + elev[ne].vert[2];
-				//now calculate approximate pathlength using Lehn's/ Bruton's parabolic approximation
-				//good for nearly horizontal rays with no addition for refraction
-				d__3 = abs(hgtdif) - dist * dist * .5f / rearth;
-				pathlength = sqrt(dist * dist + d__3 * d__3);
-				//now add terrestrial refraction based on modified (Wikipedia) Bomford expression 
-				if (abs(hgtdif) > 1e3f) {
-					exponent = .99f;
-				} else {
-					exponent = .9965f;
+				if (ntrcalc != 4) //if = 4, then it is surveyor data, so don't modify view angles
+				{
+					//now modify apparent elevention, elevint, with terrestrial refraction
+					//first calculate interpolated difference of heights
+					hgtdifx = elev[ne + 1].vert[3] - elev[ne].vert[3]; //difference of neighboring obstruction heights
+					hgtdif = (hgtdifx / elevintx) * (azi1 - elev[ne].vert[0]) + elev[ne].vert[3];
+					hgtdif -= hgt;
+					//convert to kms
+					hgtdif *= .001f;
+					//now calculate the interpolated distance to obstruction along earth
+					distx = elev[ne + 1].vert[2] - elev[ne].vert[2];
+					dist = (distx / elevintx) * (azi1 - elev[ne].vert[0]) + elev[ne].vert[2];
+					//now calculate approximate pathlength using Lehn's/ Bruton's parabolic approximation
+					//good for nearly horizontal rays with no addition for refraction
+					d__3 = abs(hgtdif) - dist * dist * .5f / rearth;
+					pathlength = sqrt(dist * dist + d__3 * d__3);
+					//now add terrestrial refraction based on modified (Wikipedia) Bomford expression 
+					if (abs(hgtdif) > 1e3f) {
+						exponent = .99f;
+					} else {
+						exponent = .9965f;
+					}
+					elevint += TRfudgeVis * trbasis * pow(pathlength, exponent);
 				}
-				elevint += TRfudgeVis * trbasis * pow(pathlength, exponent);
 				//////////////////////////////////////////////////////////////////////////////////////////
 
 				if ((elevint >= al1 || nloops <= 0) && nabove == 1)
@@ -11974,27 +11978,30 @@ L692:
 				elevintx = elev[ne + 1].vert[0] - elev[ne].vert[0];
 				elevint = elevinty / elevintx * (azi1 - elev[ne].vert[0]) + elev[ne].vert[1];
 
-				//now modify apparent elevention, elevint, with terrestrial refraction
-				//first calculate interpolated difference of heights
-				hgtdifx = elev[ne + 1].vert[3] - elev[ne].vert[3]; //difference of neighboring obstruction heights
-				hgtdif = (hgtdifx / elevintx) * (azi1 - elev[ne].vert[0]) + elev[ne].vert[3];
-				hgtdif -= hgt;
-				//convert to kms
-				hgtdif *= .001f;
-				//now calculate the interpolated distance to obstruction along earth
-				distx = elev[ne + 1].vert[2] - elev[ne].vert[2];
-				dist = (distx / elevintx) * (azi1 - elev[ne].vert[0]) + elev[ne].vert[2];
-				//now calculate approximate pathlength using Lehn's/ Bruton's parabolic approximation
-				//good for nearly horizontal rays with no addition for refraction
-				d__3 = abs(hgtdif) - dist * dist * .5f / rearth;
-				pathlength = sqrt(dist * dist + d__3 * d__3);
-				//now add terrestrial refraction based on modified (Wikipedia) Bomford expression 
-				if (abs(hgtdif) > 1e3f) {
-					exponent = .99f;
-				} else {
-					exponent = .9965f;
+				if (ntrcalc != 4) //if = 4, then it is surveyor data, so leave TR alone
+				{
+					//now modify apparent elevention, elevint, with terrestrial refraction
+					//first calculate interpolated difference of heights
+					hgtdifx = elev[ne + 1].vert[3] - elev[ne].vert[3]; //difference of neighboring obstruction heights
+					hgtdif = (hgtdifx / elevintx) * (azi1 - elev[ne].vert[0]) + elev[ne].vert[3];
+					hgtdif -= hgt;
+					//convert to kms
+					hgtdif *= .001f;
+					//now calculate the interpolated distance to obstruction along earth
+					distx = elev[ne + 1].vert[2] - elev[ne].vert[2];
+					dist = (distx / elevintx) * (azi1 - elev[ne].vert[0]) + elev[ne].vert[2];
+					//now calculate approximate pathlength using Lehn's/ Bruton's parabolic approximation
+					//good for nearly horizontal rays with no addition for refraction
+					d__3 = abs(hgtdif) - dist * dist * .5f / rearth;
+					pathlength = sqrt(dist * dist + d__3 * d__3);
+					//now add terrestrial refraction based on modified (Wikipedia) Bomford expression 
+					if (abs(hgtdif) > 1e3f) {
+						exponent = .99f;
+					} else {
+						exponent = .9965f;
+					}
+					elevint += TRfudgeVis * trbasis * pow(pathlength, exponent);
 				}
-				elevint += TRfudgeVis * trbasis * pow(pathlength, exponent);
 				//////////////////////////////////////////////////////////////////////////////////////////
 
 				if (elevint <= alt1)
@@ -14128,7 +14135,7 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 ////////////////////////////////////////////////////////////
 {
 	double tmp1,tmp2,tmp3,tmp4;
-	short nazn, nazimuth,ntrcalc;
+	short nazn, nazimuth;
 	double deltd, distd, defm, defb, avref;
 	double trrbasis, d__1, d__2, d__3;
 	double exponent,pathlength;
@@ -14258,6 +14265,9 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 		    if (tmp4 == 0 && tmp3 == 100)
 			{
 				//this is old surveyor data, leave view angles alone
+				//flag this as surveyor data so don't modify view angles for terrestrial refraction
+				//i.e., assume what the surveyor measured stays constant forever
+				ntrcalc = 4;
 			}
 			else
 			{
@@ -14347,6 +14357,9 @@ short ReadProfile( char *fileon, double *hgt, short *maxang, double *meantemp )
 						if (tmp4 == 0 && tmp3 == 100)
 						{
 							//this is old surveyor data, leave view angles alone
+							//flag as surveyor data and leave terrestrial refraction alone
+							//assuming that what the surveyor measured stays constant forever
+							ntrcalc = 4;
 						}
 						else
 						{
