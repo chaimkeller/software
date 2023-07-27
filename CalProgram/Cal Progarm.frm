@@ -4,9 +4,9 @@ Begin VB.Form Caldirectories
    BackColor       =   &H00FFFFC0&
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Cal Program"
-   ClientHeight    =   8025
+   ClientHeight    =   8490
    ClientLeft      =   3570
-   ClientTop       =   1995
+   ClientTop       =   1920
    ClientWidth     =   4560
    BeginProperty Font 
       Name            =   "Arial"
@@ -22,8 +22,95 @@ Begin VB.Form Caldirectories
    LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   8025
+   ScaleHeight     =   8490
    ScaleWidth      =   4560
+   Begin VB.OptionButton Option3 
+      BackColor       =   &H00FFFFC0&
+      Caption         =   "Kovitz list"
+      Enabled         =   0   'False
+      BeginProperty Font 
+         Name            =   "Arial"
+         Size            =   6.75
+         Charset         =   177
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   225
+      Left            =   3200
+      MaskColor       =   &H00FFFFC0&
+      TabIndex        =   40
+      ToolTipText     =   "Use Kovitz sorted list"
+      Top             =   360
+      Width           =   975
+   End
+   Begin VB.Frame frmTableType 
+      BackColor       =   &H00FFFFC0&
+      Enabled         =   0   'False
+      Height          =   430
+      Left            =   360
+      TabIndex        =   36
+      Top             =   2620
+      Width           =   3855
+      Begin VB.OptionButton optBoth 
+         BackColor       =   &H00FFFFC0&
+         Caption         =   "Both"
+         Enabled         =   0   'False
+         BeginProperty Font 
+            Name            =   "Arial"
+            Size            =   8.25
+            Charset         =   177
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   255
+         Left            =   3120
+         TabIndex        =   39
+         Top             =   160
+         Width           =   975
+      End
+      Begin VB.OptionButton optSunset 
+         BackColor       =   &H00FFFFC0&
+         Caption         =   "Sunset"
+         Enabled         =   0   'False
+         BeginProperty Font 
+            Name            =   "Arial"
+            Size            =   8.25
+            Charset         =   177
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   240
+         Left            =   1560
+         TabIndex        =   38
+         Top             =   160
+         Width           =   1095
+      End
+      Begin VB.OptionButton optSunrise 
+         BackColor       =   &H00FFFFC0&
+         Caption         =   "Sunrise"
+         Enabled         =   0   'False
+         BeginProperty Font 
+            Name            =   "Arial"
+            Size            =   8.25
+            Charset         =   177
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   210
+         Left            =   120
+         TabIndex        =   37
+         Top             =   160
+         Width           =   1095
+      End
+   End
    Begin VB.TextBox txtCivil 
       BeginProperty Font 
          Name            =   "Microsoft Sans Serif"
@@ -196,6 +283,16 @@ Begin VB.Form Caldirectories
       ToolTipText     =   "Which type of tables to calculate"
       Top             =   800
       Width           =   1095
+      Begin VB.CheckBox chkObs 
+         Enabled         =   0   'False
+         Height          =   240
+         Left            =   720
+         TabIndex        =   35
+         ToolTipText     =   "Use added cushion option"
+         Top             =   130
+         UseMaskColor    =   -1  'True
+         Width           =   255
+      End
       Begin VB.OptionButton optAst 
          BackColor       =   &H00FFFFC0&
          Caption         =   "Ast"
@@ -251,7 +348,6 @@ Begin VB.Form Caldirectories
          Left            =   120
          TabIndex        =   22
          Top             =   130
-         Value           =   -1  'True
          Width           =   855
       End
    End
@@ -311,7 +407,7 @@ Begin VB.Form Caldirectories
       Left            =   240
       Style           =   1  'Graphical
       TabIndex        =   18
-      Top             =   2760
+      Top             =   3360
       Visible         =   0   'False
       Width           =   4095
    End
@@ -338,7 +434,7 @@ Begin VB.Form Caldirectories
    End
    Begin VB.OptionButton Option1 
       BackColor       =   &H00FFFFC0&
-      Caption         =   "Use citynams.lst data to print near mtn. warnings"
+      Caption         =   "Use sorted city list citysort.txt"
       Enabled         =   0   'False
       BeginProperty Font 
          Name            =   "Arial"
@@ -370,21 +466,21 @@ Begin VB.Form Caldirectories
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   240
+      Height          =   360
       Left            =   300
       TabIndex        =   15
       ToolTipText     =   "User input of coordinates"
-      Top             =   2500
+      Top             =   2640
       Visible         =   0   'False
       Width           =   3960
    End
    Begin VB.TextBox Text2 
       Alignment       =   2  'Center
-      Height          =   345
-      Left            =   1620
+      Height          =   360
+      Left            =   1560
       TabIndex        =   13
       Text            =   "1"
-      Top             =   2640
+      Top             =   3140
       Width           =   495
    End
    Begin VB.CheckBox Check1 
@@ -443,7 +539,7 @@ Begin VB.Form Caldirectories
       Picture         =   "Cal Progarm.frx":0884
       Style           =   1  'Graphical
       TabIndex        =   10
-      Top             =   2640
+      Top             =   3120
       Width           =   2055
    End
    Begin VB.ComboBox Combo1 
@@ -493,10 +589,10 @@ Begin VB.Form Caldirectories
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   2790
+      Height          =   2730
       Left            =   240
       TabIndex        =   0
-      Top             =   3480
+      Top             =   4200
       Width           =   4095
    End
    Begin VB.CommandButton ExitButton 
@@ -517,7 +613,7 @@ Begin VB.Form Caldirectories
       Picture         =   "Cal Progarm.frx":0CC6
       Style           =   1  'Graphical
       TabIndex        =   2
-      Top             =   7080
+      Top             =   7560
       UseMaskColor    =   -1  'True
       Width           =   1815
    End
@@ -532,10 +628,10 @@ Begin VB.Form Caldirectories
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      Height          =   315
+      Height          =   330
       Left            =   240
       TabIndex        =   4
-      Top             =   3120
+      Top             =   3720
       Width           =   4095
    End
    Begin VB.CommandButton OKbutton 
@@ -551,11 +647,11 @@ Begin VB.Form Caldirectories
          Strikethrough   =   0   'False
       EndProperty
       Height          =   855
-      Left            =   420
+      Left            =   480
       Picture         =   "Cal Progarm.frx":1108
       Style           =   1  'Graphical
       TabIndex        =   1
-      Top             =   7080
+      Top             =   7560
       UseMaskColor    =   -1  'True
       Width           =   1815
    End
@@ -575,7 +671,7 @@ Begin VB.Form Caldirectories
       Left            =   240
       TabIndex        =   3
       Text            =   "c:\cities\jerusalem_other_neighbohoods"
-      Top             =   6600
+      Top             =   7080
       Width           =   4095
    End
    Begin VB.Shape Shape4 
@@ -615,13 +711,13 @@ Begin VB.Form Caldirectories
       Height          =   375
       Left            =   360
       TabIndex        =   14
-      Top             =   2640
+      Top             =   3120
       Width           =   1215
    End
    Begin VB.Shape Shape1 
       BorderColor     =   &H00C0C000&
       BorderWidth     =   2
-      Height          =   3015
+      Height          =   3495
       Left            =   240
       Top             =   75
       Width           =   4095
@@ -760,6 +856,11 @@ Private Sub Autobut_Click()
    AutoCancelbut.Enabled = True
    Option1.Enabled = True
    Option2.Enabled = True
+   Option3.Enabled = True
+   frmTableType.Enabled = True
+   optSunrise.Enabled = True
+   optSunset.Enabled = True
+   optBoth.Enabled = True
 End Sub
 
 Private Sub AutoCancelbut_Click()
@@ -782,7 +883,12 @@ Private Sub AutoCancelbut_Click()
      Label3.Enabled = False
      Option1.Enabled = False
      Option2.Enabled = False
+     Option3.Enabled = False
      Text2.Text = numautolst%
+     frmTableType.Enabled = False
+     optSunrise.Enabled = False
+     optSunset.Enabled = False
+     optBoth.Enabled = False
   Else
      autocancel = True
      End If
@@ -846,6 +952,15 @@ Private Sub chkListAuto_Click()
 End Sub
 
 
+
+Private Sub chkObs_Click()
+   If chkObs.Value = vbChecked Then
+'      Call SunriseSunset.chkObst_Click
+      AddObsTime = 1
+   Else
+      AddObsTime = 0
+      End If
+End Sub
 
 Private Sub chkPdfPrinter_Click()
    chkHtmlAuto.Value = False
@@ -926,6 +1041,8 @@ Drive1_Change_Error:
 End Sub
 
 Private Sub ExitButton_Click()
+   On Error GoTo ExitButton_Click_Error
+
    Screen.MousePointer = vbDefault
    Close
    If Katz = True Then GoTo 55
@@ -1002,6 +1119,15 @@ exer50:
 
     'end program abruptly
     End
+
+   On Error GoTo 0
+   Exit Sub
+
+ExitButton_Click_Error:
+    If Err.Number = 70 Then
+       Resume Next
+       End If
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure ExitButton_Click of Form Caldirectories"
 
 End Sub
 
@@ -1211,6 +1337,7 @@ popmsgbox:
    CN4netz$ = sEmpty
    CN4skiy$ = sEmpty
    nearauto = False
+   nearautoedited = False
    Runbutton.Enabled = False
    AutoCancelbut.Enabled = False
    frmSplash.Visible = Fase
@@ -1301,6 +1428,17 @@ Private Sub optAst_Click()
    visauto = False
    mishorauto = False
    astauto = True
+   chkObs.Enabled = False
+   chkObs.Value = vbUnchecked
+End Sub
+
+Private Sub optBoth_Click()
+  SunriseCalc = True
+  SunsetCalc = True
+  With SunriseSunset
+     .Check1.Value = vbChecked
+     .Check2.Value = vbChecked
+  End With
 End Sub
 
 Private Sub optEnglish_Click()
@@ -1339,12 +1477,14 @@ End Sub
 
 Private Sub Option1_Click()
    nearauto = False
+   nearautoedited = False
 End Sub
 
 Private Sub Option2_Click()
 '   On Error GoTo operror
    autoNoCDcheck = False
    nearauto = True
+   nearautoedited = False
    If autosave Then
       autoNoCDcheck = True
       Exit Sub
@@ -1393,19 +1533,57 @@ Private Sub Option2_Click()
 '  Resume
 End Sub
 
+Private Sub Option3_Click()
+   autoNoCDcheck = False
+   nearauto = True
+   'use edited list
+   nearautoedited = True
+   If autosave Then
+      autoNoCDcheck = True
+      Exit Sub
+      End If
+End Sub
+
 Private Sub optMishor_Click()
    visauto = False
    mishorauto = True
    astauto = False
+   chkObs.Enabled = False
+   chkObs.Value = vbUnchecked
+End Sub
+
+Private Sub optSunrise_Click()
+  SunriseCalc = True
+  SunsetCalc = False
+  With SunriseSunset
+     .Check1.Value = vbChecked
+     .Check2.Value = vbUnchecked
+  End With
+End Sub
+
+Private Sub optSunset_Click()
+  SunriseCalc = False
+  SunsetCalc = True
+  With SunriseSunset
+     .Check1.Value = vbUnchecked
+     .Check2.Value = vbChecked
+  End With
 End Sub
 
 Private Sub optVis_Click()
    visauto = True
    mishorauto = False
    astauto = False
+   chkObs.Enabled = True
+   chkObs.Value = vbChecked
 End Sub
 
 Private Sub Runbutton_Click()
+   If Not SunriseCalc And Not SunsetCalc Then
+      Call MsgBox("Click on the sunrise, sunset, or both option buttons to define which type of calculation to do", vbInformation, "Calculation Type")
+      Exit Sub
+      End If
+      
    If runningscan = True Then Exit Sub
    If autocancel = True Then GoTo 950
    yrheb% = Val(Combo1.Text)
@@ -1527,7 +1705,6 @@ autorun:
       stage% = 1
       
       If chkPrintAuto.Value = vbChecked Then GoTo 999
-      
 920:  'make html directories if required
       
       If chkHtmlAuto.Value = vbChecked Then
@@ -1624,17 +1801,28 @@ autorun2:
       
 930:  If numautolst% + 1 > numautocity% Then GoTo 950
       filcit% = FreeFile
-      Open drivcities & "citysortheb_w1255.txt" For Input As #filcit%
-      filnam% = FreeFile
-      Open drivcities & "citynams_w1255.txt" For Input As #filnam%
-      Dir1.ListIndex = 0
-      For i% = 1 To numautolst% + 1
-         Input #filcit%, doclin$
-      Next i%
-      Close #filcit%
+      If nearautoedited Then
+        'only calculate tables for the edited city list
+        Open drivcities & "citysorthebedited_w1255.txt" For Input As #filcit%
+        For i% = 1 To numautolst% + 1
+           Input #filcit%, doclin$
+        Next i%
+        Close #filcit%
+      Else
+        'calculate tables for all the cities
+        Open drivcities & "citysortheb_w1255.txt" For Input As #filcit%
+        For i% = 1 To numautolst% + 1
+           Input #filcit%, doclin$
+        Next i%
+        Close #filcit%
+        End If
+        
       numautolst% = numautolst% + 1
          
       'now open citynams_w1255.txt and find equivalent English name
+      filnam% = FreeFile
+      Open drivcities & "citynams_w1255.txt" For Input As #filnam%
+      Dir1.ListIndex = 0
        Do Until EOF(filnam%)
           Input #filnam%, cityAutoEng$
           Input #filnam%, cityAutoHeb$
@@ -1668,10 +1856,20 @@ autorun2:
       automatic = True
       Caldirectories.OKbutton.Value = True
       If nearauto = False Then
+         AddObsTime = 0
          SunriseSunset.OKbut0.Value = True
       ElseIf nearauto = True Then
-         SunriseSunset.Check3.Value = vbChecked
-         SunriseSunset.OKbut0.Value = True
+         If chkObs.Value = vbChecked Then
+            AddObsTime = 1
+            SunriseSunset.Check3.Value = vbUnchecked
+            SunriseSunset.chkObst.Value = vbChecked
+            SunriseSunset.OKbut0.Value = True
+         Else
+            AddObsTime = 0
+            SunriseSunset.Check3.Value = vbChecked
+            SunriseSunset.chkObst.Value = vbUnchecked
+            SunriseSunset.OKbut0.Value = True
+            End If
           End If
       stage% = 1
       If chkOnePage.Value Then autocancel = True
@@ -1741,6 +1939,7 @@ autorun2:
       
       Option1.Enabled = False
       Option2.Enabled = False
+      Option3.Enabled = False
       
       'ret = SetWindowPos(Caldirectories.hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
       runningscan = False

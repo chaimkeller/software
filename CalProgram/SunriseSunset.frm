@@ -426,7 +426,6 @@ Begin VB.Form SunriseSunset
       TabIndex        =   1
       ToolTipText     =   "visible sunset"
       Top             =   2100
-      Value           =   1  'Checked
       Width           =   1815
    End
    Begin VB.CheckBox Check1 
@@ -858,7 +857,7 @@ Private Sub Check7_Click()
       End If
 End Sub
 
-Private Sub chkObst_Click()
+Public Sub chkObst_Click()
    If Check3.Value = vbChecked Then
       Check3.Value = vbUnchecked
       End If
@@ -950,7 +949,7 @@ Private Sub Form_Load()
     
     'visible times are default
     Check1.Value = vbChecked
-    Check2.Value = vbChecked
+    Check2.Value = vbUnchecked
     Check4.Value = vbUnchecked
     Check5.Value = vbUnchecked
     Check6.Value = vbUnchecked
@@ -959,28 +958,54 @@ Private Sub Form_Load()
     If Caldirectories.Runbutton.Enabled Then
        If visauto Then 'visible times
          'use defaults
+         '////changed 022423
+         If SunriseCalc Then
+            Check1.Value = vbChecked
+            End If
+         If SunsetCalc Then
+            Check2.Value = vbChecked
+            End If
+         
+         If AddObsTime = 1 Then
+            chkObst.Value = vbUnchecked 'reset value
+            Call chkObst_Click 'set parameters for added cushion
+            End If
        ElseIf mishorauto Then 'mishor times
          Check1.Value = vbUnchecked
          Check2.Value = vbUnchecked
          Check4.Value = vbUnchecked
          Check5.Value = vbUnchecked
-         Check6.Value = vbChecked
-         Check7.Value = vbChecked
+         Check6.Value = vbUnchecked
+         chekc7.Value = vbUnchecked
+         If SunriseCalc Then
+            Check6.Value = vbChecked
+            End If
+         If SunsetCalc Then
+            Check7.Value = vbChecked
+            End If
        ElseIf astauto Then 'astronomical times
          Check1.Value = vbUnchecked
          Check2.Value = vbUnchecked
-         Check4.Value = vbChecked
-         Check5.Value = vbChecked
+         Check4.Value = vbUnchecked
+         Check5.Value = vbUnchecked
+         If SunriseCalc Then
+            Check4.Value = vbChecked
+            End If
+         If SunsetCalc Then
+            Check5.Value = vbChecked
+            End If
          Check6.Value = vbUnchecked
          Check7.Value = vbUnchecked
          End If
        End If
        
    If AddObsTime = 1 Then
-     chkObst.Value = vbChecked
+'     chkObst.Value = vbChecked
      Check3.Value = vbChecked
+     chkObst.Value = vbUnchecked 'reset value
+     Call chkObst_Click 'set parameters for added cushion
    Else
-     Check1.Value = vbChecked
+     Check3.Value = vbChecked
      chkObst.Value = vbUnchecked
      End If
     
@@ -1017,6 +1042,7 @@ Private Sub OKbut0_Click()
    Dim Coords() As String, kmxAT As Double, kmyAT As Double
    Dim ltAT As Double, lgAT As Double
    Dim MinTK(12) As Integer, AvgTK(12) As Integer, MaxTK(12) As Integer, ier As Integer
+   Dim StrArr() As String
    
    On Error GoTo OKbuterhand
    
@@ -1147,6 +1173,14 @@ Private Sub OKbut0_Click()
           End If
        
        End If
+       
+   If automatic And Caldirectories.chkObs.Value = vbChecked And SunriseSunset.chkObst.Value = vbUnchecked Then
+      If SunriseSunset.chkObst.Value = vbChecked Then
+      Else
+         Call SunriseSunset.chkObst_Click
+         End If
+      AddAddObsTime = 1
+      End If
    
    nearnez = False
    nearski = False
@@ -2253,12 +2287,12 @@ Private Sub OKbut0_Click()
             GoTo i500
             End If
          If automatic = True And Not autosave Then
-            response = MsgBox("There seems to be a discrepancy between the city's hebrew name and the stored name in the .SAV file!...will ABORT automatic run for next iteration.", vbExclamation + vbOKCancel, "Cal Program")
+            response = MsgBox("There seems to be a discrepancy between the city's hebrew name and the stored name in the .SAV file!...will ABORT automatic run for next iteration." & vbCrLf & vbCrLf & "(Hint: check to see if the citynams_w1255.txt file has been updated)", vbExclamation + vbOKCancel, "Cal Program")
             If response = vbCancel Then
                autocancel = True
                End If
          ElseIf Not autosave Then
-            MsgBox "There seems to be a discrepancy between the city's hebrew name and the stored name in the .SAV file...so be SURE you fix it!", vbExclamation + vbOKOnly, "Cal Program"
+            MsgBox "There seems to be a discrepancy between the city's hebrew name and the stored name in the .SAV file...so be SURE you fix it!" & vbCrLf & vbCrLf & "(Hint: check to see if the citynams_w1255.txt file has been updated.)", vbExclamation + vbOKOnly, "Cal Program"
             End If
       Else
          newhebcalfm.Combo1.AddItem compare1$
@@ -2432,12 +2466,15 @@ i500:
          sumkmxo = sumkmxo + kmxo
          sumkmyo = sumkmyo + kmyo
          sumhgt = sumhgt + hgt
-         For i% = Len(doclin$) To 1 Step -1
-            If Mid$(doclin$, i%, 1) = "\" Then
-               fileo$ = Mid$(doclin$, i% + 1, Len(doclin$) - i%)
-               Exit For
-               End If
-         Next i%
+         StrArr = Split(doclin$, "\")
+         fileo$ = StrArr(UBound(StrArr))
+'         For i% = Len(doclin$) To 1 Step -1
+'            c$ = Mid$(doclin$, i%, 1)
+'            If Mid$(doclin$, i%, 1) = "\" Then
+'               fileo$ = Mid$(doclin$, i% + 1, Len(doclin$) - i%)
+'               Exit For
+'               End If
+'         Next i%
          direco$ = drivfordtm$ + nset$
          filen$ = direco$ & "\" & fileo$
          If Check6.Value = vbChecked Or Check7.Value = vbChecked Then hgt = 0
@@ -2846,7 +2883,10 @@ oke5: If lngTimerID <> 0 Then
       If Err.Number = 52 Then
          MsgBox "SunriseSunset can't read the CD-ROM!, start from the beginning!", vbExclamation, "Cal Program"
       ElseIf Err.Number = 53 Then
-         MsgBox "SunriseSunset couldn't find the file: " & filchk$ & " listed in the .BAT file! Start from the beginning.", vbExclamation, "Cal Program"
+         filchk$ = fileo$
+         MsgBox "SunriseSunset couldn't find the file: " & filchk$ & " listed in the .BAT file!" & vbCrLf & vbCrLf & _
+         "Line in bat file is: " & doclin$ & vbCrLf & vbCrLf & _
+         "Start from the beginning.", vbExclamation, "Cal Program"
          Close
          SunriseSunset.Visible = False
          Caldirectories.Label1.Enabled = True

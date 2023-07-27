@@ -41,12 +41,12 @@ Public astrplaces$(100), astcoord(5, 100), autoNoCDcheck As Boolean, cityAutoEng
 Public nsetflag%, yrheb%, skiya As Boolean, checklst%, maxang%, parshiotdiaspora As Boolean
 Public mypath As String, automatic As Boolean, runningscan As Boolean, ZmanTitle$
 Public myname As String, stage%, numautolst%, numautocity%, newpagenum%, autonum%
-Public currentdrive As String, startedscan As Boolean, nearauto As Boolean, DSTcheck As Boolean
+Public currentdrive As String, startedscan As Boolean, nearauto As Boolean, nearautoedited As Boolean, DSTcheck As Boolean
 Public nearyesval As Boolean, netzskiyok As Boolean, arrStrSedra(1, 54) As String
 Public ntmp%, nstat%, nstato%, tmpsetflg%, CN4netz$, CN4skiy$, arrStrParshiot(1, 62) As String
 Public paperheight, paperwidth, leftmargin, rightmargin, topmargin, bottommargin
 Public captmp$, suntop%, nn4%, numchecked%, rescale As Boolean, holidays(1, 11) As String
-Public netzski$(1, 1000), First As Boolean, hebleapyear As Boolean, dayRoshHashono%
+Public netzski$(1, 1000), First As Boolean, hebleapyear As Boolean, dayRoshHashono%, PaperFormatVis As Boolean
 Public nchecked%(999), magnify As Boolean, nearcolor As Boolean, yeartype%, RefHebYear%, RefCivilYear%
 Public newhebout As Boolean, hebcal As Boolean, Marginshow As Boolean, SponsorLine$, TitleLine$
 Public rescal, portrait As Boolean, prespap%, Loadcombo%, endyr%, RemoveUnderline As Boolean
@@ -84,7 +84,7 @@ Public heb1$(70), heb2$(20), heb3$(32), heb4$(8), heb5$(40), heb6$(10), nettype$
 Public optiondmish%, optiontmish%, dirnet$, RoundSeconds%, myear0%, fshabos0%, htmldir$
 Public yrstrt%(1), yrend%(1), visauto As Boolean, mishorauto As Boolean, astauto As Boolean
 Public BeginningYear$, EndYear$, NumCivilYears%, NumCivilYearsInc%, BeginCivilRun As Boolean
-Public PDFprinter As Boolean
+Public PDFprinter As Boolean, SunriseCalc As Boolean, SunsetCalc As Boolean
 'Public MaxHourZemanios As Double
 Public Type BrowseInfo
     lngHwnd        As Long
@@ -397,13 +397,24 @@ Public Sub readpaper()
          Input #filpaper%, margins(1, numpaper%), margins(2, numpaper%), margins(3, numpaper%), margins(4, numpaper%)
       Loop
       Close #filpaper%
-      If automatic = True Then 'always use Standard paper format
-         For i% = 1 To numpaper%
-            If papername$(i%) = "Standard" Then
-               prespap% = i%
-               Exit For
-               End If
-         Next i%
+      If automatic = True Then 'determine paper type
+         If SunriseCalc And SunsetCalc Then
+            'use Standard paper format
+            For i% = 1 To numpaper%
+               If papername$(i%) = "Standard" Then
+                  prespap% = i%
+                  Exit For
+                  End If
+            Next i%
+         ElseIf (SunriseCalc And Not SunsetCalc) Or (SunsetCalc And Not SunriseCalc) Then
+            'use A4 paper format
+            For i% = 1 To numpaper%
+               If papername$(i%) = "A4" Then
+                  prespap% = i%
+                  Exit For
+                  End If
+            Next i%
+            End If
          End If
       If internet = True Then 'always use A4 paper format
          For i% = 1 To numpaper%
@@ -4852,12 +4863,29 @@ If automatic = True And Caldirectories.Check1.Value = vbChecked Then 'paginate
    
    'pagnum% = numautolst% - 1 - newpagenum%
    pagnums$ = Trim$(CStr(pagnum%))
-   If pagnum% Mod 2 = 0 Then
-      Dev.CurrentX = paperwidth - rightmargin - Dev.TextWidth(pagnums$)
-   ElseIf pagnum% Mod 2 <> 0 Then
-      Dev.CurrentX = leftmargin
-      End If
-   Dev.CurrentY = topmargin - Dev.TextHeight(pagnums$)
+   'print page number on automatic mode page
+
+   If SunriseCalc And SunsetCalc Then
+
+        If pagnum% Mod 2 = 0 Then
+           Dev.CurrentX = paperwidth - rightmargin - Dev.TextWidth(pagnums$)
+        ElseIf pagnum% Mod 2 <> 0 Then
+           Dev.CurrentX = leftmargin
+           End If
+        Dev.CurrentY = topmargin - Dev.TextHeight(pagnums$)
+        
+   ElseIf (SunriseCalc And Not SunsetCalc) Or (SunsetCalc And Not SunriseCalc) Then
+   
+        If pagnum% Mod 2 = 0 Then
+'           Dev.CurrentX = paperwidth - rightmargin - Dev.TextWidth(pagnums$)
+           Dev.CurrentX = paperwidth * 1.3 - Dev.TextWidth(pagnums$) '* 2 - rightmargin - Dev.TextWidth(pagnums$)
+        ElseIf pagnum% Mod 2 <> 0 Then
+           Dev.CurrentX = leftmargin
+           End If
+        Dev.CurrentY = topmargin - Dev.TextHeight(pagnums$)
+        If Dev.CurrentY < 0 Then Dev.CurrentY = 5
+        End If
+        
    Dev.Print pagnums$
    'now append to the table of contents file
    filcont% = FreeFile
