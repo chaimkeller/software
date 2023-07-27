@@ -1371,8 +1371,15 @@ L40:
 
 					//elev = (real *) calloc(80 * maxang + 1, sizeof(real));  //old way of reallocating memory
 
+					/////////////added on 072723 to fix realloc bug (see below)/////////////////
+					elev = NULL;  //deallocate pointer to old memory block, then reallocate memory
+				    elev = (real *) calloc(80 * maxang + 1, sizeof(real));
+					//////////////////////////////////////////////////////////////
+
+					////////////THIS DOESN'T WORK FOR UNKNOWN REASON////
 					//reallocate memory for elev  //added on 030523
-					elev = realloc(elev, 80 * maxang + 1 * sizeof(real));  
+					//elev = realloc(elev, 80 * maxang + 1 * sizeof(real)); 
+					/////////////////////////////////////////////////////////
 
 					if (elev == NULL) //memory reallocation failes
 					{
@@ -1438,6 +1445,7 @@ L40:
 			if (elev[(nazn << 2) - 1] == 0 && elev[(nazn << 2) - 2] == 100)
 			{
 				//this is surveyor's actual measurements, so leave view angles alone
+				ntrcalc = 4; //flag surveyor data and skip rest of terrestrial refraction manipulations
 			}
 			else
 			{
@@ -1526,7 +1534,7 @@ L50:
 	    cl__1.cerr = 0;
 	    cl__1.cunit = 2;
 	    cl__1.csta = 0;
-	    f_clos(&cl__1);
+	    f_clos(&cl__1); /////////////<<<<<<<<<<<<causes assert after gush_chitzpin calcualation and after reading skiy file
 	    s_copy(coment, place + (nsetflag << 3), (ftnlen)8, (ftnlen)8);
 	    if (! nofiles && nointernet) {
 /*          prepare filenames of output files */
@@ -2516,41 +2524,52 @@ L695:
 			elevint = elevinty / elevintx * (azi1 - elev[(ne << 2)
 				 - 4]) + elev[(ne << 2) - 3];
 /* ////////////// now modify apparent elevention, elevint, with terrestrial refraction///// */
-/* 			   first calculate interpolated difference of heights */
-			hgtdifx = elev[(ne + 1 << 2) - 1] - elev[(ne << 2) - 
-				1];
-			hgtdif = hgtdifx / elevintx * (azi1 - elev[(ne << 2) 
-				- 4]) + elev[(ne << 2) - 1];
-			hgtdif -= hgt;
-			//convert to kms
-			hgtdif *= .001f;
-/* 			   now calculate interpolated distance to obstruction along earth */
-			distx = elev[(ne + 1 << 2) - 2] - elev[(ne << 2) - 2];
-			dist = distx / elevintx * (azi1 - elev[(ne << 2) - 4])
-				 + elev[(ne << 2) - 2];
-/* 			   now calculate pathlength of curved ray using Lehn's parabolic approximation */
-/* Computing 2nd power */
-			d__2 = dist;
-/* Computing 2nd power */
-			d__4 = dist;
-/* Computing 2nd power */
-			d__3 = abs(hgtdif) - d__4 * d__4 * .5f / 
-				rearth;
-			pathlength = sqrt(d__2 * d__2 + d__3 * d__3);
-/* 			   now add terrestrial refraction based on modified Wikipedia expression */
-			if (abs(hgtdif) > 1e3f) {
-			    exponent = .99f;
-			} else {
-			    exponent = .9965f;
+			if (ntrcalc == 4)
+			{
+				//flagged to be surveyor measurements
+				//so don't add any addition to the view angles due to terrestrial refraction
+				//assume that the terrestrial refraction is already taken into account
+				//even though it will change as a function of the hour of the day and weather
+				;
 			}
-			//ViewAdd = TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
+			else
+			{
+				/* 			   first calculate interpolated difference of heights */
+				hgtdifx = elev[(ne + 1 << 2) - 1] - elev[(ne << 2) - 
+					1];
+				hgtdif = hgtdifx / elevintx * (azi1 - elev[(ne << 2) 
+					- 4]) + elev[(ne << 2) - 1];
+				hgtdif -= hgt;
+				//convert to kms
+				hgtdif *= .001f;
+	/* 			   now calculate interpolated distance to obstruction along earth */
+				distx = elev[(ne + 1 << 2) - 2] - elev[(ne << 2) - 2];
+				dist = distx / elevintx * (azi1 - elev[(ne << 2) - 4])
+					 + elev[(ne << 2) - 2];
+	/* 			   now calculate pathlength of curved ray using Lehn's parabolic approximation */
+	/* Computing 2nd power */
+				d__2 = dist;
+	/* Computing 2nd power */
+				d__4 = dist;
+	/* Computing 2nd power */
+				d__3 = abs(hgtdif) - d__4 * d__4 * .5f / 
+					rearth;
+				pathlength = sqrt(d__2 * d__2 + d__3 * d__3);
+	/* 			   now add terrestrial refraction based on modified Wikipedia expression */
+				if (abs(hgtdif) > 1e3f) {
+					exponent = .99f;
+				} else {
+					exponent = .9965f;
+				}
+				//ViewAdd = TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
 
-			/////////////////////////////////////////////////////////////////////////////
-			//in case terrestrial refraction altered from ideal atmosphere, then
-			//the refraction will also be increased by terrestrial refraction term,
-			//so it will cancel the change in view angle due to TR, so use TRfudgeVis = 1
-			///////////////////////////////////////////////////////////////////
-			elevint += TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
+				/////////////////////////////////////////////////////////////////////////////
+				//in case terrestrial refraction altered from ideal atmosphere, then
+				//the refraction will also be increased by terrestrial refraction term,
+				//so it will cancel the change in view angle due to TR, so use TRfudgeVis = 1
+				///////////////////////////////////////////////////////////////////
+				elevint += TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
+			}
 /* //////////////////////////////////////////////////////////////////////////////////////// */
 			if ((elevint >= al1 || nloops <= 0) && nabove == 1) {
 /*                 reached sunset */
@@ -2814,42 +2833,53 @@ L760:
 			elevint = elevinty / elevintx * (azi1 - elev[(ne << 2)
 				 - 4]) + elev[(ne << 2) - 3];
 /* ////////////// now modify apparent elevention, elevint, with terrestrial refraction///// */
-/* 			   first calculate interpolated difference of heights */
-			hgtdifx = elev[(ne + 1 << 2) - 1] - elev[(ne << 2) - 
-				1];
-			hgtdif = hgtdifx / elevintx * (azi1 - elev[(ne << 2) 
-				- 4]) + elev[(ne << 2) - 1];
-			hgtdif -= hgt;
-/* 			   convert to kms */
-			hgtdif *= .001f;
-/* 			   now calculate interpolated distance to obstruction along earth */
-			distx = elev[(ne + 1 << 2) - 2] - elev[(ne << 2) - 2];
-			dist = distx / elevintx * (azi1 - elev[(ne << 2) - 4])
-				 + elev[(ne << 2) - 2];
-/* 			   now calculate pathlength of curved ray using Lehn's parabolic approximation */
-/* Computing 2nd power */
-			d__2 = dist;
-/* Computing 2nd power */
-			d__4 = dist;
-/* Computing 2nd power */
-			d__3 = abs(hgtdif) - d__4 * d__4 * .5f / 
-				rearth;
-			pathlength = sqrt(d__2 * d__2 + d__3 * d__3);
-/* 			   now add terrestrial refraction based on modified Wikipedia expression */
-			if (abs(hgtdif) > 1e3f) {
-			    exponent = .99f;
-			} else {
-			    exponent = .9965f;
+			if (ntrcalc == 4)
+			{
+				//flagged to be surveyor measurements
+				//so don't add any addition to the view angles due to terrestrial refraction
+				//assume that the terrestrial refraction is already taken into account
+				//even though it will change as a function of the hour of the day and weather
+				;
 			}
-			//ViewAdd = TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent)
+			else
+			{
+				/* 			   first calculate interpolated difference of heights */
+				hgtdifx = elev[(ne + 1 << 2) - 1] - elev[(ne << 2) - 
+					1];
+				hgtdif = hgtdifx / elevintx * (azi1 - elev[(ne << 2) 
+					- 4]) + elev[(ne << 2) - 1];
+				hgtdif -= hgt;
+	/* 			   convert to kms */
+				hgtdif *= .001f;
+	/* 			   now calculate interpolated distance to obstruction along earth */
+				distx = elev[(ne + 1 << 2) - 2] - elev[(ne << 2) - 2];
+				dist = distx / elevintx * (azi1 - elev[(ne << 2) - 4])
+					 + elev[(ne << 2) - 2];
+	/* 			   now calculate pathlength of curved ray using Lehn's parabolic approximation */
+	/* Computing 2nd power */
+				d__2 = dist;
+	/* Computing 2nd power */
+				d__4 = dist;
+	/* Computing 2nd power */
+				d__3 = abs(hgtdif) - d__4 * d__4 * .5f / 
+					rearth;
+				pathlength = sqrt(d__2 * d__2 + d__3 * d__3);
+	/* 			   now add terrestrial refraction based on modified Wikipedia expression */
+				if (abs(hgtdif) > 1e3f) {
+					exponent = .99f;
+				} else {
+					exponent = .9965f;
+				}
+				//ViewAdd = TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent)
 
-			//////////////////////////////////////////////////////////////
-			//in case terrestrial refraction altered from ideal atmosphere, then
-			//the refraction will also be increased by terrestrial refraction term,
-			//so it will cancel the change in view angle due to TR, so use only TRfudgeVis = 1.0
-			///////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////
+				//in case terrestrial refraction altered from ideal atmosphere, then
+				//the refraction will also be increased by terrestrial refraction term,
+				//so it will cancel the change in view angle due to TR, so use only TRfudgeVis = 1.0
+				///////////////////////////////////////////////////////////////////
 
-			elevint += TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
+				elevint += TRfudgeVis * trbasis * pow_dd(&pathlength, &exponent);
+			}
 /* //////////////////////////////////////////////////////////////////////////////////////// */
 			if (elevint <= alt1_2 && elevint > alt1 && showCalc)
 			{
