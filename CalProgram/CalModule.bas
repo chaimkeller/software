@@ -84,7 +84,7 @@ Public heb1$(70), heb2$(20), heb3$(32), heb4$(8), heb5$(40), heb6$(10), nettype$
 Public optiondmish%, optiontmish%, dirnet$, RoundSeconds%, myear0%, fshabos0%, htmldir$
 Public yrstrt%(1), yrend%(1), visauto As Boolean, mishorauto As Boolean, astauto As Boolean
 Public BeginningYear$, EndYear$, NumCivilYears%, NumCivilYearsInc%, BeginCivilRun As Boolean
-Public PDFprinter As Boolean, SunriseCalc As Boolean, SunsetCalc As Boolean
+Public PDFprinter As Boolean, SunriseCalc As Boolean, SunsetCalc As Boolean, LastItem$
 'Public MaxHourZemanios As Double
 Public Type BrowseInfo
     lngHwnd        As Long
@@ -4846,7 +4846,7 @@ If newhebcalfm.Check1.Value = vbChecked And automatic = False Then
    Dev.Print helpfromshemyim$
    End If
 If automatic = False Then GoTo 9000
-If automatic = True And Caldirectories.Check1.Value = vbChecked Then 'paginate
+If automatic = True Then 'And Caldirectories.Check1.Value = vbChecked Then 'paginate
    If Abs(nsetflag%) = 3 And skiya = True And tblmesag% = 0 Then GoTo 9000
    Dev.Font = "David"
    Dev.FontSize = 12 * rescal
@@ -4864,6 +4864,16 @@ If automatic = True And Caldirectories.Check1.Value = vbChecked Then 'paginate
    'pagnum% = numautolst% - 1 - newpagenum%
    pagnums$ = Trim$(CStr(pagnum%))
    'print page number on automatic mode page
+   
+   If Caldirectories.Check1.Value = vbUnchecked Then
+      Select Case MsgBox("Do you want to print a page number?", vbYesNo Or vbQuestion Or vbDefaultButton1, "Paginate")
+      
+        Case vbYes
+      
+        Case vbNo
+          GoTo 9000
+      End Select
+      End If
 
    If SunriseCalc And SunsetCalc Then
 
@@ -4888,28 +4898,35 @@ If automatic = True And Caldirectories.Check1.Value = vbChecked Then 'paginate
         
    Dev.Print pagnums$
    'now append to the table of contents file
-   filcont% = FreeFile
-   myfile = Dir(drivcities$ + "tablcont.txt")
-   If myfile = sEmpty Then
-      Open drivcities$ + "tablcont.txt" For Output As #filcont%
-   Else
-      If numautolst% = 1 And Val(Caldirectories.Text2.Text) = 1 Then
-         Open drivcities$ + "tablcont.txt" For Output As #filcont%
-      Else
-         Open drivcities$ + "tablcont.txt" For Append As #filcont%
-         End If
-      End If
-'    Print #filcont%, Tab(1); pagnums$; Tab(20); hebcityname$
-'   textlen1 = Abs(Dev.TextWidth(hebcityname$))
-'   textlen2 = Abs(Dev.TextWidth("."))
-   'textlen3 = Dev.TextWidth(pagnums$)
-'   totlen% = 150 '15 centimeters
-'   totleft% = totlen% - textlen1
-'   mult% = totleft% / textlen2
-   'mult% = CInt((textlen1 + textlen3) / textlen2)
-'   Print #filcont%, hebcityname$ + String$(mult% - 50, ".") + "," + pagnums$
-    Print #filcont%, hebcityname$ + "," + pagnums$
-    Close #filcont%
+   
+   If Caldirectories.Check1.Value = vbChecked Then 'record the city in tablcont
+   
+       filcont% = FreeFile
+       myfile = Dir(drivcities$ + "tablcont.txt")
+       If myfile = sEmpty Then
+          Open drivcities$ + "tablcont.txt" For Output As #filcont%
+       Else
+          If numautolst% = 1 And Val(Caldirectories.Text2.Text) = 1 And LastItem$ = "" Then
+             Open drivcities$ + "tablcont.txt" For Output As #filcont%
+          Else
+             Open drivcities$ + "tablcont.txt" For Append As #filcont%
+             End If
+          End If
+    '    Print #filcont%, Tab(1); pagnums$; Tab(20); hebcityname$
+    '   textlen1 = Abs(Dev.TextWidth(hebcityname$))
+    '   textlen2 = Abs(Dev.TextWidth("."))
+       'textlen3 = Dev.TextWidth(pagnums$)
+    '   totlen% = 150 '15 centimeters
+    '   totleft% = totlen% - textlen1
+    '   mult% = totleft% / textlen2
+       'mult% = CInt((textlen1 + textlen3) / textlen2)
+    '   Print #filcont%, hebcityname$ + String$(mult% - 50, ".") + "," + pagnums$
+        If hebcityname$ + "," + pagnums$ <> LastItem$ Then
+           Print #filcont%, hebcityname$ + "," + pagnums$
+           LastItem$ = hebcityname$ + "," + pagnums$
+           Close #filcont%
+           End If
+        End If
     End If
     
 9000:

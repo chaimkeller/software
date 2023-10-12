@@ -837,12 +837,17 @@ Private Sub Autobut_Click()
 
         hebcal = True
         mydate$ = Date
-        lenmydate% = Len(mydate$)  '****fix a YK2 bug!****
-        If lenmydate% = 8 Then
-           yeartab% = Mid$(mydate$, lenmydate% - 1, 2)
-           sthebyr% = yeartab% - 97 + 5758
-        ElseIf lenmydate% >= 9 Then
-           yeartab% = Mid$(mydate$, lenmydate% - 3, 4)
+        If InStr(mydate$, "/") Then
+           Dim DateSt() As String
+           DateSt = Split(mydate$, "/")
+           If UBound(DateSt) > 1 Then
+             yeartab% = Val(DateSt(2))
+             End If
+           End If
+        lenmydate% = Len(DateSt(2))  '****fix a YK2 bug!****
+        If lenmydate% = 2 Then
+           sthebyr% = 200 + yeartab% - 97 + 5758
+        Else
            sthebyr% = yeartab% - 1997 + 5758
            End If
         Combo1.ListIndex = sthebyr%
@@ -959,6 +964,16 @@ Private Sub chkObs_Click()
       AddObsTime = 1
    Else
       AddObsTime = 0
+      End If
+End Sub
+
+Private Sub chkOnePage_Click()
+   If chkOnePage.Value = vbUnchecked Then
+      Text2.Enabled = False
+      Label4.Enabled = False
+   ElseIf chkOnePage.Value = vbChecked Then
+      Text2.Enabled = True
+      Label4.Enabled = True
       End If
 End Sub
 
@@ -1579,10 +1594,14 @@ Private Sub optVis_Click()
 End Sub
 
 Private Sub Runbutton_Click()
+   On Error GoTo Runbutton_Click_Error
+
    If Not SunriseCalc And Not SunsetCalc Then
       Call MsgBox("Click on the sunrise, sunset, or both option buttons to define which type of calculation to do", vbInformation, "Calculation Type")
       Exit Sub
       End If
+      
+   LastItem$ = sEmpty
       
    If runningscan = True Then Exit Sub
    If autocancel = True Then GoTo 950
@@ -1655,7 +1674,7 @@ autorun:
    Open drivcities$ + "citynams_w1255.lst" For Input As #fillst1%
    Do Until EOF(fillst1%)
       Line Input #fillst1%, doclin$
-      numautocity% = numautocity% + 1
+      If Trim$(doclin$) <> sEmpty Then numautocity% = numautocity% + 1
    Loop
    Close #fillst1%
    numautolst% = 0
@@ -1847,6 +1866,17 @@ autorun2:
             Exit For
             End If
       Next i%
+      
+    'check for wrong Hebrew name
+    If drivcities$ & LCase$(cityAutoEng$) <> LCase$(Dir1.List(i%)) Then
+       Call MsgBox("Can't find the Hebrew Name:" _
+                   & vbCrLf & doclin$ _
+                   & vbCrLf & "in the citynams_w1255.txt file!" _
+                   & vbCrLf & "Aborting the auto run...." _
+                   , vbInformation, "Can't find the yeshuv")
+                   GoTo 950
+       End If
+       
       newer$ = currentdir
       calTime = Timer + 2#
       Do While calTime > Timer
@@ -1949,6 +1979,18 @@ autorun2:
 '      End If
 '   GoTo 900
 999   Label1.Enabled = True
+   On Error GoTo 0
+   Exit Sub
+
+Runbutton_Click_Error:
+    If Err.Number = 62 Then
+       'eof error, exit autorun
+       runningscan = False
+       autocancel = True
+       Exit Sub
+       End If
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Runbutton_Click of Form Caldirectories"
 End Sub
 
 Private Sub Text1_Change()

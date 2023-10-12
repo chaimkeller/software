@@ -1608,15 +1608,22 @@ Private Sub OKbut0_Click()
 '      compare1$ = title$ + " לזמני הנץ החמה הנראה באיזור " + hebcityname$
 '      newhebcalfm.Combo6.AddItem title$ + " לזמני שקיעת החמה הנראית ב" + cityhebnames$(i%)
 '      compare2$ = title$ + " לזמני שקיעת החמה הנראית באיזור " + hebcityname$
-      newhebcalfm.Combo1.AddItem title$ + heb1$(10) + cityhebnames$(i%)
-      compare1$ = title$ + heb1$(10) + hebcityname$
-      newhebcalfm.Combo6.AddItem title$ + heb1$(11) + cityhebnames$(i%)
-      compare2$ = title$ + heb1$(11) + hebcityname$
-      
+'      newhebcalfm.Combo1.AddItem title$ + heb1$(10) + cityhebnames$(i%)
+'      compare1$ = title$ + heb1$(10) + hebcityname$
+'      newhebcalfm.Combo6.AddItem title$ + heb1$(11) + cityhebnames$(i%)
+'      compare2$ = title$ + heb1$(11) + hebcityname$
+      If InStr(eroscountry$, "Israel") = 0 Then IsraelNeighborhood = False
       If IsraelNeighborhood And optionheb Then
         hebcityname$ = eroshebcity$
-        compare1$ = title$ + heb1$(10) + eroshebcity$
-        compare2$ = title$ + heb1$(11) + eroshebcity$
+        compare1$ = title$ + heb1$(10) + hebcityname$ 'eroshebcity$
+        compare2$ = title$ + heb1$(11) + hebcityname$ 'eroshebcity$
+        newhebcalfm.Combo1.AddItem title$ + heb1$(10) + hebcityname$ 'eroshebcity$
+        newhebcalfm.Combo6.AddItem title$ + heb1$(11) + hebcityname$ 'eroshebcity$
+      Else
+        newhebcalfm.Combo1.AddItem title$ + heb1$(10) + cityhebnames$(i%)
+        compare1$ = title$ + heb1$(10) + hebcityname$
+        newhebcalfm.Combo6.AddItem title$ + heb1$(11) + cityhebnames$(i%)
+        compare2$ = title$ + heb1$(11) + hebcityname$
         End If
       
       If optionheb = False Then
