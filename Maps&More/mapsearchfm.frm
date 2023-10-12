@@ -1748,6 +1748,8 @@ Private Sub Combo1_Click()
 End Sub
 
 Private Sub Combo2_Click()
+   On Error GoTo Combo2_Click_Error
+
       tmpfil$ = drivcities$ + "eros\" + Combo2.Text + ".sav"
       myfile = Dir(tmpfil$)
       nn% = 0
@@ -1768,6 +1770,13 @@ Private Sub Combo2_Click()
            txtStep.Text = "0.5"
            End If
         End If
+
+   On Error GoTo 0
+   Exit Sub
+
+Combo2_Click_Error:
+    Close #erosfil%
+'    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Combo2_Click of Form mapsearchfm"
 End Sub
 
 Private Sub Combo2_DblClick()

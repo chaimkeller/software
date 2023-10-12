@@ -555,6 +555,8 @@ WebBrowser1.Navigate queryAddress
 End Sub
 
 Private Sub Command2_Click()
+   On Error GoTo Command2_Click_Error
+
 If txtLat.Text = "" Or txtLong.Text = "" Then
     MsgBox "Supply a latitude and longitude value.", vbOKOnly, "Missing Data"
 End If
@@ -624,6 +626,13 @@ Else
    'https://www.bing.com/maps?sp=point.45.23423_-122.1232_Some+Point_WhereAmI&cp=45.234223%7E-122.128916&lvl=16.0
    WebBrowser1.Navigate queryAddress
    End If
+
+   On Error GoTo 0
+   Exit Sub
+
+Command2_Click_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Command2_Click of Form frmMap"
 End Sub
 
 Private Sub Command3_Click()

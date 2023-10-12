@@ -187,7 +187,7 @@ Public map400 As Boolean, map50 As Boolean, sunmode%, hChild As Long, Skynum%
 Public n400x%(9), n400y%(9), n50x%(9), n50y%(9), Skycoord%, OverhWnd As Long
 Public kmxoo, kmyoo, filnumg%, hgt, hgtpos, picf$, sgnfudx, xpix As Integer, ypix As Integer
 'Public CHMAP(14, 26) As String * 2, CHMNE As String * 2, CHMNEO As String * 2, SF As String * 2
-Public coordmode%, dragx, dragy, kmxc, kmyc, nplac%, Tdxname As String, MapLatCenter As Long, MapLonCenter As Long
+Public coordmode%, dragx, dragy, kmxc, kmyc, nplac%, Tdxname As String, MapLatCenter As Double, MapLonCenter As Double
 Public X50c As Single, Y50c As Single, kmx50c, kmy50c, hgt50c, TdxhWnd As Long, SavedAll As Boolean
 Public X400c As Single, Y400c As Single, kmx400c, kmy400c, hgt400c, bn%(4)
 Public kmxorigin, kmyorigin, picold$(9), bufx(2, 4), bufy(2, 4), bufwi(2, 4), bufhi(2, 4)
@@ -311,8 +311,8 @@ Private Type MapInfos
    pixkm As Double 'pixels per kilmoters
    pixlon As Integer 'pixels for one degree of longitude
    pixlat As Integer 'pixels for one degree of latitude
-   loncenter As Integer 'longitude of the chosen center of the picture (e.g., the intersection of lines of lat and lon.)
-   latcenter As Integer 'latitude of the chosen center of the picture
+   loncenter As Double 'longitude of the chosen center of the picture (e.g., the intersection of lines of lat and lon.)
+   latcenter As Double 'latitude of the chosen center of the picture
 End Type
 
 Public MapInfo As MapInfos
