@@ -1143,6 +1143,8 @@ Dim DataLine() As String
 Dim latitude As Double
 Dim longitude As Double
 Dim PntSelected As Boolean
+Dim lgAT As Double
+Dim ltAT As Double
 
     '39.358008,-76.688316
     waitime = Timer
@@ -1154,6 +1156,24 @@ Dim PntSelected As Boolean
     longitude = Val(DataLine(1))
     latitude = Val(DataLine(2))
     
+    If eroscountry$ = "Israel" Then
+       'check for ITM coordinates
+       If longitude > 80 And latitude > 100 Then
+          'convert from ITM to geo
+           Call casgeo(latitude, longitude, lgAT, ltAT)
+'           lgAT = -lgAT 'this is convention for WorldClim
+           longitude = lgAT
+           latitude = ltAT
+       Else
+           Call MsgBox("These coordinates don't seem be inside Israel:" _
+                       & vbCrLf & "These are the coordinates read:" _
+                       & vbCrLf & "ITMx =" & Str$(longitude) _
+                       & vbCrLf & "ITMy =" & Str$(latitude) _
+                       , vbInformation, "Coordinates error")
+           Exit Sub
+           End If
+       End If
+       
     ' A very simple URL encoding.
     '**original code modified to contain coordinates instead of address - 011122****************
     addr = Str$(latitude) & "," & Str$(-longitude)
