@@ -210,13 +210,15 @@ Dim ltAT As Double
         PntSelected = Not .Selected(.ListIndex) 'store checked status
         DataLine = Split(.List(.ListIndex), ",")
     
-        longitude = Val(DataLine(1))
-        latitude = Val(DataLine(2))
+        longitude = Val(DataLine(2))
+        latitude = Val(DataLine(1))
         
+    If eroscountry$ = "Israel" Or eros = False Then
+       'check for ITM coordinates
         'check for ITM coordinates
         If longitude > 80 And latitude > 100 Then
            'convert from ITM to geo
-            Call casgeo(longitude, latitude, lgAT, ltAT)
+            Call casgeo(latitude, longitude, lgAT, ltAT)
     '           lgAT = -lgAT 'this is convention for WorldClim
             longitude = lgAT
             latitude = ltAT
@@ -228,6 +230,8 @@ Dim ltAT As Double
                         , vbInformation, "Coordinates error")
             Exit Sub
             End If
+        
+        End If
            
         ' A very simple URL encoding.
         '**original code modified to contain coordinates instead of address - 011122****************
