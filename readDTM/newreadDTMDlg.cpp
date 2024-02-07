@@ -71,10 +71,14 @@ int InStr( char * str, char * str2 );
 //The program modules, flag files, and DTM directories must reside either of Windows Disk c or e
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-char worlddtm[]="";  //drive letter where SRTM files are stored
+char worlddtm[]="";  //drive letter where SRTM1 files are stored
+char d3asdtm[]="";   //drive letter where SRTM3 - MERIT files are stored
+char arosdtm[]="";	 //drive letter where ALOS bil files are stored
 bool worlddtmcd;
 char ramdrive[]="";
-char usadrive[255]="";  //folder where SRTM files are stored
+char usadrive[255]="";  //folder where SRTM1 tiles are stored
+char tasdrive[266]="";  //folder where SRTM3 tiles are stored
+char bildrive[255]="";  //folder where ALOS bil tiles are stored
 char tmpfil[81];
 //int DTMflag = 0; //default DTM = SRTM30
 //bool IgnoreMissingTiles = false;
@@ -215,12 +219,20 @@ BOOL CNewreadDTMDlg::OnInitDialog()
 		strcpy(worlddtm, token);
 		token = strtok( NULL, seps );
 		worlddtmcd = atoi(token);
-		fgets_CR(doclin, 255, stream);
+		fgets_CR(doclin, 255, stream); //USA directory for DTMflag = 1
+		sprintf(usadrive, "%s:\\%s\\", worlddtm, doclin );
+		fgets_CR(doclin, 255, stream); //3AS directory for DTMflag = 2
+		token = strtok( doclin, seps );
+		strcpy(d3asdtm, token);
+		token = strtok( NULL, seps );
+		sprintf(tasdrive, "%s:\\%s\\", d3asdtm,token );
+		fgets_CR(doclin, 255, stream); //BIL directory for DTMflag = 3
+		token = strtok( doclin, seps );
+		strcpy(arosdtm, token);
+		token = strtok( NULL, seps );
+		sprintf(bildrive, "%s:\\%s\\", d3asdtm, token );
 		fclose( stream );
 	}
-
-	sprintf(usadrive, "%s%s%s%s", worlddtm, ":\\", doclin, "\\" );
-    //usadrive contains full path to the DEM-SRTM files which can now be any folder: EK 061322
 
 	
 	//open eros.tm3 file and read beglat,endlat,etc.
@@ -341,8 +353,9 @@ w2000:
 	// It contains the integer, DTMflag, the flag of DTM type, where
 	// DTMflag =
 	//         = 0 for GTOPO30 (1000 meter) -- default
-	//         = 1 for SRTM-1 (30 meter)
-	//         = 2 for SRTM-2 (90 meter)
+	//         = 1 for SRTM-1 DEM (30 meter)
+	//         = 2 for SRTM-2/3 MERIT DEM (90 meter)
+	//		   = 3 for ALOS DEM (30 meter)
 	// also read in the hard drive letter of the SRTM worlddtm
 	strncpy( tmpfil, (const char *)ramdrive, 1);
 	strncpy( tmpfil + 1, ":\\eros.tm6", 11 );
@@ -351,6 +364,32 @@ w2000:
 		fscanf( stream, "%1s, %d\n", &worlddtm, &DTMflag);
 		fclose( stream );
 		}
+	else
+	{
+		reply = AfxMessageBox( "Can't find the file eros.tm6 in the jk_c folder!", MB_OK | MB_ICONSTOP | MB_APPLMODAL );
+		OnCancel();
+	}
+
+	if (DTMflag == 1) //SRTM1 DEM
+	{
+		//sprintf(usadrive, "%s%s%s%s", worlddtm, ":\\", doclin, "\\" );
+		//worlddtm already defined
+		;
+	}
+	else if (DTMflag == 2) //SRTM3-MERIT DEM
+	{
+		//sprintf(tasdrive, "%s%s%s%s", worlddtm, ":\\", doclin, "\\" );
+		worlddtm[0] = 0;
+		strcpy(worlddtm, d3asdtm );
+	}
+	else if (DTMflag == 3) //ALOS DEM
+	{
+		//sprintf(bildrive, "%s%s%s%s", worlddtm, ":\\", doclin, "\\" );
+		worlddtm[0] = 0;
+		strcpy(worlddtm, arosdtm );
+	}
+
+    //usadrive contains full path to the DEM-SRTM files which can now be any folder: EK 061322
 
 	/****************************test mode*********/
 	//strncpy( worlddtm, "d", 1 );
@@ -605,12 +644,12 @@ int WhichJK_2();
 	xdim = 0.008333333333333; //GTOPO30 -- the default
 	ydim = 0.008333333333333;
 
-	if (DTMflag == 1) //SRTM-1 (1 arcsec/30 meter DTM)
+	if (DTMflag == 1 || DTMflag == 3) //SRTM-1 (1 arcsec/30 meter DTM), or ALOS DEM (1 arcsec/30 meters)
 	{
 		xdim = xdim/30.0;
 		ydim = ydim/30.0;
 	}
-	else if (DTMflag == 2) //SRTM-2 (3 arcsec/100 meter DTM)
+	else if (DTMflag == 2) //SRTM-2/3 or MERIT DEM (3 arcsec/100 meter DTM)
 	{
 		xdim = xdim * 0.1;
 		ydim = ydim * 0.1;
@@ -992,20 +1031,36 @@ ret2:	;
 			fclose ( stream );
 			if (DTMflag == 0) //GTOPO30 data
 			{
-			strncpy( filt, (const char *)filt1[iter], 18 );
-			strncpy( filn, (const char *)worlddtm, 1);
-			strncpy( filn + 1, ":\\", 2 );
-			strncpy( filn + 3, (const char *)filt1[iter], 7 );
-			strncpy( filn + 10, "\\", 1 );
-			strncpy( filn + 11, (const char *)filt1[iter], 7 );
-			numCD = whichCDs[iter];
+				strncpy( filt, (const char *)filt1[iter], 7); //18 );
+				//new string manipulation to allow for tiles existing in sub directories 02/06/24
+				/*
+				strncpy( filn, (const char *)worlddtm, 1);
+				strncpy( filn + 1, ":\\", 2 );
+				strncpy( filn + 3, (const char *)filt1[iter], 7 );
+				strncpy( filn + 10, "\\", 1 );
+				strncpy( filn + 11, (const char *)filt1[iter], 7 );
+				*/
+				sprintf(filn, "%s:\\:%s\\%s", worlddtm, filt1[iter], filt1[iter]);
+				numCD = whichCDs[iter];
 			}
-			else //SRTM data
+			else if (DTMflag == 1) //SRTM1 data
 			{
 				filn[0] = 0;
 				strncpy( filt, (const char *)filt1[iter], 7 );
 				sprintf( filn, "%s%s", usadrive, filt );
 				//strncpy( filn + 7, (const char *)filt1[iter], 7);
+			}
+			else if (DTMflag == 2) //SRTM3 data
+			{
+				filn[0] = 0;
+				strncpy( filt, (const char *)filt1[iter], 7 );
+				sprintf( filn, "%s%s", tasdrive, filt );
+			}
+			else if (DTMflag == 3) //ALOS data in bil form
+			{
+				filn[0] = 0;
+				strncpy( filt, (const char *)filt1[iter], 7 );
+				sprintf( filn, "%s%s", bildrive, filt );
 			}
 
 			gototag = 2;
@@ -1746,7 +1801,7 @@ if (DTMflag == 0) //GTOPO30 DTM
 
 }
 
-else if (DTMflag > 0) //SRTM data, determine number of tiles
+else if (DTMflag > 0) //SRTM or AROS data, determine number of tiles
 
 {
 	  //now determine the tile names
@@ -1814,7 +1869,7 @@ else if (DTMflag > 0) //SRTM data, determine number of tiles
 			strncpy( filnn, (const char *)worlddtm, 1);
 			strncpy( filnn + 1, ":\\", 2 );
 			
-			if (DTMflag == 1) // 30 meter
+			if (DTMflag == 1) // 30 meter NED or SRTM1
 			{
 				nrows = 3601;
 				ncols = 3601; 
@@ -1824,13 +1879,25 @@ else if (DTMflag > 0) //SRTM data, determine number of tiles
 				strncat( filnn, (const char *)filt1[itnum], 7 );
 				//strncpy( filnn + 7, (const char *)filt1[itnum], 7 );
 			}
-			else if (DTMflag == 2) //100 meter
+			else if (DTMflag == 2) //90 meter SRTM3 or MERIT DEM
 			{
 				nrows = 1201;
 				ncols = 1201;
-				strncpy( filnn + 3, "3AS", 3 );
-				strncpy( filnn + 6, "\\", 1 );
-				strncpy( filnn + 7, (const char *)filt1[itnum], 7 );
+				//strncpy( filnn + 3, "3AS", 3 );
+				//strncpy( filnn + 6, "\\", 1 );
+				strcpy( filnn, tasdrive );
+				//strncpy( filnn + 7, (const char *)filt1[itnum], 7 );
+				strncat( filnn, (const char *)filt1[itnum], 7 );
+			}
+			else if (DTMflag == 3) //ALOS 30 meter DEM BIL files
+			{
+				nrows = 3600;
+				ncols = 3600;
+				//strncpy( filnn + 3, "BIL", 3 );
+				//strncpy( filnn + 6, "\\", 1 );
+				strcpy( filnn, bildrive );
+				//strncpy( filnn + 7, (const char *)filt1[itnum], 7 );
+				strncat( filnn, (const char *)filt1[itnum], 7 );
 			}
 
 			lt1chk[itnum] = (int)(lt1 + 1.0); //SRTM DTM is named by SW corner
@@ -1850,8 +1917,8 @@ else if (DTMflag > 0) //SRTM data, determine number of tiles
 
 			//record tile name in filn buffer
 			if ( itnum == 0 )
-				{
-				if (DTMflag == 1) // 30 meter
+			{
+				if (DTMflag != 0 ) // not GTOPO30
 				{
 					sprintf( filn, "%s", filnn);
 				}
@@ -1859,7 +1926,7 @@ else if (DTMflag > 0) //SRTM data, determine number of tiles
 				{
 					strncpy( filn, filnn, 14 );
 				}
-				}
+			}
 
 			maxranget += numstepkmyt[itnum] * numstepkmxt[itnum];
 			itnum++;
@@ -1890,13 +1957,18 @@ dtmfiles:
 			strncpy( DTMfile + 18, ".DEM", 4 );
 			strncpy( DTMfile + 22, "\0", 1);
 		}
-		else //SRTM DTM data
+		else if (DTMflag == 1 || DTMflag == 2) //SRTM DTM data
 		{
 			DTMfile[0] = 0;
 			sprintf( DTMfile, "%s%s", filn, ".hgt"); //EK 061322
 			//strncpy( DTMfile, filn, 14 );
 			//strncpy( DTMfile + 14, ".hgt", 4 );
 			//strncpy( DTMfile + 18, "\0", 1);
+		}
+		else if (DTMflag == 3) //ALOS DEM data
+		{
+			DTMfile[0] = 0;
+			sprintf( DTMfile, "%s%s", filn, ".bil"); //EK 061322
 		}
 
 retry:	if ( (stream = fopen( (const char *)DTMfile, "rb" )) == NULL)
@@ -1939,7 +2011,7 @@ retry:	if ( (stream = fopen( (const char *)DTMfile, "rb" )) == NULL)
 					//strncpy( quest + 44, "\n", 1);
 					//strncpy( quest + 45, "Do you wan't to use an empty tile instead?", 42);
 					//strncpy( quest + 87, "\0", 1);
-					sprintf( quest, "%s%s\n%s", "Can't find the SRTM tile: ", DTMfile, "Do you wan't to use an empty tile instead?" );
+					sprintf( quest, "%s%s\n%s", "Can't find the DTM tile: ", DTMfile, "Do you wan't to use an empty tile instead?" );
 					reply = AfxMessageBox( (const char *)quest, MB_YESNOCANCEL | MB_ICONINFORMATION | MB_APPLMODAL );		
 					}
 				else if (IgnoreMissingTiles == 1) //automatically use default empty tile
@@ -1950,18 +2022,26 @@ retry:	if ( (stream = fopen( (const char *)DTMfile, "rb" )) == NULL)
 				if (reply == 6) //Replace the missing srtm file with an empty tile
 					{
 					//goto retry;
-						if (DTMflag == 1)
+						if (DTMflag == 1) //SRTM1 DEM
 						{
-						//strncpy( DTMfile, (const char *)worlddtm, 1);
-    					//strncpy( DTMfile + 1, ":\\USA\\Z000000.hgt\0", 18);
-						sprintf( DTMfile, "%s%s", usadrive, "Z000000.hgt" );
-						goto retry;
+							//strncpy( DTMfile, (const char *)worlddtm, 1);
+    						//strncpy( DTMfile + 1, ":\\USA\\Z000000.hgt\0", 18);
+							sprintf( DTMfile, "%s%s", usadrive, "Z000000.hgt" );
+							goto retry;
 						}
-						else if (DTMflag == 2)
+						else if (DTMflag == 2) //SRTM3 - MERIT DEM
 						{
-						strncpy( DTMfile, (const char *)worlddtm, 1);
-    					strncpy( DTMfile + 1, ":\\3AS\\Z000000.hgt\0", 18);
-						goto retry;
+							//strncpy( DTMfile, (const char *)worlddtm, 1);
+    						//strncpy( DTMfile + 1, ":\\3AS\\Z000000.hgt\0", 18);
+							sprintf( DTMfile, "%s%s", tasdrive, "Z000000.hgt" );
+							goto retry;
+						}
+						else if (DTMflag == 3) //ALOS DEM
+						{
+							//strncpy( DTMfile, (const char *)worlddtm, 1);
+    						//strncpy( DTMfile + 1, ":\\BIL\\Z000000.bil\0", 18);
+							sprintf( DTMfile, "%s%s", bildrive, "Z000000.hgt" );
+							goto retry;
 						}
 					}
 				else if (reply == 7) //the user wants to try again
@@ -2224,7 +2304,7 @@ Profiles:
 			if (range >= 20. && maxang > (double) optang) {
 				maxang = (double) optang; }
 /*          if range >= 40 km and SRTM-1, then reduce step size to ~ 60m */
-			if (range >= 40. && DTMflag == 1) {
+			if (range >= 40. && DTMflag != 2) {
 				numskip = 2;
 			if (range >= 40. && range < 60) {
 				numskip = 2; }
@@ -2255,7 +2335,7 @@ Profiles:
 			if (range > 20. && maxang > (double) optang) {
 				maxang = (double) optang; }
 /*          if range >= 40 km and SRTM-1, then increase step size to ~ 60 m */
-			if (range > 40. && DTMflag == 1) {
+			if (range > 40. && DTMflag != 2) {
 				//numskip = 2;
 			
 				if (range >= 40. && range < 60) {
@@ -2286,7 +2366,7 @@ Profiles:
 			if (range <= 20.) {
 				maxang = maxang0; }
 /*          if distance <= 40 km and SRTM-1, then reduce stepsize */
-			if (range <= 40. && DTMflag == 1) {
+			if (range <= 40. && DTMflag != 2) {
 				numskip = 1;}
 		}
 /*      optimized half angular range in longitude (degrees) = dkmy */
@@ -2334,10 +2414,13 @@ Profiles:
 			{
 				//hgt2 = (float)(uni5[numrc].chi5[0] << 8 | uni5[numrc].chi5[1]);
 
-				//rotate bits to little-endian
-				i4sw[0].i4s = uni5[numrc].i5;
-				uni5[numrc].chi5[0] = i4sw[0].chi6[1];
-				uni5[numrc].chi5[1] = i4sw[0].chi6[0];
+				if (DTMflag == 1 || DTMflag == 2) //SRTM hgt Motorola Big Endian
+				{
+					//rotate bits to little-endian
+					i4sw[0].i4s = uni5[numrc].i5;
+					uni5[numrc].chi5[0] = i4sw[0].chi6[1];
+					uni5[numrc].chi5[1] = i4sw[0].chi6[0];
+				}
 				hgt2 = uni5[numrc].i5;
 				if (fabs(hgt2) == 9999. || fabs(hgt2) == 32768. || fabs(hgt2) > 8848.) {
 					hgt2 = 0.;} //ocean and radar voids or glitches

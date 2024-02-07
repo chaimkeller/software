@@ -3,97 +3,17 @@
 <pre>
 <h1>Build Log</h1>
 <h3>
---------------------Configuration: newreadDTM - Win32 Release--------------------
+--------------------Configuration: newreadDTM - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating command line "link.exe /nologo /subsystem:windows /incremental:no /pdb:"Release/newreadDTM.pdb" /machine:I386 /out:"Release/newreadDTM.exe"  ".\Release\newreadDTM.obj" ".\Release\newreadDTMDlg.obj" ".\Release\StdAfx.obj" ".\Release\newreadDTM.res" "
+Creating command line "link.exe /nologo /subsystem:windows /incremental:yes /pdb:"Debug/newreadDTM.pdb" /debug /machine:I386 /out:"Debug/newreadDTM.exe" /pdbtype:sept  ".\Debug\newreadDTM.obj" ".\Debug\newreadDTMDlg.obj" ".\Debug\StdAfx.obj" ".\Debug\newreadDTM.res" "
 <h3>Output Window</h3>
 Linking...
-newreadDTMDlg.obj : error LNK2005: "public: __thiscall CNewreadDTMDlg::CNewreadDTMDlg(class CWnd *)" (??0CNewreadDTMDlg@@QAE@PAVCWnd@@@Z) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "protected: virtual void __thiscall CNewreadDTMDlg::DoDataExchange(class CDataExchange *)" (?DoDataExchange@CNewreadDTMDlg@@MAEXPAVCDataExchange@@@Z) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "protected: static struct AFX_MSGMAP const * __stdcall CNewreadDTMDlg::_GetBaseMessageMap(void)" (?_GetBaseMessageMap@CNewreadDTMDlg@@KGPBUAFX_MSGMAP@@XZ) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "protected: virtual struct AFX_MSGMAP const * __thiscall CNewreadDTMDlg::GetMessageMap(void)const " (?GetMessageMap@CNewreadDTMDlg@@MBEPBUAFX_MSGMAP@@XZ) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "protected: virtual int __thiscall CNewreadDTMDlg::OnInitDialog(void)" (?OnInitDialog@CNewreadDTMDlg@@MAEHXZ) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "protected: void __thiscall CNewreadDTMDlg::OnPaint(void)" (?OnPaint@CNewreadDTMDlg@@IAEXXZ) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "protected: struct HICON__ * __thiscall CNewreadDTMDlg::OnQueryDragIcon(void)" (?OnQueryDragIcon@CNewreadDTMDlg@@IAEPAUHICON__@@XZ) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "protected: virtual void __thiscall CNewreadDTMDlg::OnOK(void)" (?OnOK@CNewreadDTMDlg@@MAEXXZ) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "protected: void __thiscall CNewreadDTMDlg::OnTimer(unsigned int)" (?OnTimer@CNewreadDTMDlg@@IAEXI@Z) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "protected: virtual void __thiscall CNewreadDTMDlg::OnCancel(void)" (?OnCancel@CNewreadDTMDlg@@MAEXXZ) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * DTMfile" (?DTMfile@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * filnn" (?filnn@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * filn" (?filn@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "protected: static struct AFX_MSGMAP const CNewreadDTMDlg::messageMap" (?messageMap@CNewreadDTMDlg@@1UAFX_MSGMAP@@B) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "private: static struct AFX_MSGMAP_ENTRY const * const CNewreadDTMDlg::_messageEntries" (?_messageEntries@CNewreadDTMDlg@@0QBUAFX_MSGMAP_ENTRY@@B) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numface" (?numface@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * CDbuffer" (?CDbuffer@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double xdim" (?xdim@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long nskip" (?nskip@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int lg11" (?lg11@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numCD" (?numCD@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numstepkmy" (?numstepkmy@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numstepkmx" (?numstepkmx@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * quest" (?quest@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * filt" (?filt@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "short numtiles" (?numtiles@@3FA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * buffer" (?buffer@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * lg1ch" (?lg1ch@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double fracy" (?fracy@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double fracx" (?fracx@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int * lt1chk" (?lt1chk@@3PAHA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numy" (?numy@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numx" (?numx@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double ntmp" (?ntmp@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double num4" (?num4@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double num3" (?num3@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int ny" (?ny@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double num2" (?num2@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double nx" (?nx@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double num1" (?num1@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * lt1ch" (?lt1ch@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numfracy2" (?numfracy2@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numfracy1" (?numfracy1@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * filtmp" (?filtmp@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numfracx2" (?numfracx2@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numfracx1" (?numfracx1@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "short i4" (?i4@@3FA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double tmp" (?tmp@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * NS" (?NS@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * st2" (?st2@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * EW" (?EW@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long pos" (?pos@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int rep" (?rep@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double kmyo" (?kmyo@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double kmxo" (?kmxo@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long tmprc" (?tmprc@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "bool poles" (?poles@@3_NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int oldpercent" (?oldpercent@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int reply" (?reply@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double kmy" (?kmy@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double kmx" (?kmx@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int lt2" (?lt2@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int lt1" (?lt1@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * lch" (?lch@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char (* filt1)[8]" (?filt1@@3PAY07DA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long charout" (?charout@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numrec" (?numrec@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int lg2" (?lg2@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int lg1" (?lg1@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int lt11" (?lt11@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "long numrc" (?numrc@@3JA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int * lg1chk" (?lg1chk@@3PAHA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "char * binfil" (?binfil@@3PADA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int gototag" (?gototag@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "double ydim" (?ydim@@3NA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int nrows" (?nrows@@3HA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "short * whichCDs" (?whichCDs@@3PAFA) already defined in newreadDTM.obj
-newreadDTMDlg.obj : error LNK2005: "int ncols" (?ncols@@3HA) already defined in newreadDTM.obj
-Release/newreadDTM.exe : fatal error LNK1169: one or more multiply defined symbols found
-Error executing link.exe.
 
 
 
 <h3>Results</h3>
-newreadDTM.exe - 79 error(s), 0 warning(s)
+newreadDTM.exe - 0 error(s), 0 warning(s)
 </pre>
 </body>
 </html>
