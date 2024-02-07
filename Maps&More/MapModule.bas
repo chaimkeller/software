@@ -19,11 +19,11 @@ Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hwnd As Lo
 'Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
 'Declare Function GetWindow Lib "user32" (ByVal hwnd As Long, ByVal wCmd As Long) As Long
 'Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (ByVal hwnd As Long, ByVal lpString As String) As Long
-Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
+Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal X As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
 Declare Function EnumChildWindows Lib "user32" (ByVal hWndParent As Long, ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
 Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hwnd As Long, ByVal lpString As String, ByVal cch As Long) As Long
 Declare Function FindWindow Lib "user32" Alias "FindWindowA" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
-Declare Function MoveWindow Lib "user32" (ByVal hwnd As Long, ByVal x As Long, ByVal y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
+Declare Function MoveWindow Lib "user32" (ByVal hwnd As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
 Declare Function BringWindowToTop Lib "user32" (ByVal hwnd As Long) As Long
 Declare Sub keybd_event Lib "user32" (ByVal bVk As Byte, ByVal bScan As Byte, ByVal dwFlags As Long, ByVal dwExtraInfo As Long)
 Declare Sub mouse_event Lib "user32" (ByVal dwFlags As Long, ByVal dX As Long, ByVal dY As Long, ByVal cButtons As Long, ByVal dwExtraInfo As Long)
@@ -221,6 +221,7 @@ Public israeldtmf As String * 1, israeldtmcdf As Boolean, mapSearchVis As Boolea
 Public worlddtm As String * 1, worlddtmcd As Boolean, ExplorerDir As String, plotfile$
 Public worlddtmf As String * 1, worlddtmcdf As Boolean, searchhgt As Single, treehgtStored As Double
 Public srtmdtm As String * 1, srtmdtmcd As Boolean, srtmdtmf As String * 1, srtmdtmcdf As Boolean
+Public alosdtm As String * 1, alosdtmf As String * 1, d3asdtm As String * 1, d3asdtmf As String * 1
 Public ramdrive As String * 1, ramdrivef As String * 1, viewsearch As Boolean
 Public terradir$, terradirf$, impcenter As Boolean, resetorigin As Boolean, ObstructionCheck As Boolean
 Public mapimport As Boolean, mapfile$, deglat As Double, deglog As Double, AutoVer As Boolean
@@ -236,7 +237,7 @@ Public SearchVis As Boolean, WinVer As Long, XDIM As Double, YDIM As Double, noV
 Public AutoPress As Boolean, IsraelDTMsource%, OnlyExtractFile As Boolean, EastOnly As Boolean, WestOnly As Boolean
 Public CalculateProfile As Integer, SearchCrossSection As Boolean, SearchCrossObstruct As Boolean
 Public rderos2_use As Boolean, IgnoreTiles%, autoazirange%, NoCDWarning As Boolean, TemperatureModel%
-Public MainDir$, Turbo2cdDir$, USADir$, GEOTOPO30Dir$, D3ASDir$, SamplesDir$, D3dExplorerDir$, ErosCitiesDir$
+Public MainDir$, Turbo2cdDir$, USADir$, GEOTOPO30Dir$, D3ASDir$, SamplesDir$, D3dExplorerDir$, ErosCitiesDir$, BILDir$
 
 '----------------GPS global constants------------------------
 Public Const MAX_PORT = 15 'maximum number of com ports to search
@@ -373,7 +374,7 @@ End Function
 Public Sub heights(kmx, kmy, hgt2)
       On Error GoTo g35
       
-      If IsraelDTMsource% = 1 Then 'convert to long,lat and use SRTM extraction
+      If IsraelDTMsource% > 0 Then 'convert to long,lat and use SRTM extraction
          'Call casgeo(kmx, kmy, lgh, lth)
 
          If ggpscorrection = True Then 'apply conversion from Clark geoid to WGS84
@@ -392,7 +393,7 @@ Public Sub heights(kmx, kmy, hgt2)
             Call casgeo(kmx, kmy, lgh, lth)
             End If
          
-         Call worldheights(lgh, lth, hgt2)
+         Call worldheights(-lgh, lth, hgt2)
          GoTo g99
          End If
       
@@ -856,9 +857,9 @@ Public Sub worldheights(lg, lt, hgt)
       
    'check if have correct CD in the drive, if not present error message
    '//changes 061222 - added northern range to N70 for Alaska DEM and EU-dem files
-   If (world = False And IsraelDTMsource% = 1) Or (DTMflag > 0 And (lt >= -60 And lt <= 70)) Then 'SRTM
+   If (world = False And IsraelDTMsource% = 1) Or (DTMflag > 0 And (lt >= -85 And lt <= 85)) Then 'SRTM or MERIT or ALOS
       
-      If world = False And IsraelDTMsource% = 1 Then
+      If world = False And IsraelDTMsource% <= 0 Then 'use gtopo30
          'use 90-m SRTM of Eretz Yisroel
          XDIM = 8.33333333333333E-04
          YDIM = 8.33333333333333E-04
@@ -869,18 +870,24 @@ Public Sub worldheights(lg, lt, hgt)
          GoTo wh50
          End If
          
-      If DTMflag = 1 And Dir(srtmdtm & ":/USA/", vbDirectory) <> sEmpty Then
+      If IsraelDTMsource% = 1 And Dir(USADir$, vbDirectory) <> sEmpty Then 'Dir(srtmdtm & ":/USA/", vbDirectory) <> sEmpty Then
          XDIM = 8.33333333333333E-04 / 3#
          YDIM = 8.33333333333333E-04 / 3#
-         DEMfile$ = srtmdtm & ":/USA/"
+         DEMfile$ = USADir$
          NROWS = 3601
          NCOLS = 3601
-      ElseIf DTMflag = 2 And Dir(srtmdtm & ":/3AS/", vbDirectory) <> sEmpty Then
+      ElseIf IsraelDTMsource% = 2 And Dir(D3ASDir$, vbDirectory) <> sEmpty Then '(srtmdtm & ":/3AS/", vbDirectory) <> sEmpty Then
          XDIM = 8.33333333333333E-04
          YDIM = 8.33333333333333E-04
-         DEMfile$ = srtmdtm & ":/3AS/"
+         DEMfile$ = D3ASDir$
          NROWS = 1201
          NCOLS = 1201
+      ElseIf IsraelDTMsource% = 3 And Dir(BILDir$, vbDirectory) <> sEmpty Then '(alosdtm & ":/" & DirBil$, vbDirectory) <> sEmpty Then
+         XDIM = 8.33333333333333E-04 / 3#
+         YDIM = 8.33333333333333E-04 / 3#
+         DEMfile$ = BILDir$
+         NROWS = 3600
+         NCOLS = 3600
          End If
 wh50:
       'determine tile name
@@ -903,7 +910,11 @@ wh50:
          lt1ch$ = Trim$(Str$(Abs(lt1)))
          End If
       lt1 = lt1 + 1 'the first record in SRTM tiles in the NW corner
-      DEMfile$ = DEMfile$ & NSch$ & lt1ch$ & EWch$ & lg1ch$ & ".hgt"
+      If IsraelDTMsource% < 3 Then
+         DEMfile$ = DEMfile$ & NSch$ & lt1ch$ & EWch$ & lg1ch$ & ".hgt"
+      ElseIf IsraelDTMsource% = 3 Then
+         DEMfile$ = DEMfile$ & NSch$ & lt1ch$ & EWch$ & lg1ch$ & ".bil"
+         End If
       If Dir(DEMfile$) = sEmpty Then
          GoTo gtopo
          'mapEROSDTMwarn.Visible = True
@@ -1073,85 +1084,91 @@ Eroshgt:
    c% = worldfnum%
    numrec& = (IKMY& - 1) * tncols + IKMX&
    Get #worldfnum%, (numrec& - 1) * 2 + 1, IO%
-'   A$ = sEmpty
-'   A$ = Hex$(io%)
-   'first attempt to swap bytes the fattest way--i.e.,
-   'by modular division by 256 (= 100) (since the first byte, i.e.,
-   'the first two bits, represent integers in the range 0 to 255)
-   '(this fails for negative integers due to the way negative integers
-   'are represented, as detailed later).
-    If IO% < 0 Then GoTo mer130 'then modular division failed, use HEX swap
-    T1 = IO% Mod 256
-    T2 = Int(IO% / 256)
-    tr = T1 * 256 + T2
-    integ1& = tr
+   
+   If IsraelDTMsource% <> 3 Then
+    '   A$ = sEmpty
+    '   A$ = Hex$(io%)
+       'first attempt to swap bytes the fattest way--i.e.,
+       'by modular division by 256 (= 100) (since the first byte, i.e.,
+       'the first two bits, represent integers in the range 0 to 255)
+       '(this fails for negative integers due to the way negative integers
+       'are represented, as detailed later).
+        If IO% < 0 Then GoTo mer130 'then modular division failed, use HEX swap
+        T1 = IO% Mod 256
+        T2 = Int(IO% / 256)
+        tr = T1 * 256 + T2
+        integ1& = tr
 mer130:
-    If IO% < 0 Or integ1& > elevmax% Then 'modular division failed use HEX swap
-       A0$ = LTrim$(RTrim$(Hex$(IO%)))
-       aa$ = sEmpty
-       'swap the two bytes using their hex representation
-       'e.g., ABCD --> CDAB, etc.
-       If Len(A0$) = 4 Then
-          A1$ = Mid$(A0$, 1, 2)
-          A2$ = Mid$(A0$, 3, 2)
-          If Mid$(A2$, 3, 1) = "0" And Mid$(A2$, 3, 2) <> "0" Then
-             A2$ = Mid$(A0$, 4, 1)
-          ElseIf Mid$(A2$, 3, 1) = "0" And Mid$(A2$, 3, 2) = "0" Then
-             A2$ = sEmpty
-             End If
-          aa$ = A2$ + A1$
-       ElseIf Len(A0$) = 3 Then
-          A1$ = "0" + Mid$(A0$, 1, 1)
-          A2$ = Mid$(A0$, 2, 2)
-          If Mid$(A0$, 2, 1) = "0" Then A2$ = Mid$(A0$, 3, 1)
-          aa$ = A2$ + A1$
-       ElseIf Len(A0$) = 2 Or Len(A0$) = 1 Then
-          A1$ = "00"
-          A2$ = A0$
-          aa$ = A2$ + A1$
-          End If
-    
-        'convert swaped hexadecimel to an integer value
-        leng% = Len(LTrim$(RTrim$(aa$)))
-        integ1& = 0
-        For j% = leng% To 1 Step -1
-            v$ = Mid$(LTrim$(RTrim$(aa$)), j%, 1)
-            If InStr("ABCDEF", v$) <> 0 Then
-               If v$ = "A" Then
-                  NO& = 10
-               ElseIf v$ = "B" Then
-                  NO& = 11
-               ElseIf v$ = "C" Then
-                  NO& = 12
-               ElseIf v$ = "D" Then
-                  NO& = 13
-               ElseIf v$ = "E" Then
-                  NO& = 14
-               ElseIf v$ = "F" Then
-                  NO& = 15
+        If IO% < 0 Or integ1& > elevmax% Then 'modular division failed use HEX swap
+           A0$ = LTrim$(RTrim$(Hex$(IO%)))
+           aa$ = sEmpty
+           'swap the two bytes using their hex representation
+           'e.g., ABCD --> CDAB, etc.
+           If Len(A0$) = 4 Then
+              A1$ = Mid$(A0$, 1, 2)
+              A2$ = Mid$(A0$, 3, 2)
+              If Mid$(A2$, 3, 1) = "0" And Mid$(A2$, 3, 2) <> "0" Then
+                 A2$ = Mid$(A0$, 4, 1)
+              ElseIf Mid$(A2$, 3, 1) = "0" And Mid$(A2$, 3, 2) = "0" Then
+                 A2$ = sEmpty
+                 End If
+              aa$ = A2$ + A1$
+           ElseIf Len(A0$) = 3 Then
+              A1$ = "0" + Mid$(A0$, 1, 1)
+              A2$ = Mid$(A0$, 2, 2)
+              If Mid$(A0$, 2, 1) = "0" Then A2$ = Mid$(A0$, 3, 1)
+              aa$ = A2$ + A1$
+           ElseIf Len(A0$) = 2 Or Len(A0$) = 1 Then
+              A1$ = "00"
+              A2$ = A0$
+              aa$ = A2$ + A1$
+              End If
+        
+            'convert swaped hexadecimel to an integer value
+            leng% = Len(LTrim$(RTrim$(aa$)))
+            integ1& = 0
+            For j% = leng% To 1 Step -1
+                v$ = Mid$(LTrim$(RTrim$(aa$)), j%, 1)
+                If InStr("ABCDEF", v$) <> 0 Then
+                   If v$ = "A" Then
+                      NO& = 10
+                   ElseIf v$ = "B" Then
+                      NO& = 11
+                   ElseIf v$ = "C" Then
+                      NO& = 12
+                   ElseIf v$ = "D" Then
+                      NO& = 13
+                   ElseIf v$ = "E" Then
+                      NO& = 14
+                   ElseIf v$ = "F" Then
+                      NO& = 15
+                      End If
+                Else
+                   NO& = Val(v$)
                   End If
-            Else
-               NO& = Val(v$)
-              End If
-           If j% = leng% - 3 Then
-              integ1& = integ1& + 4096 * NO&
-           ElseIf j% = leng% - 2 Then
-              integ1& = integ1& + 256 * NO&
-           ElseIf j% = leng% - 1 Then
-              integ1& = integ1& + 16 * NO&
-           ElseIf j% = leng% Then
-              integ1& = integ1& + NO&
-              End If
-        Next j%
-        'positive 2 byte integers are stored as numbers 1 to 32767.
-        'negative 2 byte integers are stored as numbers
-        'greater than 32767 (since 2 byte, i.e.,  8 bits encompass
-        'the integer range -32768 to 32767), where -1 is 65535 and
-        '-2 is 65534, etc up to -32768 which is represented
-        'as 32768, i.e.,
-        If integ1& > 32767 Then integ1& = integ1& - 65536
-    End If
-    integ2% = integ1&
+               If j% = leng% - 3 Then
+                  integ1& = integ1& + 4096 * NO&
+               ElseIf j% = leng% - 2 Then
+                  integ1& = integ1& + 256 * NO&
+               ElseIf j% = leng% - 1 Then
+                  integ1& = integ1& + 16 * NO&
+               ElseIf j% = leng% Then
+                  integ1& = integ1& + NO&
+                  End If
+            Next j%
+            'positive 2 byte integers are stored as numbers 1 to 32767.
+            'negative 2 byte integers are stored as numbers
+            'greater than 32767 (since 2 byte, i.e.,  8 bits encompass
+            'the integer range -32768 to 32767), where -1 is 65535 and
+            '-2 is 65534, etc up to -32768 which is represented
+            'as 32768, i.e.,
+            If integ1& > 32767 Then integ1& = integ1& - 65536
+        End If
+        integ2% = integ1&
+    Else
+        integ2% = IO% 'BIL file is Little Endian format so no need to swap bytes
+        End If
+
 Return
 
 worlderror:
@@ -1184,24 +1201,24 @@ Public Function DACOS(XX As Double) As Double
       DACOS = -Atn(XX / Sqr(-XX * XX + 1)) + pi / 2
       End If
 End Function
-Public Function atan2(ByVal y As Double, ByVal x As Double) _
+Public Function atan2(ByVal Y As Double, ByVal X As Double) _
     As Double
     'keeps angle within -180 to 180
   Dim theta As Double
 
-  If (Abs(x) < 0.0000001) Then
-    If (Abs(y) < 0.0000001) Then
+  If (Abs(X) < 0.0000001) Then
+    If (Abs(Y) < 0.0000001) Then
       theta = 0#
-    ElseIf (y > 0#) Then
+    ElseIf (Y > 0#) Then
       theta = 1.5707963267949
     Else
       theta = -1.5707963267949
     End If
   Else
-    theta = Atn(y / x)
+    theta = Atn(Y / X)
   
-    If (x < 0) Then
-      If (y >= 0#) Then
+    If (X < 0) Then
+      If (Y >= 0#) Then
         theta = 3.14159265358979 + theta
       Else
         theta = theta - 3.14159265358979
@@ -1212,23 +1229,23 @@ Public Function atan2(ByVal y As Double, ByVal x As Double) _
   atan2 = theta
 
 End Function
-Public Function datan2(ByVal y As Double, ByVal x As Double) _
+Public Function datan2(ByVal Y As Double, ByVal X As Double) _
     As Double
   Dim theta As Double
 
-  If (Abs(x) < 0.0000001) Then
-    If (Abs(y) < 0.0000001) Then
+  If (Abs(X) < 0.0000001) Then
+    If (Abs(Y) < 0.0000001) Then
       theta = 0#
-    ElseIf (y > 0#) Then
+    ElseIf (Y > 0#) Then
       theta = 1.5707963267949
     Else
       theta = -1.5707963267949
     End If
   Else
-    theta = Atn(y / x)
+    theta = Atn(Y / X)
   
-    If (x < 0) Then
-      If (y >= 0#) Then
+    If (X < 0) Then
+      If (Y >= 0#) Then
         theta = 3.14159265358979 + theta
       Else
         theta = theta - 3.14159265358979
@@ -4188,12 +4205,28 @@ W100:
        'else check if there is any USGS EROS CD in the CD player
        If DTMflag = 0 Then
           myfile = Dir(worlddtm + ":\E020N40\E020N40.GIF") 'Dir(worlddtm + ":\Gt30dem.gif")
-       Else 'SRTM
-          If Dir(srtmdtm & ":\3AS\", vbDirectory) = sEmpty And _
-             Dir(srtmdtm & ":\USA\", vbDirectory) = sEmpty Then
+       ElseIf DTMflag = 1 Or DTMflag = 2 Then 'SRTM
+          If (Dir(srtmdtm & ":\3AS\", vbDirectory) = sEmpty And _
+             Dir(srtmdtm & ":\USA\", vbDirectory) = sEmpty) And _
+             (Dir(USADir$, vbDirectory) = sEmpty And _
+             Dir(D3ASDir$, vbDirectory) = sEmpty) Then
              Screen.MousePointer = vbDefault
              ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
              response = MsgBox("Can't find the SRTM tiles!", vbOKOnly + vbExclamation, "Maps & More")
+'             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+             BringWindowToTop (mapPictureform.hwnd)
+             Maps.Toolbar1.Buttons(26).value = tbrUnpressed
+             Maps.Toolbar1.Buttons(27).value = tbrUnpressed
+             Screen.MousePointer = vbDefault
+             Exit Sub
+          Else
+             GoTo skipcheck
+             End If
+       ElseIf DTMflag = 3 Then 'ALOS
+          If Dir(BILDir$, vbDirectory) = sEmpty Then
+             Screen.MousePointer = vbDefault
+             ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+             response = MsgBox("Can't find the ALOS tiles!", vbOKOnly + vbExclamation, "Maps & More")
 '             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
              BringWindowToTop (mapPictureform.hwnd)
              Maps.Toolbar1.Buttons(26).value = tbrUnpressed
@@ -4494,6 +4527,8 @@ tst2:  myfile = Dir(ramdrive + ":\*.BI1")
               mapprogressfm.optSRTM1.value = True
            ElseIf DTMflag = 2 Then
               mapprogressfm.optSRTM2.value = True
+           ElseIf DTMflag = 3 Then
+              mapprogressfm.optALOS.value = True
               End If
            mapprogressfm.Command2.value = True
            GoTo at100
@@ -5957,13 +5992,13 @@ mapCrossSections_Error:
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure mapCrossSections of Module MapModule"
 '    Resume
 End Sub
-Function MinArray(x() As Double, NumArray As Integer) As Integer
+Function MinArray(X() As Double, NumArray As Integer) As Integer
    'returns smallest member of array x() having NumArray members
    MinArray = 1
-   xmin = x(1)
+   xmin = X(1)
    For i% = 2 To NumArray
-      If x(i%) < xmin Then
-         xmin = x(i%)
+      If X(i%) < xmin Then
+         xmin = X(i%)
          MinArray = i%
          End If
    Next i%
@@ -6573,8 +6608,8 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
   
   If Mode% = 1 Then 'convert (dragCoordX,dragCoordY) -> (kmxDrag,kmyDrag)
 
-      x = dragCoordX
-      y = dragCoordY
+      X = dragCoordX
+      Y = dragCoordY
       If world = True Then GoTo m10
       If map400 = True Then
          If mag > 1 Then
@@ -6582,8 +6617,8 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
             kmycc = kmyc
             xo = kmxcc - (km400x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km400y / mag) * (maphi2 - mapydif) * 0.5
-            kmxDrag0 = Fix(xo + x * km400x / mag) 'mapdif accounts for size of frame around picture
-            kmyDrag0 = Fix(yo - y * km400y / mag)
+            kmxDrag0 = Fix(xo + X * km400x / mag) 'mapdif accounts for size of frame around picture
+            kmyDrag0 = Fix(yo - Y * km400y / mag)
          Else
             kmxcc = kmxc + (km400x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km400y) * (maphi - maphi2 + mapydif) / 2
@@ -6591,8 +6626,8 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
             'so topleft corner=origin corresponds to:
             xo = kmxcc - km400x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km400y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            kmxDrag0 = Fix(xo + x * km400x)   'mapdif accounts for size of frame around picture
-            kmyDrag0 = Fix(yo - y * km400y)
+            kmxDrag0 = Fix(xo + X * km400x)   'mapdif accounts for size of frame around picture
+            kmyDrag0 = Fix(yo - Y * km400y)
             End If
        ElseIf map50 = True Then
          If mag > 1 Then
@@ -6600,15 +6635,15 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
             kmycc = kmyc
             xo = kmxcc - (km50x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km50y / mag) * (maphi2 - mapydif) * 0.5
-            kmxDrag0 = Fix(xo + x * km50x / mag) 'mapdif accounts for size of frame around picture
-            kmyDrag0 = Fix(yo - y * km50y / mag)
+            kmxDrag0 = Fix(xo + X * km50x / mag) 'mapdif accounts for size of frame around picture
+            kmyDrag0 = Fix(yo - Y * km50y / mag)
          Else
             kmxcc = kmxc + (km50x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km50y) * (maphi - maphi2 + mapydif) / 2
             xo = kmxcc - km50x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km50y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            kmxDrag0 = Fix(xo + x * km50x)
-            kmyDrag0 = Fix(yo - y * km50y)
+            kmxDrag0 = Fix(xo + X * km50x)
+            kmyDrag0 = Fix(yo - Y * km50y)
             End If
          End If
 m10:     Select Case coordmode%
@@ -6622,15 +6657,15 @@ m10:     Select Case coordmode%
                    latc = lat '+ fudy / mag
                    xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                    yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
-                   kmxDrag = xo + x * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
-                   kmyDrag = yo - y * (deglat / (sizewy * mag))
+                   kmxDrag = xo + X * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
+                   kmyDrag = yo - Y * (deglat / (sizewy * mag))
                  Else
                    lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx
                    latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy
                    xo = lonc - deglog / 2
                    yo = latc + deglat / 2
-                   kmxDrag = xo + x * (deglog / sizewx)
-                   kmyDrag = yo - y * (deglat / sizewy)
+                   kmxDrag = xo + X * (deglog / sizewx)
+                   kmyDrag = yo - Y * (deglat / sizewy)
                    If sizewx = Screen.TwipsPerPixelX * 10201 And sizewy = Screen.TwipsPerPixelY * 5489 Then
                        'fudge factor for inaccuracy of linear degree approx for large size map
                        kmxDrag = kmxDrag - 0.006906
@@ -6657,8 +6692,8 @@ m10:     Select Case coordmode%
             kmycc = kmyc
             xo = kmxcc - (km400x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km400y / mag) * (maphi2 - mapydif) * 0.5
-            x = mag * (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
-            y = mag * (yo - kmyDrag0) / km400y
+            X = mag * (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
+            Y = mag * (yo - kmyDrag0) / km400y
          Else
             kmxcc = kmxc + (km400x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km400y) * (maphi - maphi2 + mapydif) / 2
@@ -6666,8 +6701,8 @@ m10:     Select Case coordmode%
             'so topleft corner=origin corresponds to:
             xo = kmxcc - km400x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km400y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            x = (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
-            y = (yo - kmyDrag0) / km400y
+            X = (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
+            Y = (yo - kmyDrag0) / km400y
             End If
        ElseIf map50 = True Then
          If mag > 1 Then
@@ -6675,21 +6710,21 @@ m10:     Select Case coordmode%
             kmycc = kmyc
             xo = kmxcc - (km50x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km50y / mag) * (maphi2 - mapydif) * 0.5
-            x = mag * (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
-            y = mag * (yo - kmyDrag0) / km50y
+            X = mag * (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
+            Y = mag * (yo - kmyDrag0) / km50y
          Else
             kmxcc = kmxc + (km50x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km50y) * (maphi - maphi2 + mapydif) / 2
             xo = kmxcc - km50x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km50y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            x = (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
-            y = (yo - kmyDrag0) / km50y
+            X = (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
+            Y = (yo - kmyDrag0) / km50y
             End If
          End If
 m100:     Select Case coordmode%
            Case 1 'ITM
-              dragCoordX = x
-              dragCoordY = y
+              dragCoordX = X
+              dragCoordY = Y
            Case 2 'GEO
               If world = True Then
                  If mag > 1 Then
@@ -6697,23 +6732,23 @@ m100:     Select Case coordmode%
                    latc = lat '+ fudy / mag
                    xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                    yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
-                   x = (kmxDrag - xo) * (sizewx * mag / deglog)
-                   y = (yo - kmyDrag) * (sizewy * mag / deglat)
+                   X = (kmxDrag - xo) * (sizewx * mag / deglog)
+                   Y = (yo - kmyDrag) * (sizewy * mag / deglat)
                  Else
                    lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx
                    latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy
                    
                    xo = lonc - deglog / 2
                    yo = latc + deglat / 2
-                   x = (kmxDrag - xo) * (sizewx / deglog)
-                   y = (yo - kmyDrag) * (sizewy / deglat)
+                   X = (kmxDrag - xo) * (sizewx / deglog)
+                   Y = (yo - kmyDrag) * (sizewy / deglat)
                    End If
-                dragCoordX = x
-                dragCoordY = y
+                dragCoordX = X
+                dragCoordY = Y
                 End If
              Case Else 'option not supported yet
-                dragCoordX = x
-                dragCoordY = y
+                dragCoordX = X
+                dragCoordY = Y
           End Select
   
   End If
@@ -6726,7 +6761,7 @@ End Sub
 
 
 
-Sub FindSearchResult(x As Single, y As Single)
+Sub FindSearchResult(X As Single, Y As Single)
    'finds nearest search result to right clicked point
    'and moves the position of the Search Result DataGrid to that point
    
@@ -6735,7 +6770,7 @@ Sub FindSearchResult(x As Single, y As Single)
    On Error GoTo errhand
    
    'convert screen coordinates to kmx,kmy, or to lon,lat
-   Call ScreenToGeo(x, y, GeoX0, GeoY0, 1, ier%)
+   Call ScreenToGeo(X, Y, GeoX0, GeoY0, 1, ier%)
    If ier% < 0 Then Exit Sub
    
    'now search through the DataGrid for the nearest point
@@ -6806,14 +6841,14 @@ End Sub
 Public Sub sCenterForm(tmpF As Form)
 'centers a form in the middle of the program's main form
 
-Dim x As Integer, y As Integer
+Dim X As Integer, Y As Integer
 
 On Error GoTo sCenterForm_Error
 
-    x = Maps.Left + 0.5 * Maps.Width - 0.5 * tmpF.Width
-    y = Maps.Top + 0.5 * Maps.Height - 0.5 * tmpF.Height
+    X = Maps.Left + 0.5 * Maps.Width - 0.5 * tmpF.Width
+    Y = Maps.Top + 0.5 * Maps.Height - 0.5 * tmpF.Height
     
-    tmpF.Move x, y
+    tmpF.Move X, Y
     
     On Error GoTo 0
     Exit Sub
@@ -6918,11 +6953,11 @@ T50:
        FileIn% = FreeFile
        Open FileNameBil For Binary As #FileIn%
    
-        y = lat
-        x = lon
+        Y = lat
+        X = lon
         
-        IKMY& = CLng((ULYMAP - y) / YDIM) + 1
-        IKMX& = CLng((x - ULXMAP) / XDIM) + 1
+        IKMY& = CLng((ULYMAP - Y) / YDIM) + 1
+        IKMX& = CLng((X - ULXMAP) / XDIM) + 1
         tncols = NCOLS
         numrec& = (IKMY& - 1) * tncols + IKMX&
         Get #FileIn%, (numrec& - 1) * 2 + 1, IO%

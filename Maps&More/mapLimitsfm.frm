@@ -3,24 +3,24 @@ Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 Begin VB.Form mapLimitsfm 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Analysis Limits"
-   ClientHeight    =   9435
+   ClientHeight    =   9750
    ClientLeft      =   6885
    ClientTop       =   1815
-   ClientWidth     =   4725
+   ClientWidth     =   4785
    Icon            =   "mapLimitsfm.frx":0000
    LinkTopic       =   "Form1"
    LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   9435
-   ScaleWidth      =   4725
+   ScaleHeight     =   9750
+   ScaleWidth      =   4785
    ShowInTaskbar   =   0   'False
    Begin VB.Frame frmTemp 
       Caption         =   "Refraction-Temperature -Modeling"
       Height          =   515
       Left            =   120
       TabIndex        =   47
-      Top             =   3480
+      Top             =   3720
       Width           =   4455
       Begin VB.ComboBox cmbModelTemp 
          BeginProperty Font 
@@ -47,14 +47,14 @@ Begin VB.Form mapLimitsfm
       Left            =   2520
       TabIndex        =   46
       ToolTipText     =   "check to automatically determine appropriate azimuth range"
-      Top             =   1000
+      Top             =   1120
       Width           =   1815
    End
    Begin VB.Frame frmIgnoreTiles 
       Height          =   495
       Left            =   120
       TabIndex        =   44
-      Top             =   3000
+      Top             =   3240
       Width           =   4515
       Begin VB.CheckBox chkIgnoreTiles 
          Caption         =   "Ignore any missing tiles"
@@ -72,7 +72,7 @@ Begin VB.Form mapLimitsfm
       Height          =   1680
       Left            =   120
       TabIndex        =   35
-      Top             =   7080
+      Top             =   7320
       Width           =   4575
       Begin VB.Frame frmrderos2 
          Enabled         =   0   'False
@@ -171,7 +171,7 @@ Begin VB.Form mapLimitsfm
       Height          =   735
       Left            =   3240
       TabIndex        =   33
-      Top             =   2280
+      Top             =   2520
       Width           =   1400
       Begin VB.CheckBox chkFileOnly 
          Caption         =   "Just extract hieghts without analysis"
@@ -195,7 +195,7 @@ Begin VB.Form mapLimitsfm
       Height          =   375
       Left            =   3240
       TabIndex        =   24
-      Top             =   5835
+      Top             =   6000
       Width           =   195
       _ExtentX        =   423
       _ExtentY        =   661
@@ -229,7 +229,7 @@ Begin VB.Form mapLimitsfm
       Left            =   960
       TabIndex        =   22
       ToolTipText     =   "Use user defined extent number (2-10)"
-      Top             =   5880
+      Top             =   6040
       Width           =   1575
    End
    Begin VB.TextBox Text5 
@@ -248,7 +248,7 @@ Begin VB.Form mapLimitsfm
       Left            =   2640
       TabIndex        =   25
       Text            =   "1.2"
-      Top             =   5840
+      Top             =   6000
       Width           =   615
    End
    Begin VB.Frame frmRadar 
@@ -258,7 +258,7 @@ Begin VB.Form mapLimitsfm
       Height          =   615
       Left            =   120
       TabIndex        =   31
-      Top             =   6440
+      Top             =   6680
       Width           =   4515
       Begin VB.CheckBox chkRadar 
          Caption         =   "Smooth SRTM radar shadows/voids"
@@ -274,11 +274,29 @@ Begin VB.Form mapLimitsfm
    Begin VB.Frame frmDTM 
       Caption         =   "DTM source"
       ForeColor       =   &H00800000&
-      Height          =   495
+      Height          =   680
       Left            =   35
       TabIndex        =   26
       Top             =   0
       Width           =   4735
+      Begin VB.OptionButton optALOS 
+         Caption         =   "ALOS (30 m)"
+         BeginProperty Font 
+            Name            =   "MS Serif"
+            Size            =   6.75
+            Charset         =   177
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   180
+         Left            =   2760
+         TabIndex        =   49
+         ToolTipText     =   "ALOS DEM (30 meters)"
+         Top             =   420
+         Width           =   1215
+      End
       Begin VB.OptionButton optSRTM30 
          Caption         =   "SRTM30 (1 km)"
          BeginProperty Font 
@@ -291,15 +309,14 @@ Begin VB.Form mapLimitsfm
             Strikethrough   =   0   'False
          EndProperty
          Height          =   195
-         Left            =   1000
+         Left            =   1200
          TabIndex        =   30
          ToolTipText     =   "SRTM/GTOPO30 30 arcsec DTM"
          Top             =   240
-         Value           =   -1  'True
          Width           =   1300
       End
       Begin VB.OptionButton optSRTM2 
-         Caption         =   "SRTM-1 (90m)"
+         Caption         =   "SRTM3 MERIT (90 m)"
          BeginProperty Font 
             Name            =   "Arial"
             Size            =   6.75
@@ -310,14 +327,14 @@ Begin VB.Form mapLimitsfm
             Strikethrough   =   0   'False
          EndProperty
          Height          =   195
-         Left            =   2280
+         Left            =   2760
          TabIndex        =   29
-         ToolTipText     =   "SRTM 3 arcsec DTM"
+         ToolTipText     =   "MERIT 30 meters or SRTM 3 arcsec DTM"
          Top             =   240
-         Width           =   1215
+         Width           =   1815
       End
       Begin VB.OptionButton optSRTM1 
-         Caption         =   "SRTM-2 (30m)"
+         Caption         =   "NED DEM (30 m) / SRTM-1 (30m)"
          BeginProperty Font 
             Name            =   "Arial"
             Size            =   6.75
@@ -328,11 +345,12 @@ Begin VB.Form mapLimitsfm
             Strikethrough   =   0   'False
          EndProperty
          Height          =   195
-         Left            =   3480
+         Left            =   80
          TabIndex        =   28
-         ToolTipText     =   "SRTM 1 arcsec DTM"
-         Top             =   240
-         Width           =   1215
+         ToolTipText     =   "NED 30 m in the USA, SRTM 1 arcsec DTM elsewhere"
+         Top             =   420
+         Value           =   -1  'True
+         Width           =   2415
       End
       Begin VB.OptionButton optGTOPO30 
          Caption         =   "GTOPO30"
@@ -369,7 +387,7 @@ Begin VB.Form mapLimitsfm
       Left            =   2640
       TabIndex        =   23
       Text            =   "2"
-      Top             =   5880
+      Top             =   6000
       Visible         =   0   'False
       Width           =   540
    End
@@ -388,7 +406,7 @@ Begin VB.Form mapLimitsfm
       Height          =   2300
       Left            =   120
       TabIndex        =   17
-      Top             =   4080
+      Top             =   4320
       Width           =   4515
       Begin VB.OptionButton Option6 
          Caption         =   "View BOTH horizons;  (1/extent) *full size"
@@ -464,7 +482,7 @@ Begin VB.Form mapLimitsfm
       Height          =   735
       Left            =   120
       TabIndex        =   14
-      Top             =   2280
+      Top             =   2520
       Width           =   3015
       Begin VB.OptionButton Option2 
          Caption         =   "Extract DTM for both horizons"
@@ -496,9 +514,9 @@ Begin VB.Form mapLimitsfm
          Strikethrough   =   0   'False
       EndProperty
       Height          =   375
-      Left            =   120
+      Left            =   240
       TabIndex        =   13
-      Top             =   9000
+      Top             =   9240
       Width           =   2415
    End
    Begin VB.CommandButton Command1 
@@ -515,14 +533,14 @@ Begin VB.Form mapLimitsfm
       Height          =   375
       Left            =   2760
       TabIndex        =   12
-      Top             =   9000
+      Top             =   9240
       Width           =   1815
    End
    Begin MSComCtl2.UpDown UpDown3 
       Height          =   375
       Left            =   3480
       TabIndex        =   9
-      Top             =   1800
+      Top             =   2040
       Width           =   240
       _ExtentX        =   423
       _ExtentY        =   661
@@ -554,14 +572,14 @@ Begin VB.Form mapLimitsfm
       Left            =   2520
       TabIndex        =   8
       Text            =   "4"
-      Top             =   1800
+      Top             =   2040
       Width           =   975
    End
    Begin MSComCtl2.UpDown UpDown2 
       Height          =   375
       Left            =   3480
       TabIndex        =   5
-      Top             =   1320
+      Top             =   1440
       Width           =   240
       _ExtentX        =   423
       _ExtentY        =   661
@@ -593,14 +611,14 @@ Begin VB.Form mapLimitsfm
       Left            =   2520
       TabIndex        =   4
       Text            =   "4"
-      Top             =   1320
+      Top             =   1440
       Width           =   975
    End
    Begin MSComCtl2.UpDown UpDown1 
       Height          =   375
       Left            =   3480
       TabIndex        =   1
-      Top             =   550
+      Top             =   720
       Width           =   240
       _ExtentX        =   423
       _ExtentY        =   661
@@ -633,22 +651,22 @@ Begin VB.Form mapLimitsfm
       Left            =   2520
       TabIndex        =   0
       Text            =   "80"
-      Top             =   550
+      Top             =   720
       Width           =   975
    End
    Begin VB.Line Line3 
       BorderWidth     =   2
       X1              =   0
       X2              =   4800
-      Y1              =   8880
-      Y2              =   8880
+      Y1              =   9120
+      Y2              =   9120
    End
    Begin VB.Line Line1 
       BorderWidth     =   2
       X1              =   0
       X2              =   4800
-      Y1              =   4070
-      Y2              =   4070
+      Y1              =   4300
+      Y2              =   4300
    End
    Begin VB.Label Label6 
       Caption         =   "degrees"
@@ -664,7 +682,7 @@ Begin VB.Form mapLimitsfm
       Height          =   255
       Left            =   3840
       TabIndex        =   11
-      Top             =   1920
+      Top             =   2040
       Width           =   735
    End
    Begin VB.Label Label5 
@@ -682,7 +700,7 @@ Begin VB.Form mapLimitsfm
       Height          =   615
       Left            =   360
       TabIndex        =   10
-      Top             =   1680
+      Top             =   1920
       Width           =   1815
    End
    Begin VB.Label Label4 
@@ -699,7 +717,7 @@ Begin VB.Form mapLimitsfm
       Height          =   255
       Left            =   3840
       TabIndex        =   7
-      Top             =   1440
+      Top             =   1560
       Width           =   855
    End
    Begin VB.Label Label3 
@@ -717,7 +735,7 @@ Begin VB.Form mapLimitsfm
       Height          =   615
       Left            =   360
       TabIndex        =   6
-      Top             =   1080
+      Top             =   1280
       Width           =   1815
    End
    Begin VB.Label Label2 
@@ -734,7 +752,7 @@ Begin VB.Form mapLimitsfm
       Height          =   255
       Left            =   3840
       TabIndex        =   3
-      Top             =   660
+      Top             =   840
       Width           =   855
    End
    Begin VB.Label Label1 
@@ -752,7 +770,7 @@ Begin VB.Form mapLimitsfm
       Height          =   495
       Left            =   360
       TabIndex        =   2
-      Top             =   600
+      Top             =   720
       Width           =   1815
    End
 End
@@ -907,8 +925,35 @@ Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
    Unload Me
    Set mapLimitsfm = Nothing
 End Sub
-Private Sub Form_Load()
+Private Sub form_load()
    record = False
+   
+   If Dir(GEOTOPO30Dir$, vbDirectory) <> sEmpty Then
+      optGTOPO30.Enabled = True
+      optSRTM30.Enabled = True
+   Else
+      optGTOPO30.Enabled = False
+      optSRTM30.Enabled = False
+      End If
+      
+   If Dir(USADir$, vbDirectory) <> sEmpty Then
+      optSRTM1.Enabled = True
+   Else
+      optSRTM1.Enabled = False
+      optSRTM1.value = False
+      End If
+      
+   If Dir(D3ASDir$, vbDirectory) <> sEmpty Then
+      optSRTM2.Enabled = True
+   Else
+      optSRTM2.Enabled = False
+      End If
+      
+   If Dir(alosdir$, vbDirectory) <> sEmpty Then
+      optALOS.Enabled = True
+   Else
+      optALOS.Enabled = False
+      End If
    
    If DTMflag = -1 Then
       optGTOPO30.value = True
@@ -929,6 +974,14 @@ Private Sub Form_Load()
          End If
    ElseIf DTMflag = 2 Then
       optSRTM2.value = True
+      frmRadar.Enabled = True
+      chkRadar.Enabled = True
+      If noVoidflag = 1 Then
+         chkRadar.value = vbChecked
+         noVoidflag = 1
+         End If
+   ElseIf DTMflag = 3 Then
+      optALOS.value = True
       frmRadar.Enabled = True
       chkRadar.Enabled = True
       If noVoidflag = 1 Then
@@ -996,6 +1049,34 @@ Private Sub Form_Load()
       cmbModelTemp.ListIndex = 1
       End If
       
+End Sub
+
+Private Sub optALOS_Click()
+    DTMflag = 3
+    If maxangs% <> 0 Then Text1 = maxangs%
+    If diflogs% <> 0 Then Text2 = diflogs%
+    If diflats% <> 0 Then Text3 = diflats%
+    If fullranges% = 0 Then
+       Option1.value = True
+    ElseIf fullranges% = 1 Then
+       Option2.value = True
+       End If
+    If viewmodes% = 0 Then
+       Option3.value = True
+    ElseIf viewmodes% = 1 Then
+       Option4.value = True
+    ElseIf viewmodes% = 2 Then
+       Option5.value = True
+    ElseIf viewmodes% = 3 Then
+       Option6.value = True
+       End If
+    Text5.Text = modevals
+    If modevals <> 0 Then
+       Check1.value = vbChecked
+       End If
+    DTMflag = 3
+    frmRadar.Enabled = True
+    chkRadar.Enabled = True
 End Sub
 
 Private Sub optGTOPO30_Click()

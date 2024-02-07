@@ -1066,7 +1066,7 @@ Begin VB.MDIForm Maps
          Caption         =   "-"
       End
       Begin VB.Menu DTMlimitsfm 
-         Caption         =   "&DTM limits"
+         Caption         =   "&Profile calc settings"
       End
       Begin VB.Menu mnuGeoCoordinates 
          Caption         =   "&Geoid for geo. coordinates"
@@ -1082,7 +1082,7 @@ Begin VB.MDIForm Maps
          Caption         =   "-"
       End
       Begin VB.Menu diskDTMfm 
-         Caption         =   "&Location of DTMs"
+         Caption         =   "&Location / Choice of DTMs"
       End
       Begin VB.Menu settingsfm 
          Caption         =   "&Origin Settings"
@@ -1913,7 +1913,7 @@ Private Sub MDIForm_Load()
       driveletters$ = "cefghijklmnopq" 'exclude "d" directory
       End If
       
-   s1% = 0: S2% = 0: s3% = 0: s4% = 0: s5% = 0: s6% = 0: s7% = 0: s8% = 0: s9% = 0: s10% = 0: s11% = 0: s12% = 0
+   s1% = 0: S2% = 0: s3% = 0: s4% = 0: s5% = 0: s6% = 0: s7% = 0: s8% = 0: s9% = 0: s10% = 0: s11% = 0: s12% = 0: s15% = 0
    
    For i% = 1 To numdriv%
 '   For i% = 4 To numdriv%
@@ -1950,15 +1950,17 @@ Private Sub MDIForm_Load()
                ElseIf s7% = 0 And myname = "turbo2cd" Then
                   s7% = 1: Turbo2cdDir$ = drivlet$ + ":\turbo2cd\"
                ElseIf s8% = 0 And myname = "usa" Then
-                  s8% = 1: USADir$ = drivlet$ + ":\usa\"
+                  s8% = 1: USADir$ = drivlet$ + ":\usa\": srtmdtm = drivlet$
                ElseIf s9% = 0 And myname = "e020n40" Then
                   s9% = 1: GEOTOPO30Dir$ = drivlet$ + ":"
                ElseIf s10% = 0 And myname = "3as" Then
-                  s10% = 1: D3ASDir$ = drivlet$ + ":\3as\"
+                  s10% = 1: D3ASDir$ = drivlet$ + ":\3as\": d3asdtm = drivlet$
                ElseIf s11% = 0 And InStr(myname, "samples") <> 0 Then
                   s11% = 1: SamplesDir$ = drivlet$ + ":" & myname & "\"
                ElseIf s12% = 0 And s13% = 0 And s14% = 0 And InStr(myname, "3dexplorer") <> 0 Then
                   s12% = 1: D3dExplorerDir$ = drivlet$ + ":" & myname & "\"
+               ElseIf s15% = 0 And InStr(myname, "BIL") <> 0 Then
+                  s15% = 1: BILDir$ = drivlet$ + ":" & myname & "\": alosdtm = drivlet$
                   End If
                'If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s5% = 1 And s6% = 1 Then GoTo cdc1
                If s1% = 1 And S2% = 1 And s3% = 1 And s4% = 1 And s5% = 0 And s6% = 1 And s7% = 1 And _
@@ -2592,37 +2594,64 @@ map50:
       If Dir(drivjk_c$ & "mapSRTMinfo.sav") <> sEmpty Then
         mapinfonum% = FreeFile
         Open drivjk_c$ & "mapSRTMinfo.sav" For Input As #mapinfonum%
-        Input #mapinfonum%, srtmdtmtmp, srtmdtmcdnumtmp
-        If srtmdtmcdnumtmp = 1 Then
-           srtmdtmcdtmp = True
-        Else
-           srtmdtmcdtmp = False
-           End If
-        If Dir(USADir$, vbDirectory) <> sEmpty Or _
-           Dir(D3ASDir$, vbDirectory) <> sEmpty Then
-           srtmdtm = Mid$(USADir$, 1, 1)
-           worddtm = srtmdtm
-           world = True
-           noheights = False
-           tblbuttons%(1) = 1
-           Toolbar1.Buttons(1).value = tbrPressed
-           End If
-   
-        USADirtmp$ = sEmpty
-        Input #mapinfonum%, USADirtmp$
-        If Dir(srtmdtmtmp & ":\" & USADirtmp$, vbDirectory) <> sEmpty Then
-           srtmdtm = srtmdtmtmp
-           srtmdtmcd = srtmdtmcdtmp
-           worddtm = srtmdtm
-           USADir$ = srtmdtm & ":\" & USADirtmp$ & "\"
-           world = True
-           noheights = False
-           tblbuttons%(1) = 1
-           Toolbar1.Buttons(1).value = tbrPressed
-           End If
-        Close #mapinfonum%
+      Else
+        GoTo aftermapinfo
+        End If
+        
+     Input #mapinfonum%, srtmdtmtmp, srtmdtmcdnumtmp
+     If srtmdtmcdnumtmp = 1 Then
+        srtmdtmcdtmp = True
+     Else
+        srtmdtmcdtmp = False
+        End If
+     If Dir(USADir$, vbDirectory) <> sEmpty Or _
+        Dir(D3ASDir$, vbDirectory) <> sEmpty Then
+        srtmdtm = Mid$(USADir$, 1, 1)
+        worlddtm = srtmdtm
+        world = True
+        noheights = False
+        tblbuttons%(1) = 1
+        Toolbar1.Buttons(1).value = tbrPressed
         End If
 
+     USADirtmp$ = sEmpty
+     Input #mapinfonum%, USADirtmp$
+     If Dir(srtmdtmtmp & ":\" & USADirtmp$, vbDirectory) <> sEmpty Then
+        srtmdtm = srtmdtmtmp
+        srtmdtmcd = srtmdtmcdtmp
+        worlddtm = srtmdtm
+        USADir$ = srtmdtm & ":\" & USADirtmp$ & "\"
+        world = True
+        noheights = False
+        tblbuttons%(1) = 1
+        Toolbar1.Buttons(1).value = tbrPressed
+        End If
+        
+     D3ASDirtmp$ = sEmpty
+     'see if a different directory is recorded
+     Input #mapinfonum%, d3asdtmtmp, D3ASDirtmp$
+     If Dir(d3asdtmtmp & ":\" & D3ASDirtmp$, vbDirectory) <> sEmpty Then
+        d3asdtdm = d3asdtmtmp
+        D3ASDir$ = d3asdtm & ":\" & D3ASDirtmp$ & "\"
+        world = True
+        noheights = False
+        Toolbar1.Buttons(1).value = tbrPressed
+        End If
+        
+     BILDirtmp$ = sEmpty
+     'see if a different directory is recorded
+     Input #mapinfonum%, alosdtmtmp, BILDirtmp$
+     If Dir(alosdtmtmp & ":\" & BILDirtmp$, vbDirectory) <> sEmpty Then
+        alosdtm = alosdtmtmp
+        BILDir$ = alosdtm & ":\" & BILDirtmp$ & "\"
+        world = True
+        noheights = False
+        Toolbar1.Buttons(1).value = tbrPressed
+        End If
+           
+     Close #mapinfonum%
+
+aftermapinfo:
 '      If hgtpos = sEmpty Then hgtpos = 0
 '      If hgtworld = sEmpty Then hgtworld = 0
       If hgtpos = 0 And noheights = False And world = False Then
@@ -2901,7 +2930,7 @@ End Sub
 
 
 
-Private Sub MDIForm_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub MDIForm_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    If MapOn Then BringWindowToTop (mapPictureform.hwnd)
 End Sub
 
@@ -3759,8 +3788,8 @@ Private Sub originfm_Click()
        Maps.Text6.Text = Format(lato, "##0.0#####") '90# - Y * 180# / mappictureform.mappicture.Height
        Maps.Label5.Caption = "long."
        Maps.Label6.Caption = "latit."
-       Xworld = x
-       Yworld = y
+       Xworld = X
+       Yworld = Y
        cirworld = True
        hgtworld = hgt
        lon = lono
@@ -3783,7 +3812,7 @@ Private Sub originfm_Click()
        Exit Sub
        End If
     If map400 = True Then
-       X400c = x: Y400c = y
+       X400c = X: Y400c = Y
        kmx400c = kmxoo: kmy400c = kmyoo
        kmxc = kmx400c: kmyc = kmy400c
        hgt400c = hgt
@@ -3796,7 +3825,7 @@ Private Sub originfm_Click()
 '          End If
     ElseIf map50 = True Then
        'cir50 = True
-       X50c = x: Y50c = y
+       X50c = X: Y50c = Y
        kmx50c = kmxoo: kmy50c = kmyoo
        kmxc = kmx50c: kmyc = kmy50c
        hgt50c = hgt
@@ -4793,7 +4822,7 @@ positerror:
        Exit Sub
        End If
 End Sub
-Private Sub text1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub text1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    If Button = 1 And Maps.Timer2.Enabled = True Then Exit Sub
    If coordmode% <> 5 Then
       Maps.StatusBar1.Panels(2) = "X coordinate (change the coordinate system using RETURN key)"
@@ -4801,7 +4830,7 @@ Private Sub text1_MouseMove(Button As Integer, Shift As Integer, x As Single, y 
       Maps.StatusBar1.Panels(2) = "Distance from goto coordinates in kilometers"
       End If
 End Sub
-Private Sub text2_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub text2_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    If Button = 1 And Maps.Timer2.Enabled = True Then Exit Sub
    If coordmode% <> 5 Then
       Maps.StatusBar1.Panels(2) = "Y coordinate (change the coordinate system using RETURN key)"
@@ -4809,7 +4838,7 @@ Private Sub text2_MouseMove(Button As Integer, Shift As Integer, x As Single, y 
       Maps.StatusBar1.Panels(2) = "Azimut with respect to goto coordinates in degrees"
       End If
 End Sub
-Private Sub text3_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub text3_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    If Button = 1 And Maps.Timer2.Enabled = True Then Exit Sub
    If tblbuttons(1) = 0 Then
       Maps.StatusBar1.Panels(2) = "To activate the height option please place the DTM CD in the CD-ROM reader"
@@ -4817,31 +4846,31 @@ Private Sub text3_MouseMove(Button As Integer, Shift As Integer, x As Single, y 
       Maps.StatusBar1.Panels(2) = "Height in meters"
       End If
 End Sub
-Private Sub text4_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub text4_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    If Text4.Visible = False Then
       Maps.StatusBar1.Panels(2) = sEmpty
    Else
       Maps.StatusBar1.Panels(2) = "Dip angle (degrees) with respect to the goto coordinates"
       End If
 End Sub
-Private Sub picture4_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub picture4_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    Maps.StatusBar1.Panels(2) = sEmpty
 End Sub
-Private Sub text6_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub text6_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    Maps.StatusBar1.Panels(2) = "(Input) Y goto coordinate (change coordinate system using PGUP key)"
 End Sub
-Private Sub text5_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub text5_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    Maps.StatusBar1.Panels(2) = "(Input) X goto coordinate (change coordinate system using PGUP key)"
 End Sub
-Private Sub text7_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub text7_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    Maps.StatusBar1.Panels(2) = "Height in meters at goto coordinates (when DTM is activated)"
 End Sub
-Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    Maps.StatusBar1.Panels(2) = sEmpty
    If MapOn Then BringWindowToTop (mapPictureform.hwnd)
 End Sub
-Private Sub statusbar1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
-   If x >= StatusBar1.Panels(1).Width + StatusBar1.Panels(2).Width Then
+Private Sub statusbar1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+   If X >= StatusBar1.Panels(1).Width + StatusBar1.Panels(2).Width Then
       Maps.StatusBar1.Panels(2) = "Average of the remaining system and user resources"
       End If
 End Sub
@@ -4979,11 +5008,11 @@ Private Sub Timer3_Timer()
       End If
 End Sub
 
-Private Sub toolbar1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub toolbar1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
    X1 = 0: X2 = 0
    For i% = 1 To Toolbar1.Buttons.count
        X2 = X2 + Toolbar1.Buttons(i%).Width
-       If x > X1 And x < X2 And y > 0 And y < Toolbar1.Height Then
+       If X > X1 And X < X2 And Y > 0 And Y < Toolbar1.Height Then
          Maps.StatusBar1.Panels(2).Text = Toolbar1.Buttons(i%).ToolTipText
          If i% <= 5 Then
             exit3 = True
@@ -6614,7 +6643,9 @@ to550:  If world = True And showroute = True Then
                      checkdtm = True
                      Call sunrisesunset(1)
                    ElseIf Dir(srtmdtm & ":\3AS\", vbDirectory) <> sEmpty Or _
-                          Dir(srtmdtm & ":\USA\", vbDirectory) <> sEmpty Then
+                          Dir(srtmdtm & ":\USA\", vbDirectory) <> sEmpty Or _
+                          Dir(USADir$, vbDirectory) <> sEmpty Or _
+                          Dir(BILDir$, vbDirectory) <> sEmpty Then
                      checkdtm = True
                      Call sunrisesunset(1)
                    ElseIf Not NoCDWarning Then

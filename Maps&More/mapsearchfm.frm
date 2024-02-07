@@ -1207,6 +1207,8 @@ uoa100:
          outdrive$ = worlddtm
       Case 1, 2 'SRTM
          outdrive$ = srtmdtm
+      Case 3
+         outdrive$ = alosdtm
    End Select
    Print #dtmfile%, outdrive$; ","; DTMflag
    Close #dtmfile%
@@ -2683,7 +2685,7 @@ End Sub
 ' Purpose   :
 '---------------------------------------------------------------------------------------
 '
-Private Sub Form_Load()
+Private Sub form_load()
    On Error GoTo form_load_Error
 
    mapsearchfm.Width = 4770
@@ -3014,8 +3016,12 @@ uoa100:
    Select Case DTMflag
       Case 0, -1 'GTOPO30, SRTM30
          outdrive$ = worlddtm
-      Case 1, 2 'SRTM
+      Case 1 'SRTM1
          outdrive$ = srtmdtm
+      Case 2 'SRTM3
+         outdrive$ = d3asdtm
+      Case 3
+         outdrive$ = alosdtm
    End Select
    Print #dtmfile%, outdrive$; ","; DTMflag
    Close #dtmfile%

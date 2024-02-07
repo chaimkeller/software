@@ -5,7 +5,7 @@ Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Begin VB.Form mapdiskDTMfm 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Set directory locations of data and programs"
-   ClientHeight    =   3030
+   ClientHeight    =   3360
    ClientLeft      =   5385
    ClientTop       =   3060
    ClientWidth     =   6495
@@ -14,41 +14,42 @@ Begin VB.Form mapdiskDTMfm
    LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   3030
+   ScaleHeight     =   3360
    ScaleWidth      =   6495
    ShowInTaskbar   =   0   'False
    Begin TabDlg.SSTab SSTab1 
-      Height          =   2415
+      Height          =   2895
       Left            =   0
       TabIndex        =   2
       Top             =   120
       Width           =   6495
       _ExtentX        =   11456
-      _ExtentY        =   4260
+      _ExtentY        =   5106
       _Version        =   393216
       Tabs            =   8
-      Tab             =   2
       TabsPerRow      =   4
       TabHeight       =   520
       TabCaption(0)   =   "Israel DTM"
       TabPicture(0)   =   "mapdiskDTMfm.frx":0442
-      Tab(0).ControlEnabled=   0   'False
+      Tab(0).ControlEnabled=   -1  'True
       Tab(0).Control(0)=   "Frame1(1)"
+      Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "frmSource"
+      Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
-      TabCaption(1)   =   "GTOPO30"
+      TabCaption(1)   =   "1 km DEM"
       TabPicture(1)   =   "mapdiskDTMfm.frx":045E
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Frame2(1)"
       Tab(1).ControlCount=   1
-      TabCaption(2)   =   "SRTM-1/2"
+      TabCaption(2)   =   "30 m DEM"
       TabPicture(2)   =   "mapdiskDTMfm.frx":047A
-      Tab(2).ControlEnabled=   -1  'True
+      Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "Frame7(1)"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).Control(1)=   "frmUSA"
-      Tab(2).Control(1).Enabled=   0   'False
-      Tab(2).ControlCount=   2
+      Tab(2).Control(2)=   "frmALOS"
+      Tab(2).Control(3)=   "frmALOSfolder"
+      Tab(2).ControlCount=   4
       TabCaption(3)   =   "TerraExplorer"
       TabPicture(3)   =   "mapdiskDTMfm.frx":0496
       Tab(3).ControlEnabled=   0   'False
@@ -69,11 +70,133 @@ Begin VB.Form mapdiskDTMfm
       Tab(6).ControlEnabled=   0   'False
       Tab(6).Control(0)=   "Frame6(1)"
       Tab(6).ControlCount=   1
-      TabCaption(7)   =   "SRTM30"
+      TabCaption(7)   =   "90 m DEM"
       TabPicture(7)   =   "mapdiskDTMfm.frx":0506
       Tab(7).ControlEnabled=   0   'False
       Tab(7).Control(0)=   "Frame7(0)"
-      Tab(7).ControlCount=   1
+      Tab(7).Control(1)=   "frm3AS"
+      Tab(7).ControlCount=   2
+      Begin VB.Frame frm3AS 
+         Caption         =   "30m DTM folder"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   177
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ForeColor       =   &H00800000&
+         Height          =   1455
+         Left            =   -70320
+         TabIndex        =   62
+         Top             =   960
+         Width           =   1455
+         Begin VB.CommandButton cmdBrowse3AS 
+            Caption         =   "Browse"
+            Height          =   315
+            Left            =   240
+            TabIndex        =   64
+            Top             =   840
+            Width           =   975
+         End
+         Begin VB.TextBox txt3AS 
+            Alignment       =   2  'Center
+            Height          =   285
+            Left            =   120
+            TabIndex        =   63
+            Text            =   "3AS"
+            Top             =   360
+            Width           =   1215
+         End
+      End
+      Begin VB.Frame frmALOSfolder 
+         Caption         =   "ALOS Folder"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   177
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ForeColor       =   &H00800000&
+         Height          =   975
+         Left            =   -70320
+         TabIndex        =   56
+         Top             =   1800
+         Width           =   1575
+         Begin VB.CommandButton cmdBrowseBIL 
+            Caption         =   "Browse"
+            Height          =   255
+            Left            =   360
+            TabIndex        =   61
+            Top             =   600
+            Width           =   855
+         End
+         Begin VB.TextBox txtBIL 
+            Alignment       =   2  'Center
+            Height          =   285
+            Left            =   120
+            TabIndex        =   60
+            Text            =   "BIL"
+            ToolTipText     =   "ALOS BIL folder"
+            Top             =   360
+            Width           =   1335
+         End
+      End
+      Begin VB.Frame frmALOS 
+         Caption         =   "ALOS"
+         BeginProperty Font 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   177
+            Weight          =   700
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ForeColor       =   &H00C00000&
+         Height          =   975
+         Left            =   -74760
+         TabIndex        =   55
+         Top             =   1800
+         Width           =   4335
+         Begin VB.CommandButton cmdBrowseALOS 
+            Caption         =   "Browse"
+            Height          =   255
+            Left            =   3240
+            TabIndex        =   59
+            Top             =   240
+            Width           =   855
+         End
+         Begin VB.DriveListBox DriveALOS 
+            Height          =   315
+            Left            =   1560
+            TabIndex        =   57
+            Top             =   240
+            Width           =   1455
+         End
+         Begin VB.Label LabelALOSdrive 
+            Caption         =   "disk location"
+            BeginProperty Font 
+               Name            =   "Arial"
+               Size            =   8.25
+               Charset         =   0
+               Weight          =   700
+               Underline       =   0   'False
+               Italic          =   0   'False
+               Strikethrough   =   0   'False
+            EndProperty
+            Height          =   255
+            Left            =   280
+            TabIndex        =   58
+            Top             =   280
+            Width           =   1095
+         End
+      End
       Begin VB.Frame frmUSA 
          Caption         =   "SRTM=1 Folder"
          BeginProperty Font 
@@ -87,9 +210,9 @@ Begin VB.Form mapdiskDTMfm
          EndProperty
          ForeColor       =   &H00800000&
          Height          =   1095
-         Left            =   4680
+         Left            =   -70320
          TabIndex        =   51
-         Top             =   840
+         Top             =   720
          Width           =   1455
          Begin VB.CommandButton cmdBrowseUSA 
             Caption         =   "Browse"
@@ -111,7 +234,7 @@ Begin VB.Form mapdiskDTMfm
          End
       End
       Begin VB.Frame frmSource 
-         Caption         =   "DTM source"
+         Caption         =   "Elevation source for EY maps and calculations"
          BeginProperty Font 
             Name            =   "MS Sans Serif"
             Size            =   8.25
@@ -122,31 +245,54 @@ Begin VB.Form mapdiskDTMfm
             Strikethrough   =   0   'False
          EndProperty
          ForeColor       =   &H00C00000&
-         Height          =   495
-         Left            =   -74040
+         Height          =   615
+         Left            =   240
          TabIndex        =   48
-         Top             =   1740
-         Width           =   4335
-         Begin VB.OptionButton optSRTM 
-            Caption         =   "SRTM"
+         Top             =   2040
+         Width           =   5775
+         Begin VB.OptionButton optSRTM3 
+            Caption         =   "SRTM3 / MERIT"
+            Enabled         =   0   'False
             Height          =   195
-            Left            =   2880
-            TabIndex        =   50
+            Left            =   3200
+            TabIndex        =   65
             Top             =   240
-            Width           =   855
+            Width           =   1575
+         End
+         Begin VB.OptionButton optALOS 
+            Caption         =   "ALOS"
+            Enabled         =   0   'False
+            Height          =   195
+            Left            =   4860
+            TabIndex        =   54
+            ToolTipText     =   "Use ALOS elevations"
+            Top             =   240
+            Width           =   800
+         End
+         Begin VB.OptionButton optSRTM 
+            Caption         =   "NED / SRTM1"
+            Enabled         =   0   'False
+            Height          =   195
+            Left            =   1680
+            TabIndex        =   50
+            ToolTipText     =   "Use SRTM elevations"
+            Top             =   240
+            Width           =   1455
          End
          Begin VB.OptionButton optJK 
             Caption         =   "JK's 25-m DTM"
+            Enabled         =   0   'False
             Height          =   195
-            Left            =   720
+            Left            =   120
             TabIndex        =   49
+            ToolTipText     =   "Use JKH's DTM"
             Top             =   240
             Value           =   -1  'True
-            Width           =   1575
+            Width           =   1455
          End
       End
       Begin VB.Frame Frame7 
-         Caption         =   "SRTM30 DTM"
+         Caption         =   "SRTM3 / MERIT 30m DTM"
          BeginProperty Font 
             Name            =   "Arial"
             Size            =   8.25
@@ -159,14 +305,14 @@ Begin VB.Form mapdiskDTMfm
          ForeColor       =   &H00C00000&
          Height          =   1455
          Index           =   0
-         Left            =   -74040
+         Left            =   -74640
          TabIndex        =   40
-         Top             =   720
-         Width           =   4335
+         Top             =   960
+         Width           =   4215
          Begin VB.CheckBox chkSRTM30 
             Caption         =   "Use this DTM and not the GTOPO30"
             Height          =   255
-            Left            =   720
+            Left            =   480
             TabIndex        =   46
             Top             =   1080
             Value           =   1  'Checked
@@ -184,7 +330,7 @@ Begin VB.Form mapdiskDTMfm
             Caption         =   "&Browse"
             Height          =   315
             Index           =   0
-            Left            =   3180
+            Left            =   3120
             TabIndex        =   43
             Top             =   300
             Width           =   915
@@ -193,7 +339,7 @@ Begin VB.Form mapdiskDTMfm
             Caption         =   "This is a CD drive"
             Height          =   195
             Index           =   0
-            Left            =   540
+            Left            =   360
             TabIndex        =   42
             Top             =   720
             Width           =   1575
@@ -202,7 +348,7 @@ Begin VB.Form mapdiskDTMfm
             Caption         =   "This is a disk drive"
             Height          =   195
             Index           =   0
-            Left            =   2340
+            Left            =   2040
             TabIndex        =   41
             Top             =   720
             Value           =   -1  'True
@@ -251,7 +397,7 @@ Begin VB.Form mapdiskDTMfm
          Index           =   1
          Left            =   -73920
          TabIndex        =   38
-         Top             =   960
+         Top             =   1080
          Width           =   4335
          Begin VB.CheckBox Check1 
             Caption         =   "DTM calculations from Windows enabled"
@@ -331,7 +477,7 @@ Begin VB.Form mapdiskDTMfm
             _Version        =   393216
             Value           =   1
             BuddyControl    =   "Text2(1)"
-            BuddyDispid     =   196623
+            BuddyDispid     =   196626
             BuddyIndex      =   1
             OrigLeft        =   3600
             OrigTop         =   360
@@ -354,7 +500,7 @@ Begin VB.Form mapdiskDTMfm
             _Version        =   393216
             Value           =   1
             BuddyControl    =   "Text1(1)"
-            BuddyDispid     =   196622
+            BuddyDispid     =   196625
             BuddyIndex      =   1
             OrigLeft        =   1740
             OrigTop         =   360
@@ -418,7 +564,7 @@ Begin VB.Form mapdiskDTMfm
          Index           =   1
          Left            =   -74040
          TabIndex        =   27
-         Top             =   980
+         Top             =   1200
          Width           =   4335
          Begin VB.DriveListBox Drive3 
             Height          =   315
@@ -480,7 +626,7 @@ Begin VB.Form mapdiskDTMfm
          Index           =   1
          Left            =   -73920
          TabIndex        =   21
-         Top             =   840
+         Top             =   1080
          Width           =   4335
          Begin VB.DriveListBox Drive4 
             Height          =   315
@@ -553,7 +699,7 @@ Begin VB.Form mapdiskDTMfm
          End
       End
       Begin VB.Frame Frame7 
-         Caption         =   "SRTM DTM"
+         Caption         =   "NED DEM / SRTM1 DTM"
          BeginProperty Font 
             Name            =   "Arial"
             Size            =   8.25
@@ -566,9 +712,9 @@ Begin VB.Form mapdiskDTMfm
          ForeColor       =   &H00C00000&
          Height          =   1095
          Index           =   1
-         Left            =   240
+         Left            =   -74760
          TabIndex        =   15
-         Top             =   840
+         Top             =   720
          Width           =   4335
          Begin VB.OptionButton Option5 
             Caption         =   "This is a disk drive"
@@ -634,7 +780,7 @@ Begin VB.Form mapdiskDTMfm
          End
       End
       Begin VB.Frame Frame2 
-         Caption         =   "GTOPO30 DTM"
+         Caption         =   "GTOPO30 / SRTM30 DTM"
          BeginProperty Font 
             Name            =   "Arial"
             Size            =   8.25
@@ -649,7 +795,7 @@ Begin VB.Form mapdiskDTMfm
          Index           =   1
          Left            =   -74040
          TabIndex        =   9
-         Top             =   720
+         Top             =   840
          Width           =   4335
          Begin VB.CheckBox chkGTOPO30 
             Caption         =   "Use this DTM and not the SRTM30"
@@ -736,9 +882,9 @@ Begin VB.Form mapdiskDTMfm
          ForeColor       =   &H00C00000&
          Height          =   1095
          Index           =   1
-         Left            =   -74040
+         Left            =   960
          TabIndex        =   3
-         Top             =   650
+         Top             =   840
          Width           =   4335
          Begin VB.DriveListBox Drive1 
             Height          =   315
@@ -818,7 +964,7 @@ Begin VB.Form mapdiskDTMfm
       Height          =   315
       Left            =   3240
       TabIndex        =   1
-      Top             =   2640
+      Top             =   3000
       Width           =   1395
    End
    Begin VB.CommandButton Command1 
@@ -835,7 +981,7 @@ Begin VB.Form mapdiskDTMfm
       Height          =   315
       Left            =   2160
       TabIndex        =   0
-      Top             =   2640
+      Top             =   3000
       Width           =   1095
    End
 End
@@ -876,19 +1022,70 @@ Private Sub chkSRTM30_Click()
 
 End Sub
 
-Private Sub cmdBrowseUSA_Click()
+Private Sub cmdBrowse3AS_Click()
 Dim DirPath$
 
-        DirPath$ = BrowseForFolder(mapdiskDTMfm.hWnd, "Choose Directory")
+        DirPath$ = BrowseForFolder(mapdiskDTMfm.hwnd, "Choose Directory")
         If Dir(DirPath$, vbDirectory) <> "" Then
-           USADir$ = DirPath$ & "\"
-           txtUSA = Mid$(USADir$, 4, Len(USADir$) - 4)
+           D3ASDir$ = DirPath$ & "\"
+           txt3AS = Mid$(D3ASDir$, 4, Len(D3ASDir$) - 4)
+           alosdtm = Mid$(D3ASDir$, 1, 1)
+           Drive5(0).Drive = alosdtm
+           optALOS.Enabled = True
         Else
            ier = -1
            Exit Sub
            End If
-'first extract minimum temperatures
+End Sub
 
+Private Sub cmdBrowseALOS_Click()
+
+   On Error GoTo cmdBrowseALOS_Click_Error
+
+  CommonDialog5(1).CancelError = True
+  CommonDialog5(1).Filter = "ALOS files (*.bil)|*.bil|"
+  CommonDialog5(1).FilterIndex = 1
+  CommonDialog5(1).FileName = alosdtm + ":\BIL\ALPSMLC30_N032E035_DSM.bil"
+  CommonDialog5(1).ShowOpen
+
+   On Error GoTo 0
+   Exit Sub
+
+cmdBrowseALOS_Click_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdBrowseALOS_Click of Form mapdiskDTMfm"
+End Sub
+
+Private Sub cmdBrowseBIL_Click()
+Dim DirPath$
+
+        DirPath$ = BrowseForFolder(mapdiskDTMfm.hwnd, "Choose Directory")
+        If Dir(DirPath$, vbDirectory) <> "" Then
+           BILDir$ = DirPath$ & "\"
+           txtBIL = Mid$(BILDir$, 4, Len(BILDir$) - 4)
+           alosdtm = Mid$(BILDir$, 1, 1)
+           DriveALOS.Drive = alosdtm
+           optALOS.Enabled = True
+        Else
+           ier = -1
+           Exit Sub
+           End If
+End Sub
+
+Private Sub cmdBrowseUSA_Click()
+Dim DirPath$
+
+        DirPath$ = BrowseForFolder(mapdiskDTMfm.hwnd, "Choose Directory")
+        If Dir(DirPath$, vbDirectory) <> "" Then
+           USADir$ = DirPath$ & "\"
+           txtUSA = Mid$(USADir$, 4, Len(USADir$) - 4)
+           srtmdtm = Mid$(USADir$, 1, 1)
+           Drive5(1).Drive = srtmdtm
+           optSRTM.Enabled = True
+        Else
+           ier = -1
+           Exit Sub
+           End If
 
 End Sub
 
@@ -901,6 +1098,7 @@ Private Sub Command1_Click()
          End If
       ramdrive = Drive3(1).Drive
       srtmdtm = Drive5(1).Drive
+      alosdtm = DriveALOS.Drive
       'terradrive = Drive4.Drive
       terradir$ = Dir1(1).List(Dir1(1).ListIndex - 1)
       If israeldtmcd = True Then
@@ -978,7 +1176,9 @@ Private Sub Command2_Click()
       Open drivjk_c$ & "mapSRTMinfo.sav" For Output As #mapinfonum%
       Print #mapinfonum%, srtmdtm; ","; srtmdtmcdnum
       Print #mapinfonum%, txtUSA
-      Close mapinfonum%
+      Print #mapinfonum%, d3asdtm; ","; Trim$(txt3AS.Text)
+      Print #mapinfonum%, alosdtm; ","; Trim$(txtBIL.Text)
+      Close #mapinfonum%
       
       Call Form_QueryUnload(i%, j%)
 
@@ -1021,9 +1221,10 @@ End Sub
 Private Sub Command7_Click(Index As Integer)
   On Error GoTo c3error
   CommonDialog5(1).CancelError = True
-  CommonDialog5(1).Filter = "srtm files (*.hgt)|*.hgt|"
+  CommonDialog5(1).Filter = "srtm 30m files (*.hgt)|*.hgt|"
   CommonDialog5(1).FilterIndex = 1
-  CommonDialog5(1).FileName = srtmdtm + ":\3AS\N34W118.hgt"
+  'CommonDialog5(1).FileName = srtmdtm + ":\3AS\N31E035.hgt"
+  CommonDialog5(1).FileName = "N31E035.hgt"
   CommonDialog5(1).ShowOpen
 c3error:
   Exit Sub
@@ -1072,7 +1273,15 @@ Private Sub Drive5_Change(Index As Integer)
       End If
 End Sub
 
-Private Sub Form_Load()
+Private Sub DriveALOS_Change()
+   If Dir(DriveALOS.Drive & "\bil", vbDirectory) <> sEmpty Then
+      txtBIL.Text = "BIL"
+   Else
+      txtBIL.Text = sEmpty
+      End If
+End Sub
+
+Private Sub form_load()
    On Error GoTo errhand
    
    myfile = Dir(drivjk_c$ + "mapcdinfo.sav")
@@ -1104,8 +1313,16 @@ Private Sub Form_Load()
          End If
       If D3ASDir$ <> sEmpty Then
          Drive5(0).Drive = Mid$(D3ASDir$, 1, 1)
+         d3asdtm = Mid$(D3ASDir$, 1, 1)
       Else
          Drive5(0).Drive = MainDir$
+         End If
+      If BILDir$ <> sEmpty Then
+         alosdtm = Mid$(BILDir$, 1, 1)
+         DriveALOS.Drive = Mid$(BILDir$, 1, 1)
+      Else
+         alosdtm = "c"
+         DriveALOS.Drive = MainDir$
          End If
          
       ramdrive = MainDir$
@@ -1138,6 +1355,7 @@ Private Sub Form_Load()
       If israeldtmcdnum = 0 Then
          israeldtmcd = False
          Option2(1).value = True
+         optJK.Enabled = True
          'Option2_Click
       Else
          israeldtmcd = True
@@ -1193,11 +1411,21 @@ Private Sub Form_Load()
          Check1(1).value = vbUnchecked
          End If
       Input #mapinfonum%, IsraelDTMsource%
-      If IsraelDTMsource% = 1 Then 'SRTM is source of Israel DTM
+      If IsraelDTMsource% = 1 Then 'SRTM is source of Israel elevations
          optSRTM.value = True
+      ElseIf IsraelDTMsource% = 2 Then 'SRTM3 - MERIT DEM is source of elevations in Israel
+         optSRTM3.value = True
+      ElseIf IsraelDTMsource% = 3 Then 'ALOS DEM is source of elevations in Israel
+         optALOS.value = True
          End If
       Close #mapinfonum%
       End If
+      
+      If Dir(israeldtm + ":\dtm\N31E035.hgt") <> sEmpty Then
+         Close 'close any open files
+         CHMNEO = sEmpty 'reinitialize DTM reading (GETZ)
+         optJK.Enabled = True
+         End If
       
       'now open SRTM info file
       If Dir(drivjk_c$ & "mapSRTMinfo.sav") <> sEmpty Then
@@ -1216,11 +1444,29 @@ Private Sub Form_Load()
          If USADirtmp$ <> sEmpty Then
             USADir$ = srtmdtm & ":\" & USADirtmp$ & "\"
             txtUSA.Text = Mid$(USADir$, 4, Len(USADir$) - 4)
+            optSRTM.Enabled = True
          Else
             If Dir(USADir$, vbDirectory) <> sEmpty Then
                txtUSA = Mid$(USADir$, 4, Len(USADir$) - 4)
                End If
             End If
+         If Not EOF(mapinfonum%) Then
+            Input #mapinfonum%, d3asdtm, D3ASDirtmp$
+            If D3ASDirtmp$ <> sEmpty Then
+               D3ASDir$ = d3asdtm & ":\" & D3ASDirtmp$ & "\"
+               txt3AS.Text = D3ASDirtmp$
+               optSRTM3.Enabled = True
+               End If
+            End If
+         If Not EOF(mapinfonum%) Then
+            Input #mapinfonum%, alosdtm, BILDirtmp$
+            If BILDirtmp$ <> sEmpty Then
+               BILDir$ = alosdtm & ":\" & BILDirtmp$ & "\"
+               txtBIL.Text = BILDirtmp$
+               optALOS.Enabled = True
+               End If
+            End If
+         
          Close #mapinfonum%
       Else
          Drive5(1).Drive = "d" 'default SRTM data drive"
@@ -1231,12 +1477,27 @@ Private Sub Form_Load()
          
       If IsraelDTMsource% = 1 Then
          optSRTM.value = True
+      ElseIf IsraelDTMsource% = 2 Then
+         optSRTM3.value = True
+      ElseIf IsraelDTMsource% = 3 Then
+         optALOS.value = True
          End If
          
       Exit Sub
       
 errhand:
    Resume Next
+End Sub
+
+Private Sub optALOS_Click()
+   'use ALOS DTM for Eretz Israel
+'   If Dir(israeldtm + ":\dtm\N31E035.hgt") <> sEmpty Then
+'      Close 'close any open files
+'      CHMNEO = sEmpty 'reinitialize DTM reading (GETZ)
+      IsraelDTMsource% = 3
+'   Else
+'      MsgBox "Israel SRTM DTM not found is expected location", vbExclamation + vbOKOnly, "Maps&More"
+'      End If
 End Sub
 
 Private Sub Option1_Click(Index As Integer)
@@ -1272,18 +1533,30 @@ Private Sub optJK_Click()
       Close 'close any open files
       CHMNEO = sEmpty 'reinitialize DTM reading (GETZ)
       IsraelDTMsource% = 0
+      optJK.Enabled = True
    Else
       MsgBox "Israel 25-m DTM not found is expected location", vbExclamation + vbOKOnly, "Maps&More"
       End If
 End Sub
 
 Private Sub optSRTM_Click()
-   'use SRTM DTM for Eretz Israel
-   If Dir(israeldtm + ":\dtm\N31E035.hgt") <> sEmpty Then
-      Close 'close any open files
-      CHMNEO = sEmpty 'reinitialize DTM reading (GETZ)
+   'use SRTM1 DTM for Eretz Israel
+'   If Dir(israeldtm + ":\dtm\N31E035.hgt") <> sEmpty Then
+'      Close 'close any open files
+'      CHMNEO = sEmpty 'reinitialize DTM reading (GETZ)
       IsraelDTMsource% = 1
-   Else
-      MsgBox "Israel SRTM DTM not found is expected location", vbExclamation + vbOKOnly, "Maps&More"
-      End If
+'   Else
+'      MsgBox "Israel SRTM DTM not found is expected location", vbExclamation + vbOKOnly, "Maps&More"
+'      End If
+End Sub
+
+Private Sub optSRTM3_Click()
+   'use SRTM3 DTM for Eretz Israel
+'   If Dir(israeldtm + ":\dtm\N31E035.hgt") <> sEmpty Then
+'      Close 'close any open files
+'      CHMNEO = sEmpty 'reinitialize DTM reading (GETZ)
+      IsraelDTMsource% = 2
+'   Else
+'      MsgBox "Israel SRTM DTM not found is expected location", vbExclamation + vbOKOnly, "Maps&More"
+'      End If
 End Sub

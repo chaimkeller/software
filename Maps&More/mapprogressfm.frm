@@ -3,7 +3,7 @@ Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form mapprogressfm 
    BorderStyle     =   1  'Fixed Single
-   ClientHeight    =   1410
+   ClientHeight    =   1605
    ClientLeft      =   2820
    ClientTop       =   5760
    ClientWidth     =   6030
@@ -13,7 +13,7 @@ Begin VB.Form mapprogressfm
    LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   1410
+   ScaleHeight     =   1605
    ScaleWidth      =   6030
    ShowInTaskbar   =   0   'False
    Begin VB.TextBox Text2 
@@ -31,7 +31,7 @@ Begin VB.Form mapprogressfm
       Left            =   1200
       TabIndex        =   15
       Text            =   "0"
-      Top             =   360
+      Top             =   480
       Visible         =   0   'False
       Width           =   1335
    End
@@ -46,12 +46,30 @@ Begin VB.Form mapprogressfm
          Strikethrough   =   0   'False
       EndProperty
       ForeColor       =   &H00000000&
-      Height          =   785
+      Height          =   980
       Left            =   4860
       TabIndex        =   11
       Top             =   250
       Visible         =   0   'False
       Width           =   1095
+      Begin VB.OptionButton optALOS 
+         Caption         =   "AlOS (30m)"
+         BeginProperty Font 
+            Name            =   "Arial"
+            Size            =   6
+            Charset         =   177
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ForeColor       =   &H00004080&
+         Height          =   255
+         Left            =   60
+         TabIndex        =   16
+         Top             =   720
+         Width           =   900
+      End
       Begin VB.OptionButton optSRTM2 
          Caption         =   "SRTM-90 m"
          BeginProperty Font 
@@ -115,7 +133,7 @@ Begin VB.Form mapprogressfm
       Style           =   1  'Graphical
       TabIndex        =   10
       ToolTipText     =   "view in 3D"
-      Top             =   360
+      Top             =   480
       Width           =   615
    End
    Begin VB.CommandButton Command1 
@@ -153,7 +171,7 @@ Begin VB.Form mapprogressfm
       Style           =   1  'Graphical
       TabIndex        =   0
       ToolTipText     =   "Calculate 2D Profile using inputed nearest approach (km)"
-      Top             =   360
+      Top             =   480
       Visible         =   0   'False
       Width           =   615
    End
@@ -200,7 +218,7 @@ Begin VB.Form mapprogressfm
       Height          =   555
       Left            =   2520
       TabIndex        =   5
-      Top             =   360
+      Top             =   480
       Visible         =   0   'False
       Width           =   240
       _ExtentX        =   423
@@ -208,7 +226,7 @@ Begin VB.Form mapprogressfm
       _Version        =   393216
       AutoBuddy       =   -1  'True
       BuddyControl    =   "Text1"
-      BuddyDispid     =   196619
+      BuddyDispid     =   196621
       OrigLeft        =   3720
       OrigTop         =   240
       OrigRight       =   3960
@@ -233,7 +251,7 @@ Begin VB.Form mapprogressfm
       Left            =   1200
       TabIndex        =   4
       Text            =   "0"
-      Top             =   360
+      Top             =   480
       Visible         =   0   'False
       Width           =   1335
    End
@@ -241,7 +259,7 @@ Begin VB.Form mapprogressfm
       Height          =   375
       Left            =   240
       TabIndex        =   1
-      Top             =   480
+      Top             =   600
       Width           =   5535
       _ExtentX        =   9763
       _ExtentY        =   661
@@ -254,7 +272,7 @@ Begin VB.Form mapprogressfm
       Height          =   375
       Left            =   0
       TabIndex        =   2
-      Top             =   1035
+      Top             =   1230
       Width           =   6030
       _ExtentX        =   10636
       _ExtentY        =   661
@@ -335,6 +353,8 @@ Private Sub Acceptbut_Click()
          outdrive$ = worlddtm
       Case 1, 2 'SRTM
          outdrive$ = srtmdtm
+      Case 3 'ALOS
+         outdrive$ = alosdtm
    End Select
    Print #dtmfile%, outdrive$; ","; DTMflag
    Close #dtmfile%
@@ -385,6 +405,8 @@ Private Sub Command2_Click()
          outdrive$ = worlddtm
       Case 1, 2 'SRTM
          outdrive$ = srtmdtm
+      Case 3 'ALOS
+         outdrive$ = alosdtm
    End Select
    Print #dtmfile%, outdrive$; ","; DTMflag
    Close #dtmfile%
@@ -398,33 +420,39 @@ errhand:
 
 End Sub
 
-Private Sub Form_Load()
+Private Sub form_load()
    'read last eros.tm6 file to determine last DTM used
-   If Dir(ramdrive & ":\eros.tm6") <> sEmpty Then
-        dtmfile% = FreeFile
-        Open ramdrive & ":\eros.tm6" For Input As #dtmfile%
-        Input #dtmfile%, outdrive$, DTMflag
+'   If Dir(ramdrive & ":\eros.tm6") <> sEmpty Then
+'        dtmfile% = FreeFile
+'        Open ramdrive & ":\eros.tm6" For Input As #dtmfile%
+'        Input #dtmfile%, outdrive$, DTMflag
         Select Case DTMflag
-           Case 0 'SRTM30 (1 km)
+           Case 0, -1 'GTOPO30 / SRTM30 (1 km)
               optGTOPO30.value = True
-           Case 1 'SRTM-2 (30 meter)
+           Case 1 'SRTM-1 (30 meter)
               optSRTM1.value = True
-           Case 2 'SRTM-1 (100 meter)
+           Case 2 'SRTM-3 / MERIT (90 meter)
               optSRTM2.value = True
+           Case 3 'ALOS (30 meters)
+              optALOS.value = True
         End Select
-        Close #dtmfile%
-   Else
-       DTMflag = 0 'default is SRTM30
-       optGTOPO30.value = True
-       End If
+'        Close #dtmfile%
+'   Else
+'       DTMflag = 0 'default is SRTM30
+'       optGTOPO30.value = True
+'       End If
 
    
    'DTMflag = 2 'default is SRTM layer 2 DEM (90 meter)
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
-   If viewer3D = False Then BringWindowToTop (mapPictureform.hWnd) 'ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+   If viewer3D = False Then BringWindowToTop (mapPictureform.hwnd) 'ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
    Unload Me
+End Sub
+
+Private Sub optALOS_Click()
+   DTMflag = 3
 End Sub
 
 Private Sub optGTOPO30_Click()
