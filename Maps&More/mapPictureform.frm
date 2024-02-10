@@ -304,7 +304,7 @@ keyerror:
    Exit Sub
 End Sub
 
-Private Sub Form_Load()
+Private Sub form_load()
    MapOn = True
 End Sub
 
@@ -665,6 +665,18 @@ Private Sub mappicture_MouseUp(Button As Integer, _
                Maps.Label5.Caption = "ITMx"
                Maps.Label6.Caption = "ITMy"
                coordmode2% = 1
+               
+               If TempFormVis Then
+                  With mapTempfrm
+                  If .chkShowTestDTM And .chkHere Then
+                     .txtEasting = kmxc * 0.001
+                     .txtNorthing = (kmyc - 1000000) * 0.001
+                     .txtElevation = hgt
+                     End If
+                  End With
+                  End If
+                  
+                  
             ElseIf world = True Then
                If impcenter = True Then GoTo mup50
                If coordmode% = 5 Then
@@ -721,10 +733,10 @@ mup50:         If impcenter = True Then
                           Call sunrisesunset(1)
                        ElseIf Not NoCDWarning Then
                           Maps.Toolbar1.Buttons(26).value = tbrUnpressed
-                          ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+                          ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                           response = MsgBox("USGS EROS CD not found!  Please enter the appropriate CD, and then press the DTM button!", vbCritical + vbOKOnly, "Maps & More")
 '                          ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-                          BringWindowToTop (mapPictureform.hWnd)
+                          BringWindowToTop (mapPictureform.hwnd)
                           NoCDWarning = True
                           Exit Sub
                           End If
@@ -831,7 +843,7 @@ mup50:         If impcenter = True Then
                     End If
                If Maps.mnuMagDragEnable.Checked Then
 '                  ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-                  BringWindowToTop (mapPictureform.hWnd)
+                  BringWindowToTop (mapPictureform.hwnd)
                   Call keybd_event(VK_SNAPSHOT, 1, 0, 0)
                   Call keybd_event(VK_SNAPSHOT, 1, KEYEVENTF_KEYUP, 0)
                   waitime = Timer
@@ -849,7 +861,7 @@ mup50:         If impcenter = True Then
                   my = Fix(10 / magy) / 10
                   mapMAGfm.Visible = True
 '                  ret = SetWindowPos(mapMAGfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-                  BringWindowToTop (mapMAGfm.hWnd)
+                  BringWindowToTop (mapMAGfm.hwnd)
                   mapMAGfm.Caption = "Magnifcation " + Str(mx) + " x" + Str(my) + " of marked region on main map"
                   mapMAGfm.MAGpicture.DrawMode = 13
                   'now load the bitmap from the clipboard to pictureclip2
@@ -926,7 +938,7 @@ mu50:             mapMAGfm.MAGpicture.SetFocus
                         End If
                      End If
                ElseIf Maps.mnuXYFix.Checked Then
-                  ret = BringWindowToTop(mapPictureform.hWnd)
+                  ret = BringWindowToTop(mapPictureform.hwnd)
                   If drag1x <> drag2x And drag1y <> drag2y Then
                     response = MsgBox("Drag defines XY fix area?", vbQuestion + vbYesNoCancel, "Maps&More")
                     If response = vbYes Then
@@ -935,7 +947,7 @@ mu50:             mapMAGfm.MAGpicture.SetFocus
                     End If
                   End If
                   
-                  BringWindowToTop (mapPictureform.hWnd)
+                  BringWindowToTop (mapPictureform.hwnd)
                   mapPictureform.mapPicture.DrawMode = 7
                   mapPictureform.mapPicture.DrawWidth = 2
                   mapPictureform.mapPicture.Line (drag2x, drag2y)-(drag1x, drag1y), QBColor(15), B
@@ -988,7 +1000,7 @@ mu50:             mapMAGfm.MAGpicture.SetFocus
             maprightform.Text1 = "Name"
             maprightform.Visible = True
 '            ret = SetWindowPos(maprightform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            BringWindowToTop (maprightform.hWnd)
+            BringWindowToTop (maprightform.hwnd)
             maprightform.SetFocus
             Exit Sub
             End If
@@ -1016,7 +1028,7 @@ mu50:             mapMAGfm.MAGpicture.SetFocus
             End If
          maprightform.Visible = True
 '         ret = SetWindowPos(maprightform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-         BringWindowToTop (maprightform.hWnd)
+         BringWindowToTop (maprightform.hwnd)
          maprightform.SetFocus
       End Select
       

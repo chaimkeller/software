@@ -2930,7 +2930,7 @@ End Sub
 
 
 
-Private Sub MDIForm_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub MDIForm_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    If MapOn Then BringWindowToTop (mapPictureform.hwnd)
 End Sub
 
@@ -3788,8 +3788,8 @@ Private Sub originfm_Click()
        Maps.Text6.Text = Format(lato, "##0.0#####") '90# - Y * 180# / mappictureform.mappicture.Height
        Maps.Label5.Caption = "long."
        Maps.Label6.Caption = "latit."
-       Xworld = X
-       Yworld = Y
+       Xworld = x
+       Yworld = y
        cirworld = True
        hgtworld = hgt
        lon = lono
@@ -3812,7 +3812,7 @@ Private Sub originfm_Click()
        Exit Sub
        End If
     If map400 = True Then
-       X400c = X: Y400c = Y
+       X400c = x: Y400c = y
        kmx400c = kmxoo: kmy400c = kmyoo
        kmxc = kmx400c: kmyc = kmy400c
        hgt400c = hgt
@@ -3825,7 +3825,7 @@ Private Sub originfm_Click()
 '          End If
     ElseIf map50 = True Then
        'cir50 = True
-       X50c = X: Y50c = Y
+       X50c = x: Y50c = y
        kmx50c = kmxoo: kmy50c = kmyoo
        kmxc = kmx50c: kmyc = kmy50c
        hgt50c = hgt
@@ -4822,7 +4822,7 @@ positerror:
        Exit Sub
        End If
 End Sub
-Private Sub text1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    If Button = 1 And Maps.Timer2.Enabled = True Then Exit Sub
    If coordmode% <> 5 Then
       Maps.StatusBar1.Panels(2) = "X coordinate (change the coordinate system using RETURN key)"
@@ -4830,7 +4830,7 @@ Private Sub text1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y 
       Maps.StatusBar1.Panels(2) = "Distance from goto coordinates in kilometers"
       End If
 End Sub
-Private Sub text2_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text2_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    If Button = 1 And Maps.Timer2.Enabled = True Then Exit Sub
    If coordmode% <> 5 Then
       Maps.StatusBar1.Panels(2) = "Y coordinate (change the coordinate system using RETURN key)"
@@ -4838,7 +4838,7 @@ Private Sub text2_MouseMove(Button As Integer, Shift As Integer, X As Single, Y 
       Maps.StatusBar1.Panels(2) = "Azimut with respect to goto coordinates in degrees"
       End If
 End Sub
-Private Sub text3_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text3_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    If Button = 1 And Maps.Timer2.Enabled = True Then Exit Sub
    If tblbuttons(1) = 0 Then
       Maps.StatusBar1.Panels(2) = "To activate the height option please place the DTM CD in the CD-ROM reader"
@@ -4846,31 +4846,31 @@ Private Sub text3_MouseMove(Button As Integer, Shift As Integer, X As Single, Y 
       Maps.StatusBar1.Panels(2) = "Height in meters"
       End If
 End Sub
-Private Sub text4_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text4_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    If Text4.Visible = False Then
       Maps.StatusBar1.Panels(2) = sEmpty
    Else
       Maps.StatusBar1.Panels(2) = "Dip angle (degrees) with respect to the goto coordinates"
       End If
 End Sub
-Private Sub picture4_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub picture4_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = sEmpty
 End Sub
-Private Sub text6_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text6_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = "(Input) Y goto coordinate (change coordinate system using PGUP key)"
 End Sub
-Private Sub text5_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text5_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = "(Input) X goto coordinate (change coordinate system using PGUP key)"
 End Sub
-Private Sub text7_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub text7_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = "Height in meters at goto coordinates (when DTM is activated)"
 End Sub
-Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub picture1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    Maps.StatusBar1.Panels(2) = sEmpty
    If MapOn Then BringWindowToTop (mapPictureform.hwnd)
 End Sub
-Private Sub statusbar1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
-   If X >= StatusBar1.Panels(1).Width + StatusBar1.Panels(2).Width Then
+Private Sub statusbar1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+   If x >= StatusBar1.Panels(1).Width + StatusBar1.Panels(2).Width Then
       Maps.StatusBar1.Panels(2) = "Average of the remaining system and user resources"
       End If
 End Sub
@@ -5008,11 +5008,11 @@ Private Sub Timer3_Timer()
       End If
 End Sub
 
-Private Sub toolbar1_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub toolbar1_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
    X1 = 0: X2 = 0
    For i% = 1 To Toolbar1.Buttons.count
        X2 = X2 + Toolbar1.Buttons(i%).Width
-       If X > X1 And X < X2 And Y > 0 And Y < Toolbar1.Height Then
+       If x > X1 And x < X2 And y > 0 And y < Toolbar1.Height Then
          Maps.StatusBar1.Panels(2).Text = Toolbar1.Buttons(i%).ToolTipText
          If i% <= 5 Then
             exit3 = True
