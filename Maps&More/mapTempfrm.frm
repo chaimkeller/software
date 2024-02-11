@@ -1,10 +1,11 @@
 VERSION 5.00
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form mapTempfrm 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "WorldClim Temperature Model Ver. 2"
-   ClientHeight    =   9645
+   ClientHeight    =   10290
    ClientLeft      =   6570
    ClientTop       =   2430
    ClientWidth     =   6765
@@ -13,25 +14,43 @@ Begin VB.Form mapTempfrm
    LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   9645
+   ScaleHeight     =   10290
    ScaleWidth      =   6765
    ShowInTaskbar   =   0   'False
+   Begin MSComctlLib.StatusBar StatusBarTemp 
+      Align           =   2  'Align Bottom
+      Height          =   375
+      Left            =   0
+      TabIndex        =   19
+      Top             =   9915
+      Width           =   6765
+      _ExtentX        =   11933
+      _ExtentY        =   661
+      _Version        =   393216
+      BeginProperty Panels {8E3867A5-8586-11D1-B16A-00C0F0283628} 
+         NumPanels       =   1
+         BeginProperty Panel1 {8E3867AB-8586-11D1-B16A-00C0F0283628} 
+            AutoSize        =   2
+         EndProperty
+      EndProperty
+   End
    Begin VB.Frame frmComparison 
       Caption         =   "Elevations"
-      Height          =   1575
+      Height          =   1935
       Left            =   240
       TabIndex        =   8
       Top             =   7920
       Width           =   6255
       Begin MSFlexGridLib.MSFlexGrid flxgrdCompare 
-         Height          =   975
+         Height          =   1280
          Left            =   240
          TabIndex        =   9
          Top             =   360
          Width           =   5775
          _ExtentX        =   10186
-         _ExtentY        =   1720
+         _ExtentY        =   2249
          _Version        =   393216
+         Rows            =   3
          Cols            =   5
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "MS Sans Serif"
@@ -263,7 +282,7 @@ Dim FileIn$
 Private Sub chkShowTestDTM_Click()
    With chkShowTestDTM
       If .value = vbChecked Then
-         mapTempfrm.Height = 10095
+         mapTempfrm.Height = 10740
       ElseIf .value = vbUnchecked Then
          mapTempfrm.Height = 7000
          End If
@@ -277,6 +296,7 @@ Private Sub cmdCompare_Click()
    Dim ITMy
    Dim hgt(3)
    Dim IsraelDTMsource0%
+   Dim RMS(3)
    
    ITMx = Val(txtEasting.Text) * 1000
    ITMy = 1000000 + Val(txtNorthing.Text) * 1000
@@ -332,6 +352,32 @@ Private Sub cmdCompare_Click()
           Close #filrec%
           End If
        End If
+       
+    'calculate running rms
+    For i% = 0 To 3
+       RMS(i%) = 0
+    Next i%
+    
+    filrms% = FreeFile
+    Open App.Path & "\Compare.txt" For Input As #filrms%
+    Line Input #filrms%, doclin$ 'skip the doc line
+    numrms% = 0
+    Do Until EOF(filrms%)
+        Input #filrms%, Es, Ns, hgt(0), hgt(1), hgt(2), hgt(3), trighgt
+        For i% = 0 To 3
+            RMS(i%) = RMS(i%) + (trighgt - hgt(i%)) ^ 2
+        Next i%
+        numrms% = numrms% + 1
+    Loop
+    Close #filrms%
+    
+    For i% = 0 To 3
+       RMS(i%) = Sqr(RMS(i%) / numrms%)
+       mapTempfrm.flxgrdCompare.TextMatrix(2, i% + 1) = Val(Format(RMS(i%), "#0.0"))
+    Next i%
+    
+    StatusBarTemp.Panels(1).Text = Str$(numrms%) & " points"
+    
        
     IsraelDTMsource% = IsraelDTMsource0%
     
@@ -514,6 +560,7 @@ Private Sub form_load()
       .ColAlignment(3) = 1
       .ColAlignment(4) = 1
       .TextMatrix(1, 0) = "hgt (m)"
+      .TextMatrix(2, 0) = "RMS"
       .TextMatrix(0, 1) = "JK DTM"
       .TextMatrix(0, 2) = "SRTM1"
       .TextMatrix(0, 3) = "MERIT"
