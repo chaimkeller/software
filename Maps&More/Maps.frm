@@ -1113,7 +1113,7 @@ Begin VB.MDIForm Maps
             Caption         =   "-"
          End
          Begin VB.Menu mnuExcelDrag 
-            Caption         =   "Enable E&xportl drag"
+            Caption         =   "Enable E&xport drag"
          End
          Begin VB.Menu spacerTrig 
             Caption         =   "-"

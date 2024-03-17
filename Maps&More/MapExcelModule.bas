@@ -8,7 +8,7 @@ Attribute VB_Name = "MapExcelModule"
 'exports 3D topo data to Excel for plotting
 Sub ExportToExcel(drag1x, drag1y, drag2x, drag2y)
 
-   Dim kmxstep As Double, kmystep As Double
+   Dim KMXStep As Double, KMYStep As Double
    Dim invstepx As Double, invstepy As Double
    Dim kmxsteps As Double, kmysteps As Double
    
@@ -32,20 +32,20 @@ Sub ExportToExcel(drag1x, drag1y, drag2x, drag2y)
    
   
    If Not world Then
-      kmxstep = 25
-      kmystep = 25
+      KMXStep = 25
+      KMYStep = 25
    Else
-      kmxstep = XDIM
-      kmystep = YDIM
+      KMXStep = XDIM
+      KMYStep = YDIM
       End If
       
    'convert to appropriate grid
-   invstepx = 1# / kmxstep
-   invstepy = 1# / kmystep
-   kmxUL = CLng(kmxUL * invstepx) * kmxstep
-   kmxLR = CLng(kmxLR * invstepx) * kmxstep
-   kmyUL = CLng(kmyUL * invstepy) * kmystep
-   kmyLR = CLng(kmyLR * invstepy) * kmystep
+   invstepx = 1# / KMXStep
+   invstepy = 1# / KMYStep
+   kmxUL = CLng(kmxUL * invstepx) * KMXStep
+   kmxLR = CLng(kmxLR * invstepx) * KMXStep
+   kmyUL = CLng(kmyUL * invstepy) * KMYStep
+   kmyLR = CLng(kmyLR * invstepy) * KMYStep
    
       
       
@@ -55,7 +55,7 @@ Sub ExportToExcel(drag1x, drag1y, drag2x, drag2y)
                        , vbYesNoCancel Or vbExclamation Or vbDefaultButton1, "Export")
     
       Case vbYes
-         'do nothing
+         'do nothing (handler below after select)
     
       Case vbNo
          'export to xyz file and then exit
@@ -72,6 +72,21 @@ Sub ExportToExcel(drag1x, drag1y, drag2x, drag2y)
                FileName = Maps.CommonDialog2.FileName
                filnum% = FreeFile
                
+               Dim YColumn As Boolean
+               frmMsgBox.MsgCstm "Inside loop for export", "Y or X?", mbQuestion, 1, False, _
+                                 "Y columns are inside loop", "X rows are inside loop", "Cancel"
+               Select Case frmMsgBox.g_lBtnClicked
+                   Case 1 'the 1st button in your list was clicked
+                        YColumn = True
+            
+                   Case 2 'the 2nd button in your list was clicked
+                        YColumn = False
+                    
+                  Case 0, 3 'cancel.
+                        Close
+                        Exit Sub
+               End Select
+               
                Screen.MousePointer = vbHourglass
                
                With mapprogressfm
@@ -84,7 +99,7 @@ Sub ExportToExcel(drag1x, drag1y, drag2x, drag2y)
                     .Caption = "Exporting xyz file, 0%"
                     .StatusBar1.Panels(1).Text = "Please wait..."
                     .ProgressBar1.Min = 0
-                    .ProgressBar1.Max = CLng((kmxLR - kmxUL) / kmxstep) + 1
+                    .ProgressBar1.Max = CLng((kmxLR - kmxUL) / KMXStep) + 1
                     .ProgressBar1.value = 0
                     .Left = Maps.Left + 0.5 * Maps.Width - 0.5 * .Width
                     .Top = Maps.Top + 0.5 * Maps.Height - 0.5 * .Height
@@ -95,45 +110,89 @@ Sub ExportToExcel(drag1x, drag1y, drag2x, drag2y)
                Open FileName For Output As #filnum%
                
                   stepNum& = 0
-              
-                  For kmxsteps = kmxUL To kmxLR Step kmxstep 'kmystep = kmyLR To kmyUL Step 25
-                        
-                      For kmysteps = kmyLR To kmyUL Step kmystep 'kmxstep = kmxUL To kmxLR Step 25
+                  
+                  If YColumn Then
+                                   
+                      For kmxsteps = kmxUL To kmxLR Step KMXStep 'kmystep = kmyLR To kmyUL Step 25
+                            
+                          For kmysteps = kmyLR To kmyUL Step KMYStep 'kmxstep = kmxUL To kmxLR Step 25
+                              
+                              'determine heights at those coordinates
+                              If Not world Then
+                                If noheights = False Then
+                                   kmxpoint = kmxsteps
+                                   kmypoint = kmysteps
+                                   Call heights(kmxpoint, kmypoint, hgt2)
+                                ElseIf noheights = True Then
+                                   hgt2 = 0#
+                                   End If
+                              Else
+                                 
+                                If noheights = False Then
+                                   kmxpoint = kmxsteps
+                                   kmypoint = kmysteps
+                                   Call worldheights(kmxpoint, kmypoint, hgt2)
+                                   If hgt2 = -9999 Then hgt2 = 0
+                                Else
+                                   hgt2 = 0
+                                   End If
+                                 
+                                 End If
+                                 
+                                 Write #filnum%, kmxsteps, kmysteps, hgt2
+                              
+                          Next kmysteps 'kmxstep
                           
-                          'determine heights at those coordinates
-                          If Not world Then
-                            If noheights = False Then
-                               kmxpoint = kmxsteps
-                               kmypoint = kmysteps
-                               Call heights(kmxpoint, kmypoint, hgt2)
-                            ElseIf noheights = True Then
-                               hgt2 = 0#
-                               End If
-                          Else
-                             
-                            If noheights = False Then
-                               kmxpoint = kmxsteps
-                               kmypoint = kmysteps
-                               Call worldheights(kmxpoint, kmypoint, hgt2)
-                               If hgt2 = -9999 Then hgt2 = 0
-                            Else
-                               hgt2 = 0
-                               End If
-                             
-                             End If
-                             
-                             Write #filnum%, kmxsteps, kmysteps, hgt2
-                          
-                      Next kmysteps 'kmxstep
-                      
-                      numSteps& = numSteps& + 1
-                      mapprogressfm.ProgressBar1.value = numSteps&
-                      mapprogressfm.Caption = "Exporting xyz file, " + Str$(CLng(100 * numSteps& / mapprogressfm.ProgressBar1.Max)) + "%"
-                      mapprogressfm.Label1.Caption = Str$(CLng(100 * numSteps& / mapprogressfm.ProgressBar1.Max)) + "%"
-                      mapprogressfm.Refresh
-
-                    Next kmxsteps 'kmystep
+                          numSteps& = numSteps& + 1
+                          mapprogressfm.ProgressBar1.value = numSteps&
+                          mapprogressfm.Caption = "Exporting xyz file, " + Str$(CLng(100 * numSteps& / mapprogressfm.ProgressBar1.Max)) + "%"
+                          mapprogressfm.Label1.Caption = Str$(CLng(100 * numSteps& / mapprogressfm.ProgressBar1.Max)) + "%"
+                          mapprogressfm.Refresh
+    
+                        Next kmxsteps 'kmystep
               
+                    Else
+                            
+                      For kmysteps = kmyLR To kmyUL Step KMYStep 'kmxstep = kmxUL To kmxLR Step 25
+                          
+                          For kmxsteps = kmxUL To kmxLR Step KMXStep
+                              
+                              'determine heights at those coordinates
+                              If Not world Then
+                                If noheights = False Then
+                                   kmxpoint = kmxsteps
+                                   kmypoint = kmysteps
+                                   Call heights(kmxpoint, kmypoint, hgt2)
+                                ElseIf noheights = True Then
+                                   hgt2 = 0#
+                                   End If
+                              Else
+                                 
+                                If noheights = False Then
+                                   kmxpoint = kmxsteps
+                                   kmypoint = kmysteps
+                                   Call worldheights(kmxpoint, kmypoint, hgt2)
+                                   If hgt2 = -9999 Then hgt2 = 0
+                                Else
+                                   hgt2 = 0
+                                   End If
+                                 
+                                 End If
+                                 
+                                 Write #filnum%, kmysteps, kmxsteps, hgt2
+                              
+                          Next kmxsteps 'kmxstep
+                          
+                          numSteps& = numSteps& + 1
+                          mapprogressfm.ProgressBar1.value = numSteps&
+                          mapprogressfm.Caption = "Exporting xyz file, " + Str$(CLng(100 * numSteps& / mapprogressfm.ProgressBar1.Max)) + "%"
+                          mapprogressfm.Label1.Caption = Str$(CLng(100 * numSteps& / mapprogressfm.ProgressBar1.Max)) + "%"
+                          mapprogressfm.Refresh
+    
+                        Next kmysteps 'kmystep
+                    
+                       End If
+                       
                Close #filnum%
                Unload mapprogressfm
                ProgressView = False
@@ -150,89 +209,89 @@ Sub ExportToExcel(drag1x, drag1y, drag2x, drag2y)
     
     End Select
     
-'''''''''''''''''''''''''''''''''enable if have EXCEL ocx''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''comment out if don't have EXCEL.exe registered as a component'''''''''''''''''''''''''
      
-'    Screen.MousePointer = vbHourglass
+    Screen.MousePointer = vbHourglass
     
-    'Use the Excel (OLE) Object library
+'    Use the Excel (OLE) Object library
     
-'    Dim ExcelApp As Excel.Application
-'    Dim ExcelBook As Excel.Workbook
-'    Dim ExcelSheet As Excel.Worksheet
-'
-'    Set ExcelApp = New Excel.Application
-'    Set ExcelBook = ExcelApp.Workbooks.Add
-'    Set ExcelSheet = ExcelBook.Worksheets.Add
-'
-'    Screen.MousePointer = vbDefault
-'    ExcelBook.Application.Visible = True
-'    ExcelBook.Windows(1).Visible = True
-'    middle& = CLng(Abs(kmxUL - kmxLR) * 0.5 / kmxstep)
-'    ExcelSheet.Cells( _
-'        1, middle&).Value = "Maps&More export file, Date/Time: " & Now()
-'
-'    'Headers (X coordinate)
-'    j& = 0
-'    For kmxExcel = kmxUL To kmxLR Step kmxstep
-'        j& = j& + 1
-'        ExcelSheet.Cells(3, j& + 1) = kmxExcel
-'    Next kmxExcel
-'
-'
-'    numRow& = 3 'starting row for data is numRow&+1
-'
-'    'Y coordinates and heights
-'    For kmyExcel = kmyUL To kmyLR Step -kmystep
-'
-'        numRow& = numRow& + 1
-'        ExcelSheet.Cells(numRow&, 1) = kmyExcel 'Y Coordinate
-'
-'        i& = 0
-'        For kmxExcel = kmxUL To kmxLR Step kmxstep
-'            i& = i& + 1
-'
-'            'determine heights at those coordinates
-'            If Not world Then
-'              If noheights = False Then
-'                 kmxExcel0 = kmxExcel
-'                 kmyExcel0 = kmyExcel
-'                 Call heights(kmxExcel0, kmyExcel0, hgt2)
-'              ElseIf noheights = True Then
-'                 hgt2 = 0#
-'                 End If
-'            Else
-'
-'              If noheights = False Then
-'                 kmxExcel0 = kmxExcel
-'                 kmyExcel0 = kmyExcel
-'                 Call worldheights(kmxExcel0, kmyExcel0, hgt2)
-'                 If hgt2 = -9999 Then hgt2 = 0
-'              Else
-'                 hgt2 = 0
-'                 End If
-'
-'               End If
-'
-'            ExcelSheet.Cells(numRow&, i& + 1) = hgt2
-'        Next kmxExcel
-'     Next kmyExcel
-'
-'    ExcelSheet.SaveAs drivjk$ & "dtmpiec.xls"
-'    Screen.MousePointer = vbDefault
-'
-'    response = MsgBox( _
-'        "Do you wan't to close the EXCEL window? " + _
-'        "(If you answer No, then EXCEL will continue running, even after " + _
-'        "closing Maps & More.)", vbQuestion + vbYesNo + vbDefaultButton2, _
-'        "Maps&More")
-'    If response = vbYes Then
-'       ExcelApp.Quit
-'
-'       Set ExcelApp = Nothing
-'       Set ExcelBook = Nothing
-'       Set ExcelSheet = Nothing
-'       End If
-'
+    Dim ExcelApp As Excel.Application
+    Dim ExcelBook As Excel.Workbook
+    Dim ExcelSheet As Excel.Worksheet
+
+    Set ExcelApp = New Excel.Application
+    Set ExcelBook = ExcelApp.Workbooks.Add
+    Set ExcelSheet = ExcelBook.Worksheets.Add
+
+    Screen.MousePointer = vbDefault
+    ExcelBook.Application.Visible = True
+    ExcelBook.Windows(1).Visible = True
+    middle& = CLng(Abs(kmxUL - kmxLR) * 0.5 / KMXStep)
+    ExcelSheet.Cells( _
+        1, middle&).value = "Maps&More export file, Date/Time: " & Now()
+
+    'Headers (X coordinate)
+    j& = 0
+    For kmxExcel = kmxUL To kmxLR Step KMXStep
+        j& = j& + 1
+        ExcelSheet.Cells(3, j& + 1) = kmxExcel
+    Next kmxExcel
+
+
+    numRow& = 3 'starting row for data is numRow&+1
+
+    'Y coordinates and heights
+    For kmyExcel = kmyUL To kmyLR Step -KMYStep
+
+        numRow& = numRow& + 1
+        ExcelSheet.Cells(numRow&, 1) = kmyExcel 'Y Coordinate
+
+        i& = 0
+        For kmxExcel = kmxUL To kmxLR Step KMXStep
+            i& = i& + 1
+
+            'determine heights at those coordinates
+            If Not world Then
+              If noheights = False Then
+                 kmxExcel0 = kmxExcel
+                 kmyExcel0 = kmyExcel
+                 Call heights(kmxExcel0, kmyExcel0, hgt2)
+              ElseIf noheights = True Then
+                 hgt2 = 0#
+                 End If
+            Else
+
+              If noheights = False Then
+                 kmxExcel0 = kmxExcel
+                 kmyExcel0 = kmyExcel
+                 Call worldheights(kmxExcel0, kmyExcel0, hgt2)
+                 If hgt2 = -9999 Then hgt2 = 0
+              Else
+                 hgt2 = 0
+                 End If
+
+               End If
+
+            ExcelSheet.Cells(numRow&, i& + 1) = hgt2
+        Next kmxExcel
+     Next kmyExcel
+
+    ExcelSheet.SaveAs drivjk$ & "dtmpiec.xls"
+    Screen.MousePointer = vbDefault
+
+    response = MsgBox( _
+        "Do you wan't to close the EXCEL window? " + _
+        "(If you answer No, then EXCEL will continue running, even after " + _
+        "closing Maps & More.)", vbQuestion + vbYesNo + vbDefaultButton2, _
+        "Maps&More")
+    If response = vbYes Then
+       ExcelApp.Quit
+
+       Set ExcelApp = Nothing
+       Set ExcelBook = Nothing
+       Set ExcelSheet = Nothing
+       End If
+
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 Exit Sub
@@ -261,11 +320,11 @@ errhand:
    outfil$ = drivjk$ & "dtmpiec2.out"
    filnum% = FreeFile
    Open outfil$ For Output As #filnum%
-   kmxstep = 25
-   kmystep = 25
+   KMXStep = 25
+   KMYStep = 25
    doclin2$ = ""
    nn% = 0
-   For kmxExcel = kmxUL To kmxLR Step kmxstep
+   For kmxExcel = kmxUL To kmxLR Step KMXStep
       If nn% = 0 Then
          doclin2$ = "---," + Str$(kmxExcel)
       Else
@@ -275,11 +334,11 @@ errhand:
    Next kmxExcel
    Print #filnum%, doclin2$
 
-   For kmyExcel = kmyLR To kmyUL Step kmystep
+   For kmyExcel = kmyLR To kmyUL Step KMYStep
       kmyn = kmyExcel
       nn% = 0
       doclin2$ = ""
-      For kmxExcel = kmxUL To kmxLR Step kmxstep
+      For kmxExcel = kmxUL To kmxLR Step KMXStep
           'determine heights at those coordinates
 
           If Not world Then
@@ -344,19 +403,19 @@ Sub TrigPointAdjust(drag1x, drag1y, drag2x, drag2y)
    
    'Convert drag coordinates to kmx
    Call ScreenToGeo(drag1x, drag1y, kmxDrag, kmyDrag, 1, ier%)
-   kmxStart = kmxDrag
-   kmyEnd = kmyDrag
+   KmxStart = kmxDrag
+   KmyEnd = kmyDrag
 
    Call ScreenToGeo(drag2x, drag2y, kmxDrag, kmyDrag, 1, ier%)
-   kmxEnd = kmxDrag
-   kmyStart = kmyDrag
+   KmxEnd = kmxDrag
+   KmyStart = kmyDrag
    
    'Now determine end and start with respect to actual DTM
    'points:
-   kmxStart = CLng(kmxStart * 0.04) * 25#
-   kmxEnd = CLng(kmxEnd * 0.04) * 25#
-   kmyStart = CLng(kmyStart * 0.04) * 25#
-   kmyEnd = CLng(kmyEnd * 0.04) * 25#
+   KmxStart = CLng(KmxStart * 0.04) * 25#
+   KmxEnd = CLng(KmxEnd * 0.04) * 25#
+   KmyStart = CLng(KmyStart * 0.04) * 25#
+   KmyEnd = CLng(KmyEnd * 0.04) * 25#
    
    '---------------------change to xyz------------------------------
    
@@ -506,8 +565,8 @@ tp500: '-----------save the points to the DTM tile----------------------
           
         'determine which tile(s) are being used and back them up
         CHFind$ = sEmpty
-        For kmy = kmyStart To kmyEnd Step 25
-           For kmx = kmxStart To kmxEnd Step 25
+        For kmy = KmyStart To KmyEnd Step 25
+           For kmx = KmxStart To KmxEnd Step 25
               kmxDTM = kmx * 0.001
               kmyDTM = (kmy - 1000000) * 0.001
               IKMX& = Int((kmxDTM + 20!) * 40!) + 1
@@ -521,14 +580,14 @@ tp500: '-----------save the points to the DTM tile----------------------
              'Since roundoff errors in converting from coord to
              'integer indexes, just count columns and rows assuming
              'that the first one has no roundoff error
-              If kmx = kmxStart And kmy = kmyStart Then
+              If kmx = KmxStart And kmy = KmyStart Then
                  IR% = NROW% - (Jg% - 1) * 800
                  IC% = NCOL% - (Ig% - 1) * 800
                  IR0% = IR%
                  IC0% = IC%
               Else
-                 IC% = CInt((kmx - kmxStart) * 0.04) + IC0%
-                 IR% = IR0% - CInt((kmy - kmyStart) * 0.04)
+                 IC% = CInt((kmx - KmxStart) * 0.04) + IC0%
+                 IR% = IR0% - CInt((kmy - KmyStart) * 0.04)
                  End If
               
               IFN& = (IR% - 1) * 801! + IC%
@@ -596,15 +655,15 @@ tp250:        If CHFindTmp$ <> CHFind$ Then
                'Since roundoff errors in converting from coord to
                'integer indexes, just count columns and rows assuming
                'that the first one has no roundoff error
-                If (kmx = kmxStart And kmy = kmyStart) Or newtile% = 1 Then
+                If (kmx = KmxStart And kmy = KmyStart) Or newtile% = 1 Then
                    IR% = NROW% - (Jg% - 1) * 800
                    IC% = NCOL% - (Ig% - 1) * 800
                    IR0% = IR%
                    IC0% = IC%
                    newtile% = 0
                 Else
-                   IC% = CInt((kmx - kmxStart) * 0.04) + IC0%
-                   IR% = IR0% - CInt((kmy - kmyStart) * 0.04)
+                   IC% = CInt((kmx - KmxStart) * 0.04) + IC0%
+                   IR% = IR0% - CInt((kmy - KmyStart) * 0.04)
                    End If
               
                 IFN& = (IR% - 1) * 801! + IC%
@@ -679,24 +738,29 @@ Sub GlitchFix(drag1x, drag1y, drag2x, drag2y, Coord As Long, Mode%)
    'a characteristic exponent L.  So for a distance D/25 m from the trig
    'point with DTM height Ho, it's new height will be modeled as
    'H = Ho + (Htrig - Ho) * L ^ -D.  First try L = e
+   Dim KmxStart, KmxEnd
+   Dim KmyStart, KmyEnd
    
    On Error GoTo GlitchFix_Error
    
    'Convert drag coordinates to kmx
    Call ScreenToGeo(drag1x, drag1y, kmxDrag, kmyDrag, 1, ier%)
-   kmxStart = kmxDrag
-   kmyEnd = kmyDrag
+   KmxStart = kmxDrag
+   KmyEnd = kmyDrag
 
    Call ScreenToGeo(drag2x, drag2y, kmxDrag, kmyDrag, 1, ier%)
-   kmxEnd = kmxDrag
-   kmyStart = kmyDrag
+   KmxEnd = kmxDrag
+   KmyStart = kmyDrag
    
    'Now determine end and start with respect to actual DTM
    'points:
-   kmxStart = CLng(kmxStart * 0.04) * 25#
-   kmxEnd = CLng(kmxEnd * 0.04) * 25#
-   kmyStart = CLng(kmyStart * 0.04) * 25#
-   kmyEnd = CLng(kmyEnd * 0.04) * 25#
+   KmxStart = CLng(KmxStart * 0.04) * 25#
+   KmxEnd = CLng(KmxEnd * 0.04) * 25#
+   KmyStart = CLng(KmyStart * 0.04) * 25#
+   KmyEnd = CLng(KmyEnd * 0.04) * 25#
+   
+'   KmxStart = 163500
+'   KmxEnd = 175000
    
    '---------------------change to xyz-----------------------------
    
@@ -864,8 +928,8 @@ tp500: '-----------save the points to the DTM tile----------------------
           
         'determine which tile(s) are being used and back them up
         CHFind$ = sEmpty
-        For kmy = kmyStart To kmyEnd Step 25
-           For kmx = kmxStart To kmxEnd Step 25
+        For kmy = KmyStart To KmyEnd Step 25
+           For kmx = KmxStart To KmxEnd Step 25
               kmxDTM = kmx * 0.001
               kmyDTM = (kmy - 1000000) * 0.001
               IKMX& = Int((kmxDTM + 20!) * 40!) + 1
@@ -879,14 +943,14 @@ tp500: '-----------save the points to the DTM tile----------------------
              'Since roundoff errors in converting from coord to
              'integer indexes, just count columns and rows assuming
              'that the first one has no roundoff error
-              If kmx = kmxStart And kmy = kmyStart Then
+              If kmx = KmxStart And kmy = KmyStart Then
                  IR% = NROW% - (Jg% - 1) * 800
                  IC% = NCOL% - (Ig% - 1) * 800
                  IR0% = IR%
                  IC0% = IC%
               Else
-                 IC% = CInt((kmx - kmxStart) * 0.04) + IC0%
-                 IR% = IR0% - CInt((kmy - kmyStart) * 0.04)
+                 IC% = CInt((kmx - KmxStart) * 0.04) + IC0%
+                 IR% = IR0% - CInt((kmy - KmyStart) * 0.04)
                  End If
               
               IFN& = (IR% - 1) * 801! + IC%

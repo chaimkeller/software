@@ -351,6 +351,16 @@ Begin VB.Form mapsearchfm
       TabIndex        =   5
       Top             =   3000
       Width           =   4275
+      Begin VB.CheckBox chkValidity 
+         Height          =   195
+         Left            =   3960
+         TabIndex        =   66
+         ToolTipText     =   "Check for a valid true and unique peak"
+         Top             =   1560
+         Value           =   1  'Checked
+         Visible         =   0   'False
+         Width           =   255
+      End
       Begin VB.Frame frmExtras 
          Caption         =   "Advanced"
          BeginProperty Font 
@@ -1804,6 +1814,8 @@ End Sub
 Private Sub Command1_Click()
    'perform search
    Dim Dist As Double
+   Dim cosang As Double
+   Dim numpnts&
    
    On Error GoTo Command1_Click_Error
 
@@ -1862,7 +1874,7 @@ Private Sub Command1_Click()
         BegMosaicY = 0
         EndMosaicY = 0
         MosaicStepX = 1
-        MosaicStepY = 1
+        MosaicStepy = 1
 
         numSlots& = Val(Text4)
         
@@ -1872,13 +1884,13 @@ Private Sub Command1_Click()
         ydegkm = 180 / (pi * 6371.315) 'degrees per km latitude
         xdegkm = 180 / (pi * 6371.315 * Cos(cd * Text1)) 'degrees per km longitude
         MosaicStepX = Val(txtMosaic.Text) * xdegkm
-        MosaicStepY = Val(txtMosaic.Text) * ydegkm
+        MosaicStepy = Val(txtMosaic.Text) * ydegkm
         BegMosaicY = Val(Text1) - Val(Text3) * ydegkm  '- MosaicStepY
         EndMosaicY = Val(Text1) + Val(Text3) * ydegkm  '+ MosaicStepY
         BegMosaicX = Val(Text2) - Val(Text3) * xdegkm  '- MosaicStepX
         EndMosaicX = Val(Text2) + Val(Text3) * xdegkm  '+ MosaicStepX
         y11 = BegMosaicY
-        y12 = BegMosaicY + MosaicStepY
+        y12 = BegMosaicY + MosaicStepy
         x11 = BegMosaicX
         x12 = BegMosaicX + MosaicStepX
         numSlots& = 1
@@ -1897,7 +1909,7 @@ Private Sub Command1_Click()
         BegMosaicY = 0
         EndMosaicY = 0
         MosaicStepX = 1
-        MosaicStepY = 1
+        MosaicStepy = 1
         numSlots& = Val(Text4)
         
         ReDim searchhgts(3, Val(Text4) + 1)
@@ -1906,34 +1918,34 @@ Private Sub Command1_Click()
         ydegkm = del * 1000
         xdegkm = del * 1000
         MosaicStepX = Val(txtMosaic.Text) * 1000
-        MosaicStepY = Val(txtMosaic.Text) * 1000
+        MosaicStepy = Val(txtMosaic.Text) * 1000
         BegMosaicY = Val(Text1) - Val(Text3 * 1000)
-        EndMosaicY = Val(Text1) + Val(Text3 * 1000) - MosaicStepY
+        EndMosaicY = Val(Text1) + Val(Text3 * 1000) - MosaicStepy
         BegMosaicX = Val(Text2) - Val(Text3 * 1000)
         EndMosaicX = Val(Text2) + Val(Text3 * 1000) - MosaicStepX
         y11 = BegMosaicY
-        y12 = BegMosaicY + MosaicStepY
+        y12 = BegMosaicY + MosaicStepy
         x11 = BegMosaicX
         x12 = BegMosaicX + MosaicStepX
         numSlots& = 1
         End If
       End If
       
-   numMosaic& = ((EndMosaicY - BegMosaicY) / MosaicStepY + 1) * ((EndMosaicX - BegMosaicX) / MosaicStepX + 1)
-   numSearchPnts& = numMosaic& * (2 * (y12 - y11) / (ydegkm) + 1) * (2 * (x12 - x11) / (xdegkm) + 1)
+   numMosaic& = ((EndMosaicY - BegMosaicY) / MosaicStepy + 1) * ((EndMosaicX - BegMosaicX) / MosaicStepX + 1)
+   numsearchpnts& = numMosaic& * (2 * (y12 - y11) / (ydegkm) + 1) * (2 * (x12 - x11) / (xdegkm) + 1)
    If SearchType% = 1 Then
       ReDim searchhgts(3, numMosaic& + 1)
       Text4.Text = Str$(numMosaic&)
       If world Then
-         numSearchPnts& = numMosaic& * (2 * (y12 - y11) / (del * ydegkm) + 1) * (2 * (x12 - x11) / (del * xdegkm) + 1)
+         numsearchpnts& = numMosaic& * (2 * (y12 - y11) / (del * ydegkm) + 1) * (2 * (x12 - x11) / (del * xdegkm) + 1)
          End If
       End If
-   mapsearchfm.progSearch.Max = numSearchPnts&
+   mapsearchfm.progSearch.Max = numsearchpnts&
    
    nn& = 0
    numMos& = 0
-   numPnts& = 0
-   For iYMosaic = BegMosaicY To EndMosaicY Step MosaicStepY
+   numpnts& = -1
+   For iYMosaic = BegMosaicY To EndMosaicY Step MosaicStepy
    For iXMosaic = BegMosaicX To EndMosaicX Step MosaicStepX
       If SearchType% = 1 Then
          numMos& = numMos& + 1
@@ -1941,7 +1953,7 @@ Private Sub Command1_Click()
             GoTo sr500
             End If
          y11 = iYMosaic
-         y12 = iYMosaic + MosaicStepY
+         y12 = iYMosaic + MosaicStepy
          x11 = iXMosaic
          x12 = iXMosaic + MosaicStepX
          End If
@@ -1954,8 +1966,8 @@ Private Sub Command1_Click()
    init = 0
    
    If SearchType% = 0 Then
-       numSearchPnts& = ((y12 - y11) / (ydegkm * 0.5 * multstep) + 1) * ((x12 - x11) / (xdegkm * 0.5 * multstep) + 1)
-       mapsearchfm.progSearch.Max = numSearchPnts&
+       numsearchpnts& = ((y12 - y11) / (ydegkm * 0.5 * multstep) + 1) * ((x12 - x11) / (xdegkm * 0.5 * multstep) + 1)
+       mapsearchfm.progSearch.Max = numsearchpnts&
     
        ReDim searchhgts(3, Val(Text4) + 1)
        End If
@@ -1979,7 +1991,6 @@ Private Sub Command1_Click()
            'this is considerably smaller than the straight line distance
            'for large distances.  To calculate that distance you
            'need to use the CrossSection option
-           Dim cosang As Double
            cosang = X1 * X2 + Y1 * Y2 + Z1 * Z2
            If Abs(cosang - 1) > 0.000000001 Then
               Dist = 6371.315 * DACOS(cosang)
@@ -1993,7 +2004,7 @@ Private Sub Command1_Click()
            Dist = 0.0005 * Sqr((kmxs - Val(Text2)) ^ 2 + (kmys - Val(Text1)) ^ 2)
            End If
         If Dist <= Val(Text3) Then '/ 2# Then  'within the search radius
-            If init = 0 Then numPnts& = numPnts& + 1
+            If init = 0 Then numpnts& = numpnts& + 1
             If world = True Then
                Call worldheights(kmxs, kmys, hgts)
             Else
@@ -2006,30 +2017,30 @@ Private Sub Command1_Click()
             If init = 0 Then
                If numheights <= numSlots& Then
                   numheights = numheights + 1
-                  searchhgts(0, numheights) = kmys
-                  searchhgts(1, numheights) = kmxs
-                  searchhgts(2, numheights) = hgts
-                  searchhgts(3, numheights) = Val(Format(Str$(Dist), "####0.0###"))
+                  searchhgts(0, numheights - 1) = kmys
+                  searchhgts(1, numheights - 1) = kmxs
+                  searchhgts(2, numheights - 1) = hgts
+                  searchhgts(3, numheights - 1) = Val(Format(Str$(Dist), "####0.0###"))
                Else
                   init = 1
                   End If
                End If
             If init = 1 Then 'find highest points
                For i& = 1 To numSlots&
-                  If hgts > searchhgts(2, i&) Then
+                  If hgts > searchhgts(2, i& - 1) Then
                      'find minimum searchhgts, and replace it with this height
 s50:                 minhgt0 = searchhgts(2, 1)
                      For j& = 2 To numSlots&
                         If searchhgts(2, j&) < minhgt0 Then
-                           minhgt = searchhgts(2, j&)
-                           minkmy = searchhgts(0, j&)
-                           minkmx = searchhgts(1, j&)
-                           mindist = searchhgts(3, j&)
+                           minhgt = searchhgts(2, j& - 1)
+                           minkmy = searchhgts(0, j& - 1)
+                           minkmx = searchhgts(1, j& - 1)
+                           mindist = searchhgts(3, j& - 1)
                            minhgtindex = j&
-                           searchhgts(2, j&) = searchhgts(2, 1)
-                           searchhgts(0, j&) = searchhgts(0, 1)
-                           searchhgts(1, j&) = searchhgts(1, 1)
-                           searchhgts(3, j&) = searchhgts(3, 1)
+                           searchhgts(2, j&) = searchhgts(2, 0)
+                           searchhgts(0, j&) = searchhgts(0, 0)
+                           searchhgts(1, j&) = searchhgts(1, 0)
+                           searchhgts(3, j&) = searchhgts(3, 0)
                            searchhgts(2, 1) = minhgt
                            searchhgts(0, 1) = minkmy
                            searchhgts(1, 1) = minkmx
@@ -2048,24 +2059,24 @@ s50:                 minhgt0 = searchhgts(2, 1)
                End If
             ElseIf SearchType% = 1 Then
                If init = 0 Then
-                  searchhgts(0, numPnts&) = kmys
-                  searchhgts(1, numPnts&) = kmxs
-                  searchhgts(2, numPnts&) = hgts
-                  searchhgts(3, numPnts&) = Dist
+                  searchhgts(0, numpnts&) = kmys
+                  searchhgts(1, numpnts&) = kmxs
+                  searchhgts(2, numpnts&) = hgts
+                  searchhgts(3, numpnts&) = Dist
                   init = 1
                Else
-                  If hgts > searchhgts(2, numPnts&) Then
-                     searchhgts(0, numPnts&) = kmys
-                     searchhgts(1, numPnts&) = kmxs
-                     searchhgts(2, numPnts&) = hgts
-                     searchhgts(3, numPnts&) = Dist
+                  If hgts > searchhgts(2, numpnts&) Then
+                     searchhgts(0, numpnts&) = kmys
+                     searchhgts(1, numpnts&) = kmxs
+                     searchhgts(2, numpnts&) = hgts
+                     searchhgts(3, numpnts&) = Dist
                      End If
                   End If
               End If
             End If
 sr250:
             nn& = nn& + 1
-            newCaption$ = "Searching...  " & Trim$(Str$(CInt((nn& / numSearchPnts&) * 100))) & " % complete"
+            newCaption$ = "Searching...  " & Trim$(Str$(CInt((nn& / numsearchpnts&) * 100))) & " % complete"
             If newCaption$ <> mapsearchfm.Caption Then mapsearchfm.Caption = newCaption$
             If nn& >= mapsearchfm.progSearch.Max Then
                GoTo sr300
@@ -2074,6 +2085,102 @@ sr250:
 sr300:
       Next kmxs
    Next kmys
+   
+   If chkValidity.value = vbChecked Then
+      'check for unique valid peak, e.g., highest point is actually on slope, or near highest point beyond mosaic border
+      Dim StepSize As Double
+      Dim NumStepsToCheck As Integer
+      
+      StepSize = xdegkm * 0.5 * multstep
+
+      'numstepstocheck is a quarter of a mosaic
+      NumStepsToCheck = 0.25 * MosaicStepX / StepSize
+      For kmxs = searchhgts(1, numpnts&) - NumStepsToCheck * StepSize To searchhgts(1, numpnts&) + NumStepsToCheck * StepSize Step StepSize
+        kmys = searchhgts(0, numpnts&)
+        If world = True Then
+           Call worldheights(kmxs, kmys, hgts)
+        Else
+           kmxs1 = kmxs
+           kmys1 = kmys
+           Call heights(kmxs1, kmys1, hgts)
+           End If
+        If hgts > searchhgts(2, numpnts&) Then
+           'remove this entry
+           numpnts& = numpnts& - 1
+           numsearchpnts& = numsearchpnts& - 1
+           GoTo SkipEntry
+           End If
+      Next kmxs
+      
+      StepSize = ydegkm * 0.5 * multstep
+      NumStepsToCheck = 0.25 * MosaicStepy / StepSize
+      For kmys = searchhgts(0, numpnts&) - NumStepsToCheck * StepSize To searchhgts(0, numpnts&) + NumStepsToCheck * StepSize Step StepSize
+        kmxs = searchhgts(1, numpnts&)
+        If world = True Then
+           Call worldheights(kmxs, kmys, hgts)
+        Else
+           kmxs1 = kmxs
+           kmys1 = kmys
+           Call heights(kmxs1, kmys1, hgts)
+           End If
+        If hgts > searchhgts(2, numpnts&) Then
+           'remove this entry
+           numpnts& = numpnts& - 1
+           numsearchpnts& = numsearchpnts& - 1
+           GoTo SkipEntry
+           End If
+      Next kmys
+      End If
+      
+      'now do a proximity search
+      For i& = 0 To numpnts& - 1
+          'determine distance between high places
+          If world = True Then
+'            dist = Sqr(((kmxs - Val(Text2)) / xdegkm) ^ 2 + ((kmys - Val(Text1)) / ydegkm) ^ 2)
+             X1 = Cos(searchhgts(0, i&) * cd) * Cos(searchhgts(0, i&) * cd)
+             X2 = Cos(searchhgts(0, numpnts&) * cd) * Cos(searchhgts(1, numpnts&) * cd)
+             Y1 = Cos(searchhgts(0, i&) * cd) * Sin(searchhgts(0, i&) * cd)
+             Y2 = Cos(searchhgts(0, numpnts&) * cd) * Sin(searchhgts(1, numpnts&) * cd)
+             Z1 = Sin(searchhgts(0, i&) * cd)
+             Z2 = Sin(searchhgts(0, numpnts&) * cd)
+             'this is a calculation of
+             'the shortest geodesic distance and is given by
+             'Re * Angle between vectors
+             'cos(Angle between unit vectors) = Dot product of unit vectors
+             'this is considerably smaller than the straight line distance
+             'for large distances.  To calculate that distance you
+             'need to use the CrossSection option
+             cosang = X1 * X2 + Y1 * Y2 + Z1 * Z2
+             If Abs(cosang - 1) > 0.000000001 Then
+                Dist = 6371.315 * DACOS(cosang)
+             Else
+                Dist = 0
+                Dist = 6371.315 * Sqr((X1 - X2) ^ 2 + (Y1 - Y2) ^ 2)
+                End If
+          Else
+             'distance in kilometers
+             Dist = 0.001 * Sqr((searchhgts(1, numpnts&) - searchhgts(1, i&)) ^ 2 + (searchhgts(0, numpnts&) - searchhgts(0, i&)) ^ 2)
+             End If
+          If Dist < 0.25 * Val(txtMosaic.Text) Then
+             If searchhgts(2, numpnts&) > searchhgts(2, i&) Then
+                'remove previous points by switching
+                searchhgts(0, i&) = searchhgts(0, numpnts&)
+                searchhgts(1, i&) = searchhgts(1, numpnts&)
+                searchhgts(2, i&) = searchhgts(2, numpnts&)
+                searchhgts(3, i&) = searchhgts(3, numpnts&)
+                numpnts& = numpnts& - 1
+                numsearchpnts& = numsearchpnts& - 1
+                GoTo SkipEntry
+             ElseIf searchhgts(2, numpnts&) <= searchhgts(2, i&) Then
+                'remove this point
+                numpnts& = numpnts& - 1
+                numsearchpnts& = numsearchpnts& - 1
+                GoTo SkipEntry
+                End If
+            End If
+      Next i&
+      
+SkipEntry:
    Next iXMosaic
    Next iYMosaic
    
@@ -2086,27 +2193,27 @@ sr500:
    'now sort the points from nearest to farthest distances
    'or form highest to lowest elevation
    'and place them into Flex-Grid
-    If SearchType% = 0 Then numPnts& = numSlots&
-    sky2.Rows = numPnts& + 1 'Val(Text4) + 1
+    If SearchType% = 0 Then numpnts& = numSlots&
+    sky2.Rows = numpnts& + 1 'Val(Text4) + 1
     If world = True Then
-        For i& = 0 To numPnts& - 1 'Val(Text4)
+        For i& = 0 To numpnts& - 1 'Val(Text4)
             
            If EastOnly Then
-              If searchhgts(1, i& + 1) > Text2 Then GoTo sr600
+              If searchhgts(1, i&) > Text2 Then GoTo sr600
               End If
               
            If WestOnly Then
-              If searchhgts(1, i& + 1) < Text2 Then GoTo sr600
+              If searchhgts(1, i&) < Text2 Then GoTo sr600
               End If
             
             If chkIgnoreZeros.value = vbChecked And _
-               searchhgts(2, i& + 1) <= Val(txtHgtLimit.Text) Then
+               searchhgts(2, i&) <= Val(txtHgtLimit.Text) Then
                'ignore points with hgts<=0
                GoTo sr600
                End If
                 
             If chkIgnoreLarge.value = vbChecked And _
-               searchhgts(2, i& + 1) >= Val(txtIgnoreLarge.Text) Then
+               searchhgts(2, i&) >= Val(txtIgnoreLarge.Text) Then
                'point is larger than upper limit
                'so ignore it
                GoTo sr600
@@ -2117,9 +2224,9 @@ sr500:
               crosssectionpnt(0, 0) = Text2 'center longitude
               crosssectionpnt(0, 1) = Text1 'center lat
               crosssectionhgt(0) = Maps.Text7 'height of center point
-              crosssectionpnt(1, 0) = searchhgts(1, i& + 1) 'search point longitude
-              crosssectionpnt(1, 1) = searchhgts(0, i& + 1) 'search point lat
-              crosssectionhgt(1) = searchhgts(2, i& + 1) 'height of search point
+              crosssectionpnt(1, 0) = searchhgts(1, i&) 'search point longitude
+              crosssectionpnt(1, 1) = searchhgts(0, i&) 'search point lat
+              crosssectionhgt(1) = searchhgts(2, i&) 'height of search point
               'since small distance, use straight line on mercator projection
               greatcircle = False
               SearchCrossSection = True
@@ -2129,25 +2236,25 @@ sr500:
               End If
            
            sky2.TextArray(skyp2(i& + 1, 0)) = i& + 1
-           sky2.TextArray(skyp2(i& + 1, 1)) = Format(Trim$(Str$(searchhgts(0, i& + 1))), "###0.0#####")
-           sky2.TextArray(skyp2(i& + 1, 2)) = Format(Trim$(Str$(searchhgts(1, i& + 1))), "###0.0#####")
-           sky2.TextArray(skyp2(i& + 1, 3)) = Format(Trim$(Str$(searchhgts(2, i& + 1))), "###0.0")
-           sky2.TextArray(skyp2(i& + 1, 4)) = Format(Trim$(Str$(searchhgts(3, i& + 1))), "###0.0###")
+           sky2.TextArray(skyp2(i& + 1, 1)) = Format(Trim$(Str$(searchhgts(0, i&))), "###0.0#####")
+           sky2.TextArray(skyp2(i& + 1, 2)) = Format(Trim$(Str$(searchhgts(1, i&))), "###0.0#####")
+           sky2.TextArray(skyp2(i& + 1, 3)) = Format(Trim$(Str$(searchhgts(2, i&))), "###0.0")
+           sky2.TextArray(skyp2(i& + 1, 4)) = Format(Trim$(Str$(searchhgts(3, i&))), "###0.0###")
 sr600:
         Next i&
     Else
-        For i& = 0 To numPnts& - 1 'Val(Text4)
+        For i& = 0 To numpnts& - 1 'Val(Text4)
         
            If EastOnly Then
-              If searchhgts(1, i& + 1) > Text2 Then GoTo sr650
+              If searchhgts(1, i&) > Text2 Then GoTo sr650
               End If
               
            If WestOnly Then
-              If searchhgts(1, i& + 1) < Text2 Then GoTo sr650
+              If searchhgts(1, i&) < Text2 Then GoTo sr650
               End If
             
            If chkIgnoreZeros.value = vbChecked And _
-               searchhgts(2, i& + 1) <= Val(txtHgtLimit.Text) Then
+               searchhgts(2, i&) <= Val(txtHgtLimit.Text) Then
                'ignore points with hgts<=0
                'numPnts& = numPnts& - 1
                'sky2.Rows = numPnts& + 1
@@ -2156,7 +2263,7 @@ sr600:
                End If
         
            If chkIgnoreLarge.value = vbChecked And _
-               searchhgts(2, i& + 1) >= Val(txtIgnoreLarge.Text) Then
+               searchhgts(2, i&) >= Val(txtIgnoreLarge.Text) Then
                'point is larger than upper limit
                'so ignore it
                GoTo sr650
@@ -2167,9 +2274,9 @@ sr600:
               crosssectionpnt(0, 0) = Text2 'starting longitude
               crosssectionpnt(0, 1) = Text1 'starting lat
               crosssectionhgt(0) = Maps.Text7 'height of center point
-              crosssectionpnt(1, 0) = searchhgts(1, i& + 1) 'search point longitude
-              crosssectionpnt(1, 1) = searchhgts(0, i& + 1) 'search point lat
-              crosssectionhgt(1) = searchhgts(2, i& + 1) 'height of search point
+              crosssectionpnt(1, 0) = searchhgts(1, i&) 'search point longitude
+              crosssectionpnt(1, 1) = searchhgts(0, i&) 'search point lat
+              crosssectionhgt(1) = searchhgts(2, i&) 'height of search point
               'since small distance, use straight line on mercator projection
               greatcircle = False
               SearchCrossSection = True
@@ -2179,10 +2286,10 @@ sr600:
               End If
            
            sky2.TextArray(skyp2(i& + 1, 0)) = i& + 1
-           sky2.TextArray(skyp2(i& + 1, 1)) = searchhgts(1, i& + 1)
-           sky2.TextArray(skyp2(i& + 1, 2)) = searchhgts(0, i& + 1)
-           sky2.TextArray(skyp2(i& + 1, 3)) = searchhgts(2, i& + 1)
-           sky2.TextArray(skyp2(i& + 1, 4)) = searchhgts(3, i& + 1)
+           sky2.TextArray(skyp2(i& + 1, 1)) = searchhgts(1, i&)
+           sky2.TextArray(skyp2(i& + 1, 2)) = searchhgts(0, i&)
+           sky2.TextArray(skyp2(i& + 1, 3)) = searchhgts(2, i&)
+           sky2.TextArray(skyp2(i& + 1, 4)) = searchhgts(3, i&)
 sr650:
         Next i&
        End If
@@ -2781,6 +2888,7 @@ Private Sub optMosaic_Click()
    txtMosaic.Enabled = True
    Text4.Enabled = False
    UpDown2.Enabled = False
+   chkValidity.Visible = True
    If Trim$(txtMosaic) = sEmpty Then txtMosaic = "1"
    If Trim$(txtStep) = sEmpty Then txtStep = "0.1"
    SearchType% = 1
@@ -2801,6 +2909,7 @@ Private Sub optSimple_Click()
    SearchType% = 0
    lblMosaic.Enabled = False
    txtMosaic.Enabled = False
+   chkValidity.Visible = False
 End Sub
 
 Private Sub optSortDist_Click()

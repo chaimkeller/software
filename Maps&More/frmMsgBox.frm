@@ -223,11 +223,12 @@ Private Sub btnAction_Click(Index As Integer)
     Unload Me
 End Sub
 
-Private Sub Form_Load()
+Private Sub form_load()
     g_lBtnClicked = 0
     g_bDontAsk = False
     Me.Font = btnAction(0).Font
     lblMsg.Font = Me.Font
+    Call sCenterForm(Me)  'added by EK on 030524
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)

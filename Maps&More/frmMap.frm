@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
 Object = "{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}#1.1#0"; "ieframe.dll"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
 Begin VB.Form frmMap 
    AutoRedraw      =   -1  'True
    Caption         =   "Map"
@@ -676,7 +676,7 @@ Command3_Click_Error:
 '    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Command3_Click of Form frmMap"
 End Sub
 
-Private Sub Form_Load()
+Private Sub form_load()
 SaveSizes
 GoogleMapVis = True
 WebBrowser1.Silent = True
