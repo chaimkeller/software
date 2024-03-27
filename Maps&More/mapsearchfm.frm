@@ -18,6 +18,16 @@ Begin VB.Form mapsearchfm
    MinButton       =   0   'False
    ScaleHeight     =   8055
    ScaleWidth      =   5400
+   Begin VB.CheckBox chkProfiles 
+      Caption         =   "profiles"
+      Height          =   255
+      Left            =   4560
+      TabIndex        =   67
+      ToolTipText     =   "Output profile files in x and y as a function of grid spacing"
+      Top             =   7380
+      Visible         =   0   'False
+      Width           =   795
+   End
    Begin VB.CommandButton cmdGoogleMap 
       Height          =   495
       Left            =   2040
@@ -636,7 +646,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   20
          BuddyControl    =   "Text4"
-         BuddyDispid     =   196647
+         BuddyDispid     =   196648
          OrigLeft        =   3420
          OrigTop         =   300
          OrigRight       =   3660
@@ -658,7 +668,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   15
          BuddyControl    =   "Text3"
-         BuddyDispid     =   196649
+         BuddyDispid     =   196650
          OrigLeft        =   2100
          OrigTop         =   240
          OrigRight       =   2340
@@ -1016,6 +1026,14 @@ Private Sub chkIgnoreZeros_Click()
    Else
       txtHgtLimit.Enabled = True
       If txtHgtLimit.Text = sEmpty Then txtHgtLimit.Text = "0"
+      End If
+End Sub
+
+Private Sub chkValidity_Click()
+   If chkValidity.value = vbChecked Then
+      chkProfiles.Visible = True
+   Else
+      chkProfiles.Visible = False
       End If
 End Sub
 
@@ -2184,6 +2202,150 @@ SkipEntry:
    Next iXMosaic
    Next iYMosaic
    
+   If chkProfiles.value = vbChecked Then
+    'determine if peak is a true peak in x/y over a typical distance
+    Dim SymmPeakArray() As Integer
+    Dim numSymmPeaks&, numSlope%
+    numSlope% = 15 'number of grid steps to check for descending slope
+    Dim SlopeOut() As Single
+    Dim FileSlopeName$, slopenum%
+    ReDim SlopeOut(3, numSlope% - 1) As Single
+    
+    numSymmPeaks& = 0
+    For i& = 0 To numpnts& - 1
+        pkkmy = searchhgts(0, i&)
+        pkkmx = searchhgts(1, i&)
+        pkhgt = searchhgts(2, i&)
+        
+        hgts1 = pkhgt
+        hgts2 = pkhgt
+        hgts3 = pkhgt
+        hgts4 = pkhgt
+        
+        For j& = 1 To numSlope%
+        
+          kmys = pkkmy
+          kmxs = pkkmx + j& * xdegkm
+          If world = True Then
+             Call worldheights(kmxs, kmys, hgts)
+          Else
+             kmxs1 = kmxs
+             kmys1 = kmys
+             Call heights(kmxs1, kmys1, hgts)
+             End If
+             
+          If hgts > hgts1 Then
+             GoTo nextentry
+          Else
+             hgts1 = hgts
+             SlopeOut(0, j& - 1) = hgts / pkhgt
+             End If
+        
+          kmxs = pkkmx - j& * xdegkm
+          If world = True Then
+             Call worldheights(kmxs, kmys, hgts)
+          Else
+             kmxs1 = kmxs
+             kmys1 = kmys
+             Call heights(kmxs1, kmys1, hgts)
+             End If
+             
+          If hgts > hgts2 Then
+             GoTo nextentry
+          Else
+             hgst2 = hgts
+             SlopeOut(1, j& - 1) = hgts / pkhgt
+             End If
+        
+          kmxs = pkkmx
+          kmys = pkkmy + j& * ydegkm
+          If world = True Then
+             Call worldheights(kmxs, kmys, hgts)
+          Else
+             kmxs1 = kmxs
+             kmys1 = kmys
+             Call heights(kmxs1, kmys1, hgts)
+             End If
+             
+          If hgts > hgts3 Then
+             GoTo nextentry
+          Else
+             hgts3 = hgts
+             SlopeOut(2, j& - 1) = hgts / pkhgt
+             End If
+        
+          kmys = pkkmy - j& * ydegkm
+          If world = True Then
+             Call worldheights(kmxs, kmys, hgts)
+          Else
+             kmxs1 = kmxs
+             kmys1 = kmys
+             Call heights(kmxs1, kmys1, hgts)
+             End If
+             
+          If hgts > hgts4 Then
+             GoTo nextentry
+          Else
+             hgts4 = hgts
+             SlopeOut(3, j& - 1) = hgts / pkhgt
+             End If
+          
+        Next j&
+        
+        numSymmPeaks& = numSymmPeaks& + 1
+        ReDim Preserve SymmPeakArray(numSymmPeaks&)
+        SymmPeakArray(numSymmPeaks& - 1) = i&
+        
+        'output slope files
+        FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-xp.txt"
+        slopenum% = FreeFile
+        Open FileSlopeName$ For Output As #slopenum%
+        Print #slopenum%, "0.0, 1.0"
+        For j& = 1 To numSlope%
+            Print #slopenum%, Str$(j& * xdegkm) & "," & Format(Str$(SlopeOut(0, j& - 1)), "#0.0###")
+        Next j&
+        Close #slopenum%
+        FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-xn.txt"
+        slopenum% = FreeFile
+        Open FileSlopeName$ For Output As #slopenum%
+        For j& = numSlope% To 1 Step -1
+            Print #slopenum%, Str$(-j& * xdegkm) & "," & Format(Str$(SlopeOut(1, j& - 1)), "#0.0###")
+        Next j&
+        Print #slopenum%, "0.0, 1.0"
+        Close #slopenum%
+        FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-yp.txt"
+        slopenum% = FreeFile
+        Open FileSlopeName$ For Output As #slopenum%
+        Print #slopenum%, "0.0, 1.0"
+        For j& = 1 To numSlope%
+            Print #slopenum%, Str$(j& * ydegkm) & "," & Format(Str$(SlopeOut(2, j& - 1)), "#0.0###")
+        Next j&
+        Close #slopenum%
+        FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-yn.txt"
+        slopenum% = FreeFile
+        Open FileSlopeName$ For Output As #slopenum%
+        For j& = numSlope% To 1 Step -1
+            Print #slopenum%, Str$(-j& * ydegkm) & "," & Format(Str$(SlopeOut(3, j& - 1)), "#0.0###")
+        Next j&
+        Print #slopenum%, "0.0, 1.0"
+        Close #slopenum%
+            
+nextentry:
+    Next i&
+    
+    'now repack searchhgts array
+    If numpnts& <> numSymmPeaks& Then
+        For j& = 0 To numSymmPeaks& - 1
+            searchhgts(0, j&) = searchhgts(0, SymmPeakArray(j&))
+            searchhgts(1, j&) = searchhgts(1, SymmPeakArray(j&))
+            searchhgts(2, j&) = searchhgts(2, SymmPeakArray(j&))
+            searchhgts(3, j&) = searchhgts(3, SymmPeakArray(j&))
+        Next j&
+        numpnts& = numSymmPeaks&
+        End If
+        
+    End If
+   
 sr500:
    mapsearchfm.frmProg.Visible = False
    mapsearchfm.Width = 4770
@@ -2889,6 +3051,7 @@ Private Sub optMosaic_Click()
    Text4.Enabled = False
    UpDown2.Enabled = False
    chkValidity.Visible = True
+   chkProfiles.Visible = True
    If Trim$(txtMosaic) = sEmpty Then txtMosaic = "1"
    If Trim$(txtStep) = sEmpty Then txtStep = "0.1"
    SearchType% = 1
@@ -2910,6 +3073,8 @@ Private Sub optSimple_Click()
    lblMosaic.Enabled = False
    txtMosaic.Enabled = False
    chkValidity.Visible = False
+   chkProfiles.Visible = False
+   chkProfiles.value = vbUnchecked
 End Sub
 
 Private Sub optSortDist_Click()
