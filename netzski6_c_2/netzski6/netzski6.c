@@ -503,13 +503,12 @@ outine. */
 	if (exists) {
 /*             found default drive */
 	    *(unsigned char *)yesint = *(unsigned char *)drivlet;
-	    goto L7;
+	    break;
 	}
 /* L5: */
     }
 /*       now read in the internet.yes file */
 /*       if operating internet mode, don't write stat files */
-L7:
     s_copy(yesint + 1, ":/cities/internet.yes", (ftnlen)21, (ftnlen)21);
     ioin__1.inerr = 0;
     ioin__1.infilen = 22;
@@ -530,27 +529,27 @@ L7:
     ioin__1.inblank = 0;
     f_inqu(&ioin__1);
     if (exists) {
-/*          found internet.yes file */
-	o__1.oerr = 0;
-	o__1.ounit = 1;
-	o__1.ofnmlen = 22;
-	o__1.ofnm = yesint;
-	o__1.orl = 0;
-	o__1.osta = "old";
-	o__1.oacc = 0;
-	o__1.ofm = 0;
-	o__1.oblnk = 0;
-	f_open(&o__1);
-	s_rsfe(&io___18);
-	do_fio(&c__1, (char *)&intflag, (ftnlen)sizeof(integer));
-	e_rsfe();
-	if (intflag == 1) {
-	    nointernet = FALSE_;
-	}
-	cl__1.cerr = 0;
-	cl__1.cunit = 1;
-	cl__1.csta = 0;
-	f_clos(&cl__1);
+		/* found internet.yes file */
+		o__1.oerr = 0;
+		o__1.ounit = 1;
+		o__1.ofnmlen = 22;
+		o__1.ofnm = yesint;
+		o__1.orl = 0;
+		o__1.osta = "old";
+		o__1.oacc = 0;
+		o__1.ofm = 0;
+		o__1.oblnk = 0;
+		f_open(&o__1);
+		s_rsfe(&io___18);
+		do_fio(&c__1, (char *)&intflag, (ftnlen)sizeof(integer));
+		e_rsfe();
+		if (intflag == 1) {
+			nointernet = FALSE_;
+		}
+		cl__1.cerr = 0;
+		cl__1.cunit = 1;
+		cl__1.csta = 0;
+		f_clos(&cl__1);
     }
 
 	//now look for refraction flag file used for comparing 
@@ -853,6 +852,7 @@ L7:
 		nsetflag = 1;
 	    }
 	}
+
 	if (nsetflag == 0) {
 	    ++nplac[0];  
 	    if (nplac[0] > MAXNUMPLACES) {
@@ -864,8 +864,9 @@ L7:
 		    s_paus("continue", (ftnlen)8);
 		}
 		goto L1000;
-	    }
-	    if (nointernet && ! nofiles) {
+	}
+
+	if (nointernet && ! nofiles) {
 /*                prepare names of intermediate neighborhood files */
 		s_copy(placn + (nsetflag + 1 + (nplac[0] << 1) - 3) * 30, 
 			fileo + 15, (ftnlen)30, (ftnlen)8);
