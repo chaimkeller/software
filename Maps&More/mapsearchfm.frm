@@ -21,10 +21,10 @@ Begin VB.Form mapsearchfm
    Begin VB.CheckBox chkProfiles 
       Caption         =   "profiles"
       Height          =   255
-      Left            =   4560
+      Left            =   3840
       TabIndex        =   67
       ToolTipText     =   "Output profile files in x and y as a function of grid spacing"
-      Top             =   7380
+      Top             =   7750
       Visible         =   0   'False
       Width           =   795
    End
@@ -646,7 +646,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   20
          BuddyControl    =   "Text4"
-         BuddyDispid     =   196648
+         BuddyDispid     =   196649
          OrigLeft        =   3420
          OrigTop         =   300
          OrigRight       =   3660
@@ -668,7 +668,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   15
          BuddyControl    =   "Text3"
-         BuddyDispid     =   196650
+         BuddyDispid     =   196651
          OrigLeft        =   2100
          OrigTop         =   240
          OrigRight       =   2340
@@ -2296,39 +2296,73 @@ SkipEntry:
         ReDim Preserve SymmPeakArray(numSymmPeaks&)
         SymmPeakArray(numSymmPeaks& - 1) = i&
         
-        'output slope files
-        FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-xp.txt"
-        slopenum% = FreeFile
-        Open FileSlopeName$ For Output As #slopenum%
-        Print #slopenum%, "0.0, 1.0"
-        For j& = 1 To numSlope%
-            Print #slopenum%, Str$(j& * xdegkm) & "," & Format(Str$(SlopeOut(0, j& - 1)), "#0.0###")
-        Next j&
-        Close #slopenum%
-        FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-xn.txt"
-        slopenum% = FreeFile
-        Open FileSlopeName$ For Output As #slopenum%
-        For j& = numSlope% To 1 Step -1
-            Print #slopenum%, Str$(-j& * xdegkm) & "," & Format(Str$(SlopeOut(1, j& - 1)), "#0.0###")
-        Next j&
-        Print #slopenum%, "0.0, 1.0"
-        Close #slopenum%
-        FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-yp.txt"
-        slopenum% = FreeFile
-        Open FileSlopeName$ For Output As #slopenum%
-        Print #slopenum%, "0.0, 1.0"
-        For j& = 1 To numSlope%
-            Print #slopenum%, Str$(j& * ydegkm) & "," & Format(Str$(SlopeOut(2, j& - 1)), "#0.0###")
-        Next j&
-        Close #slopenum%
-        FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-yn.txt"
-        slopenum% = FreeFile
-        Open FileSlopeName$ For Output As #slopenum%
-        For j& = numSlope% To 1 Step -1
-            Print #slopenum%, Str$(-j& * ydegkm) & "," & Format(Str$(SlopeOut(3, j& - 1)), "#0.0###")
-        Next j&
-        Print #slopenum%, "0.0, 1.0"
-        Close #slopenum%
+        Dim modeSlope%
+        '= 0 for slope profiles starting at peak position
+        '= 1 for peak profiles from each side of peak
+        modeSlope% = 1
+        
+        If modeSlope% = 0 Then
+            'output slope files
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-xp.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            Print #slopenum%, "0.0, 1.0"
+            For j& = 1 To numSlope%
+                Print #slopenum%, Str$(j& * xdegkm) & "," & Format(Str$(SlopeOut(0, j& - 1)), "#0.0###")
+            Next j&
+            Close #slopenum%
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-xn.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            For j& = numSlope% To 1 Step -1
+                Print #slopenum%, Str$(-j& * xdegkm) & "," & Format(Str$(SlopeOut(1, j& - 1)), "#0.0###")
+            Next j&
+            Print #slopenum%, "0.0, 1.0"
+            Close #slopenum%
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-yp.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            Print #slopenum%, "0.0, 1.0"
+            For j& = 1 To numSlope%
+                Print #slopenum%, Str$(j& * ydegkm) & "," & Format(Str$(SlopeOut(2, j& - 1)), "#0.0###")
+            Next j&
+            Close #slopenum%
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-yn.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            For j& = numSlope% To 1 Step -1
+                Print #slopenum%, Str$(-j& * ydegkm) & "," & Format(Str$(SlopeOut(3, j& - 1)), "#0.0###")
+            Next j&
+            Print #slopenum%, "0.0, 1.0"
+            Close #slopenum%
+            
+        ElseIf modeSlope% = 1 Then
+            'output peak files
+            'first in x
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-xpk.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            For j& = numSlope% To 1 Step -1
+                Print #slopenum%, Str$(-j& * xdegkm) & "," & Format(Str$(SlopeOut(1, j& - 1)), "#0.0###")
+            Next j&
+            Print #slopenum%, "0.0, 1.0"
+            For j& = 1 To numSlope%
+                Print #slopenum%, Str$(j& * xdegkm) & "," & Format(Str$(SlopeOut(0, j& - 1)), "#0.0###")
+            Next j&
+            Close #slopenum%
+            'then in y
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-ypk.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            For j& = numSlope% To 1 Step -1
+                Print #slopenum%, Str$(-j& * ydegkm) & "," & Format(Str$(SlopeOut(3, j& - 1)), "#0.0###")
+            Next j&
+            Print #slopenum%, "0.0, 1.0"
+            For j& = 1 To numSlope%
+                Print #slopenum%, Str$(j& * ydegkm) & "," & Format(Str$(SlopeOut(2, j& - 1)), "#0.0###")
+            Next j&
+            Close #slopenum%
+            End If
             
 nextentry:
     Next i&
