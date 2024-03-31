@@ -121,7 +121,7 @@ Public Function FileRoot(item As String) As String
         End If
         
     'now check that there are no extraneous characters at the end
-    pos% = InStr(FileRoot, ".")
+    pos% = InStr(Len(FileRoot) - 5, FileRoot, ".")
     If Len(FileRoot) - pos% > 3 Then
        FileRoot = Mid$(FileRoot, 1, Len(FileRoot) - 1)
        End If

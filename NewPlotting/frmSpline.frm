@@ -49,13 +49,22 @@ Begin VB.Form frmSpline
       TabIndex        =   11
       Top             =   2640
       Width           =   1575
+      Begin VB.CheckBox chkCurvature 
+         Caption         =   "Curvature"
+         Height          =   195
+         Left            =   440
+         TabIndex        =   28
+         ToolTipText     =   "Calculate the curvature at x=0 for polyn deg >= 2"
+         Top             =   460
+         Width           =   1095
+      End
       Begin VB.OptionButton optSpline 
          Caption         =   "Spline fit"
          Height          =   195
          Left            =   160
          TabIndex        =   13
          ToolTipText     =   "Fit data to spline"
-         Top             =   600
+         Top             =   720
          Width           =   1215
       End
       Begin VB.OptionButton optPoly 
@@ -64,7 +73,7 @@ Begin VB.Form frmSpline
          Left            =   160
          TabIndex        =   12
          ToolTipText     =   "Polynomial least square fit"
-         Top             =   240
+         Top             =   220
          Value           =   -1  'True
          Width           =   1335
       End
@@ -587,7 +596,7 @@ Private Sub cmdFit_Click()
                  If PlotInfo(3, I) = "" Then
                  
                    Select Case MsgBox("Can't fit since you haven't yet defined this file's plot format!" _
-                                      & vbCrLf & "(Apparently you haven't plotted it yet before entering splines)" _
+                                      & vbCrLf & "(Apparently you haven't plotted it yet before fitting)" _
                                       & vbCrLf & "" _
                                       & vbCrLf & "Do you wish to add format information to it at this time?" _
                                       , vbOKCancel Or vbInformation Or vbDefaultButton1, "Missing format information")
@@ -605,7 +614,7 @@ Private Sub cmdFit_Click()
                  If UBound(dPlot, 3) = 0 Then
                    testfile% = 0
                    Select Case MsgBox("Can't find the chosen file's data in the data buffer!" _
-                                      & vbCrLf & "(Apparently you haven't plotted it yet before entering splines)" _
+                                      & vbCrLf & "(Apparently you haven't plotted it yet before fitting)" _
                                       & vbCrLf & "" _
                                       & vbCrLf & "Do you wish to plot this file at this time?" _
                                       , vbOKCancel Or vbInformation Or vbDefaultButton1, "Missing format information")
@@ -641,7 +650,7 @@ Private Sub cmdFit_Click()
                 
                 If found1% = 0 Then
                    Select Case MsgBox("Can't fit since you haven't yet defined this file's plot format!" _
-                                      & vbCrLf & "(Apparently you haven't plotted it yet before entering splines)" _
+                                      & vbCrLf & "(Apparently you haven't plotted it yet before fitting)" _
                                       & vbCrLf & "" _
                                       & vbCrLf & "Do you wish to add format information to it at this time?" _
                                       , vbOKCancel Or vbInformation Or vbDefaultButton1, "Missing format information")
@@ -687,7 +696,7 @@ Private Sub cmdFit_Click()
                 
                 Text1 = MinX
                 Text2 = MaxX
-                txtNumFitPnts.Text = numToFit 'numRows%
+                If Val(txtNumFitPnts.Text) = 0 Then txtNumFitPnts.Text = numToFit 'numRows%
                 
                 Close #freefil%
                
@@ -706,6 +715,7 @@ Private Sub cmdFit_Click()
             
                 With flxGridFit
                     .Rows = PolyDeg + 2
+                    If cmbDeg.Text >= 2 And chkCurvature.Value = vbChecked Then .Rows = PolyDeg + 3
                     .Cols = 2
                     .ColAlignment(0) = 1
                     .ColAlignment(1) = 0
@@ -730,6 +740,10 @@ Private Sub cmdFit_Click()
                 
                 'now overplot the file and the fit
                 'create temperorary two column fit file with the requested number of points
+                'in case calcualting curvature, determine the peak position of the fit
+                Dim YFitMax As Double
+                Dim XFitMax As Double
+                YFitMax = -9999
                 NumFitSteps = Val(txtNumFitPnts.Text)
                 FitXStep = (MaxX - MinX) / (NumFitSteps - 1)
                 filetmp% = FreeFile
@@ -742,8 +756,26 @@ Private Sub cmdFit_Click()
                        YFit = YFit + BestCoeffs.item(K + 1) * XFit ^ K
                    Next K
                    Print #filetmp%, XFit, YFit
+                   'keep track of XFit position of maximum YFit
+                   If YFit > YFitMax Then
+                      YFitMax = YFit
+                      XFitMax = XFit
+                      End If
                 Next J
                 Close #filetmp%
+                
+                If cmbDeg.Text >= 2 And chkCurvature.Value = vbChecked Then
+                   With flxGridFit
+                       .TextMatrix(PolyDeg + 2, 0) = "Curva(X:" & Format(Str$(XFitMax), "0.00000E+00") & ")"
+                       .TextMatrix(PolyDeg + 2, 1) = sEmpty
+                        'calculate second derivate at XFitMax, 0th and 1st order terms don't contribute
+                        YFit = 0#
+                        For K = 2 To BestCoeffs.Count - 1
+                           YFit = YFit + K * (K - 1) * BestCoeffs.item(K + 1) * XFitMax ^ (K - 2)
+                        Next K
+                        .TextMatrix(PolyDeg + 2, 1) = Format(Str$(YFit), "0.00000E+00")
+                   End With
+                   End If
                 
                 If chkAuto.Value = vbChecked Then
                    'automatically record the fit results
@@ -830,7 +862,7 @@ Private Sub cmdFit_Click()
             
                  If PlotInfo(3, I) = "" Then
                    Select Case MsgBox("Can't fit since you haven't yet defined this file's plot format!" _
-                                      & vbCrLf & "(Apparently you haven't plotted it yet before entering splines)" _
+                                      & vbCrLf & "(Apparently you haven't plotted it yet before fitting)" _
                                       & vbCrLf & "" _
                                       & vbCrLf & "Do you wish to add format information to it at this time?" _
                                       , vbOKCancel Or vbInformation Or vbDefaultButton1, "Missing format information")
@@ -847,7 +879,7 @@ Private Sub cmdFit_Click()
                  If UBound(dPlot, 3) = 0 Then
                    testfile% = 0
                    Select Case MsgBox("Can't find the chosen file's data in the data buffer!" _
-                                      & vbCrLf & "(Apparently you haven't plotted it yet before entering splines)" _
+                                      & vbCrLf & "(Apparently you haven't plotted it yet before fitting)" _
                                       & vbCrLf & "" _
                                       & vbCrLf & "Do you wish to plot this file at this time?" _
                                       , vbOKCancel Or vbInformation Or vbDefaultButton1, "Missing format information")
@@ -879,7 +911,7 @@ Private Sub cmdFit_Click()
                 
                 If found1% = 0 Then
                       Select Case MsgBox("Can't fit since you haven't yet defined this file's plot format!" _
-                                       & vbCrLf & "(Apparently you haven't plotted it yet before entering splines)" _
+                                       & vbCrLf & "(Apparently you haven't plotted it yet before fitting)" _
                                        & vbCrLf & "" _
                                        & vbCrLf & "Do you wish to add format information to it at this time?" _
                                        , vbOKCancel Or vbInformation Or vbDefaultButton1, "Missing format information")
@@ -2050,6 +2082,8 @@ Private Sub Form_Load()
      OriginalNumPlotFiles = numFilesToPlot% 'record how many files were in the plot buffer before fitting
      
     'now unselect all the files in the frmsetcond flexlst
+    Text1.Text = frmSetCond.txtValueX0
+    Text2.Text = frmSetCond.txtValueX1
     
      frmSpline.flxGridFit.Refresh
      For I = 1 To numfiles%
@@ -2295,6 +2329,7 @@ Private Sub optPoly_Click()
       chkAuto.Visible = True
       cmbSpline.Visible = False
       FitMethod% = 1
+      chkCurvature.Visible = True
       End If
 End Sub
 
@@ -2307,5 +2342,6 @@ Private Sub optSpline_Click()
       FitMethod% = 2
       cmbSpline.ListIndex = 1
       cmbDeg.Visible = False
+      chkCurvature.Visible = False
       End If
 End Sub

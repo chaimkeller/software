@@ -33,7 +33,6 @@ Begin VB.Form frmSetCond
          BeginProperty Panel1 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
             AutoSize        =   1
             Object.Width           =   5133
-            Key             =   ""
             Object.Tag             =   ""
          EndProperty
       EndProperty
@@ -699,8 +698,8 @@ Private Sub cmdClear_Click()
    frmSetCond.lblXTitle.Enabled = False
    frmSetCond.lblYTitle.Enabled = False
    frmSetCond.lblTitle.Enabled = False
-   txtX0 = "0"
-   txtX1 = "0"
+   txtX0 = sEmpty
+   txtX1 = sEmpty
    txtValueY0 = sEmpty
    txtValueY1 = sEmpty
    txtValueX0 = sEmpty
@@ -1242,8 +1241,8 @@ Load500:
    cmdClear.Enabled = False
    chkOrigin.Enabled = False
    chkGridLine.Enabled = False
-   txtX0.Enabled = False
-   txtX1.Enabled = False
+   txtX0.Enabled = True
+   txtX1.Enabled = True
    txtValueY0.Enabled = False
    txtValueY1.Enabled = False
    txtXTitle.Enabled = False
@@ -1262,8 +1261,8 @@ Load500:
    frmSetCond.lblStartY.Enabled = False
    frmSetCond.lblXTitle.Enabled = False
    frmSetCond.lblYTitle.Enabled = False
-   txtX0 = "0"
-   txtX1 = "0"
+   txtX0 = sEmpty
+   txtX1 = sEmpty
    txtValueY0 = sEmpty
    txtValueY1 = sEmpty
    txtValueX0 = sEmpty
@@ -1302,19 +1301,19 @@ With udtMyGraphLayout
   If Abs((Val(txtValueX1.Text) - Val(txtValueX0.Text))) >= 0 And txtValueX1.Text <> "" _
   And txtValueX0.Text <> "" Then
     .X0 = Val(txtValueX0.Text)
-    .X1 = Val(txtValueX1.Text)
+    .x1 = Val(txtValueX1.Text)
     Else
     .X0 = dXmin
-    .X1 = dXmax
+    .x1 = dXmax
   End If
   'Y-range
   If Abs((Val(txtValueY1.Text) - Val(txtValueY0.Text))) >= 0 And txtValueY1.Text <> "" _
   And txtValueY0.Text <> "" Then
     .Y0 = Val(txtValueY0.Text)
-    .Y1 = Val(txtValueY1.Text)
+    .y1 = Val(txtValueY1.Text)
     Else
     .Y0 = dYmin 'dPlot(LBound(dPlot, 1), 2)
-    .Y1 = dYmax  'dPlot(UBound(dPlot, 1), 2)
+    .y1 = dYmax  'dPlot(UBound(dPlot, 1), 2)
   End If
   'index start-X1
   If Val(txtX0.Text) >= LBound(dPlot, 3) And Val(txtX0.Text) <= UBound(dPlot, 3) _
