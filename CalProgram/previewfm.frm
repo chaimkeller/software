@@ -11,6 +11,7 @@ Begin VB.Form previewfm
    ClientWidth     =   11865
    Icon            =   "previewfm.frx":0000
    LinkTopic       =   "Form1"
+   LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
    ScaleHeight     =   8085
@@ -310,7 +311,7 @@ Private Sub schultimbut_Click()
 End Sub
 
 Private Sub prevCLIPbut_Click()
-  'send a bitmap image of the current window to the CLIPBOARD
+  'send a bitmap image of the screen to the CLIPBOARD
    Screen.MousePointer = vbHourglass
    Call keybd_event(VK_SNAPSHOT, 0, 0, 0)
    waittime = Timer
@@ -396,7 +397,7 @@ Private Sub prevASCIIfilbut_Click()
    CommonDialog2.CancelError = True
    CommonDialog2.ShowSave
    'check for existing files, and for wrong save directories
-   ext$ = RTrim$(Mid$(CommonDialog2.FileName, InStr(1, CommonDialog2.FileName, ".") + 1, 3))
+   ext$ = RTrim$(Mid$(CommonDialog2.FileName, InStr(Len(CommonDialog2.FileName) - 4, CommonDialog2.FileName, ".") + 1, 3))
    If ext$ = "htm" Then ext$ = "html"
    If ext$ <> "ls1" And ext$ <> "xls" And ext$ <> "ls2" And ext$ <> "dos" And ext$ <> "men" And ext$ <> "ls3" And ext$ <> "sch" And ext$ <> "html" And ext$ <> "*" Then
       MsgBox "Sorry, the selected save file format is not yet available. Please choose (*.ls1) format.", vbInformation, "Cal Program"
@@ -1412,13 +1413,13 @@ Private Sub PreviewPrinterbut_Click()
     CommonDialog1.Flags = cdlPDPrintSetup
     CommonDialog1.ShowPrinter
   
-    Dim x As Printer
+    Dim X As Printer
     
-    For Each x In Printers
-        If x.DeviceName = Printer.DeviceName Then
+    For Each X In Printers
+        If X.DeviceName = Printer.DeviceName Then
            'this is default printer
-           SetDefaultPrinter x
-           Set Printer = x
+           SetDefaultPrinter X
+           Set Printer = X
            Exit For
            End If
     Next

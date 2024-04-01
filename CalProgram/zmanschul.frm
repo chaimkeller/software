@@ -1454,7 +1454,7 @@ Private Sub Command2_Click()
            Else
               'add suffix to name
               Dim pos%
-              pos% = InStr(filnam$, ".")
+              pos% = InStr(Len(filnam$) - 4, filnam$, ".")
               filnam$ = Mid$(filnam$, 1, pos% - 1) & "_Eng.sct"
               End If
            
@@ -1632,7 +1632,7 @@ Private Sub Command3_Click()
         CommonDialog1.FileName = drivjk$ + "*.sch"
         CommonDialog1.ShowSave
         filnam$ = CommonDialog1.FileName
-        pos% = InStr(filnam$, ".")
+        pos% = InStr(Len(filnam$) - 4, filnam$, ".")
         ext$ = Mid(filnam$, pos% + 1, 3)
         myfile = Dir(filnam$)
         If myfile <> sEmpty Then

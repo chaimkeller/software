@@ -319,6 +319,8 @@ Private Sub Toolbar1_ButtonClick(ByVal Button As MSComCtlLib.Button)
 
 Dim noxsl As Boolean
 
+   On Error GoTo Toolbar1_ButtonClick_Error
+
    Select Case Button.Key
      Case "savebut"
         On Error GoTo c3error
@@ -342,7 +344,7 @@ Dim noxsl As Boolean
               End If
            End If
         Screen.MousePointer = vbHourglass
-        pos% = InStr(filnam$, ".")
+        pos% = InStr(Len(filnam$) - 4, filnam$, ".")
         fileroot$ = Mid$(filnam$, 1, pos% - 1)
         'find root without directory
         For jr% = pos% - 1 To 1 Step -1
@@ -698,6 +700,13 @@ c3error:
         
      Case Else
   End Select
+
+   On Error GoTo 0
+   Exit Sub
+
+Toolbar1_ButtonClick_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Toolbar1_ButtonClick of Form Zmanimlistfm"
 End Sub
 Function skyp2(row As Integer, col As Integer) As Long
      skyp2 = row * MSFlexGrid1.Cols + col
