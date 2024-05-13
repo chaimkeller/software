@@ -5,7 +5,7 @@ Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 Begin VB.Form Zmanimform 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Define Z'manim Parameters"
-   ClientHeight    =   7380
+   ClientHeight    =   7635
    ClientLeft      =   3540
    ClientTop       =   840
    ClientWidth     =   5370
@@ -14,14 +14,14 @@ Begin VB.Form Zmanimform
    LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   7380
+   ScaleHeight     =   7635
    ScaleWidth      =   5370
    Begin VB.Frame frmParshiot 
       Caption         =   "Parshot HaShavua"
       Height          =   535
       Left            =   80
       TabIndex        =   91
-      Top             =   6150
+      Top             =   6480
       Width           =   5235
       Begin VB.OptionButton optDiasporaParshiot 
          Caption         =   "Sedra of Diaspora"
@@ -56,7 +56,7 @@ Begin VB.Form Zmanimform
       Style           =   1  'Graphical
       TabIndex        =   82
       ToolTipText     =   "Save the z'manim parameters as a template"
-      Top             =   6840
+      Top             =   7080
       Width           =   555
    End
    Begin VB.CommandButton loadbut 
@@ -66,7 +66,7 @@ Begin VB.Form Zmanimform
       Style           =   1  'Graphical
       TabIndex        =   81
       ToolTipText     =   "Load stored z'manim parameters' template"
-      Top             =   6840
+      Top             =   7080
       Width           =   555
    End
    Begin VB.Frame Frame9 
@@ -75,7 +75,7 @@ Begin VB.Form Zmanimform
       Height          =   1035
       Left            =   60
       TabIndex        =   77
-      Top             =   5100
+      Top             =   5400
       Width           =   5235
       Begin VB.CommandButton Command6 
          Caption         =   "Re&load"
@@ -109,17 +109,17 @@ Begin VB.Form Zmanimform
    End
    Begin VB.CommandButton calendarbut 
       Height          =   435
-      Left            =   2940
+      Left            =   2880
       Picture         =   "Zmanimform.frx":1558
       Style           =   1  'Graphical
       TabIndex        =   14
       ToolTipText     =   "Calculate these z'manim for this table"
-      Top             =   6840
+      Top             =   7080
       Width           =   495
    End
    Begin MSComDlg.CommonDialog CommonDialog1 
-      Left            =   4740
-      Top             =   6720
+      Left            =   4680
+      Top             =   7080
       _ExtentX        =   847
       _ExtentY        =   847
       _Version        =   393216
@@ -127,7 +127,7 @@ Begin VB.Form Zmanimform
    Begin VB.Frame Frame2 
       BackColor       =   &H8000000B&
       Caption         =   "Z'manim parameters"
-      Height          =   4155
+      Height          =   4455
       Left            =   60
       TabIndex        =   1
       Top             =   840
@@ -136,7 +136,7 @@ Begin VB.Form Zmanimform
          Height          =   285
          Left            =   3720
          TabIndex        =   74
-         Top             =   3360
+         Top             =   3720
          Width           =   240
          _ExtentX        =   423
          _ExtentY        =   503
@@ -159,14 +159,14 @@ Begin VB.Form Zmanimform
          Left            =   3180
          TabIndex        =   73
          Text            =   "60"
-         Top             =   3360
+         Top             =   3740
          Width           =   555
       End
       Begin MSComCtl2.UpDown UpDown11 
          Height          =   285
          Left            =   3720
          TabIndex        =   72
-         Top             =   3060
+         Top             =   3480
          Width           =   240
          _ExtentX        =   423
          _ExtentY        =   503
@@ -189,7 +189,7 @@ Begin VB.Form Zmanimform
          Left            =   3180
          TabIndex        =   71
          Text            =   "60"
-         Top             =   3060
+         Top             =   3480
          Width           =   555
       End
       Begin VB.OptionButton Option18 
@@ -198,7 +198,7 @@ Begin VB.Form Zmanimform
          Height          =   195
          Left            =   480
          TabIndex        =   70
-         Top             =   3420
+         Top             =   3760
          Width           =   2595
       End
       Begin VB.OptionButton Option17 
@@ -207,7 +207,7 @@ Begin VB.Form Zmanimform
          Height          =   195
          Left            =   480
          TabIndex        =   69
-         Top             =   3120
+         Top             =   3520
          Width           =   2655
       End
       Begin VB.CommandButton Command1 
@@ -224,23 +224,24 @@ Begin VB.Form Zmanimform
          Height          =   315
          Left            =   120
          TabIndex        =   11
-         Top             =   3720
+         Top             =   4080
          Width           =   4995
       End
       Begin TabDlg.SSTab SSTab1 
-         Height          =   2775
+         Height          =   3135
          Left            =   120
          TabIndex        =   2
+         ToolTipText     =   "Configure zemanim"
          Top             =   240
          Width           =   4995
          _ExtentX        =   8811
-         _ExtentY        =   4895
+         _ExtentY        =   5530
          _Version        =   393216
-         Tabs            =   6
-         Tab             =   3
-         TabsPerRow      =   6
+         Tabs            =   7
+         Tab             =   6
+         TabsPerRow      =   4
          TabHeight       =   600
-         BackColor       =   12632256
+         BackColor       =   14737632
          BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
             Name            =   "Arial"
             Size            =   6.75
@@ -267,9 +268,8 @@ Begin VB.Form Zmanimform
          Tab(2).ControlCount=   1
          TabCaption(3)   =   "&Candel Lighting"
          TabPicture(3)   =   "Zmanimform.frx":1736
-         Tab(3).ControlEnabled=   -1  'True
+         Tab(3).ControlEnabled=   0   'False
          Tab(3).Control(0)=   "Frame6"
-         Tab(3).Control(0).Enabled=   0   'False
          Tab(3).ControlCount=   1
          TabCaption(4)   =   "S&unrises"
          TabPicture(4)   =   "Zmanimform.frx":1752
@@ -281,14 +281,84 @@ Begin VB.Form Zmanimform
          Tab(5).ControlEnabled=   0   'False
          Tab(5).Control(0)=   "Frame8"
          Tab(5).ControlCount=   1
+         TabCaption(6)   =   "&Mishmarot"
+         TabPicture(6)   =   "Zmanimform.frx":178A
+         Tab(6).ControlEnabled=   -1  'True
+         Tab(6).Control(0)=   "frmMishmarim"
+         Tab(6).Control(0).Enabled=   0   'False
+         Tab(6).ControlCount=   1
+         Begin VB.Frame frmMishmarim 
+            Height          =   2175
+            Left            =   120
+            TabIndex        =   99
+            Top             =   765
+            Width           =   4575
+            Begin VB.TextBox txtMishmarVis 
+               Alignment       =   2  'Center
+               Enabled         =   0   'False
+               Height          =   285
+               Left            =   3840
+               TabIndex        =   105
+               Text            =   "33.33"
+               ToolTipText     =   "Enter percentage (0-100)"
+               Top             =   1560
+               Width           =   495
+            End
+            Begin VB.TextBox txtMishmarAst 
+               Alignment       =   2  'Center
+               Enabled         =   0   'False
+               Height          =   285
+               Left            =   3840
+               TabIndex        =   104
+               Text            =   "33.33"
+               ToolTipText     =   "Enter percentage (0-100)"
+               Top             =   840
+               Width           =   495
+            End
+            Begin VB.TextBox txtMishmarMis 
+               Alignment       =   2  'Center
+               Enabled         =   0   'False
+               Height          =   285
+               Left            =   3840
+               TabIndex        =   103
+               Text            =   "33.33"
+               ToolTipText     =   "Enter percentage (0-100)"
+               Top             =   240
+               Width           =   495
+            End
+            Begin VB.OptionButton optMishmarVis 
+               Caption         =   "Percentage of the night from the visible sunset to the visible sunrise"
+               Height          =   495
+               Left            =   240
+               TabIndex        =   102
+               Top             =   1440
+               Width           =   3615
+            End
+            Begin VB.OptionButton optMishmarAst 
+               Caption         =   "Percentage of night from the astronomical sunset to the astronomical sunrise"
+               Height          =   375
+               Left            =   240
+               TabIndex        =   101
+               Top             =   840
+               Width           =   3615
+            End
+            Begin VB.OptionButton optMishmarMis 
+               Caption         =   "Percentage of night from the mishor sunset to the mishor sunrise"
+               Height          =   375
+               Left            =   240
+               TabIndex        =   100
+               Top             =   240
+               Width           =   3615
+            End
+         End
          Begin VB.Frame Frame8 
             Height          =   2235
             Left            =   -74880
             TabIndex        =   62
-            Top             =   420
+            Top             =   765
             Width           =   4755
             Begin VB.OptionButton Option16 
-               Caption         =   $"Zmanimform.frx":178A
+               Caption         =   $"Zmanimform.frx":17A6
                BeginProperty Font 
                   Name            =   "Arial"
                   Size            =   6.75
@@ -305,7 +375,7 @@ Begin VB.Form Zmanimform
                Width           =   4515
             End
             Begin VB.OptionButton Option15 
-               Caption         =   $"Zmanimform.frx":18A6
+               Caption         =   $"Zmanimform.frx":18C2
                BeginProperty Font 
                   Name            =   "Arial"
                   Size            =   6.75
@@ -344,10 +414,10 @@ Begin VB.Form Zmanimform
             Height          =   2295
             Left            =   -74880
             TabIndex        =   61
-            Top             =   360
+            Top             =   705
             Width           =   4755
             Begin VB.OptionButton Option13 
-               Caption         =   $"Zmanimform.frx":199A
+               Caption         =   $"Zmanimform.frx":19B6
                BeginProperty Font 
                   Name            =   "Arial"
                   Size            =   6.75
@@ -364,7 +434,7 @@ Begin VB.Form Zmanimform
                Width           =   4635
             End
             Begin VB.OptionButton Option12 
-               Caption         =   $"Zmanimform.frx":1ABA
+               Caption         =   $"Zmanimform.frx":1AD6
                BeginProperty Font 
                   Name            =   "Arial"
                   Size            =   6.75
@@ -401,9 +471,9 @@ Begin VB.Form Zmanimform
          End
          Begin VB.Frame Frame6 
             Height          =   2235
-            Left            =   120
+            Left            =   -74880
             TabIndex        =   50
-            Top             =   420
+            Top             =   765
             Width           =   4755
             Begin VB.TextBox Text14 
                Height          =   285
@@ -546,7 +616,7 @@ Begin VB.Form Zmanimform
             Height          =   2175
             Left            =   -74880
             TabIndex        =   36
-            Top             =   480
+            Top             =   825
             Width           =   4755
             Begin VB.CheckBox chkSunset 
                Caption         =   "Before/After twi/sunset"
@@ -770,7 +840,7 @@ Begin VB.Form Zmanimform
             Height          =   2235
             Left            =   -74880
             TabIndex        =   21
-            Top             =   420
+            Top             =   765
             Width           =   4755
             Begin VB.Frame Frame10 
                Height          =   365
@@ -932,7 +1002,7 @@ Begin VB.Form Zmanimform
                Width           =   3195
             End
             Begin VB.OptionButton Option4 
-               Caption         =   $"Zmanimform.frx":1BB1
+               Caption         =   $"Zmanimform.frx":1BCD
                BeginProperty Font 
                   Name            =   "Arial"
                   Size            =   6.75
@@ -1077,9 +1147,10 @@ Begin VB.Form Zmanimform
             Height          =   2355
             Left            =   -74880
             TabIndex        =   4
-            Top             =   360
+            Top             =   705
             Width           =   4755
             Begin VB.Frame Frame11 
+               BackColor       =   &H8000000B&
                Height          =   365
                Left            =   360
                TabIndex        =   87
@@ -1403,7 +1474,7 @@ Begin VB.Form Zmanimform
          Height          =   195
          Left            =   4020
          TabIndex        =   76
-         Top             =   3360
+         Top             =   3760
          Width           =   675
       End
       Begin VB.Label Label16 
@@ -1412,7 +1483,7 @@ Begin VB.Form Zmanimform
          Height          =   195
          Left            =   4020
          TabIndex        =   75
-         Top             =   3120
+         Top             =   3520
          Width           =   675
       End
    End
@@ -1438,7 +1509,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private savedit As Boolean, addbut As Boolean, newlistnum%
-Private changes As Boolean, vis1%, mishornetznum%, mishorskiynum%
+Private changes As Boolean, vis1%, mishornetznum%, mishorskiynum%, visiblenetzzman%
 Private astnetznum%, astskiynum%
 Private mis1%, ast1%, init As Boolean, radio As Boolean, sortnumber%
 Private noon As Boolean, chazosnum%, tmpsortnum%(49), load As Boolean
@@ -1507,6 +1578,32 @@ End Sub
 
 Private Sub Option22_Click()
    optiondmish% = 0
+End Sub
+
+Private Sub optMishmarAst_Click()
+   txtMishmarMis.Enabled = False
+   txtMishmarAst.Enabled = True
+   txtMishmarVis.Enabled = False
+   Option17.Value = True
+   Text15.Text = "60"
+
+End Sub
+
+Private Sub optMishmarMis_Click()
+   txtMishmarMis.Enabled = True
+   txtMishmarAst.Enabled = False
+   txtMishmarVis.Enabled = False
+   Option17.Value = True
+   Text15.Text = "60"
+End Sub
+
+Private Sub optMishmarVis_Click()
+   txtMishmarMis.Enabled = False
+   txtMishmarAst.Enabled = False
+   txtMishmarVis.Enabled = True
+   Option17.Value = True
+   Text15.Text = "60"
+
 End Sub
 
 Private Sub optNoParshiot_Click()
@@ -1636,7 +1733,7 @@ Private Sub loadbut_Click()
   ZmanTitle$ = sEmpty
   numtotatl% = -1
   Do Until EOF(zmannum%)
-     Input #zmannum%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+     Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
      If a$ = "sedra/holidays" Then
         Input #zmannum%, trflag%
         If trflag% = 0 Then
@@ -1655,7 +1752,7 @@ Private Sub loadbut_Click()
         Line Input #zmannum%, ZmanTitle$
         GoTo zm100
         End If
-     If C$ = "sort" And D$ = "order" Then
+     If c$ = "sort" And D$ = "order" Then
         neworder = True
         reorder = True
         Exit Do
@@ -1706,7 +1803,7 @@ zm100:
         For inum% = 0 To ISort% - 1
            Line Input #zmannum%, doclin$
         Next inum%
-        Input #zmannum%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+        Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
         List1.AddItem a$
         List1.ListIndex = List1.ListCount - 1
      Loop
@@ -1725,13 +1822,13 @@ zm100:
   filsort% = FreeFile
   Open filnam$ For Input As filsort%
   Do Until EOF(filsort%)
-     Input #filsort%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+     Input #filsort%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
      If (a$ = "sedra/holidays") Or _
-        (C$ = "sort" And D$ = "order") Or _
+        (c$ = "sort" And D$ = "order") Or _
         (a$ = "Title/Description") Then
         Exit Do
         End If
-     Write #zmannum%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+     Write #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
   Loop
   Close #filsort%
   Close #zmannum%
@@ -1839,9 +1936,9 @@ Private Sub Combo1_Click()
      SSTab1.Tab = 0
      If itsthere = True Then
         Do Until EOF(zmannum%)
-           Input #zmannum%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+           Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
            If a$ = tmptext$ Then
-              optiond% = Val(C$)
+              optiond% = Val(c$)
               Select Case optiond%
                  Case 1
                     Option1.Value = True
@@ -1873,9 +1970,9 @@ Private Sub Combo1_Click()
      SSTab1.Tab = 1
      If itsthere = True Then
         Do Until EOF(zmannum%)
-           Input #zmannum%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+           Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
            If a$ = tmptext$ Then
-              optiont% = Val(C$)
+              optiont% = Val(c$)
               Select Case optiont%
                  Case 1
                     Option7.Value = True
@@ -1907,7 +2004,7 @@ Private Sub Combo1_Click()
      SSTab1.Tab = 2
      If itsthere = True Then
         Do Until EOF(zmannum%)
-           Input #zmannum%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+           Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
            If a$ = tmptext$ Then
            
               'search add/subtract clock minutes to this zman
@@ -1932,7 +2029,7 @@ Private Sub Combo1_Click()
                  txtBeforeAfter.Text = "0"
                  End If
            
-              Combo2.ListIndex = Val(C$)
+              Combo2.ListIndex = Val(c$)
               Combo3.ListIndex = Val(D$)
               optionz% = Val(b$)
               Select Case optionz%
@@ -1961,7 +2058,7 @@ Private Sub Combo1_Click()
      SSTab1.Tab = 3
      If itsthere = True Then
         Do Until EOF(zmannum%)
-           Input #zmannum%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+           Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
            If a$ = tmptext$ Then
               options% = Val(b$)
               Select Case options%
@@ -1971,7 +2068,7 @@ Private Sub Combo1_Click()
                     Option10.Value = True
                  Case Else
               End Select
-              Text12.Text = C$
+              Text12.Text = c$
               Text13.Text = D$
               Text14.Text = Mid$(a$, 9, Len(a$) - 9)
               If Val(GZ$) = -1 Then
@@ -1990,7 +2087,7 @@ Private Sub Combo1_Click()
      SSTab1.Tab = 4
      If itsthere = True Then
         Do Until EOF(zmannum%)
-           Input #zmannum%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+           Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
            If a$ = tmptext$ Then
               optionsun1% = Val(b$)
               Select Case optionsun1%
@@ -2027,7 +2124,7 @@ Private Sub Combo1_Click()
      SSTab1.Tab = 5
      If itsthere = True Then
         Do Until EOF(zmannum%)
-           Input #zmannum%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+           Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
            If a$ = tmptext$ Then
               optionsun2% = Val(b$)
               Select Case optionsun2%
@@ -2409,6 +2506,40 @@ Private Sub Command1_Click()
             stepss$ = Text16.Text
             End If
           Write #zmannum%, tmpnam$, Str$(optionsun2%), Str$(Combo3.ListIndex), "NA", "NA", "NA", Str$(optionround%), stepss$
+       Case 6 'Mishmarot
+          If optMishmarMis Then
+             tmpnam$ = "Mishmarot: mishor set/rise "
+             optionmishmar% = 3
+             FractionNight$ = Format(Str$(Val(txtMishmarMis.Text)), "0.0####")
+             tmpnam$ = tmpnam$ + "night percent: " & FractionNight$
+          ElseIf optMishmarAst Then
+             tmpnam$ = "Mishmarot: astro set/rise"
+             optionmishmar% = 4
+             FractionNight$ = Format(Str$(Val(txtMishmarAst.Text)), "0.0####")
+             tmpnam$ = tmpnam$ + "night percent: " & FractionNight$
+          ElseIf optMishmarVis Then
+             tmpnam$ = "Mishmarot: vis set/rise"
+             FractionNight$ = Format(Str$(Val(txtMishmarVis.Text)), "0.0####")
+             optionmishmar% = 5
+             tmpnam$ = tmpnam$ + "night percent: " & FractionNight$
+          Else
+             Call MsgBox("Click on one of the mishmar options!", vbInformation, "Mshmar option")
+             Exit Sub
+             End If
+          tmpnam$ = "Zmanim: " & tmpnam$ 'these fall under the calculation cateogry of zemanim
+          GoSub checknam
+          Combo1.AddItem tmpnam$
+          Combo1.ListIndex = Combo1.ListCount - 1
+          Combo3.AddItem tmpnam$
+          Combo3.ListIndex = Combo3.ListCount - 1
+          zmanopen = False
+          
+          If optionround% = -1 Then
+            stepss$ = Text15.Text
+          ElseIf optionround% = 1 Then
+            stepss$ = Text16.Text
+            End If
+          Write #zmannum%, tmpnam$, Str$(optionmishmar%), Str$(Combo3.ListIndex), FractionNight$, "NA", "NA", Str$(optionround%), stepss$
        Case Else
    End Select
 500:
@@ -2464,6 +2595,140 @@ Private Sub calendarbut_Click()
    Dim sumref(7) As Double, winref(7) As Double
    
    On Error GoTo generrhand
+   
+'//////////////////DST support for Israel, USA added 082921/////////////////////////////////////
+    Dim stryrDST%, endyrDST%, strdaynum(1) As Integer, enddaynum(1) As Integer
+    
+    Dim MarchDate As Integer
+    Dim OctoberDate As Integer
+    Dim NovemberDate As Integer
+    Dim YearLength As Integer
+    Dim DSThour As Integer
+    
+    Dim DSTadd As Boolean
+    
+    Dim DSTPerpetualIsrael As Boolean
+    Dim DSTPerpetualUSA As Boolean
+    
+    'set to true when these countries adopt universal DST
+    DSTPerpetualIsrael = False
+    DSTPerpetualUSA = False
+    
+    If CalMDIform.mnuDST.Checked = True Then
+       DSTadd = True
+       End If
+    
+    If Option2b Then
+       If yrheb% < 1918 Then DSTadd = False
+    Else
+       If yrheb% < 5678 Then DSTadd = False
+       End If
+    
+    If DSTadd Then
+    
+       If Not Option2b Then 'hebrew years
+          stryrDST% = yrheb% + RefCivilYear% - RefHebYear% '(yrheb% - 5758) + 1997
+          endyrDST% = yrheb% + RefCivilYear% - RefHebYear% + 1 '(yrheb% - 5758) + 1998
+       Else
+          stryrDST% = yrheb%
+          endyrDST% = yrheb%
+          End If
+    
+       'find beginning and ending day numbers for each civil year
+       Select Case eroscountry$
+    
+          Case "Israel", "" 'EY eros or cities using 2017 DST rules
+    
+              MarchDate = (31 - (Fix(stryrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
+              OctoberDate = (31 - (Fix(stryrDST% * 5 / 4) + 1) Mod 7)
+              YearLength% = DaysinYear(stryrDST%)
+              strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
+              enddaynum(0) = DayNumber(YearLength%, 10, OctoberDate)
+    
+              If DSTPerpetualIsrael Then
+                 strdaynum(0) = 1
+                 enddaynum(0) = YearLength%
+                 End If
+    
+              MarchDate = (31 - (Fix(endyrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
+              OctoberDate = (31 - (Fix(endyrDST% * 5 / 4) + 1) Mod 7)
+              YearLength% = DaysinYear(endyrDST%)
+              strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
+              enddaynum(1) = DayNumber(YearLength%, 10, OctoberDate)
+    
+              If DSTPerpetualIsrael Then
+                 strdaynum(1) = 1
+                 enddaynum(1) = YearLength%
+                 End If
+    
+    
+          Case "USA", "Canada" 'English {USA DST rules}
+    
+            'not all states in the US have DST
+            If InStr(eroscity$, "Phoenix") Or InStr(eroscity$, "Honolulu") Or InStr(eroscity$, "Regina") Then
+               DSTadd = False
+            Else
+    
+              MarchDate = 14 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
+              NovemberDate = 7 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
+              YearLength% = DaysinYear(stryrDST%)
+              strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
+              enddaynum(0) = DayNumber(YearLength%, 11, NovemberDate)
+    
+              If DSTPerpetualUSA Then
+                 strdaynum(0) = 1
+                 enddaynum(0) = YearLength%
+                 End If
+    
+              MarchDate = 14 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
+              NovemberDate = 7 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
+              YearLength% = DaysinYear(endyrDST%)
+              strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
+              enddaynum(1) = DayNumber(YearLength%, 11, NovemberDate)
+    
+              If DSTPerpetualUSA Then
+                 strdaynum(1) = 1
+                 enddaynum(1) = YearLength%
+                 End If
+    
+              End If
+    
+          Case "England", "UK", "France", "Germany", "Netherlands", "Belgium", _
+               "Northern_Ireland", "Yugoslavia", "Slovakia", "Romania", "Hungary", _
+               "Denmark", "Ireland", "Switzerland", "Finland", "Ukraine", "Norway", _
+               "France", "Czechoslovakia", "Sweden", "Italy", "Europe"
+    
+              MarchDate = (31 - (Fix(stryrDST% * 5 / 4) + 4) Mod 7) 'starts on Sunday, 2 days after EY
+              OctoberDate = (31 - (Fix(stryrDST% * 5 / 4) + 1) Mod 7)
+              YearLength% = DaysinYear(stryrDST%)
+              strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
+              enddaynum(0) = DayNumber(YearLength%, 10, OctoberDate)
+    
+              If DSTPerpetualIsrael Then
+                 strdaynum(0) = 1
+                 enddaynum(0) = YearLength%
+                 End If
+    
+              MarchDate = (31 - (Fix(endyrDST% * 5 / 4) + 4) Mod 7) 'starts on Sunday = 2 days after EY
+              OctoberDate = (31 - (Fix(endyrDST% * 5 / 4) + 1) Mod 7)
+              YearLength% = DaysinYear(endyrDST%)
+              strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
+              enddaynum(1) = DayNumber(YearLength%, 10, OctoberDate)
+    
+              If DSTPerpetualIsrael Then
+                 strdaynum(1) = 1
+                 enddaynum(1) = YearLength%
+                 End If
+    
+    
+          Case Else 'not implemented yet for other countries
+             DSTadd = False
+    
+       End Select
+       End If
+
+'///////////////////////////////////////////////////////////////////////////////////////////////////////
+
   'define constants used for the analytic expression for the
   'refraction that replaces menatsum.ref and menatwin.ref data
   'the refraction terms, ref, eps have been fitted to the above
@@ -2702,7 +2967,9 @@ Exit Sub
      D = FNarsin(Sin(ob) * Sin(es))
      Return
 
-1500 t3hr = Fix(t3sub): t3min = Fix((t3sub - t3hr) * 60)
+1500 t3hr = Fix(t3sub)
+'     t3sec = Int((t3sub - t3hr - t3min / 60) * 3600 + 0.5)
+     t3min = Fix((t3sub - t3hr) * 60)
      t3sec = Int((t3sub - t3hr - t3min / 60) * 3600 + 0.5)
      If t3sec = 60 Then t3min = t3min + 1: t3sec = 0
      If t3min = 60 Then t3hr = t3hr + 1: t3min = 0
@@ -3421,6 +3688,19 @@ cal:
            sr2 = FNarco((-Tan(lr) * Tan(D)) + (Cos(air2) / Cos(lr) / Cos(D))) * ch
            t3sub = t6 + sr2 'in fractions of hours
            End If
+           
+          '//////////////added 082921--DST support//////////////
+          If DSTadd And t3sub <> -9999 Then
+             'add hour for DST
+             j% = dy
+             yrn% = yr
+             If j% >= strdaynum(yrn% - stryrDST%) And j% < enddaynum(yrn% - stryrDST%) Then
+                t3sub = t3sub + 1
+                If t3sub > 24 Then t3sub = t3sub - 24
+                End If
+             End If
+          '//////////////////////////////////////////////////
+
 
 Return
 
@@ -3479,7 +3759,7 @@ newzemanim:
              zmantimes(num%, numday%) = t3subb$
              zmannumber%(0, Val(bz$)) = num%
            Case -2 'dawn defined by minutes zemanios (as defined by astron. sunrise/sunset)
-             t3subb$ = zmantimes(astnetznum%, numday%) 'this is mishor sunrise
+             t3subb$ = zmantimes(astnetznum%, numday%) 'this is astronomical sunrise
              If (t3subb$ <> "none") Then
                 sunrise = Val(t3subb$)
                 t3subb$ = zmantimes(astskiynum%, numday%) 'this is mishor sunset
@@ -3637,6 +3917,7 @@ newzemanim:
                 stortim$(0, imonth% - 1, kday% - 1) = Mid$(timtmp$, 1, pos% - 1)
                 End If
              zmantimes(num%, numday%) = stortim$(0, imonth% - 1, kday% - 1)
+             visiblenetzzman% = num%
           ElseIf ast = True And (InStr(az$, "Astronomical") Or _
              InStr(az$, heb3$(24)) Or InStr(az$, heb3$(25))) And zmannetz = True Then
              zmannames(num%) = "astronomical sunrise time: "
@@ -3886,6 +4167,108 @@ newzemanim:
                If t3sub < 0 Or t3sub >= 24 Then
                   t3sub = -9999
                   End If
+            Case 3 'Mishmaroat using mishor sunrise and sunset
+                'find hoursnightzemanios
+                'sunset is for previous day, sunrise is for this day
+                hgt = 0
+                yr = Val(Mid$(stortim$(2, imonth% - 1, kday% - 1), 8, 4))
+                ZA = 90
+                dy = jday% - 1
+                GoSub cal
+                sunset = t3sub
+                If t3sub = -9999 Then
+                   zmantimes(num%, numday%) = "none"
+                Else 'calculate the mishor sunrise
+                   hgt = 0
+                   yr = Val(Mid$(stortim$(2, imonth% - 1, kday% - 1), 8, 4))
+                   ZA = -90
+                   dy = jday%
+                   GoSub cal
+                   sunrise = t3sub
+                   If t3sub = -9999 Then
+                      zmantimes(num%, numday%) = "none"
+                   Else
+                      hoursnightzemanios = 24 - sunset + sunrise
+                      portionofnight = hoursnightzemanios * Val(dz$) * 0.01
+                      t3sub = sunset + portionofnight
+                      If t3sub > 24 Then t3sub = t3sub - 24
+                      End If
+                   
+                   End If
+            Case 4 'Mishmarot using astronomical sunrise and sunset
+                'find hoursnightzemanios
+                'sunset is for previous day, sunrise is for this day
+                hgt = avehgtskiy
+                yr = Val(Mid$(stortim$(2, imonth% - 1, kday% - 1), 8, 4))
+                ZA = 90
+                dy = jday% - 1
+                GoSub cal
+                sunset = t3sub
+                If t3sub = -9999 Then
+                   zmantimes(num%, numday%) = "none"
+                Else 'calculate the mishor sunrise
+                   hgt = avehgtskiy
+                   yr = Val(Mid$(stortim$(2, imonth% - 1, kday% - 1), 8, 4))
+                   ZA = -90
+                   dy = jday%
+                   GoSub cal
+                   sunrise = t3sub
+                   If t3sub = -9999 Then
+                      zmantimes(num%, numday%) = "none"
+                   Else
+                      hoursnightzemanios = 24 - sunset + sunrise
+                      portionofnight = hoursnightzemanios * Val(dz$) * 0.01
+                      t3sub = sunset + portionofnight
+                      If t3sub > 24 Then t3sub = t3sub - 24
+                      End If
+                   
+                   End If
+            Case 5 'Mishmarot using visible sunrise and sunset
+                If kday% > 1 Then
+                   sunset = stortim$(1, imonth% - 1, kday% - 2)
+                Else
+                   'use the sunset stored of Rosh Hashono, since the one for Erev RH wasn't calculated
+                   sunset = stortim$(1, imonth% - 1, kday% - 1)
+                   End If
+                If sunset = -9999 Then
+                Else
+                   'both sunrise and sunset are now strings, so parse out the decimal time values
+                   'remove "*" for near mountains indication
+                   pos% = InStr(sunset, "*")
+                   If pos% > 0 Then
+                      sunset = Mid$(sunset, 1, pos% - 1)
+                      End If
+                   If Len(sunset) = 7 And InStr(sunset, ":") Then
+                      sunset = Val(Mid$(sunset, 1, 1)) + Val(Mid$(sunset, 3, 2)) / 60 + Val(Mid$(sunset, 6, 2)) / 3600
+                   ElseIf Len(sunset) = 8 And InStr(sunset, ":") Then
+                      sunset = Val(Mid$(sunset, 1, 2)) + Val(Mid$(sunset, 4, 2)) / 60 + Val(Mid$(sunset, 7, 2)) / 3600
+                   Else
+                      sunset = Val(sunset)
+                      End If
+                   
+                   sunrise = stortim$(0, imonth% - 1, kday% - 1)
+                   pos% = InStr(sunrise, "*")
+                   If pos% > 0 Then
+                      sunrise = Mid$(sunrise, 1, pos% - 1)
+                      End If
+                   If Len(sunrise) = 7 And InStr(sunrise, ":") Then
+                      sunrise = Val(Mid$(sunrise, 1, 1)) + Val(Mid$(sunrise, 3, 2)) / 60 + Val(Mid$(sunrise, 6, 2)) / 3600
+                   ElseIf Len(sunset) = 8 And InStr(sunset, ":") Then
+                      sunrise = Val(Mid$(sunrise, 1, 2)) + Val(Mid$(sunrise, 4, 2)) / 60 + Val(Mid$(sunrise, 7, 2)) / 3600
+                   Else
+                      sunrise = Val(sunrise)
+                      End If
+                   If sunrise = -9999 Then
+                      t3sub = -9999
+                   Else
+                      hoursnightzemanios = 12 - sunset + sunrise
+                      portionofnight = hoursnightzemanios * Val(dz$) * 0.01
+                      t3sub = sunset + portionofnight
+                      'convert to 24 hour clock
+                      t3sub = t3sub + 12
+                      If t3sub > 24 Then t3sub = t3sub - 24
+                      End If
+                   End If
             Case Else
          End Select
          
@@ -3987,7 +4370,11 @@ newzemanim:
            newzmans(nextnum%) = t3subb$ '  zmantimes(nextnum%, numday%) = t3subb$ 'use this for tables
            'remove the "Zmanim", etc from the name
            pos% = InStr(az$, ":")
-           zmannames$(nextnum%) = Trim$(Mid$(az$, pos% + 1, Len(az$) - pos%))
+           If pos% > 0 Then
+              zmannames$(nextnum%) = Trim$(Mid$(az$, pos% + 1, Len(az$) - pos%))
+           Else
+              zmannames$(nextnum%) = az$
+              End If
            If optionheb Then 'convert sunrises/sunsets into hebrew
               If InStr(zmannames$(nextnum%), "Mishor Sunrise") Then
                  zmannames$(nextnum%) = heb3$(18)
@@ -4003,6 +4390,8 @@ newzemanim:
                  zmannames$(nextnum%) = heb3$(19)
               ElseIf InStr(zmannames$(nextnum%), "Chazos") Then
                  zmannames$(nextnum%) = heb3$(28)
+              ElseIf InStr(zmannames$(nextnum%), "Mishmarot") Then
+                 'no hebrew string yet, so use the english one
                  End If
               End If
            If reorder = True Then GoTo 950
@@ -4022,6 +4411,7 @@ newzemanim:
 Return
 
 generrhand:
+     Screen.MousePointer = vbDefault
      If internet = True And Err.Number >= 0 Then   'exit the program
         'abort the program with a error messages
         errlog% = FreeFile
@@ -4047,6 +4437,7 @@ generrhand:
         End
      
      Else
+        Resume
         response = MsgBox("Zmanimform calendarbut encountered error number: " + Str(Err.Number) + ".  Do you want to abort?", vbYesNoCancel + vbCritical, "Cal Program")
         If response <> vbYes Then
            Close
@@ -4110,7 +4501,7 @@ Private Sub Form_Load()
         zmannum% = FreeFile
         Open drivjk$ + "zmanim.tmp" For Input As zmannum%
         Do Until EOF(zmannum%)
-           Input #zmannum%, a$, b$, C$, D$, e$, f$, GZ$, HZ$
+           Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
            Combo1.AddItem a$
            If InStr(a$, "Dawn") Or InStr(a$, "Sunrise") Or InStr(a$, "Chazos") Then
               Combo2.AddItem a$

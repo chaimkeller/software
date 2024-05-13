@@ -2157,7 +2157,7 @@ Dim OctoberDate As Integer
 Dim NovemberDate As Integer
 Dim YearLength As Integer
 Dim DSThour As Integer
-   
+
 Dim DSTadd As Boolean
 
 Dim DSTPerpetualIsrael As Boolean
@@ -2170,13 +2170,13 @@ DSTPerpetualUSA = False
 If CalMDIform.mnuDST.Checked = True Then
    DSTadd = True
    End If
-   
+
 If Option2b Then
    If yrheb% < 1918 Then DSTadd = False
 Else
    If yrheb% < 5678 Then DSTadd = False
    End If
-  
+
 If DSTadd Then
 
    If Not Option2b Then 'hebrew years
@@ -2186,23 +2186,23 @@ If DSTadd Then
       stryrDST% = yrheb%
       endyrDST% = yrheb%
       End If
-      
+
    'find beginning and ending day numbers for each civil year
    Select Case eroscountry$
-   
+
       Case "Israel", "" 'EY eros or cities using 2017 DST rules
-      
+
           MarchDate = (31 - (Fix(stryrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
           OctoberDate = (31 - (Fix(stryrDST% * 5 / 4) + 1) Mod 7)
           YearLength% = DaysinYear(stryrDST%)
           strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
           enddaynum(0) = DayNumber(YearLength%, 10, OctoberDate)
-          
+
           If DSTPerpetualIsrael Then
              strdaynum(0) = 1
              enddaynum(0) = YearLength%
              End If
-             
+
           MarchDate = (31 - (Fix(endyrDST% * 5 / 4) + 4) Mod 7) - 2 'starts on Friday = 2 days before EU start on Sunday
           OctoberDate = (31 - (Fix(endyrDST% * 5 / 4) + 1) Mod 7)
           YearLength% = DaysinYear(endyrDST%)
@@ -2213,39 +2213,39 @@ If DSTadd Then
              strdaynum(1) = 1
              enddaynum(1) = YearLength%
              End If
-        
-      
+
+
       Case "USA", "Canada" 'English {USA DST rules}
-      
+
         'not all states in the US have DST
         If InStr(eroscity$, "Phoenix") Or InStr(eroscity$, "Honolulu") Or InStr(eroscity$, "Regina") Then
            DSTadd = False
         Else
-      
+
           MarchDate = 14 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
           NovemberDate = 7 - (Fix(1 + stryrDST% * 5 / 4) Mod 7)
           YearLength% = DaysinYear(stryrDST%)
           strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
           enddaynum(0) = DayNumber(YearLength%, 11, NovemberDate)
-          
+
           If DSTPerpetualUSA Then
              strdaynum(0) = 1
              enddaynum(0) = YearLength%
              End If
-             
+
           MarchDate = 14 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
           NovemberDate = 7 - (Fix(1 + endyrDST% * 5 / 4) Mod 7)
           YearLength% = DaysinYear(endyrDST%)
           strdaynum(1) = DayNumber(YearLength%, 3, MarchDate)
           enddaynum(1) = DayNumber(YearLength%, 11, NovemberDate)
-          
+
           If DSTPerpetualUSA Then
              strdaynum(1) = 1
              enddaynum(1) = YearLength%
              End If
-             
+
           End If
-             
+
       Case "England", "UK", "France", "Germany", "Netherlands", "Belgium", _
            "Northern_Ireland", "Yugoslavia", "Slovakia", "Romania", "Hungary", _
            "Denmark", "Ireland", "Switzerland", "Finland", "Ukraine", "Norway", _
@@ -2256,12 +2256,12 @@ If DSTadd Then
           YearLength% = DaysinYear(stryrDST%)
           strdaynum(0) = DayNumber(YearLength%, 3, MarchDate)
           enddaynum(0) = DayNumber(YearLength%, 10, OctoberDate)
-          
+
           If DSTPerpetualIsrael Then
              strdaynum(0) = 1
              enddaynum(0) = YearLength%
              End If
-             
+
           MarchDate = (31 - (Fix(endyrDST% * 5 / 4) + 4) Mod 7) 'starts on Sunday = 2 days after EY
           OctoberDate = (31 - (Fix(endyrDST% * 5 / 4) + 1) Mod 7)
           YearLength% = DaysinYear(endyrDST%)
@@ -2273,13 +2273,13 @@ If DSTadd Then
              enddaynum(1) = YearLength%
              End If
 
-      
+
       Case Else 'not implemented yet for other countries
          DSTadd = False
-      
+
    End Select
    End If
-   
+
 '///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 On Error GoTo generrhand
@@ -3790,12 +3790,12 @@ GoTo 999
 
 If Abs(nsetflag%) = 1 Or (Abs(nsetflag%) = 3 And skiya = False) Then
    setflag% = 0
-   tmpsetflg% = 1
+   tmpsetflg% = 1 'sunrise
    stortim$(0, 1, 28) = sEmpty 'zero values of Feb. 29,30,31
    stortim$(0, 1, 29) = sEmpty
    stortim$(0, 1, 30) = sEmpty
 ElseIf Abs(nsetflag%) = 2 Or (Abs(nsetflag%) = 3 And skiya = True) Then
-   tmpsetflg% = 2
+   tmpsetflg% = 2 'sunset
    setflag% = -1 'use 12 hour clock for simplicity
    nadd% = 1
    stortim$(1, 1, 28) = sEmpty 'zero values of Feb. 29,30,31
