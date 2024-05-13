@@ -18,10 +18,75 @@ Begin VB.Form mapsearchfm
    MinButton       =   0   'False
    ScaleHeight     =   8055
    ScaleWidth      =   5400
+   Begin MSComCtl2.UpDown updwnSymm 
+      Height          =   285
+      Left            =   5041
+      TabIndex        =   71
+      Top             =   7680
+      Visible         =   0   'False
+      Width           =   255
+      _ExtentX        =   450
+      _ExtentY        =   503
+      _Version        =   393216
+      Value           =   5
+      AutoBuddy       =   -1  'True
+      BuddyControl    =   "txtSymm"
+      BuddyDispid     =   196609
+      OrigLeft        =   5160
+      OrigTop         =   7680
+      OrigRight       =   5415
+      OrigBottom      =   7935
+      Max             =   50
+      Min             =   1
+      SyncBuddy       =   -1  'True
+      Wrap            =   -1  'True
+      BuddyProperty   =   0
+      Enabled         =   -1  'True
+   End
+   Begin VB.TextBox txtSymm 
+      Alignment       =   2  'Center
+      BeginProperty Font 
+         Name            =   "Arial"
+         Size            =   6
+         Charset         =   177
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   285
+      Left            =   4850
+      TabIndex        =   70
+      Text            =   "15"
+      Top             =   7680
+      Visible         =   0   'False
+      Width           =   220
+   End
+   Begin VB.OptionButton optpeaks 
+      Caption         =   "peaks"
+      Height          =   255
+      Left            =   4100
+      TabIndex        =   69
+      ToolTipText     =   "output peak files"
+      Top             =   7850
+      Value           =   -1  'True
+      Visible         =   0   'False
+      Width           =   950
+   End
+   Begin VB.OptionButton optslopes 
+      Caption         =   "slopes"
+      Height          =   195
+      Left            =   4100
+      TabIndex        =   68
+      ToolTipText     =   "output slope files"
+      Top             =   7700
+      Visible         =   0   'False
+      Width           =   950
+   End
    Begin VB.CheckBox chkProfiles 
       Caption         =   "profiles"
       Height          =   255
-      Left            =   3840
+      Left            =   3200
       TabIndex        =   67
       ToolTipText     =   "Output profile files in x and y as a function of grid spacing"
       Top             =   7750
@@ -646,7 +711,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   20
          BuddyControl    =   "Text4"
-         BuddyDispid     =   196649
+         BuddyDispid     =   196652
          OrigLeft        =   3420
          OrigTop         =   300
          OrigRight       =   3660
@@ -668,7 +733,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   15
          BuddyControl    =   "Text3"
-         BuddyDispid     =   196651
+         BuddyDispid     =   196654
          OrigLeft        =   2100
          OrigTop         =   240
          OrigRight       =   2340
@@ -739,7 +804,7 @@ Begin VB.Form mapsearchfm
          Height          =   255
          Left            =   3960
          TabIndex        =   46
-         Top             =   1320
+         Top             =   1220
          Width           =   255
       End
       Begin VB.Label lblMosaic 
@@ -1797,7 +1862,18 @@ Private Sub Combo2_Click()
         Close #erosfil%
         Combo1.ListIndex = Combo1.ListCount - 1
         If world = True And txtStep.Text = sEmpty Then
-           txtStep.Text = "0.5"
+           Select Case DTMflag
+              Case -1, 0:
+                txtStep.Text = "0.5"
+              Case 1:
+                txtStep.Text = "0.030"
+              Case 2:
+                txtStep.Text = "0.090"
+              Case Else
+                txtStep.Text = "0.1"
+           End Select
+        ElseIf world = False And txtStep.Text = sEmpty Then
+           txtStep.Text = "0.025"
            End If
         End If
 
@@ -1834,7 +1910,7 @@ Private Sub Command1_Click()
    Dim Dist As Double
    Dim cosang As Double
    Dim numpnts&
-   
+      
    On Error GoTo Command1_Click_Error
 
    If txtStep.Text = sEmpty Or Val(txtStep.Text) = 0 Then
@@ -1867,21 +1943,51 @@ Private Sub Command1_Click()
    Screen.MousePointer = vbHourglass
    numheights = 0
    
+   'calculate earth radii in kilometers
+'   Dim MR As Double, PVR As Double, GR As Double
+'   MR = MeridianRad(Val(Text1.Text))
+'   PVR = PrimeVertRadius(Val(Text1.Text))
+'   GR = GeocentricRadius(Val(Text1.Text))
    del = Val(txtStep.Text)
    If del = 0 Then
-      If SearchType% = 0 Then
-         del = 0.05
-         txtStep.Text = "0.05"
-         End If
-      If SearchType% = 1 Then
-         del = 0.06
-         txtStep.Text = "0.2"
-         End If
+      If world Then
+           Select Case DTMflag
+              Case -1, 0:
+                txtStep.Text = "0.5"
+              Case 1, 3:
+                txtStep.Text = "0.030"
+              Case 2:
+                txtStep.Text = "0.090"
+              Case Else
+                txtStep.Text = "0.1"
+           End Select
+           del = Val(txtStep.Text)
+      Else
+        txtStep.Text = "0.025"
+        del = 0.025
+'        If SearchType% = 0 Then
+'           del = 0.05
+'           txtStep.Text = "0.05"
+'           End If
+'        If SearchType% = 1 Then
+'           del = 0.06
+'           txtStep.Text = "0.2"
+'           End If
+        End If
       End If
    If world = True Then
+        'source = https://www.opendem.info/arc2meters.html
+        '1 degree° = 60 arc minutes '
+        '1 Arc Minute ' = 60 arc seconds ''
+        '1 Arc Second '' at equatorial sea level = 1852m/60 = 30.86666667m
+        '
+        'Formlua: cos(degree latitude) * (1852/60)
+        'Example   0° latitude and 1 arc second:   cos(0) * 30.866666667 = 1 * 30.866666667 = 30.866666667
+        'Example 45° latitude and 1 arc second: cos(45) * 30.866666667 = 0.7071067811865476 * 30.866666667 = 21.82602931286047
+        'Example 60° latitude and 1 arc second: cos(60) * 30.866666667 = 0.5000000000000001 * 30.866666667 = 15.433333333500004
       If SearchType% = 0 Then 'simple search
         ydegkm = 180 / (pi * 6371.315)   'degrees per km latitude
-        xdegkm = 180 / (pi * 6371.315 * Cos(cd * Text1))   'degrees per km longitude
+        xdegkm = 180 / (pi * 6371.315 * Cos(cd * Val(Text1)))   'degrees per km longitude
         If (Text3 < 1) Then ydegkm = xdegkm 'for a small search radius, use the same step size for x and y
         y11 = Val(Text1) - Val(Text3) * ydegkm '- del * ydegkm 'move beyond the borders by del
         y12 = Val(Text1) + Val(Text3) * ydegkm '+ del * ydegkm
@@ -1900,7 +2006,7 @@ Private Sub Command1_Click()
         
       ElseIf SearchType% = 1 Then 'mosaic search
         ydegkm = 180 / (pi * 6371.315) 'degrees per km latitude
-        xdegkm = 180 / (pi * 6371.315 * Cos(cd * Text1)) 'degrees per km longitude
+        xdegkm = 180 / (pi * 6371.315 * Cos(cd * Val(Text1))) 'degrees per km longitude
         MosaicStepX = Val(txtMosaic.Text) * xdegkm
         MosaicStepy = Val(txtMosaic.Text) * ydegkm
         BegMosaicY = Val(Text1) - Val(Text3) * ydegkm  '- MosaicStepY
@@ -2010,6 +2116,7 @@ Private Sub Command1_Click()
            'for large distances.  To calculate that distance you
            'need to use the CrossSection option
            cosang = X1 * X2 + Y1 * Y2 + Z1 * Z2
+
            If Abs(cosang - 1) > 0.000000001 Then
               Dist = 6371.315 * DACOS(cosang)
            Else
@@ -2104,7 +2211,7 @@ sr300:
       Next kmxs
    Next kmys
    
-   If chkValidity.value = vbChecked Then
+   If chkValidity.value = vbChecked And numpnts& >= 0 Then
       'check for unique valid peak, e.g., highest point is actually on slope, or near highest point beyond mosaic border
       Dim StepSize As Double
       Dim NumStepsToCheck As Integer
@@ -2169,6 +2276,8 @@ sr300:
              'for large distances.  To calculate that distance you
              'need to use the CrossSection option
              cosang = X1 * X2 + Y1 * Y2 + Z1 * Z2
+'             RE = EllipRad(CDbl(searchhgts(0, numpnts&)))
+
              If Abs(cosang - 1) > 0.000000001 Then
                 Dist = 6371.315 * DACOS(cosang)
              Else
@@ -2206,10 +2315,10 @@ SkipEntry:
     'determine if peak is a true peak in x/y over a typical distance
     Dim SymmPeakArray() As Integer
     Dim numSymmPeaks&, numSlope%
-    numSlope% = 15 'number of grid steps to check for descending slope
+    numSlope% = Val(txtSymm.Text) 'number of grid steps to check for descending slope
     Dim SlopeOut() As Single
     Dim FileSlopeName$, slopenum%
-    ReDim SlopeOut(3, numSlope% - 1) As Single
+    ReDim SlopeOut(7, numSlope% - 1) As Single
     
     numSymmPeaks& = 0
     For i& = 0 To numpnts& - 1
@@ -2217,20 +2326,25 @@ SkipEntry:
         pkkmx = searchhgts(1, i&)
         pkhgt = searchhgts(2, i&)
         
+        Dim hgts1, hgts2, hgts3, hgts4, hgts5, hgts6, hgts7, hgts8
+        
         hgts1 = pkhgt
         hgts2 = pkhgt
         hgts3 = pkhgt
         hgts4 = pkhgt
+        hgts5 = pkhgt
+        hgts6 = pkhgt
+        hgts7 = pkhgt
+        hgts8 = pkhgt
         
         For j& = 1 To numSlope%
         
-          kmys = pkkmy
-          kmxs = pkkmx + j& * xdegkm
+          kmys1 = pkkmy
+          
+          kmxs1 = pkkmx + j& * xdegkm * multstep
           If world = True Then
-             Call worldheights(kmxs, kmys, hgts)
+             Call worldheights(kmxs1, kmys1, hgts)
           Else
-             kmxs1 = kmxs
-             kmys1 = kmys
              Call heights(kmxs1, kmys1, hgts)
              End If
              
@@ -2241,12 +2355,10 @@ SkipEntry:
              SlopeOut(0, j& - 1) = hgts / pkhgt
              End If
         
-          kmxs = pkkmx - j& * xdegkm
+          kmxs1 = pkkmx - j& * xdegkm * multstep
           If world = True Then
-             Call worldheights(kmxs, kmys, hgts)
+             Call worldheights(kmxs1, kmys1, hgts)
           Else
-             kmxs1 = kmxs
-             kmys1 = kmys
              Call heights(kmxs1, kmys1, hgts)
              End If
              
@@ -2257,13 +2369,12 @@ SkipEntry:
              SlopeOut(1, j& - 1) = hgts / pkhgt
              End If
         
-          kmxs = pkkmx
-          kmys = pkkmy + j& * ydegkm
+          kmxs1 = pkkmx
+          
+          kmys1 = pkkmy + j& * ydegkm * multstep
           If world = True Then
-             Call worldheights(kmxs, kmys, hgts)
+             Call worldheights(kmxs1, kmys1, hgts)
           Else
-             kmxs1 = kmxs
-             kmys1 = kmys
              Call heights(kmxs1, kmys1, hgts)
              End If
              
@@ -2274,12 +2385,10 @@ SkipEntry:
              SlopeOut(2, j& - 1) = hgts / pkhgt
              End If
         
-          kmys = pkkmy - j& * ydegkm
+          kmys1 = pkkmy - j& * ydegkm * multstep
           If world = True Then
-             Call worldheights(kmxs, kmys, hgts)
+             Call worldheights(kmxs1, kmys1, hgts)
           Else
-             kmxs1 = kmxs
-             kmys1 = kmys
              Call heights(kmxs1, kmys1, hgts)
              End If
              
@@ -2288,6 +2397,68 @@ SkipEntry:
           Else
              hgts4 = hgts
              SlopeOut(3, j& - 1) = hgts / pkhgt
+             End If
+             
+          'now in diagonal directions
+          
+          kmxs1 = pkkmx + j& * xdegkm * multstep
+          kmys1 = pkkmy + j& * ydegkm * multstep
+          If world = True Then
+             Call worldheights(kmxs1, kmys1, hgts)
+          Else
+             Call heights(kmxs1, kmys1, hgts)
+             End If
+             
+          If hgts > hgts5 Then
+             GoTo nextentry
+          Else
+             hgts5 = hgts
+             SlopeOut(4, j& - 1) = hgts / pkhgt
+             End If
+        
+          kmxs1 = pkkmx - j& * xdegkm * multstep
+          kmys1 = pkkmy - j& * ydegkm * multstep
+          If world = True Then
+             Call worldheights(kmxs1, kmys1, hgts)
+          Else
+             Call heights(kmxs1, kmys1, hgts)
+             End If
+             
+          If hgts > hgts6 Then
+             GoTo nextentry
+          Else
+             hgst6 = hgts
+             SlopeOut(5, j& - 1) = hgts / pkhgt
+             End If
+        
+          kmys1 = pkkmy + j& * ydegkm * multstep
+          kmxs1 = pkkmx - j& * xdegkm * multstep
+          If world = True Then
+             Call worldheights(kmxs1, kmys1, hgts)
+          Else
+             Call heights(kmxs1, kmys1, hgts)
+             End If
+             
+          If hgts > hgts7 Then
+             GoTo nextentry
+          Else
+             hgts7 = hgts
+             SlopeOut(6, j& - 1) = hgts / pkhgt
+             End If
+        
+          kmys1 = pkkmy - j& * ydegkm * multstep
+          kmxs1 = pkkmx + j& * xdegkm * multstep
+          If world = True Then
+             Call worldheights(kmxs1, kmys1, hgts)
+          Else
+             Call heights(kmxs1, kmys1, hgts)
+             End If
+             
+          If hgts > hgts8 Then
+             GoTo nextentry
+          Else
+             hgts8 = hgts
+             SlopeOut(7, j& - 1) = hgts / pkhgt
              End If
           
         Next j&
@@ -2299,7 +2470,13 @@ SkipEntry:
         Dim modeSlope%
         '= 0 for slope profiles starting at peak position
         '= 1 for peak profiles from each side of peak
-        modeSlope% = 1
+        If optslopes.value = True Then
+           modeSlope% = 0
+        ElseIf optpeaks.value = True Then
+           modeSlope% = 1
+           End If
+           
+        mult = del * 1000 'convert from km to degrees
         
         If modeSlope% = 0 Then
             'output slope files
@@ -2308,14 +2485,14 @@ SkipEntry:
             Open FileSlopeName$ For Output As #slopenum%
             Print #slopenum%, "0.0, 1.0"
             For j& = 1 To numSlope%
-                Print #slopenum%, Str$(j& * xdegkm) & "," & Format(Str$(SlopeOut(0, j& - 1)), "#0.0###")
+                Print #slopenum%, Str$(j& * mult) & "," & Format(Str$(SlopeOut(0, j& - 1)), "#0.0###")
             Next j&
             Close #slopenum%
             FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-xn.txt"
             slopenum% = FreeFile
             Open FileSlopeName$ For Output As #slopenum%
             For j& = numSlope% To 1 Step -1
-                Print #slopenum%, Str$(-j& * xdegkm) & "," & Format(Str$(SlopeOut(1, j& - 1)), "#0.0###")
+                Print #slopenum%, Str$(-j& * mult) & "," & Format(Str$(SlopeOut(1, j& - 1)), "#0.0###")
             Next j&
             Print #slopenum%, "0.0, 1.0"
             Close #slopenum%
@@ -2324,30 +2501,64 @@ SkipEntry:
             Open FileSlopeName$ For Output As #slopenum%
             Print #slopenum%, "0.0, 1.0"
             For j& = 1 To numSlope%
-                Print #slopenum%, Str$(j& * ydegkm) & "," & Format(Str$(SlopeOut(2, j& - 1)), "#0.0###")
+                Print #slopenum%, Str$(j& * mult) & "," & Format(Str$(SlopeOut(2, j& - 1)), "#0.0###")
             Next j&
             Close #slopenum%
             FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-yn.txt"
             slopenum% = FreeFile
             Open FileSlopeName$ For Output As #slopenum%
             For j& = numSlope% To 1 Step -1
-                Print #slopenum%, Str$(-j& * ydegkm) & "," & Format(Str$(SlopeOut(3, j& - 1)), "#0.0###")
+                Print #slopenum%, Str$(-j& * mult) & "," & Format(Str$(SlopeOut(3, j& - 1)), "#0.0###")
             Next j&
             Print #slopenum%, "0.0, 1.0"
             Close #slopenum%
+            'diagnoal files
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-dpp.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            Print #slopenum%, "0.0, 1.0"
+            For j& = 1 To numSlope%
+                Print #slopenum%, Str$(j& * mult) & "," & Format(Str$(SlopeOut(4, j& - 1)), "#0.0###")
+            Next j&
+            Close #slopenum%
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-dnn.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            For j& = numSlope% To 1 Step -1
+                Print #slopenum%, Str$(-j& * mult) & "," & Format(Str$(SlopeOut(5, j& - 1)), "#0.0###")
+            Next j&
+            Print #slopenum%, "0.0, 1.0"
+            Close #slopenum%
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-dnp.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            Print #slopenum%, "0.0, 1.0"
+            For j& = 1 To numSlope%
+                Print #slopenum%, Str$(j& * mult) & "," & Format(Str$(SlopeOut(6, j& - 1)), "#0.0###")
+            Next j&
+            Close #slopenum%
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-dpn.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            For j& = numSlope% To 1 Step -1
+                Print #slopenum%, Str$(-j& * mult) & "," & Format(Str$(SlopeOut(7, j& - 1)), "#0.0###")
+            Next j&
+            Print #slopenum%, "0.0, 1.0"
+            Close #slopenum%
+
             
         ElseIf modeSlope% = 1 Then
-            'output peak files
+            'output peak files, i.e., showing height values on both side of peak
             'first in x
             FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-xpk.txt"
             slopenum% = FreeFile
             Open FileSlopeName$ For Output As #slopenum%
             For j& = numSlope% To 1 Step -1
-                Print #slopenum%, Str$(-j& * xdegkm) & "," & Format(Str$(SlopeOut(1, j& - 1)), "#0.0###")
+                Print #slopenum%, Str$(-j& * mult) & "," & Format(Str$(SlopeOut(1, j& - 1)), "#0.0###")
             Next j&
             Print #slopenum%, "0.0, 1.0"
             For j& = 1 To numSlope%
-                Print #slopenum%, Str$(j& * xdegkm) & "," & Format(Str$(SlopeOut(0, j& - 1)), "#0.0###")
+                Print #slopenum%, Str$(j& * mult) & "," & Format(Str$(SlopeOut(0, j& - 1)), "#0.0###")
             Next j&
             Close #slopenum%
             'then in y
@@ -2355,13 +2566,38 @@ SkipEntry:
             slopenum% = FreeFile
             Open FileSlopeName$ For Output As #slopenum%
             For j& = numSlope% To 1 Step -1
-                Print #slopenum%, Str$(-j& * ydegkm) & "," & Format(Str$(SlopeOut(3, j& - 1)), "#0.0###")
+                Print #slopenum%, Str$(-j& * mult) & "," & Format(Str$(SlopeOut(3, j& - 1)), "#0.0###")
             Next j&
             Print #slopenum%, "0.0, 1.0"
             For j& = 1 To numSlope%
-                Print #slopenum%, Str$(j& * ydegkm) & "," & Format(Str$(SlopeOut(2, j& - 1)), "#0.0###")
+                Print #slopenum%, Str$(j& * mult) & "," & Format(Str$(SlopeOut(2, j& - 1)), "#0.0###")
             Next j&
             Close #slopenum%
+            'diagonal files
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-dpppk.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            For j& = numSlope% To 1 Step -1
+                Print #slopenum%, Str$(-j& * mult) & "," & Format(Str$(SlopeOut(5, j& - 1)), "#0.0###")
+            Next j&
+            Print #slopenum%, "0.0, 1.0"
+            For j& = 1 To numSlope%
+                Print #slopenum%, Str$(j& * mult) & "," & Format(Str$(SlopeOut(4, j& - 1)), "#0.0###")
+            Next j&
+            Close #slopenum%
+            'then in y
+            FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-dnnpk.txt"
+            slopenum% = FreeFile
+            Open FileSlopeName$ For Output As #slopenum%
+            For j& = numSlope% To 1 Step -1
+                Print #slopenum%, Str$(-j& * mult) & "," & Format(Str$(SlopeOut(6, j& - 1)), "#0.0###")
+            Next j&
+            Print #slopenum%, "0.0, 1.0"
+            For j& = 1 To numSlope%
+                Print #slopenum%, Str$(j& * mult) & "," & Format(Str$(SlopeOut(7, j& - 1)), "#0.0###")
+            Next j&
+            Close #slopenum%
+            
             End If
             
 nextentry:
@@ -2503,7 +2739,7 @@ sr650:
     'highlight first row
     sky2.SelectionMode = flexSelectionByRow
     sky2.HighLight = flexHighlightWithFocus
-    sky2.row = 1
+    If sky2.Rows > 1 Then sky2.row = 1
     
     'reclaim memory
     ReDim searchhgts(0, 0)
@@ -2590,7 +2826,16 @@ Private Sub Command11_Click()
          Call goto_click
          End If
       If txtStep.Text = sEmpty And world = True Then
-         txtStep.Text = "0.5"
+           Select Case DTMflag
+              Case -1, 0:
+                txtStep.Text = "0.5"
+              Case 1:
+                txtStep.Text = "0.030"
+              Case 2:
+                txtStep.Text = "0.090"
+              Case Else
+                txtStep.Text = "0.1"
+           End Select
          End If
 End Sub
 
@@ -2792,25 +3037,38 @@ Private Sub Command2_Click()
    Text1 = Maps.Text6
    Text2 = Maps.Text5
    If world = True Then
-      If Val(txtStep.Text) < 0.5 Then txtStep.Text = 0.5 'Str(90 / (pi * 6371.315))
+      If Val(txtStep.Text) = 0 Then '< 0.5 Then txtStep.Text = 0.5 'Str(90 / (pi * 6371.315))
+        Select Case DTMflag
+           Case -1, 0:
+             txtStep.Text = "0.5"
+           Case 1:
+             txtStep.Text = "0.030"
+           Case 2:
+             txtStep.Text = "0.090"
+           Case Else
+             txtStep.Text = "0.1"
+        End Select
+        End If
    Else
-      If Val(txtStep.Text) = 0 Then txtStep.Text = Str(0.0125)
+      If Val(txtStep.Text) = 0 Then txtStep.Text = "0.025" 'Str(0.0125)
       End If
 End Sub
 
 Private Sub dosort()
-   sky2.row = 1
-   If HeightSort Then 'sort descending by height
-      sky2.col = 3
-      sky2.ColSel = 3
-      sky2.RowSel = sky2.Rows - 1
-      sky2.Sort = 2 'generic descending
-   Else 'sort ascending by distance
-      sky2.col = 4
-      sky2.ColSel = 4
-      sky2.RowSel = sky2.Rows - 1
-      sky2.Sort = 1 'generic ascending
-      End If
+   If sky2.Rows > 1 Then
+    sky2.row = 1
+    If HeightSort Then 'sort descending by height
+       sky2.col = 3
+       sky2.ColSel = 3
+       sky2.RowSel = sky2.Rows - 1
+       sky2.Sort = 2 'generic descending
+    Else 'sort ascending by distance
+       sky2.col = 4
+       sky2.ColSel = 4
+       sky2.RowSel = sky2.Rows - 1
+       sky2.Sort = 1 'generic ascending
+       End If
+    End If
 End Sub
 
 Private Sub cmdClear_Click()
@@ -2889,9 +3147,19 @@ Private Sub Command7_Click()
             End If
         End If
    If world = True Then
-      txtStep.Text = 0.5 'Str(90 / (pi * 6371.315))
+      'txtStep.Text = 0.5 'Str(90 / (pi * 6371.315))
+        Select Case DTMflag
+           Case -1, 0:
+             txtStep.Text = "0.5"
+           Case 1:
+             txtStep.Text = "0.030"
+           Case 2:
+             txtStep.Text = "0.090"
+           Case Else
+             txtStep.Text = "0.1"
+        End Select
    Else
-      txtStep.Text = Str(0.0125)
+      txtStep.Text = 0.025 'Str(0.0125)
       End If
 End Sub
 
@@ -3086,6 +3354,10 @@ Private Sub optMosaic_Click()
    UpDown2.Enabled = False
    chkValidity.Visible = True
    chkProfiles.Visible = True
+   optslopes.Visible = True
+   optpeaks.Visible = True
+   txtSymm.Visible = True
+   updwnSymm.Visible = True
    If Trim$(txtMosaic) = sEmpty Then txtMosaic = "1"
    If Trim$(txtStep) = sEmpty Then txtStep = "0.1"
    SearchType% = 1
@@ -3108,6 +3380,10 @@ Private Sub optSimple_Click()
    txtMosaic.Enabled = False
    chkValidity.Visible = False
    chkProfiles.Visible = False
+   optslopes.Visible = False
+   optpeaks.Visible = False
+   txtSymm.Visible = False
+   updwnSymm.Visible = False
    chkProfiles.value = vbUnchecked
 End Sub
 

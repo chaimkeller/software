@@ -19,11 +19,11 @@ Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hwnd As Lo
 'Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
 'Declare Function GetWindow Lib "user32" (ByVal hwnd As Long, ByVal wCmd As Long) As Long
 'Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (ByVal hwnd As Long, ByVal lpString As String) As Long
-Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal X As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
+Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
 Declare Function EnumChildWindows Lib "user32" (ByVal hWndParent As Long, ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
 Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hwnd As Long, ByVal lpString As String, ByVal cch As Long) As Long
 Declare Function FindWindow Lib "user32" Alias "FindWindowA" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
-Declare Function MoveWindow Lib "user32" (ByVal hwnd As Long, ByVal X As Long, ByVal Y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
+Declare Function MoveWindow Lib "user32" (ByVal hwnd As Long, ByVal x As Long, ByVal y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
 Declare Function BringWindowToTop Lib "user32" (ByVal hwnd As Long) As Long
 Declare Sub keybd_event Lib "user32" (ByVal bVk As Byte, ByVal bScan As Byte, ByVal dwFlags As Long, ByVal dwExtraInfo As Long)
 Declare Sub mouse_event Lib "user32" (ByVal dwFlags As Long, ByVal dX As Long, ByVal dY As Long, ByVal cButtons As Long, ByVal dwExtraInfo As Long)
@@ -379,12 +379,12 @@ Public Sub heights(kmx, kmy, hgt2)
 
          If ggpscorrection = True Then 'apply conversion from Clark geoid to WGS84
             Dim N As Long
-            Dim E As Long
+            Dim e As Long
             Dim lat As Double
             Dim lon As Double
             N = kmy
-            E = kmx
-            Call ics2wgs84(N, E, lat, lon)
+            e = kmx
+            Call ics2wgs84(N, e, lat, lon)
             lgh = lon
             lth = lat
             'Call casgeo(kmx, kmy, lgh, lth)
@@ -494,7 +494,7 @@ Public Sub GEOUTM(L11, L22, Z%, G1, G2)
        Dim a As Double, A0 As Double, A1 As Double, A2 As Double
        Dim A3 As Double, A4 As Double, A5 As Double, l2 As Double
        Dim b As Double, B0 As Double, B1 As Double, c As Double
-       Dim C1 As Double, D As Double, E As Double, l1 As Double
+       Dim C1 As Double, D As Double, e As Double, l1 As Double
        Dim L0 As Double, p As Double, r As Double, s1 As Double
        Dim T1 As Double, T2 As Double, T3 As Double, X1 As Double
 
@@ -503,7 +503,7 @@ Public Sub GEOUTM(L11, L22, Z%, G1, G2)
       a = 6375836.645
       b = 6354369.181
       p = 0.00672267019391
-      E = 0.00676817037114
+      e = 0.00676817037114
       A0 = 1.00507398896
       B0 = 0.00508468605159
       c = 0.000010718137317
@@ -519,7 +519,7 @@ Public Sub GEOUTM(L11, L22, Z%, G1, G2)
       s1 = Sin(l1 / r)
       C1 = Cos(l1 / r)
       T1 = s1 / C1
-      T2 = E * C1 ^ 2
+      T2 = e * C1 ^ 2
       B1 = A0 * (l1 / r) - B0 / 2# * Sin(2# * l1 / r) + c / 4# * Sin(4# * l1 / r) - D / 6# * Sin(6# * l1 _
       / r) + E0 / 8# * Sin(8# * l1 / r) - f / 10# * Sin(10# * l1 / r)
       B1 = B1 * a * (1# - p)
@@ -606,7 +606,7 @@ End Sub
 Public Sub UTMGEO(G11, G22, Z11, L11, L22)
       Dim a As Double, A0 As Double, b As Double, B1 As Double, B2 As Double
       Dim B3 As Double, B4 As Double, B5 As Double, c As Double, C1 As Double
-      Dim D As Double, D1 As Double, E As Double, E0 As Double, EP As Double
+      Dim D As Double, D1 As Double, e As Double, E0 As Double, EP As Double
       Dim f As Double, G0 As Double, G1 As Double, G2 As Double, l1 As Double
       Dim l2 As Double, p As Double, r As Double, s1 As Double, T1 As Double
       Dim T2 As Double, T3 As Double, X1 As Double
@@ -617,7 +617,7 @@ Public Sub UTMGEO(G11, G22, Z11, L11, L22)
       a = 6375836.645
       b = 6354369.181
       p = 0.00672267019391
-      E = 0.00676817037114
+      e = 0.00676817037114
       A0 = 1.00507398896
       B0 = 0.00508468605159
       c = 0.000010718137317
@@ -633,7 +633,7 @@ Public Sub UTMGEO(G11, G22, Z11, L11, L22)
 5     s1 = Sin(l1)
       C1 = Cos(l1)
       T1 = s1 / C1
-      T2 = E * C1 ^ 2
+      T2 = e * C1 ^ 2
       B1 = A0 * (l1) - B0 / 2# * Sin(2# * l1) + c / 4# * Sin(4# * l1) - D / 6# * Sin(6# * l1) + _
            E0 / 8# * Sin(8# * l1) - f / 10# * Sin(10# * l1)
       B1 = B1 * a * (1# - p)
@@ -870,19 +870,19 @@ Public Sub worldheights(lg, lt, hgt)
          GoTo wh50
          End If
          
-      If IsraelDTMsource% = 1 And Dir(USADir$, vbDirectory) <> sEmpty Then 'Dir(srtmdtm & ":/USA/", vbDirectory) <> sEmpty Then
+      If (IsraelDTMsource% = 1 Or DTMflag% = 1) And Dir(USADir$, vbDirectory) <> sEmpty Then 'Dir(srtmdtm & ":/USA/", vbDirectory) <> sEmpty Then
          XDIM = 8.33333333333333E-04 / 3#
          YDIM = 8.33333333333333E-04 / 3#
          DEMfile$ = USADir$
          NROWS = 3601
          NCOLS = 3601
-      ElseIf IsraelDTMsource% = 2 And Dir(D3ASDir$, vbDirectory) <> sEmpty Then '(srtmdtm & ":/3AS/", vbDirectory) <> sEmpty Then
+      ElseIf (IsraelDTMsource% = 2 Or DTMflag% = 2) And Dir(D3ASDir$, vbDirectory) <> sEmpty Then '(srtmdtm & ":/3AS/", vbDirectory) <> sEmpty Then
          XDIM = 8.33333333333333E-04
          YDIM = 8.33333333333333E-04
          DEMfile$ = D3ASDir$
          NROWS = 1201
          NCOLS = 1201
-      ElseIf IsraelDTMsource% = 3 And Dir(BILDir$, vbDirectory) <> sEmpty Then '(alosdtm & ":/" & DirBil$, vbDirectory) <> sEmpty Then
+      ElseIf (IsraelDTMsource% = 3 Or DTMflag% = 3) And Dir(BILDir$, vbDirectory) <> sEmpty Then '(alosdtm & ":/" & DirBil$, vbDirectory) <> sEmpty Then
          XDIM = 8.33333333333333E-04 / 3#
          YDIM = 8.33333333333333E-04 / 3#
          DEMfile$ = BILDir$
@@ -910,9 +910,9 @@ wh50:
          lt1ch$ = Trim$(Str$(Abs(lt1)))
          End If
       lt1 = lt1 + 1 'the first record in SRTM tiles in the NW corner
-      If IsraelDTMsource% < 3 Then
+      If DTMflag% < 3 Then
          DEMfile$ = DEMfile$ & NSch$ & lt1ch$ & EWch$ & lg1ch$ & ".hgt"
-      ElseIf IsraelDTMsource% = 3 Then
+      ElseIf DTMflag% = 3 Then
          DEMfile$ = DEMfile$ & NSch$ & lt1ch$ & EWch$ & lg1ch$ & ".bil"
          End If
       If Dir(DEMfile$) = sEmpty Then
@@ -969,11 +969,11 @@ gtopo:
       lt1 = 90 - 50 * ny%
       lt1ch$ = LTrim$(RTrim$(Str$(Abs(lt1))))
       If lt1 > 0 Then
-         ns$ = "N"
+         Ns$ = "N"
       Else
-         ns$ = "S"
+         Ns$ = "S"
          End If
-      DEMfile0$ = EW$ + lg1ch$ + ns$ + lt1ch$
+      DEMfile0$ = EW$ + lg1ch$ + Ns$ + lt1ch$
       DEMfile1$ = worlddtm + ":\" + DEMfile0$ + "\" + DEMfile0$
       DEMfile$ = DEMfile1$ + ".dem"
       NROWS = 6000
@@ -994,10 +994,10 @@ gtopo:
       Else
          EW$ = "E"
          End If
-      ns$ = "S"
+      Ns$ = "S"
       lt1 = -60
       lt1ch$ = "60"
-      DEMfile0$ = EW$ + lg1ch$ + ns$ + lt1ch$
+      DEMfile0$ = EW$ + lg1ch$ + Ns$ + lt1ch$
       DEMfile1$ = worlddtm + ":\" + DEMfile0$ + "\" + DEMfile0$
       DEMfile$ = DEMfile1$ + ".dem"
       NROWS = 3600
@@ -1101,7 +1101,7 @@ Eroshgt:
 mer130:
         If IO% < 0 Or integ1& > elevmax% Then 'modular division failed use HEX swap
            A0$ = LTrim$(RTrim$(Hex$(IO%)))
-           aa$ = sEmpty
+           AA$ = sEmpty
            'swap the two bytes using their hex representation
            'e.g., ABCD --> CDAB, etc.
            If Len(A0$) = 4 Then
@@ -1112,23 +1112,23 @@ mer130:
               ElseIf Mid$(A2$, 3, 1) = "0" And Mid$(A2$, 3, 2) = "0" Then
                  A2$ = sEmpty
                  End If
-              aa$ = A2$ + A1$
+              AA$ = A2$ + A1$
            ElseIf Len(A0$) = 3 Then
               A1$ = "0" + Mid$(A0$, 1, 1)
               A2$ = Mid$(A0$, 2, 2)
               If Mid$(A0$, 2, 1) = "0" Then A2$ = Mid$(A0$, 3, 1)
-              aa$ = A2$ + A1$
+              AA$ = A2$ + A1$
            ElseIf Len(A0$) = 2 Or Len(A0$) = 1 Then
               A1$ = "00"
               A2$ = A0$
-              aa$ = A2$ + A1$
+              AA$ = A2$ + A1$
               End If
         
             'convert swaped hexadecimel to an integer value
-            leng% = Len(LTrim$(RTrim$(aa$)))
+            leng% = Len(LTrim$(RTrim$(AA$)))
             integ1& = 0
             For j% = leng% To 1 Step -1
-                v$ = Mid$(LTrim$(RTrim$(aa$)), j%, 1)
+                v$ = Mid$(LTrim$(RTrim$(AA$)), j%, 1)
                 If InStr("ABCDEF", v$) <> 0 Then
                    If v$ = "A" Then
                       NO& = 10
@@ -1201,24 +1201,24 @@ Public Function DACOS(XX As Double) As Double
       DACOS = -Atn(XX / Sqr(-XX * XX + 1)) + pi / 2
       End If
 End Function
-Public Function atan2(ByVal Y As Double, ByVal X As Double) _
+Public Function atan2(ByVal y As Double, ByVal x As Double) _
     As Double
     'keeps angle within -180 to 180
   Dim theta As Double
 
-  If (Abs(X) < 0.0000001) Then
-    If (Abs(Y) < 0.0000001) Then
+  If (Abs(x) < 0.0000001) Then
+    If (Abs(y) < 0.0000001) Then
       theta = 0#
-    ElseIf (Y > 0#) Then
+    ElseIf (y > 0#) Then
       theta = 1.5707963267949
     Else
       theta = -1.5707963267949
     End If
   Else
-    theta = Atn(Y / X)
+    theta = Atn(y / x)
   
-    If (X < 0) Then
-      If (Y >= 0#) Then
+    If (x < 0) Then
+      If (y >= 0#) Then
         theta = 3.14159265358979 + theta
       Else
         theta = theta - 3.14159265358979
@@ -1229,23 +1229,23 @@ Public Function atan2(ByVal Y As Double, ByVal X As Double) _
   atan2 = theta
 
 End Function
-Public Function datan2(ByVal Y As Double, ByVal X As Double) _
+Public Function datan2(ByVal y As Double, ByVal x As Double) _
     As Double
   Dim theta As Double
 
-  If (Abs(X) < 0.0000001) Then
-    If (Abs(Y) < 0.0000001) Then
+  If (Abs(x) < 0.0000001) Then
+    If (Abs(y) < 0.0000001) Then
       theta = 0#
-    ElseIf (Y > 0#) Then
+    ElseIf (y > 0#) Then
       theta = 1.5707963267949
     Else
       theta = -1.5707963267949
     End If
   Else
-    theta = Atn(Y / X)
+    theta = Atn(y / x)
   
-    If (X < 0) Then
-      If (Y >= 0#) Then
+    If (x < 0) Then
+      If (y >= 0#) Then
         theta = 3.14159265358979 + theta
       Else
         theta = theta - 3.14159265358979
@@ -1348,9 +1348,9 @@ Public Sub dipcoord()
      Y2 = Cos(lt2 * cd) * Sin(lg2 * cd)
      Z1 = Sin(lt1 * cd)
      Z2 = Sin(lt2 * cd)
-     Re = 6371315#
-     re1 = (hgt1 + Re)
-     re2 = (hgt2 + Re)
+     RE = 6371315#
+     re1 = (hgt1 + RE)
+     re2 = (hgt2 + RE)
      X1 = re1 * X1
      Y1 = re1 * Y1
      Z1 = re1 * Z1
@@ -1378,7 +1378,7 @@ Public Sub dipcoord()
      z1s = Cos(lt1 * cd)
      azisin = (x1s * x1d + y1s * y1d + z1s * z1d)
      azi = Atn(azisin / azicos)
-     If world = True Then distkm = Angle * Re * 0.001
+     If world = True Then distkm = Angle * RE * 0.001
      Maps.Text1.Text = LTrim$(Format(distkm, "###,##0.000"))
      Maps.Text4.Text = LTrim$(Format(viewang / cd, "##0.000"))
      Maps.Text2.Text = LTrim$(Format(azi / cd, "##0.000"))
@@ -5022,11 +5022,11 @@ findtile:
       lt1 = 90 - 50 * ny%
       lt1ch$ = LTrim$(RTrim$(Str$(Abs(lt1))))
       If lt1 > 0 Then
-         ns$ = "N"
+         Ns$ = "N"
       Else
-         ns$ = "S"
+         Ns$ = "S"
          End If
-      filt1$ = EW$ + lg1ch$ + ns$ + lt1ch$
+      filt1$ = EW$ + lg1ch$ + Ns$ + lt1ch$
       NROWS = 6000
       NCOLS = 4800
    Else 'Antartic - Cd #5
@@ -5044,10 +5044,10 @@ findtile:
       Else
          EW$ = "E"
          End If
-      ns$ = "S"
+      Ns$ = "S"
       lt1 = -60
       lt1ch$ = "60"
-      filt1$ = EW$ + lg1ch$ + ns$ + lt1ch$
+      filt1$ = EW$ + lg1ch$ + Ns$ + lt1ch$
       NROWS = 3600
       NCOLS = 7200
       End If
@@ -5069,13 +5069,13 @@ findtile:
       lt2 = 90 - 50 * ny%
       lt1ch$ = LTrim$(RTrim$(Str$(Abs(lt2))))
       If lt2 > 0 Then
-         ns$ = "N"
+         Ns$ = "N"
       Else
-         ns$ = "S"
+         Ns$ = "S"
          End If
       NROWS = 6000
       NCOLS = 4800
-      filt$ = EW$ + lg1ch$ + ns$ + lt1ch$
+      filt$ = EW$ + lg1ch$ + Ns$ + lt1ch$
    Else 'Antartic - Cd #5
       nx% = Fix((endlog + 180) / 60)
       lg2 = -180 + nx% * 60
@@ -5091,10 +5091,10 @@ findtile:
       Else
          EW$ = "E"
          End If
-      ns$ = "S"
+      Ns$ = "S"
       lt2 = -60
       lt1ch$ = "60"
-      filt$ = EW$ + lg1ch$ + ns$ + lt1ch$
+      filt$ = EW$ + lg1ch$ + Ns$ + lt1ch$
       NROWS = 3600
       NCOLS = 7200
       End If
@@ -5130,13 +5130,13 @@ findtiles:
       lt1 = 90 - 50 * ny%
       lt1ch$ = LTrim$(RTrim$(Str$(Abs(lt1))))
       If lt1 > 0 Then
-         ns$ = "N"
+         Ns$ = "N"
       Else
-         ns$ = "S"
+         Ns$ = "S"
          End If
       NROWS = 6000
       NCOLS = 4800
-      filt1$ = EW$ + lg1ch$ + ns$ + lt1ch$
+      filt1$ = EW$ + lg1ch$ + Ns$ + lt1ch$
    Else 'Antartic - Cd #5
       nx% = Fix((kmx + 180) / 60)
       lg1 = -180 + nx% * 60
@@ -5152,10 +5152,10 @@ findtiles:
       Else
          EW$ = "E"
          End If
-      ns$ = "S"
+      Ns$ = "S"
       lt1 = -60
       lt1ch$ = "60"
-      filt1$ = EW$ + lg1ch$ + ns$ + lt1ch$
+      filt1$ = EW$ + lg1ch$ + Ns$ + lt1ch$
       NROWS = 3600
       NCOLS = 7200
       End If
@@ -5253,11 +5253,11 @@ findCD:
       lt1 = 90 - 50 * ny%
       lt1ch$ = LTrim$(RTrim$(Str$(Abs(lt1))))
       If lt1 > 0 Then
-         ns$ = "N"
+         Ns$ = "N"
       Else
-         ns$ = "S"
+         Ns$ = "S"
          End If
-      DEMfile0$ = EW$ + lg1ch$ + ns$ + lt1ch$
+      DEMfile0$ = EW$ + lg1ch$ + Ns$ + lt1ch$
       DEMfile1$ = worlddtm + ":\" + DEMfile0$ + "\" + DEMfile0$
       DEMfile$ = DEMfile1$ + ".dem"
       NROWS = 6000
@@ -5278,10 +5278,10 @@ findCD:
       Else
          EW$ = "E"
          End If
-      ns$ = "S"
+      Ns$ = "S"
       lt1 = -60
       lt1ch$ = "60"
-      DEMfile0$ = EW$ + lg1ch$ + ns$ + lt1ch$
+      DEMfile0$ = EW$ + lg1ch$ + Ns$ + lt1ch$
       DEMfile1$ = worlddtm + ":\" + DEMfile0$ + "\" + DEMfile0$
       DEMfile$ = DEMfile1$ + ".dem"
       numCD% = 5
@@ -5944,9 +5944,9 @@ viewan:
      Y2v = Cos(lt2v * cd) * Sin(lg2v * cd)
      Z1v = Sin(lt1 * cd)
      Z2v = Sin(lt2v * cd)
-     Re = 6371315#
-     re1 = (hgt1 + Re)
-     re2 = (hgt2 + Re)
+     RE = 6371315#
+     re1 = (hgt1 + RE)
+     re2 = (hgt2 + RE)
      X1v = re1 * X1v
      Y1v = re1 * Y1v
      Z1v = re1 * Z1v
@@ -5992,13 +5992,13 @@ mapCrossSections_Error:
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure mapCrossSections of Module MapModule"
 '    Resume
 End Sub
-Function MinArray(X() As Double, NumArray As Integer) As Integer
+Function MinArray(x() As Double, NumArray As Integer) As Integer
    'returns smallest member of array x() having NumArray members
    MinArray = 1
-   xmin = X(1)
+   xmin = x(1)
    For i% = 2 To NumArray
-      If X(i%) < xmin Then
-         xmin = X(i%)
+      If x(i%) < xmin Then
+         xmin = x(i%)
          MinArray = i%
          End If
    Next i%
@@ -6276,10 +6276,10 @@ f50:  If Mid$(doc1$, 2, 8) <> uniqroot$ Then
          If Not TempSet Then
          If ggpscorrection = True Then 'apply conversion from Clark geoid to WGS84
             Dim N As Long
-            Dim E As Long
+            Dim e As Long
             N = kmy * 1000 + 1000000
-            E = kmx * 1000
-            Call ics2wgs84(N, E, lat, lon)
+            e = kmx * 1000
+            Call ics2wgs84(N, e, lat, lon)
          Else
             Call casgeo(kmx * 1000, kmy * 1000 + 1000000, lon, lat)
             lon = -lon
@@ -6608,8 +6608,8 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
   
   If Mode% = 1 Then 'convert (dragCoordX,dragCoordY) -> (kmxDrag,kmyDrag)
 
-      X = dragCoordX
-      Y = dragCoordY
+      x = dragCoordX
+      y = dragCoordY
       If world = True Then GoTo m10
       If map400 = True Then
          If mag > 1 Then
@@ -6617,8 +6617,8 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
             kmycc = kmyc
             xo = kmxcc - (km400x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km400y / mag) * (maphi2 - mapydif) * 0.5
-            kmxDrag0 = Fix(xo + X * km400x / mag) 'mapdif accounts for size of frame around picture
-            kmyDrag0 = Fix(yo - Y * km400y / mag)
+            kmxDrag0 = Fix(xo + x * km400x / mag) 'mapdif accounts for size of frame around picture
+            kmyDrag0 = Fix(yo - y * km400y / mag)
          Else
             kmxcc = kmxc + (km400x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km400y) * (maphi - maphi2 + mapydif) / 2
@@ -6626,8 +6626,8 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
             'so topleft corner=origin corresponds to:
             xo = kmxcc - km400x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km400y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            kmxDrag0 = Fix(xo + X * km400x)   'mapdif accounts for size of frame around picture
-            kmyDrag0 = Fix(yo - Y * km400y)
+            kmxDrag0 = Fix(xo + x * km400x)   'mapdif accounts for size of frame around picture
+            kmyDrag0 = Fix(yo - y * km400y)
             End If
        ElseIf map50 = True Then
          If mag > 1 Then
@@ -6635,15 +6635,15 @@ Sub ScreenToGeo(dragCoordX, dragCoordY, kmxDrag, kmyDrag, Mode%, ier%)
             kmycc = kmyc
             xo = kmxcc - (km50x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km50y / mag) * (maphi2 - mapydif) * 0.5
-            kmxDrag0 = Fix(xo + X * km50x / mag) 'mapdif accounts for size of frame around picture
-            kmyDrag0 = Fix(yo - Y * km50y / mag)
+            kmxDrag0 = Fix(xo + x * km50x / mag) 'mapdif accounts for size of frame around picture
+            kmyDrag0 = Fix(yo - y * km50y / mag)
          Else
             kmxcc = kmxc + (km50x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km50y) * (maphi - maphi2 + mapydif) / 2
             xo = kmxcc - km50x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km50y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            kmxDrag0 = Fix(xo + X * km50x)
-            kmyDrag0 = Fix(yo - Y * km50y)
+            kmxDrag0 = Fix(xo + x * km50x)
+            kmyDrag0 = Fix(yo - y * km50y)
             End If
          End If
 m10:     Select Case coordmode%
@@ -6657,15 +6657,15 @@ m10:     Select Case coordmode%
                    latc = lat '+ fudy / mag
                    xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                    yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
-                   kmxDrag = xo + X * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
-                   kmyDrag = yo - Y * (deglat / (sizewy * mag))
+                   kmxDrag = xo + x * (deglog / (sizewx * mag))  'mapdif accounts for size of frame around picture
+                   kmyDrag = yo - y * (deglat / (sizewy * mag))
                  Else
                    lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx
                    latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy
                    xo = lonc - deglog / 2
                    yo = latc + deglat / 2
-                   kmxDrag = xo + X * (deglog / sizewx)
-                   kmyDrag = yo - Y * (deglat / sizewy)
+                   kmxDrag = xo + x * (deglog / sizewx)
+                   kmyDrag = yo - y * (deglat / sizewy)
                    If sizewx = Screen.TwipsPerPixelX * 10201 And sizewy = Screen.TwipsPerPixelY * 5489 Then
                        'fudge factor for inaccuracy of linear degree approx for large size map
                        kmxDrag = kmxDrag - 0.006906
@@ -6692,8 +6692,8 @@ m10:     Select Case coordmode%
             kmycc = kmyc
             xo = kmxcc - (km400x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km400y / mag) * (maphi2 - mapydif) * 0.5
-            X = mag * (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
-            Y = mag * (yo - kmyDrag0) / km400y
+            x = mag * (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
+            y = mag * (yo - kmyDrag0) / km400y
          Else
             kmxcc = kmxc + (km400x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km400y) * (maphi - maphi2 + mapydif) / 2
@@ -6701,8 +6701,8 @@ m10:     Select Case coordmode%
             'so topleft corner=origin corresponds to:
             xo = kmxcc - km400x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km400y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            X = (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
-            Y = (yo - kmyDrag0) / km400y
+            x = (kmxDrag0 - xo) / km400x 'mapdif accounts for size of frame around picture
+            y = (yo - kmyDrag0) / km400y
             End If
        ElseIf map50 = True Then
          If mag > 1 Then
@@ -6710,21 +6710,21 @@ m10:     Select Case coordmode%
             kmycc = kmyc
             xo = kmxcc - (km50x / mag) * (mapwi2 - mapxdif) * 0.5
             yo = kmycc + (km50y / mag) * (maphi2 - mapydif) * 0.5
-            X = mag * (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
-            Y = mag * (yo - kmyDrag0) / km50y
+            x = mag * (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
+            y = mag * (yo - kmyDrag0) / km50y
          Else
             kmxcc = kmxc + (km50x) * (mapwi - mapwi2 + mapxdif) / 2
             kmycc = kmyc - (km50y) * (maphi - maphi2 + mapydif) / 2
             xo = kmxcc - km50x * sizex / 2  'mapPictureform.mapPicture.Width / 2
             yo = kmycc + km50y * sizey / 2 'mapPictureform.mapPicture.Height / 2
-            X = (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
-            Y = (yo - kmyDrag0) / km50y
+            x = (kmxDrag0 - xo) / km50x 'mapdif accounts for size of frame around picture
+            y = (yo - kmyDrag0) / km50y
             End If
          End If
 m100:     Select Case coordmode%
            Case 1 'ITM
-              dragCoordX = X
-              dragCoordY = Y
+              dragCoordX = x
+              dragCoordY = y
            Case 2 'GEO
               If world = True Then
                  If mag > 1 Then
@@ -6732,23 +6732,23 @@ m100:     Select Case coordmode%
                    latc = lat '+ fudy / mag
                    xo = lonc - (deglog / (sizewx * mag)) * (mapwi2 - mapxdif) * 0.5
                    yo = latc + (deglat / (sizewy * mag)) * (maphi2 - mapydif) * 0.5
-                   X = (kmxDrag - xo) * (sizewx * mag / deglog)
-                   Y = (yo - kmyDrag) * (sizewy * mag / deglat)
+                   x = (kmxDrag - xo) * (sizewx * mag / deglog)
+                   y = (yo - kmyDrag) * (sizewy * mag / deglat)
                  Else
                    lonc = lon + (deglog / sizewx) * (mapwi - mapwi2 + mapxdif) / 2 + fudx
                    latc = lat - (deglat / sizewy) * (maphi - maphi2 + mapydif) / 2 + fudy
                    
                    xo = lonc - deglog / 2
                    yo = latc + deglat / 2
-                   X = (kmxDrag - xo) * (sizewx / deglog)
-                   Y = (yo - kmyDrag) * (sizewy / deglat)
+                   x = (kmxDrag - xo) * (sizewx / deglog)
+                   y = (yo - kmyDrag) * (sizewy / deglat)
                    End If
-                dragCoordX = X
-                dragCoordY = Y
+                dragCoordX = x
+                dragCoordY = y
                 End If
              Case Else 'option not supported yet
-                dragCoordX = X
-                dragCoordY = Y
+                dragCoordX = x
+                dragCoordY = y
           End Select
   
   End If
@@ -6761,7 +6761,7 @@ End Sub
 
 
 
-Sub FindSearchResult(X As Single, Y As Single)
+Sub FindSearchResult(x As Single, y As Single)
    'finds nearest search result to right clicked point
    'and moves the position of the Search Result DataGrid to that point
    
@@ -6770,7 +6770,7 @@ Sub FindSearchResult(X As Single, Y As Single)
    On Error GoTo errhand
    
    'convert screen coordinates to kmx,kmy, or to lon,lat
-   Call ScreenToGeo(X, Y, GeoX0, GeoY0, 1, ier%)
+   Call ScreenToGeo(x, y, GeoX0, GeoY0, 1, ier%)
    If ier% < 0 Then Exit Sub
    
    'now search through the DataGrid for the nearest point
@@ -6841,14 +6841,14 @@ End Sub
 Public Sub sCenterForm(tmpF As Form)
 'centers a form in the middle of the program's main form
 
-Dim X As Integer, Y As Integer
+Dim x As Integer, y As Integer
 
 On Error GoTo sCenterForm_Error
 
-    X = Maps.Left + 0.5 * Maps.Width - 0.5 * tmpF.Width
-    Y = Maps.Top + 0.5 * Maps.Height - 0.5 * tmpF.Height
+    x = Maps.Left + 0.5 * Maps.Width - 0.5 * tmpF.Width
+    y = Maps.Top + 0.5 * Maps.Height - 0.5 * tmpF.Height
     
-    tmpF.Move X, Y
+    tmpF.Move x, y
     
     On Error GoTo 0
     Exit Sub
@@ -6953,11 +6953,11 @@ T50:
        FileIn% = FreeFile
        Open FileNameBil For Binary As #FileIn%
    
-        Y = lat
-        X = lon
+        y = lat
+        x = lon
         
-        IKMY& = CLng((ULYMAP - Y) / YDIM) + 1
-        IKMX& = CLng((X - ULXMAP) / XDIM) + 1
+        IKMY& = CLng((ULYMAP - y) / YDIM) + 1
+        IKMX& = CLng((x - ULXMAP) / XDIM) + 1
         tncols = NCOLS
         numrec& = (IKMY& - 1) * tncols + IKMX&
         Get #FileIn%, (numrec& - 1) * 2 + 1, IO%
@@ -7013,4 +7013,72 @@ Public Function MaxHalfAzimuthRange(latitude) As Integer
        MaxHalfAzimuthRange = MaxHalfAzimuthRange + 20
        End If
 
+End Function
+'---------------------------------------------------------------------------------------
+' Procedure : MeridianRAd
+' Author    : chaim
+' Date      : 4/15/2024
+' Purpose   : Calculate meridian earth raidus (km) for major axis a (km), flattening f, latitude phi (degrees)
+'           : This is earth radius to use for North-South measurements
+'           : f = (a - b)/a ES 4.22-1
+' Reference : https://en.wikipedia.org/wiki/Earth_radius
+'---------------------------------------------------------------------------------------
+'
+Function MeridianRad(phi As Double, Optional a As Double, Optional f As Double) As Double
+   Dim e As Double 'eccentricity
+   'if a,f not imputed use WGS84 values (ES p. 220)
+   If a = 0 Then
+      a = 6378.137
+      End If
+   If f = 0 Then
+      f = 1 / 298.257223563
+      End If
+   e = Sqr(2# * f - f * f) 'ES equn 4.22-8
+   MeridianRad = a * (1 - e * e) / ((1 - (e * Sin(phi * cd)) ^ 2) ^ 1.5) 'ES p. 210
+End Function
+'---------------------------------------------------------------------------------------
+' Procedure : PrimeVertRadius
+' Author    : chaim
+' Date      : 4/15/2024
+' Purpose   : Calculate Prime Vertical Radius (km) for major axis a (km), flattening f, latitude phi (degrees)
+'           : This is the radius to use for East-West measurements
+' Reference : https://en.wikipedia.org/wiki/Earth_radius
+'---------------------------------------------------------------------------------------
+'
+Function PrimeVertRadius(phi As Double, Optional a As Double, Optional f As Double) As Double
+   'if a,f not imputed use WGS84 values (ES p. 220)
+   If a = 0 Then
+      a = 6378.137
+      End If
+   If f = 0 Then
+      f = 1 / 298.257223563
+      End If
+   e = Sqr(2# * f - f * f) 'ES equn 4.22-8
+   PrimeVertRadius = a * (1 - e * e) / (Sqr(1 - (e * Sin(phi * cd)) ^ 2))
+End Function
+'---------------------------------------------------------------------------------------
+' Procedure : GeocentricRadius
+' Author    : chaim
+' Date      : 4/15/2024
+' Purpose   : Calculate geocentric radius (km) for major axis a (km), flattening f, latitude phi (degrees)
+'           : This is radius from center of earth to any point on the earth
+' Reference : https://en.wikipedia.org/wiki/Earth_radius
+'if a,f not imputed use WGS84 values (ES p. 220)
+'
+Function GeocentricRadius(phi As Double, Optional a As Double, Optional f As Double) As Double
+   If a = 0 Then
+      a = 6378.137
+      End If
+   If f = 0 Then
+      f = 1 / 298.257223563
+      End If
+   Dim b As Double 'polar radius
+   b = a * (1 - f)
+   Dim AA As Double, BB As Double
+   AA = Cos(phi * cd)
+   BB = Sin(phi * cd)
+   Dim DD As Double, EE As Double
+   DD = (a * a * AA) ^ 2 + (b * b * BB) ^ 2
+   EE = (a * AA) ^ 2 + (b * BB) ^ 2
+   GeocentricRadius = Sqr(DD / EE)
 End Function

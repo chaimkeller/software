@@ -27,15 +27,14 @@ Begin VB.Form mapdiskDTMfm
       _ExtentY        =   5106
       _Version        =   393216
       Tabs            =   8
+      Tab             =   2
       TabsPerRow      =   4
       TabHeight       =   520
       TabCaption(0)   =   "Israel DTM"
       TabPicture(0)   =   "mapdiskDTMfm.frx":0442
-      Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "Frame1(1)"
-      Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).Control(1)=   "frmSource"
-      Tab(0).Control(1).Enabled=   0   'False
+      Tab(0).ControlEnabled=   0   'False
+      Tab(0).Control(0)=   "frmSource"
+      Tab(0).Control(1)=   "Frame1(1)"
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "1 km DEM"
       TabPicture(1)   =   "mapdiskDTMfm.frx":045E
@@ -44,11 +43,15 @@ Begin VB.Form mapdiskDTMfm
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "30 m DEM"
       TabPicture(2)   =   "mapdiskDTMfm.frx":047A
-      Tab(2).ControlEnabled=   0   'False
+      Tab(2).ControlEnabled=   -1  'True
       Tab(2).Control(0)=   "Frame7(1)"
+      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).Control(1)=   "frmUSA"
+      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).Control(2)=   "frmALOS"
+      Tab(2).Control(2).Enabled=   0   'False
       Tab(2).Control(3)=   "frmALOSfolder"
+      Tab(2).Control(3).Enabled=   0   'False
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "TerraExplorer"
       TabPicture(3)   =   "mapdiskDTMfm.frx":0496
@@ -124,7 +127,7 @@ Begin VB.Form mapdiskDTMfm
          EndProperty
          ForeColor       =   &H00800000&
          Height          =   975
-         Left            =   -70320
+         Left            =   4680
          TabIndex        =   56
          Top             =   1800
          Width           =   1575
@@ -160,7 +163,7 @@ Begin VB.Form mapdiskDTMfm
          EndProperty
          ForeColor       =   &H00C00000&
          Height          =   975
-         Left            =   -74760
+         Left            =   240
          TabIndex        =   55
          Top             =   1800
          Width           =   4335
@@ -210,7 +213,7 @@ Begin VB.Form mapdiskDTMfm
          EndProperty
          ForeColor       =   &H00800000&
          Height          =   1095
-         Left            =   -70320
+         Left            =   4680
          TabIndex        =   51
          Top             =   720
          Width           =   1455
@@ -246,7 +249,7 @@ Begin VB.Form mapdiskDTMfm
          EndProperty
          ForeColor       =   &H00C00000&
          Height          =   615
-         Left            =   240
+         Left            =   -74760
          TabIndex        =   48
          Top             =   2040
          Width           =   5775
@@ -477,7 +480,7 @@ Begin VB.Form mapdiskDTMfm
             _Version        =   393216
             Value           =   1
             BuddyControl    =   "Text2(1)"
-            BuddyDispid     =   196626
+            BuddyDispid     =   196638
             BuddyIndex      =   1
             OrigLeft        =   3600
             OrigTop         =   360
@@ -500,7 +503,7 @@ Begin VB.Form mapdiskDTMfm
             _Version        =   393216
             Value           =   1
             BuddyControl    =   "Text1(1)"
-            BuddyDispid     =   196625
+            BuddyDispid     =   196637
             BuddyIndex      =   1
             OrigLeft        =   1740
             OrigTop         =   360
@@ -712,7 +715,7 @@ Begin VB.Form mapdiskDTMfm
          ForeColor       =   &H00C00000&
          Height          =   1095
          Index           =   1
-         Left            =   -74760
+         Left            =   240
          TabIndex        =   15
          Top             =   720
          Width           =   4335
@@ -882,7 +885,7 @@ Begin VB.Form mapdiskDTMfm
          ForeColor       =   &H00C00000&
          Height          =   1095
          Index           =   1
-         Left            =   960
+         Left            =   -74040
          TabIndex        =   3
          Top             =   840
          Width           =   4335
