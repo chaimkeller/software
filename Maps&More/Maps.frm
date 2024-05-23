@@ -1586,7 +1586,7 @@ mapinfobegin:
                         filsav% = FreeFile
                         Open drivjk_c$ + "skyworld.sav" For Append As #filsav%
                        'find the height at the center coordinates
-                        Call worldheights(-MapInfo.loncenter, MapInfo.latcenter, newhgt)
+                        Call worldheights(MapInfo.loncenter, MapInfo.latcenter, newhgt) '///5/18/24 - sign was reversed, don't know why
                         If newhgt = -9999 Then newhgt = 0
                         Write #filsav%, MapInfo.name, CSng(MapInfo.loncenter), CSng(MapInfo.latcenter), CSng(newhgt)
                         Close #filsav%
@@ -1617,9 +1617,9 @@ mapinfobegin:
    'first find the radius of the ellipsoid of rotation, Re, at that latitude
    Ra = 6378.136
    Rb = 6356.751
-   Re = Sqr(1# / ((Cos(MapInfo.latcenter * cd) / Ra) ^ 2 + (Sin(MapInfo.latcenter * cd) / Rb) ^ 2))
-   deglog = 1.5 * (CDbl(MapInfo.xsize) / CDbl(MapInfo.pixkm)) / (Re * cd * Cos(MapInfo.latcenter * cd)) 'picture's x dimension in degrees
-   deglat = 1.5 * (CDbl(MapInfo.ysize) / CDbl(MapInfo.pixkm)) / (Re * cd) 'picture's y dimension in degrees
+   RE = Sqr(1# / ((Cos(MapInfo.latcenter * cd) / Ra) ^ 2 + (Sin(MapInfo.latcenter * cd) / Rb) ^ 2))
+   deglog = 1.5 * (CDbl(MapInfo.xsize) / CDbl(MapInfo.pixkm)) / (RE * cd * Cos(MapInfo.latcenter * cd)) 'picture's x dimension in degrees
+   deglat = 1.5 * (CDbl(MapInfo.ysize) / CDbl(MapInfo.pixkm)) / (RE * cd) 'picture's y dimension in degrees
    
    lon = Maps.Text5.Text
    lat = Maps.Text6.Text
@@ -1709,7 +1709,7 @@ mapinfobegin:
    '   mapPictureform.Height = Screen.Height - 1900
    '   End If
    world = True
-   kmwx = 2 * deglog / sizewx
+   kmwx = 1 * deglog / sizewx '!!!!EK up to 051924 was "2 * deglog / sizewz" and don't know why "2 *"
    kmwy = deglat / sizewy
 
    Call loadpictures  'load appropriate map tiles into off-screen buffers
@@ -1718,6 +1718,8 @@ mapinfobegin:
    Exit Sub
 
 errhand:
+    cc = Err.Number
+    Resume
     ier = MsgBox("error detected: " & Str(Err.Number) & " " & Err.Description, vbcriticial + vbOKOnly, "Error detected")
     
 End Sub
@@ -4030,7 +4032,7 @@ Private Sub routefm_Click()
           Else
              modifyspeed = False
              End If
-          numPnts% = 1
+          numpnts% = 1
           'Do Until EOF(openfilnum%)
           '   Line Input #openfilnum%, doclin$
           '   numpnts% = numpnts% + 1

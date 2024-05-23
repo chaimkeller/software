@@ -379,12 +379,12 @@ Public Sub heights(kmx, kmy, hgt2)
 
          If ggpscorrection = True Then 'apply conversion from Clark geoid to WGS84
             Dim N As Long
-            Dim e As Long
+            Dim E As Long
             Dim lat As Double
             Dim lon As Double
             N = kmy
-            e = kmx
-            Call ics2wgs84(N, e, lat, lon)
+            E = kmx
+            Call ics2wgs84(N, E, lat, lon)
             lgh = lon
             lth = lat
             'Call casgeo(kmx, kmy, lgh, lth)
@@ -494,7 +494,7 @@ Public Sub GEOUTM(L11, L22, Z%, G1, G2)
        Dim a As Double, A0 As Double, A1 As Double, A2 As Double
        Dim A3 As Double, A4 As Double, A5 As Double, l2 As Double
        Dim b As Double, B0 As Double, B1 As Double, c As Double
-       Dim C1 As Double, D As Double, e As Double, l1 As Double
+       Dim C1 As Double, D As Double, E As Double, l1 As Double
        Dim L0 As Double, p As Double, r As Double, s1 As Double
        Dim T1 As Double, T2 As Double, T3 As Double, X1 As Double
 
@@ -503,7 +503,7 @@ Public Sub GEOUTM(L11, L22, Z%, G1, G2)
       a = 6375836.645
       b = 6354369.181
       p = 0.00672267019391
-      e = 0.00676817037114
+      E = 0.00676817037114
       A0 = 1.00507398896
       B0 = 0.00508468605159
       c = 0.000010718137317
@@ -519,7 +519,7 @@ Public Sub GEOUTM(L11, L22, Z%, G1, G2)
       s1 = Sin(l1 / r)
       C1 = Cos(l1 / r)
       T1 = s1 / C1
-      T2 = e * C1 ^ 2
+      T2 = E * C1 ^ 2
       B1 = A0 * (l1 / r) - B0 / 2# * Sin(2# * l1 / r) + c / 4# * Sin(4# * l1 / r) - D / 6# * Sin(6# * l1 _
       / r) + E0 / 8# * Sin(8# * l1 / r) - f / 10# * Sin(10# * l1 / r)
       B1 = B1 * a * (1# - p)
@@ -606,7 +606,7 @@ End Sub
 Public Sub UTMGEO(G11, G22, Z11, L11, L22)
       Dim a As Double, A0 As Double, b As Double, B1 As Double, B2 As Double
       Dim B3 As Double, B4 As Double, B5 As Double, c As Double, C1 As Double
-      Dim D As Double, D1 As Double, e As Double, E0 As Double, EP As Double
+      Dim D As Double, D1 As Double, E As Double, E0 As Double, EP As Double
       Dim f As Double, G0 As Double, G1 As Double, G2 As Double, l1 As Double
       Dim l2 As Double, p As Double, r As Double, s1 As Double, T1 As Double
       Dim T2 As Double, T3 As Double, X1 As Double
@@ -617,7 +617,7 @@ Public Sub UTMGEO(G11, G22, Z11, L11, L22)
       a = 6375836.645
       b = 6354369.181
       p = 0.00672267019391
-      e = 0.00676817037114
+      E = 0.00676817037114
       A0 = 1.00507398896
       B0 = 0.00508468605159
       c = 0.000010718137317
@@ -633,7 +633,7 @@ Public Sub UTMGEO(G11, G22, Z11, L11, L22)
 5     s1 = Sin(l1)
       C1 = Cos(l1)
       T1 = s1 / C1
-      T2 = e * C1 ^ 2
+      T2 = E * C1 ^ 2
       B1 = A0 * (l1) - B0 / 2# * Sin(2# * l1) + c / 4# * Sin(4# * l1) - D / 6# * Sin(6# * l1) + _
            E0 / 8# * Sin(8# * l1) - f / 10# * Sin(10# * l1)
       B1 = B1 * a * (1# - p)
@@ -870,7 +870,7 @@ Public Sub worldheights(lg, lt, hgt)
          GoTo wh50
          End If
          
-      If (IsraelDTMsource% = 1 Or DTMflag% = 1) And Dir(USADir$, vbDirectory) <> sEmpty Then 'Dir(srtmdtm & ":/USA/", vbDirectory) <> sEmpty Then
+      If (IsraelDTMsource% <= 1 Or DTMflag% = 1) And Dir(USADir$, vbDirectory) <> sEmpty Then 'Dir(srtmdtm & ":/USA/", vbDirectory) <> sEmpty Then
          XDIM = 8.33333333333333E-04 / 3#
          YDIM = 8.33333333333333E-04 / 3#
          DEMfile$ = USADir$
@@ -6276,10 +6276,10 @@ f50:  If Mid$(doc1$, 2, 8) <> uniqroot$ Then
          If Not TempSet Then
          If ggpscorrection = True Then 'apply conversion from Clark geoid to WGS84
             Dim N As Long
-            Dim e As Long
+            Dim E As Long
             N = kmy * 1000 + 1000000
-            e = kmx * 1000
-            Call ics2wgs84(N, e, lat, lon)
+            E = kmx * 1000
+            Call ics2wgs84(N, E, lat, lon)
          Else
             Call casgeo(kmx * 1000, kmy * 1000 + 1000000, lon, lat)
             lon = -lon
@@ -7025,7 +7025,7 @@ End Function
 '---------------------------------------------------------------------------------------
 '
 Function MeridianRad(phi As Double, Optional a As Double, Optional f As Double) As Double
-   Dim e As Double 'eccentricity
+   Dim E As Double 'eccentricity
    'if a,f not imputed use WGS84 values (ES p. 220)
    If a = 0 Then
       a = 6378.137
@@ -7033,8 +7033,8 @@ Function MeridianRad(phi As Double, Optional a As Double, Optional f As Double) 
    If f = 0 Then
       f = 1 / 298.257223563
       End If
-   e = Sqr(2# * f - f * f) 'ES equn 4.22-8
-   MeridianRad = a * (1 - e * e) / ((1 - (e * Sin(phi * cd)) ^ 2) ^ 1.5) 'ES p. 210
+   E = Sqr(2# * f - f * f) 'ES equn 4.22-8
+   MeridianRad = a * (1 - E * E) / ((1 - (E * Sin(phi * cd)) ^ 2) ^ 1.5) 'ES p. 210
 End Function
 '---------------------------------------------------------------------------------------
 ' Procedure : PrimeVertRadius
@@ -7053,8 +7053,8 @@ Function PrimeVertRadius(phi As Double, Optional a As Double, Optional f As Doub
    If f = 0 Then
       f = 1 / 298.257223563
       End If
-   e = Sqr(2# * f - f * f) 'ES equn 4.22-8
-   PrimeVertRadius = a * (1 - e * e) / (Sqr(1 - (e * Sin(phi * cd)) ^ 2))
+   E = Sqr(2# * f - f * f) 'ES equn 4.22-8
+   PrimeVertRadius = a * (1 - E * E) / (Sqr(1 - (E * Sin(phi * cd)) ^ 2))
 End Function
 '---------------------------------------------------------------------------------------
 ' Procedure : GeocentricRadius
@@ -7077,8 +7077,8 @@ Function GeocentricRadius(phi As Double, Optional a As Double, Optional f As Dou
    Dim AA As Double, BB As Double
    AA = Cos(phi * cd)
    BB = Sin(phi * cd)
-   Dim DD As Double, EE As Double
+   Dim DD As Double, ee As Double
    DD = (a * a * AA) ^ 2 + (b * b * BB) ^ 2
-   EE = (a * AA) ^ 2 + (b * BB) ^ 2
-   GeocentricRadius = Sqr(DD / EE)
+   ee = (a * AA) ^ 2 + (b * BB) ^ 2
+   GeocentricRadius = Sqr(DD / ee)
 End Function
