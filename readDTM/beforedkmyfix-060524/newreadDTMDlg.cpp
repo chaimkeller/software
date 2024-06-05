@@ -1306,7 +1306,7 @@ unVoid:							    ;
 
 			//allocate memory for dtms array
 			free( dtms ); //free the memory allocated before for dtms, and reallocate
-			dtms = (union dtm *) malloc((28000) * sizeof(union dtm));
+			dtms = (union dtm *) malloc((14000) * sizeof(union dtm));
 
 			//check that memory was properly allocated to all the arrays
 			if ( prof == NULL || dtms == NULL )
@@ -2207,8 +2207,8 @@ Profiles:
     if (mang != 0.) {
 	maxang = mang;
     }
-    if (maxang > 90.) {  //EK 05/27/24 used to be 180, but that can't be since it is other horizon, rathe limit is 90 degrees
-	maxang = 90.;
+    if (maxang > 180.) {
+	maxang = 180.;
     }
     if (maxang < 30.) {
 	maxang = 30.;
@@ -2246,13 +2246,9 @@ Profiles:
 	    anav = -1.f;
 	}
 
-	double MinViewAngle = (float)anav - minview;
-
 	for ( i__ = 0; i__ < nomentr; ++i__) {
-		prof[i__].ver[0] = MinViewAngle;}
+		prof[i__].ver[0] = (float)anav - minview;}
  
-	//old code -- doesn't handle the apprnr right, needs to be checked for each coordinate in loop
-	/*
 	if (netz) {
 		endkmx = sofkmx;
 		if (startkmx < kmxo + apprnr) {
@@ -2267,15 +2263,6 @@ Profiles:
 		} else {
 			endkmx = sofkmx;
 		}
-    }
-	*/
-
-	if (netz) {
-		endkmx = sofkmx;
-		begkmx = startkmx;
-    } else {
-		begkmx = startkmx;
-		endkmx = sofkmx;
     }
 
     // notify the user of what is going on by the form's caption */
@@ -2297,30 +2284,8 @@ Profiles:
     skipkmy = dstpointy;
     numkmx = Nint(fabs(endkmx - begkmx)/skipkmx) + 1;
 
-	//////////diagnostics////////////////////////////////////
-	double distclose = 0;
-	bool AzimuthOpt = false;
-	double deltakmx;
-	double deltakmy;
-	double mindiffx = 9999;
-	double mindiffy = 9999;
-	double mindist = 9999;
-	double maxcalcrange = -9999;
-	char * fout;
-	fout = "c://jk//testazi.txt";
-	bool testopened = false;
-	bool diagnostics = false;
-	FILE * streamout;
-	if (diagnostics) {
-		if ( streamout = fopen(fout, "w" ) )
-		{
-			testopened = true;
-		}
-	}
-	/////////////////////////////////////////////////////
-
-    re = 6371315.;  //earth radius in Clark geoid in meters  //N.b. According to Widipedia Geographic Distances should be 6371009
-    rekm = 6371.315f;  //Earth radius in Clark geoid in kms
+    re = 6371315.;
+    rekm = 6371.315f;
     i__1 = numkmx;
     i__2 = numskip;
     for (i__ = nkmx1; i__2 < 0 ? i__ >= i__1 : i__ <= i__1; i__ += i__2) {
@@ -2332,22 +2297,11 @@ Profiles:
 			goto L550;
 		}
 /*      now determine optimized kmy angular range */
-/*      first convert longitude range into kilometers to a first approximation */
-		//it is Earth Radius * Delta-Angle (radians) along radius
-		//Delta-Angle = fabs(kmx - kmxo) * cd -- cd converts from degrees to radians
-		//Radius along the latitude is rekm * cos(kmyo * cd) for small changes in latitdue
+/*      first convert longitude range into kilometers */
 		range = fabs(kmx - kmxo) * cd * rekm * cos(kmyo * cd);
-		if (diagnostics)
-		{
-			if (range > maxcalcrange)
-			{
-				maxcalcrange = range;
-			}
-		}
-		if (nnetz == 1) { //sunrise
-			if (kmx <= kmxo + apprnr) goto L550;
+		if (nnetz == 1) {
 /*          if range >= 20 km, then narrow azimuthal range to MAXANG=OptAng */
-			if (range >= 20. && AzimuthOpt && maxang > (double) optang) {
+			if (range >= 20. && maxang > (double) optang) {
 				maxang = (double) optang; }
 /*          if range >= 40 km and SRTM-1, then reduce step size to ~ 60m */
 			if (range >= 40. && DTMflag != 2) {
@@ -2376,10 +2330,9 @@ Profiles:
 				numskip = 13;}			
 			
 			}
-		} else if (nnetz == 0) { //sunset
-			if (kmx >= kmxo - apprnr) goto L550;
+		} else if (nnetz == 0) {
 /*          if range >= 20 km, then narrow azimuthal range to MAXANG=OptAng */
-			if (range > 20. && AzimuthOpt && maxang > (double) optang) {
+			if (range > 20. && maxang > (double) optang) {
 				maxang = (double) optang; }
 /*          if range >= 40 km and SRTM-1, then increase step size to ~ 60 m */
 			if (range > 40. && DTMflag != 2) {
@@ -2416,17 +2369,9 @@ Profiles:
 			if (range <= 40. && DTMflag != 2) {
 				numskip = 1;}
 		}
-/*      optimized half angular range in latitude (degrees) = dkmy */
-		if (maxang <= 43) {
-			dkmy = range / (rekm * cd) * tan((maxang + 2) * cd);
-		}
-		else
-		{
-			dkmy = fabs(endlat - beglat); //range / (rekm * cd)
-		}
-		//dkmy = fabs(endlat - beglat) * 0.5 + 1;
-
-		d__1 = fabs(dkmy/skipkmy);
+/*      optimized half angular range in longitude (degrees) = dkmy */
+		dkmy = range / (rekm * cd) * tan((maxang + 2) * cd);
+		d__1 = dkmy/skipkmy;
 		numkmy = 2 * Nint(d__1) + 1;
 		numhalfkmy = Nint(d__1) + 1;
 		numdtm = (int) ((maxang0 - maxang) * 10);
@@ -2445,34 +2390,9 @@ Profiles:
 			if (kmy < beglat || kmy > endlat) {
 			goto L120;  }
 
-			//check the point is beyond the nearest approach allowed
-			//use simplest calculation for the distance valid for small distances
-
-			if (diagnostics)
-			{
-				deltakmx = kmx - kmxo;
-				deltakmy = kmy - kmyo;
-				distclose = rekm * cd * sqrt(pow(deltakmy,2.0) + pow(deltakmx * cos(kmyo*cd),2.0));
-				if (fabs(deltakmx) < mindiffx)
-				{
-					mindiffx = fabs(deltakmx);
-				}
-				if (fabs(deltakmy) < mindiffy)
-				{
-					mindiffy = fabs(deltakmy);
-				}
-				if (distclose < mindist)
-				{
-					mindist = distclose;
-				}
-				if (distclose < aprn )
-				{
-					goto L120;
-				}
-			}
 			//further optimization: use crude approximation of azimuth to
 			//determine if data will lie within the required azimuth range
-			if (kmx != lg && AzimuthOpt)
+			if (kmx != lg)
 			{
 				testazi = (kmy - lt)/(kmx - lg);
 				testazi = atan(testazi)/cd;
@@ -2563,10 +2483,6 @@ Profiles:
 			azi = atan(azisin / azicos);
 	/*      azimuth in degrees */
 			azi /= cd;
-			if (fabs(azi) > 80) {
-				int cc;
-				cc = 1;
-			}
 
 			if (TemperatureModel == -1) {
 	/*      add old contribution of atmospheric refraction to view angle */
@@ -2605,13 +2521,6 @@ Profiles:
 			dtms[numdtm].ver[0] = azi;
 			dtms[numdtm].ver[1] = viewang / cd + avref;
 			dtms[numdtm].ver[2] = kmy;
-
-			////////////////diagnostics///////////////////
-			if (testopened && diagnostics) 
-			{
-				fprintf(streamout, "%10.6f,%10.6f,%10.6f,%10.6f,%10.6f,%10.6f,%d,%10.6f\n", kmx,kmy,deltakmx,deltakmy,distclose,range,numskip,azi);
-			}
-			/////////////////////////////////////////
 
 L120:
 			;
@@ -2703,14 +2612,6 @@ L180:
 L550:
 		;
     }
-
-	////////////////diagnostics///////////////////
-	if (testopened && diagnostics) 
-	{
-		fclose(streamout);
-	}
-	/////////////////////////////////////////
-
 
 	char Header[255] = "";
 
@@ -2818,10 +2719,7 @@ L550:
 			prof[nk].ver[0] -= avref;
 		}
 
-		if (prof[nk].ver[0] > MinViewAngle + 0.1) //don't print out beyond range of azimuths that were found
-		{
-		   fprintf( f, "%lg,%lg,%f,%lf,%lg,%lg\n", xentry, prof[nk].ver[0], prof[nk].ver[1], prof[nk].ver[2], dist, hgt2);
-		}
+		fprintf( f, "%lg,%lg,%f,%lf,%lg,%lg\n", xentry, prof[nk].ver[0], prof[nk].ver[1], prof[nk].ver[2], dist, hgt2);
 
 /* L300: */
     }
