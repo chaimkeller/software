@@ -3086,31 +3086,7 @@ For k% = 1 To 2
 '   For i% = 1 To 365 + leapyr%
    For i% = yrstrt%(k% - 1) To yrend%(k% - 1)
       Input #filplc%, tims$
-      caldate$ = Mid$(tims$, 1, 11)
-      dobs = Val(Mid$(tims$, Len(tims$) - 5, 6))
       
-      
-      '////////////////////////EK 062022 Arctic Circle handling///////////////////////////////////////
-      'look for error flags in the line
-      If InStr(tims$, ">max azi") Or InStr(tims$, "55:00:00") Then
-         tims$ = "?" 'since there might be a visible sunrise or sunset, just don't have all the info to calculate it
-         dobs = 999 'dobs unknown, so print it in black
-         
-         azim% = 0
-         If tmpsetflg% = 1 And nearnez = True Then  'test for near obstructions
-           If dobs <= distlim Then
-              azim% = 1
-              NearWarning(0) = True
-              End If
-         ElseIf tmpsetflg% = 2 And nearski = True Then
-           If dobs <= distlim Then
-              azim% = 1
-              NearWarning(1) = True
-              End If
-            End If
-        
-         GoTo 365
-         End If
       If InStr(tims$, "NoSunris") Or _
          InStr(tims$, "NoSunset") Or _
          InStr(tims$, "**:00:00") Or _
@@ -3137,6 +3113,33 @@ For k% = 1 To 2
          
          GoTo 365
          End If
+         
+      caldate$ = Mid$(tims$, 1, 11)
+      dobs = Val(Mid$(tims$, Len(tims$) - 5, 6))
+      
+      
+      '////////////////////////EK 062022 Arctic Circle handling///////////////////////////////////////
+      'look for error flags in the line
+      If InStr(tims$, ">max azi") Or InStr(tims$, "55:00:00") Then
+         tims$ = "?" 'since there might be a visible sunrise or sunset, just don't have all the info to calculate it
+         dobs = 999 'dobs unknown, so print it in black
+         
+         azim% = 0
+         If tmpsetflg% = 1 And nearnez = True Then  'test for near obstructions
+           If dobs <= distlim Then
+              azim% = 1
+              NearWarning(0) = True
+              End If
+         ElseIf tmpsetflg% = 2 And nearski = True Then
+           If dobs <= distlim Then
+              azim% = 1
+              NearWarning(1) = True
+              End If
+            End If
+        
+         GoTo 365
+         End If
+
       '//////////////////////////////////////////////////////////////
          
       nadd1% = nadd%
@@ -3222,8 +3225,18 @@ For k% = 1 To 2
       If setflag% = -1 Then '***** new changes (check round and nadd1%)
          If Mid$(tims$, 1, 2) < 22 Then
             Mid$(tims$, 1, 2) = " " + Trim$(Str$(Val(Mid$(tims$, 1, 2)) - 12))
-         Else
+         ElseIf Mid$(tims$, 1, 2) < 24 Then
             Mid$(tims$, 1, 2) = Trim$(Str$(Val(Mid$(tims$, 1, 2)) - 12))
+         ElseIf Mid$(tims$, 1, 2) >= 24 Then
+            '//////////////EK 052624 handling of sunset times after 00:00:00 for Arctic Circle location///////////
+'            Mid$(tims$, 1, 2) = Trim$(Str$(Val(Mid$(tims$, 1, 2)) - 24))
+'            cc = Val(Mid$(tims$, 1, 2))
+'            cc = cc - 24
+'            ccc = Trim$(Str$(cc))
+            'If Len(ccc) = 1 Then ccc = "0" + ccc
+'            Mid$(tims$, 1, 2) = ccc
+            Mid$(tims$, 1, 2) = " " + Trim$(Str$(Val(Mid$(tims$, 1, 2)) - 24))
+            '//////////////////////////////////////////////////////
             End If
          End If
       'If setflag% = -1 Then Mid$(tims$, 1, 2) = " " + LTrim$(RTrim$(Str$(Val(Mid$(tims$, 1, 2)) - 12)))
@@ -3358,13 +3371,23 @@ For i% = 1 To endyr%
              frcolor = QBColor(0)
              End If
           
-          '//////////////added 082921--DST support//////////////
+          '//////////////added 082921--DST support, fixed 05/26/24//////////////
           If DSTadd And tims$ <> "NA" Then
-             DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
-             'add hour for DST
-             If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
-                DSThour = DSThour + 1
-                Mid$(tims$, 1, InStr(1, tims$, ":") - 1) = Trim$(Str$(DSThour))
+             '/////fixed tims = none bug 060524///////////////////////////
+             If (optionheb And InStr(tims$, heb2$(17)) Or (Not optionheb And InStr(tims$, "none"))) Then
+             Else
+             '//////////////////////////////////////////
+             
+                DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
+                'add hour for DST, take care of very late summer sunsets for high and low latitudes
+                If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
+                   DSThour = DSThour + 1
+                   If DSThour > 11 Then
+                      DSThour = DSThour - 12
+                      End If
+                   cc = Mid$(tims$, InStr(1, tims$, ":"), Len(tims$) - InStr(1, tims$, ":") + 1)
+                   tims$ = Trim$(Str$(DSThour)) + cc
+                   End If
                 End If
              End If
           '//////////////////////////////////////////////////
@@ -3422,6 +3445,12 @@ For i% = 1 To endyr%
 'End If
 
           tims$ = Trim$(tim$(yrn% - 1, j%))
+         '////////////diagnostics EK 060524/////////////
+         If (optionheb And InStr(tims$, heb2$(17)) Or (Not optionheb And InStr(tims$, "none"))) Then
+           ccc = 1
+           End If
+         '//////////////////////////////////////////////////////
+
           'If endyr% = 12 Then 'regular year
           Dev.CurrentX = coordxreg(tmpsetflg%, i%)
           Dev.CurrentY = coordy(tmpsetflg%, k%)
@@ -3473,15 +3502,25 @@ For i% = 1 To endyr%
              frcolor = QBColor(0)
              End If
           
-          '//////////////added 082921--DST support//////////////
+          '//////////////added 082921--DST support, fixed 05/26/24//////////////
           If DSTadd And tims$ <> "NA" Then
-             DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
-             'add hour for DST
-             If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
-                DSThour = DSThour + 1
-                Mid$(tims$, 1, InStr(1, tims$, ":") - 1) = Trim$(Str$(DSThour))
+             '/////fixed tims = none bug 060524///////////////////////////
+             If (optionheb And InStr(tims$, heb2$(17)) Or (Not optionheb And InStr(tims$, "none"))) Then
+             Else
+             '/////////////////////////////////////////////////
+             
+                DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
+                'add hour for DST, take care of very late summer sunsets for high and low latitudes
+                If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
+                   DSThour = DSThour + 1
+                   If DSThour > 11 Then
+                      DSThour = DSThour - 12
+                      End If
+                   cc = Mid$(tims$, InStr(1, tims$, ":"), Len(tims$) - InStr(1, tims$, ":") + 1)
+                   tims$ = Trim$(Str$(DSThour)) + cc
+                   End If
                 End If
-             End If
+              End If
           '//////////////////////////////////////////////////
              
           Dev.Print tims$
@@ -3614,6 +3653,12 @@ End If
 'End If
 
           tims$ = Trim$(tim$(yrn% - 1, j%))
+         '////////////diagnostics EK 060524/////////////
+         If (optionheb And InStr(tims$, heb2$(17)) Or (Not optionheb And InStr(tims$, "none"))) Then
+           ccc = 1
+           End If
+         '//////////////////////////////////////////////////////
+
           'If endyr% = 12 Then 'regular year
           Dev.CurrentX = coordxreg(tmpsetflg%, i%)
           Dev.CurrentY = coordy(tmpsetflg%, k%)
@@ -3668,13 +3713,23 @@ End If
              frcolor = QBColor(0)
              End If
           
-          '//////////////added 082921--DST support//////////////
+          '//////////////added 082921--DST support, fixed 05/26/24//////////////
           If DSTadd And tims$ <> "NA" Then
-             DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
-             'add hour for DST
-             If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
-                DSThour = DSThour + 1
-                Mid$(tims$, 1, InStr(1, tims$, ":") - 1) = Trim$(Str$(DSThour))
+             '/////fixed tims = none bug 060524///////////////////////////
+             If (optionheb And InStr(tims$, heb2$(17)) Or (Not optionheb And InStr(tims$, "none"))) Then
+             Else
+             '/////////////////////////////////////////////////
+             
+                DSThour = Mid$(tims$, 1, InStr(1, tims$, ":") - 1)
+                'add hour for DST, take care of very late summer sunsets for high and low latitudes
+                If j% >= strdaynum(yrn% - 1) And j% < enddaynum(yrn% - 1) Then
+                   DSThour = DSThour + 1
+                   If DSThour > 11 Then
+                      DSThour = DSThour - 12
+                      End If
+                   cc = Mid$(tims$, InStr(1, tims$, ":"), Len(tims$) - InStr(1, tims$, ":") + 1)
+                   tims$ = Trim$(Str$(DSThour)) + cc
+                   End If
                 End If
              End If
           '//////////////////////////////////////////////////
