@@ -635,6 +635,8 @@ int WhichJK_2();
 	double PATHLENGTH = 0.0; //Pathlength from observer to obstruction
 	double RETH = 6356.766; //mean radius of Earth in kms
 	double Exponent = 1.0;
+	bool AzimuthOpt = false;
+
 
 	FILE* f;
 
@@ -2231,7 +2233,6 @@ Profiles:
     optang = (short) (maxang - 12);
     numskip = 1;
 
-
     kmyoo = kmyo;
     kmxoo = kmxo;
     lt = kmyoo;
@@ -2299,7 +2300,6 @@ Profiles:
 
 	//////////diagnostics////////////////////////////////////
 	double distclose = 0;
-	bool AzimuthOpt = false;
 	double deltakmx;
 	double deltakmy;
 	double mindiffx = 9999;
@@ -2317,6 +2317,10 @@ Profiles:
 			testopened = true;
 		}
 	}
+	/////////////////////////////////////////////////////////////////
+
+	if (maxang < 50) AzimuthOpt = true; //optimize calculations for the continental USA
+
 	/////////////////////////////////////////////////////
 
     re = 6371315.;  //earth radius in Clark geoid in meters  //N.b. According to Widipedia Geographic Distances should be 6371009
