@@ -3523,3 +3523,281 @@ TR_VDW_Comp_1200_-60.dat
 Polynomical coeficients of Plot program's LS fit to 1th degree polynomial.
  0,    2.56123009894804
  1,    -1.87672500154536
+========================================
+VA-Temp-H0-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.67940284923003
+ 1,    -4.12913579682594E-03
+ 2,    1.18389566444245E-05
+ 3,    -1.68020491305396E-08
+ 4,    9.32951066798041E-12
+========================================
+VA-Temp-H240-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.65937680235275
+ 1,    -4.28471402823393E-03
+ 2,    1.30383824755449E-05
+ 3,    -1.98095412842132E-08
+ 4,    1.17038820195889E-11
+========================================
+VA-Temp-H510-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.63250010021392
+ 1,    -4.33556239497001E-03
+ 2,    1.34556056205197E-05
+ 3,    -2.0849687230893E-08
+ 4,    1.25211293966844E-11
+========================================
+VA-Temp-H750-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.60446585111227
+ 1,    -4.27837969425948E-03
+ 2,    1.35692344105071E-05
+ 3,    -2.25598650545632E-08
+ 4,    1.5218162169574E-11
+========================================
+VA-Temp-H990-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.57912468683672
+ 1,    -4.38747243057757E-03
+ 2,    1.42674597572729E-05
+ 3,    -2.32743279766813E-08
+ 4,    1.46012130079017E-11
+========================================
+VA-Temp-H1200-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.55680609994291
+ 1,    -4.32313879827103E-03
+ 2,    1.37883345513696E-05
+ 3,    -2.20837219575885E-08
+ 4,    1.36867704042534E-11
+========================================
+VA-Temp-H1440-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.52966687198405
+ 1,    -4.30560946064739E-03
+ 2,    1.38476761079848E-05
+ 3,    -2.24104116204378E-08
+ 4,    1.40180383613927E-11
+========================================
+VA-Temp-H1710-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.50830850432474
+ 1,    -4.37870694769594E-03
+ 2,    1.40773085878834E-05
+ 3,    -2.27658836043692E-08
+ 4,    1.42416293682495E-11
+========================================
+VA-Temp-H1950-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.48272030794409
+ 1,    -4.38821514840074E-03
+ 2,    1.42295967304947E-05
+ 3,    -2.32480685872798E-08
+ 4,    1.46743684829171E-11
+========================================
+VA-Temp-H2040-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.4659625771086
+ 1,    -4.26317778560495E-03
+ 2,    1.37316671331527E-05
+ 3,    -2.23463613065428E-08
+ 4,    1.40720862451157E-11
+========================================
+VA-Temp-H2220-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.45696492307063
+ 1,    -4.30252097630965E-03
+ 2,    1.32953921582454E-05
+ 3,    -2.06002685643673E-08
+ 4,    1.24258451126667E-11
+========================================
+VA-Temp-H2520-new.txt
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    1.42171201780577
+ 1,    -4.39408544534183E-03
+ 2,    1.44312457513551E-05
+ 3,    -2.39946853974808E-08
+ 4,    1.53980034632671E-11
+========================================
+VA-Temp-H2760-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.3908443479886
+ 1,    -4.31416653779423E-03
+ 2,    1.42223865684793E-05
+ 3,    -2.37546598800772E-08
+ 4,    1.52763639977195E-11
+========================================
+VA-Temp-H3000-new.txt
+Polynomical coeficients of Plot program's LS fit to 4th degree polynomial.
+ 0,    1.37068351228035
+ 1,    -4.37924813683632E-03
+ 2,    1.43431761671843E-05
+ 3,    -2.38781298642083E-08
+ 4,    1.53748374479384E-11
+
+========================================
+VA-Hgt-Temp-Dep.txt
+Polynomical coeficients of Plot program's LS fit to 1th degree polynomial.
+ 0,    1.68271708343173
+ 1,    -1.04055307822257E-04
+========================================
+error-H3000.dat
+Polynomical coeficients of Plot program's LS fit to 6th degree polynomial.
+ 0,    -0.308513758554889
+ 1,    0.298310615129117
+ 2,    -0.136241564185445
+ 3,    3.42565453484125E-02
+ 4,    -4.62048191744235E-03
+ 5,    3.10634309580547E-04
+ 6,    -8.15049109398044E-06
+========================================
+error-T260-H3000.dat
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    0.238448589114116
+ 1,    -0.359160626662857
+ 2,    0.185238093082577
+ 3,    -4.93551337505428E-02
+ 4,    6.8721570494886E-03
+ 5,    -4.71001919930513E-04
+ 6,    1.25145631536526E-05
+========================================
+error-T287-H3000.dat
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    7.2715687961926
+ 1,    -4.68139741038437E-02
+ 2,    2.26154333224892E-04
+ 3,    -7.51897121614288E-07
+ 4,    1.50178373407824E-09
+ 5,    -1.5771434308977E-12
+ 6,    6.63446646324779E-16
+========================================
+crossect.tmp
+Polynomical coeficients of Plot program's LS fit to 10th degree polynomial.
+ 0,    598.599188045957
+ 1,    0.086235740331176
+ 2,    -4.74940090874733E-05
+ 3,    7.55703828058877E-09
+ 4,    -6.13446951087636E-13
+ 5,    2.79324271158045E-17
+ 6,    -7.53646276037875E-22
+ 7,    1.23306493059821E-26
+ 8,    -1.20250383760271E-31
+ 9,    6.43526270737267E-37
+ 10,    -1.45554837810804E-42
+========================================
+crossect.tmp
+Polynomical coeficients of Plot program's LS fit to 8th degree polynomial.
+ 0,    553.859294408453
+ 1,    0.151126622684113
+ 2,    -6.98098611965993E-05
+ 3,    1.07159869328738E-08
+ 4,    -8.36644419680432E-13
+ 5,    3.61192456662792E-17
+ 6,    -8.77061477979904E-22
+ 7,    1.07549913403059E-26
+ 8,    -1.45126329823728E-32
+ 9,    -1.43246977608805E-36
+ 10,    1.97566864275369E-41
+ 11,    -1.13755653477651E-46
+ 12,    2.53495997179988E-52
+========================================
+crossect.tmp
+Polynomical coeficients of Plot program's LS fit to 8th degree polynomial.
+ 0,    818.888359542595
+ 1,    -0.191607897980186
+ 2,    3.81238132485426E-05
+ 3,    -3.70671989891874E-09
+ 4,    1.70644345686467E-13
+ 5,    -4.10630829364429E-18
+ 6,    5.36225652728773E-23
+ 7,    -3.61109958128215E-28
+ 8,    9.84225867841537E-34
+========================================
+crossect.tmp
+Polynomical coeficients of Plot program's LS fit to 11th degree polynomial.
+ 0,    832.772132844035
+ 1,    -0.244714550731683
+ 2,    6.84359980795917E-05
+ 3,    -1.00460673653427E-08
+ 4,    8.25791986979131E-13
+ 5,    -4.26494539579878E-17
+ 6,    1.44294055937789E-21
+ 7,    -3.21094617296788E-26
+ 8,    4.62408002443649E-31
+ 9,    -4.13125184516663E-36
+ 10,    2.07681721286578E-41
+ 11,    -4.4844262868453E-47
+========================================
+crossect.tmp
+Polynomical coeficients of Plot program's LS fit to 11th degree polynomial.
+ 0,    832.772132844035
+ 1,    -0.244714550731683
+ 2,    6.84359980795917E-05
+ 3,    -1.00460673653427E-08
+ 4,    8.25791986979131E-13
+ 5,    -4.26494539579878E-17
+ 6,    1.44294055937789E-21
+ 7,    -3.21094617296788E-26
+ 8,    4.62408002443649E-31
+ 9,    -4.13125184516663E-36
+ 10,    2.07681721286578E-41
+ 11,    -4.4844262868453E-47
+========================================
+sondes-refract-sorted.csv
+Polynomical coeficients of Plot program's LS fit to 1th degree polynomial.
+ 0,    11.3252898195873
+ 1,    -2.37473943791679
+========================================
+sondes-refract-sorted-2.csv
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    1.28990287064134
+ 1,    2.26425775254423
+========================================
+sondes-refract-sorted-3.csv
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    1985.83546217063
+ 1,    1131.82573257048
+========================================
+PercentageVsError.txt
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    -22.2839285714284
+ 1,    12.2187175324675
+ 2,    -0.585124999999995
+ 3,    1.35439393939392E-02
+ 4,    -1.1742424242424E-04
+========================================
+GZcut1.txt
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    824.049290556187
+ 1,    -0.148633721478699
+ 2,    2.36907040985001E-04
+ 3,    -6.19248666265157E-07
+========================================
+GZcut2.txt
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    -7776888.44546587
+ 1,    59.1900112157644
+ 2,    1.40586073254318E-04
+ 3,    -1.29473657125474E-09
+========================================
+GZcut3.txt
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    -4487312.73352723
+ 1,    35.2172515701604
+ 2,    6.83883852565644E-05
+ 3,    -7.08931447098945E-10
+========================================
+GZcut2.txt
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    775.0663003663
+ 1,    0.186001850001856
+ 2,    5.0270618270614E-04
+ 3,    -2.57674177674169E-06
+========================================
+GZcut3.txt
+Polynomical coeficients of Plot program's LS fit to 0th degree polynomial.
+ 0,    808.711274509804
+ 1,    2.24783810960256E-02
+ 2,    -6.83964662788173E-04
+ 3,    7.64605329311175E-07

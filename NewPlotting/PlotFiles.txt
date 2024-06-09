@@ -1,6 +1,12 @@
-"This file is used by Plot. Don't erase it!"
-"X-values"
-"Y-values"
-""
-" 1"," 0"," 0","1","0","1","0","C:\DevStudio\Vb\Nvei_Yaakov_ast_sunrise_2020_timedif.csv","none:none","1"
-" 1"," 0"," 0","1","0","1","0","C:\DevStudio\Vb\Menat-VDW-Ref-dif.txt","none:none","1"
+This file is used by Plot. Don't erase it!,12
+"X-values",17
+"Y-values",17
+"",14
+" 0"
+"199"
+"664.934370131784"
+"831.626191528778"
+"-31.25"
+"656.25"
+" 1"," 0"," 0","1","-1139500","1","0","C:\Users\chaim\Downloads\GZcut1.txt","none:none","1"
+" 1"," 1"," 0","1","0","1","0","C:\DevStudio\Vb\NewPlotting020603_2\GZ1-fit.txt","none:none","1"

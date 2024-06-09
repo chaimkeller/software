@@ -61,6 +61,24 @@ Sub OpenRead(numfil%, nFile As Integer)
        Case 0 'common separated mixed strings and numbers
           Do Until EOF(freefil%)
              numRows% = numRows% + 1
+             
+'             '//////////////////added 081121////////////////////////
+'             'only read the data values as bounded by txtX0 and txtX1
+'             If Val(frmSetCond.txtX0.Text) > 0 Then
+'                If numRows% < Val(frmSetCond.txtX0.Text) Then
+'                   'only begin reading data after index is greater or equal to txtX0
+'                   numRows% = numRows% - 1
+'                   GoTo or500
+'                   End If
+'                End If
+'             If Val(frmSetCond.txtX1.Text) > 0 Then
+'                If numRows% > Val(frmSetCond.txtX1.Text) Then
+'                   'don't read these rows
+'                   Exit Do
+'                   End If
+'                End If
+'             '///////////////////////////////////////////////////////
+             
              pos2% = 1
              foundX% = 0
              foundY% = 0
@@ -142,7 +160,7 @@ Sub OpenRead(numfil%, nFile As Integer)
                    
                    End If
                  End If
-                   
+or500:
           Loop
           Close (freefil%)
           ReDim Data(0) 'reclaim memory
@@ -167,6 +185,24 @@ Sub OpenRead(numfil%, nFile As Integer)
              Xvalue = Data(FilForm(3, Val(PlotInfo(0, numfil%))) - 1)
              Yvalue = Data(FilForm(4, Val(PlotInfo(0, numfil%))) - 1)
              numRows% = numRows% + 1
+             
+'             '//////////////////added 081121////////////////////////
+'             'only read the data values as bounded by txtX0 and txtX1
+'             If Val(frmSetCond.txtX0.Text) > 0 Then
+'                If numRows% < Val(frmSetCond.txtX0.Text) Then
+'                   'only begin reading data after index is greater or equal to txtX0
+'                   numRows% = numRows% - 1
+'                   GoTo or700
+'                   End If
+'                End If
+'             If Val(frmSetCond.txtX1.Text) > 0 Then
+'                If numRows% > Val(frmSetCond.txtX1.Text) Then
+'                   'don't read these rows
+'                   Exit Do
+'                   End If
+'                End If
+'             '///////////////////////////////////////////////////////
+             
              If numRows% > numRowsToNow% Then
                 ReDim Preserve dPlot(maxFilesToPlot%, 1, numRows% - 1)
                 numRowsToNow% = numRows%
@@ -206,6 +242,7 @@ Sub OpenRead(numfil%, nFile As Integer)
                        SoundWarning = True
                    End If
                  End If
+or700:
           Loop
           Close (freefil%)
           ReDim Data(0) 'reclaim memory
