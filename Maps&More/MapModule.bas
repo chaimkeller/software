@@ -853,7 +853,6 @@ Public Sub worldheights(lg, lt, hgt)
    On Error GoTo worlderror
    
    If lt > 90 Or lt < -90 Or lg < -180 Or lg > 180 Then Exit Sub
-   
       
    'check if have correct CD in the drive, if not present error message
    '//changes 061222 - added northern range to N70 for Alaska DEM and EU-dem files
@@ -870,7 +869,7 @@ Public Sub worldheights(lg, lt, hgt)
          GoTo wh50
          End If
          
-      If (IsraelDTMsource% <= 1 Or DTMflag% = 1) And Dir(USADir$, vbDirectory) <> sEmpty Then 'Dir(srtmdtm & ":/USA/", vbDirectory) <> sEmpty Then
+      If ((IsraelDTMsource% <= 1 And DTMflag% <> 3) Or DTMflag% = 1) And Dir(USADir$, vbDirectory) <> sEmpty Then 'Dir(srtmdtm & ":/USA/", vbDirectory) <> sEmpty Then
          XDIM = 8.33333333333333E-04 / 3#
          YDIM = 8.33333333333333E-04 / 3#
          DEMfile$ = USADir$
@@ -1085,7 +1084,7 @@ Eroshgt:
    numrec& = (IKMY& - 1) * tncols + IKMX&
    Get #worldfnum%, (numrec& - 1) * 2 + 1, IO%
    
-   If IsraelDTMsource% <> 3 Then
+   If IsraelDTMsource% <> 3 And DTMflag% <> 3 Then
     '   A$ = sEmpty
     '   A$ = Hex$(io%)
        'first attempt to swap bytes the fattest way--i.e.,
@@ -6104,10 +6103,10 @@ Sub EYsunrisesunset(Mode%)
       response = InputBox("Input template name", "EY Template Name", "000-xxxx", Maps.Picture1.Width / 2, Maps.Picture1.Height / 2)
       End If
    ln1% = Len(Trim$(response))
-   If ln1% >= 20 Then
-      txt1$ = "'" + Mid$(Trim$(response), 1, 20) + "'"
+   If ln1% >= 8 Then  'EK 081424  used to be 20 ?????
+      txt1$ = "'" + Mid$(Trim$(response), 1, 8) + "'"
    Else
-      txt1$ = "'" + Trim$(response) + String(20 - ln1%, " ") + "'"
+      txt1$ = "'" + Trim$(response) + String(8 - ln1%, "0") + "'"
       End If
    txt3$ = "0"
    

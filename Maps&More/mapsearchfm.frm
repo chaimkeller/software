@@ -58,6 +58,7 @@ Begin VB.Form mapsearchfm
       Left            =   4850
       TabIndex        =   70
       Text            =   "15"
+      ToolTipText     =   "number of grid steps to check for descending slope"
       Top             =   7680
       Visible         =   0   'False
       Width           =   220
@@ -67,7 +68,7 @@ Begin VB.Form mapsearchfm
       Height          =   255
       Left            =   4100
       TabIndex        =   69
-      ToolTipText     =   "output peak files"
+      ToolTipText     =   "output peak files showing normalized height on both sides of peak"
       Top             =   7850
       Value           =   -1  'True
       Visible         =   0   'False
@@ -78,7 +79,7 @@ Begin VB.Form mapsearchfm
       Height          =   195
       Left            =   4100
       TabIndex        =   68
-      ToolTipText     =   "output slope files"
+      ToolTipText     =   "output slope files showing normalized heights on only one side of peak"
       Top             =   7700
       Visible         =   0   'False
       Width           =   950
@@ -2930,8 +2931,17 @@ c3error:
   Exit Sub
 End Sub
 
+'---------------------------------------------------------------------------------------
+' Procedure : Command15_Click
+' Author    : chaim
+' Date      : 9/4/2024
+' Purpose   : Save new neighborhood
+'---------------------------------------------------------------------------------------
+'
 Private Sub Command15_Click()
       'first check if this is new place
+   On Error GoTo Command15_Click_Error
+
       For i% = 0 To nncity%
          If Combo1.Text = subcitnams(i%) Then
             Beep
@@ -2979,6 +2989,13 @@ Private Sub Command15_Click()
         Beep
         response = MsgBox("You must enter a name for the city(area)!", vbCritical + vbOKOnly, "Maps&More")
         End If
+
+   On Error GoTo 0
+   Exit Sub
+
+Command15_Click_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Command15_Click of Form mapsearchfm"
 End Sub
 
 Private Sub Command16_Click()

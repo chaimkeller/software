@@ -1719,7 +1719,7 @@ mapinfobegin:
 
 errhand:
     cc = Err.Number
-    Resume
+'    Resume
     ier = MsgBox("error detected: " & Str(Err.Number) & " " & Err.Description, vbcriticial + vbOKOnly, "Error detected")
     
 End Sub
@@ -1912,7 +1912,7 @@ Private Sub MDIForm_Load()
    If WinVer = 5 Then 'Or WinVer = 261 Then 'Windows 2000 or XP
       driveletters$ = "cdefghijklmnop" 'include "d" directory in list
    Else
-      driveletters$ = "cefghijklmnopq" 'exclude "d" directory
+      driveletters$ = "cdefghijklmnop" 'exclude "d" directory
       End If
       
    s1% = 0: S2% = 0: s3% = 0: s4% = 0: s5% = 0: s6% = 0: s7% = 0: s8% = 0: s9% = 0: s10% = 0: s11% = 0: s12% = 0: s15% = 0
