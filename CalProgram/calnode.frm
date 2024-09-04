@@ -742,6 +742,10 @@ eroslatitude = eroscitylat(Node.Index)
 erosareabat = eroscityarea(Node.Index)
 eroscountry$ = eroscountries(Node.Index)
 eroscity$ = Node.Text
+If eroscountry$ = "USA" Then
+   'find the state abbreviation
+   erosState$ = Mid$(erosareabat, InStr(erosareabat, "area_") + 5, 2)
+   End If
 userinput = False
 
 'calnode.Caption = Node.Text

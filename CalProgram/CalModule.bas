@@ -70,7 +70,7 @@ Public eroscityarea(3000) As String
 Public eroscountries(3000) As String
 Public eroslongitude As Double, eroslatitude As Double, erosareabat As String
 Public foundvantage As Boolean
-Public eroscity$, eroshebcity$, IsraelNeighborhood As Boolean, userinput As Boolean, yrcal$, astronfm As Boolean
+Public eroscity$, eroshebcity$, erosState$, IsraelNeighborhood As Boolean, userinput As Boolean, yrcal$, astronfm As Boolean
 Public mNode As Node, searchradius, viseros As Boolean
 Public optiond%, optiont%, optionz%, options%, zmanopen As Boolean, ProgExec$
 Public optionsun1%, optionsun2%, optionround%, numsort%, reorder As Boolean
@@ -2218,7 +2218,7 @@ If DSTadd Then
       Case "USA", "Canada" 'English {USA DST rules}
 
         'not all states in the US have DST
-        If InStr(eroscity$, "Phoenix") Or InStr(eroscity$, "Honolulu") Or InStr(eroscity$, "Regina") Then
+        If InStr(eroscity$, "Phoenix") Or InStr(eroscity$, "Honolulu") Or InStr(eroscity$, "Regina") Or InStr(erosState, "AZ") Or InStr(erosState, "HI") Then
            DSTadd = False
         Else
 
