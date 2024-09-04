@@ -375,6 +375,7 @@ double avehgt[2];
 char TitleLine[1255] = "";
 char SponsorLine[8][1255];
 char eroscity[255] = "";
+char erosState[3] = ""; //added 082024 to keep track of USA states for DST purposes
 char citnamp[255] = "";
 char title[1255] = "";
 char currentdir[255] = "";
@@ -1161,10 +1162,10 @@ __asm{
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
-		strcpy( country, "Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
+		strcpy( MetroArea, "Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( country, "USA" ); //"Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
 		g_yrheb = 5758; //5783; //5782; //5781; //5779;//5776; //5775;
 		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
@@ -1656,6 +1657,10 @@ __asm{
 		//engcityname = portion of ersareabat before "_area"
 		Mid( erosareabat, 1, InStr(erosareabat, "_area") - 1, engcityname );
 		Replace(engcityname, '_', ' ' ); //remove any "_" in the engcityname
+
+		//remove _area_ and USA to form two character USA state abbreviation
+		//erosState = portion of erosareabat that contains USA state abbrev. 082024
+		if (InStr(eroscountry, "USA") ) Mid(erosareabat, InStr(erosareabat, "area_") + 5, 2, erosState );
 
 		if (Geofinder) //allready collected all the info needed to redirect to chai_geofinder.php
 		{
@@ -19782,7 +19787,7 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 	else if (strstr(country, "USA") || strstr(country, "Canada") || strstr(city, "USA") || strstr(city, "Canada"))
 	{
 		//not all states in the US have DST
-		if (strstr(city, "Phoenix") || strstr(city, "Honolulu") || strstr(city, "Regina"))
+		if (strstr(city, "Phoenix") || strstr(city, "Honolulu") || strstr(city, "Regina") || strstr(erosState, "AZ") || strstr(erosState, "HI"))
 		{
 			return -1; //no DST observed in these cities
 		}
