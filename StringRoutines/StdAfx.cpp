@@ -15781,13 +15781,27 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 			switch (atoi(&zmannames[i][1][0])) //bz$
 			{
 
-				case 1: //minutes before mishor sunset
+				case 0: case 1: //minutes before mishor sunset
 					t3sub = zmantimes[mishorskiynum]; //this is mishor sunset
-					t3sub = t3sub - atof(&zmannames[i][2][0]) / 60.0;
+					t3sub = t3sub - atof(&zmannames[i][2][0]) / 60.0;  //zmannames[i][2][0] corresponds to c$ in the VB6 program Cal Program
 					//sprintf( &zmannames[i][0][0], "%s", &zmannames[i][0][0] ); //<<<<<----not clear that this is necessary
 					zmantimes[i] = t3sub;
 					break;
-
+				case 2: //minutes before visible sunset
+					break; //not supported in the cgi program
+				case 3: //minutes before astronomical sunset //added 090824
+					if (astskiynum > 0)
+					{
+						t3sub = zmantimes[astskiynum]; //this is mishor sunset
+						t3sub = t3sub - atof(&zmannames[i][2][0]) / 60.0; //zmannames[i][4][0] corresponds to e$ in the VB6 program Cal Program
+						//sprintf( &zmannames[i][0][0], "%s", &zmannames[i][0][0] ); //<<<<<----not clear that this is necessary
+						zmantimes[i] = t3sub;
+					}
+					else
+					{
+						return -1; //astronomical sunset not defined in this template
+					}
+					break;
 				default:
 					return -1; //error in zemanim perameter
 					break;
