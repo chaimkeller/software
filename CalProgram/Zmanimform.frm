@@ -238,7 +238,7 @@ Begin VB.Form Zmanimform
          _ExtentY        =   5530
          _Version        =   393216
          Tabs            =   7
-         Tab             =   6
+         Tab             =   2
          TabsPerRow      =   4
          TabHeight       =   600
          BackColor       =   14737632
@@ -263,8 +263,9 @@ Begin VB.Form Zmanimform
          Tab(1).ControlCount=   1
          TabCaption(2)   =   "&Z'mane Hayom"
          TabPicture(2)   =   "Zmanimform.frx":171A
-         Tab(2).ControlEnabled=   0   'False
+         Tab(2).ControlEnabled=   -1  'True
          Tab(2).Control(0)=   "Frame5"
+         Tab(2).Control(0).Enabled=   0   'False
          Tab(2).ControlCount=   1
          TabCaption(3)   =   "&Candel Lighting"
          TabPicture(3)   =   "Zmanimform.frx":1736
@@ -283,13 +284,12 @@ Begin VB.Form Zmanimform
          Tab(5).ControlCount=   1
          TabCaption(6)   =   "&Mishmarot"
          TabPicture(6)   =   "Zmanimform.frx":178A
-         Tab(6).ControlEnabled=   -1  'True
+         Tab(6).ControlEnabled=   0   'False
          Tab(6).Control(0)=   "frmMishmarim"
-         Tab(6).Control(0).Enabled=   0   'False
          Tab(6).ControlCount=   1
          Begin VB.Frame frmMishmarim 
             Height          =   2175
-            Left            =   120
+            Left            =   -74880
             TabIndex        =   99
             Top             =   765
             Width           =   4575
@@ -475,25 +475,63 @@ Begin VB.Form Zmanimform
             TabIndex        =   50
             Top             =   765
             Width           =   4755
+            Begin MSComCtl2.UpDown updwnAstCandles 
+               Height          =   285
+               Left            =   4140
+               TabIndex        =   108
+               Top             =   1380
+               Width           =   255
+               _ExtentX        =   450
+               _ExtentY        =   503
+               _Version        =   393216
+               AutoBuddy       =   -1  'True
+               BuddyControl    =   "txtAstCandles"
+               BuddyDispid     =   196642
+               OrigLeft        =   4200
+               OrigTop         =   1320
+               OrigRight       =   4455
+               OrigBottom      =   1575
+               Max             =   60
+               Enabled         =   0   'False
+            End
+            Begin VB.TextBox txtAstCandles 
+               Alignment       =   2  'Center
+               Enabled         =   0   'False
+               Height          =   285
+               Left            =   3720
+               TabIndex        =   107
+               Text            =   "0"
+               Top             =   1380
+               Width           =   435
+            End
+            Begin VB.OptionButton optAstCandles 
+               Caption         =   "Candle Lighting time defined by clock minutes before the astronomical sunset"
+               Enabled         =   0   'False
+               Height          =   495
+               Left            =   480
+               TabIndex        =   106
+               Top             =   1200
+               Width           =   3135
+            End
             Begin VB.TextBox Text14 
                Height          =   285
                Left            =   840
                TabIndex        =   60
-               Top             =   1500
+               Top             =   1800
                Width           =   3735
             End
             Begin MSComCtl2.UpDown UpDown10 
                Height          =   285
                Left            =   4140
                TabIndex        =   56
-               Top             =   900
+               Top             =   860
                Width           =   240
                _ExtentX        =   423
                _ExtentY        =   503
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "Text13"
-               BuddyDispid     =   196636
+               BuddyDispid     =   196645
                OrigLeft        =   3720
                OrigTop         =   840
                OrigRight       =   3960
@@ -509,21 +547,21 @@ Begin VB.Form Zmanimform
                Left            =   3720
                TabIndex        =   55
                Text            =   "0"
-               Top             =   900
+               Top             =   860
                Width           =   435
             End
             Begin MSComCtl2.UpDown UpDown9 
                Height          =   315
                Left            =   4140
                TabIndex        =   54
-               Top             =   360
+               Top             =   329
                Width           =   240
                _ExtentX        =   423
                _ExtentY        =   556
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "Text12"
-               BuddyDispid     =   196637
+               BuddyDispid     =   196646
                OrigLeft        =   3720
                OrigTop         =   420
                OrigRight       =   3960
@@ -539,7 +577,7 @@ Begin VB.Form Zmanimform
                Left            =   3720
                TabIndex        =   53
                Text            =   "0"
-               Top             =   360
+               Top             =   320
                Width           =   495
             End
             Begin VB.OptionButton Option10 
@@ -547,7 +585,7 @@ Begin VB.Form Zmanimform
                Height          =   375
                Left            =   480
                TabIndex        =   52
-               Top             =   780
+               Top             =   720
                Width           =   3015
             End
             Begin VB.OptionButton Option9 
@@ -555,8 +593,25 @@ Begin VB.Form Zmanimform
                Height          =   375
                Left            =   480
                TabIndex        =   51
-               Top             =   360
+               Top             =   240
                Width           =   3015
+            End
+            Begin VB.Label lblAstCandles 
+               Caption         =   "minutes"
+               BeginProperty Font 
+                  Name            =   "Arial"
+                  Size            =   6.75
+                  Charset         =   177
+                  Weight          =   400
+                  Underline       =   0   'False
+                  Italic          =   0   'False
+                  Strikethrough   =   0   'False
+               EndProperty
+               Height          =   135
+               Left            =   3720
+               TabIndex        =   109
+               Top             =   1200
+               Width           =   615
             End
             Begin VB.Label Label14 
                Caption         =   "Name:"
@@ -572,7 +627,7 @@ Begin VB.Form Zmanimform
                Height          =   195
                Left            =   240
                TabIndex        =   59
-               Top             =   1500
+               Top             =   1800
                Width           =   555
             End
             Begin VB.Label Label13 
@@ -590,7 +645,7 @@ Begin VB.Form Zmanimform
                Height          =   135
                Left            =   3720
                TabIndex        =   58
-               Top             =   720
+               Top             =   680
                Width           =   495
             End
             Begin VB.Label Label12 
@@ -608,13 +663,13 @@ Begin VB.Form Zmanimform
                Height          =   135
                Left            =   3720
                TabIndex        =   57
-               Top             =   180
+               Top             =   140
                Width           =   495
             End
          End
          Begin VB.Frame Frame5 
             Height          =   2175
-            Left            =   -74880
+            Left            =   120
             TabIndex        =   36
             Top             =   825
             Width           =   4755
@@ -646,7 +701,7 @@ Begin VB.Form Zmanimform
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "txtBeforeAfter"
-               BuddyDispid     =   196645
+               BuddyDispid     =   196655
                OrigLeft        =   4440
                OrigTop         =   1680
                OrigRight       =   4695
@@ -703,7 +758,7 @@ Begin VB.Form Zmanimform
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "Text9"
-               BuddyDispid     =   196648
+               BuddyDispid     =   196658
                OrigLeft        =   3780
                OrigTop         =   1380
                OrigRight       =   4020
@@ -742,7 +797,7 @@ Begin VB.Form Zmanimform
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "Text8"
-               BuddyDispid     =   196650
+               BuddyDispid     =   196660
                OrigLeft        =   3720
                OrigTop         =   1260
                OrigRight       =   3960
@@ -902,7 +957,7 @@ Begin VB.Form Zmanimform
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "Text6"
-               BuddyDispid     =   196664
+               BuddyDispid     =   196674
                OrigLeft        =   3660
                OrigTop         =   1260
                OrigRight       =   3900
@@ -933,7 +988,7 @@ Begin VB.Form Zmanimform
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "Text5"
-               BuddyDispid     =   196665
+               BuddyDispid     =   196675
                OrigLeft        =   3720
                OrigTop         =   840
                OrigRight       =   3960
@@ -964,7 +1019,7 @@ Begin VB.Form Zmanimform
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "Text4"
-               BuddyDispid     =   196666
+               BuddyDispid     =   196676
                OrigLeft        =   3660
                OrigTop         =   360
                OrigRight       =   3900
@@ -1203,7 +1258,7 @@ Begin VB.Form Zmanimform
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "Text10"
-               BuddyDispid     =   196685
+               BuddyDispid     =   196695
                OrigLeft        =   3660
                OrigTop         =   1320
                OrigRight       =   3900
@@ -1262,7 +1317,7 @@ Begin VB.Form Zmanimform
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "Text2"
-               BuddyDispid     =   196688
+               BuddyDispid     =   196698
                OrigLeft        =   3600
                OrigTop         =   780
                OrigRight       =   3840
@@ -1294,7 +1349,7 @@ Begin VB.Form Zmanimform
                _Version        =   393216
                AutoBuddy       =   -1  'True
                BuddyControl    =   "Text1"
-               BuddyDispid     =   196689
+               BuddyDispid     =   196699
                OrigLeft        =   2700
                OrigTop         =   840
                OrigRight       =   2940
@@ -1580,6 +1635,19 @@ Private Sub Option22_Click()
    optiondmish% = 0
 End Sub
 
+Private Sub optAstCandles_Click()
+   options% = 3
+   txtAstCandles.Text = "0"
+   Text12.Enabled = False
+   UpDown9.Enabled = False
+   Text12.Enabled = True
+   UpDown9.Enabled = True
+   txtAstCandles.Text = "0"
+   txtAstCandles.Enabled = True
+   updwnAstCandles.Enabled = True
+   Text14.Text = sEmpty
+End Sub
+
 Private Sub optMishmarAst_Click()
    txtMishmarMis.Enabled = False
    txtMishmarAst.Enabled = True
@@ -1836,7 +1904,6 @@ zm100:
 c3error:
   Exit Sub
 
-
 End Sub
 
 Private Sub Option12_Click()
@@ -1880,6 +1947,7 @@ Private Sub Combo1_Click()
   On Error GoTo errhand
   
   Dim itsthere As Boolean
+'  Dim ZmanString() As String
   
   If reorder = True Then
     Close
@@ -1897,7 +1965,7 @@ Private Sub Combo1_Click()
     searchnum% = -1
     Do Until EOF(zmannum%)
        searchnum% = searchnum% + 1
-       Input #zmannum%, az$, bz$, cz$, dz$, Ez$, Fz$, GZ$, HZ$
+       Input #zmannum%, az$, bz$, cz$, dz$, ez$, Fz$, GZ$, HZ$
        If InStr(az$, tmpitem$) Then
           'check for redundancies
           For j% = 0 To numsort% - 1
@@ -2029,8 +2097,20 @@ Private Sub Combo1_Click()
                  txtBeforeAfter.Text = "0"
                  End If
            
-              Combo2.ListIndex = Val(c$)
-              Combo3.ListIndex = Val(D$)
+              '091124 new hours zemanios detection and error catching
+              If Combo2.ListCount - 1 < Val(c$) Or c$ = "NA" Then
+                 Err.Raise vbObjectError + 513, "Zmaninform_Combo1_Click", "Corrupted template detected, sunrise method couldn't be detected"
+              Else
+                 Combo2.ListIndex = Val(c$)
+                 End If
+              
+              If Combo3.ListCount - 1 < Val(D$) Or D$ = "NA" Then
+                 Err.Raise vbObjectError + 513, "Zmaninform_Combo1_Click", "Corrupted template detected, suset method couldn't be detected"
+              Else
+                 Combo3.ListIndex = Val(D$)
+                 End If
+'              Combo2.ListIndex = Val(c$) '091124 old options discarded
+'              Combo3.ListIndex = Val(D$)
               optionz% = Val(b$)
               Select Case optionz%
                  Case 1
@@ -2058,19 +2138,48 @@ Private Sub Combo1_Click()
      SSTab1.Tab = 3
      If itsthere = True Then
         Do Until EOF(zmannum%)
+'              Line Input #zmannum%, doclin$
+'              ZmanString = Split(doclin$, ",")
+'              If UBound(ZmanString) = 7 Then
+'                 a1$ = ZmanString(0)
+'                 a2$ = ZmanString(1)
+'                 a3$ = ZmanString(2)
+'                 a4$ = ZmanString(3)
+'                 a5$ = ZmanString(4)
+'                 a6$ = ZmanString(5)
+'                 GZ$ = ZmanString(6)
+'                 HZ$ = ZmanString(7)
+'                 End If
            Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
+'           If InStr(a$, "Chazos") Then '<<<<<<<<<<<<<
+'              ccc = 1
+'              End If
            If a$ = tmptext$ Then
               options% = Val(b$)
-              Select Case options%
+              Select Case options% '091124 -- changed way candles are listed, only the value of the relevant option is recorded and retrieved
                  Case 1
                     Option9.Value = True
+                    Text12.Text = c$
+                    Text13.Text = "0"
+                    txtAstCandles.Text = "0"
                  Case 2
                     Option10.Value = True
+                    Text13.Text = c$
+                    Text12.Text = "0"
+                    txtAstCandles.Text = "0"
+                 Case 3
+                    optAstCandles.Value = True
+                    txtAstCandles.Text = c$
+                    Text12.Text = "0"
+                    Text13.Text = "0"
                  Case Else
               End Select
-              Text12.Text = c$
-              Text13.Text = D$
-              Text14.Text = Mid$(a$, 9, Len(a$) - 9)
+'              Text12.Text = c$  '<<<should be each text box = c$
+'              Text13.Text = D$
+'              If D$ = "NA" Then Text13.Text = "0"
+'              txtAstCandles.Text = e$
+'              If e$ = "NA" Then txtAstCandles.Text = "0"
+              Text14.Text = Mid$(a1$, 9, Len(a1$) - 9)
               If Val(GZ$) = -1 Then
                  Option17.Value = True
                  Text15.Text = HZ$
@@ -2082,6 +2191,7 @@ Private Sub Combo1_Click()
               End If
         Loop
 '        Close #zmannum%
+'        If InStr(a$, "Chazos") Then GoTo 500
         End If
   ElseIf InStr(tmptext$, "Sunrise") Then
      SSTab1.Tab = 4
@@ -2173,10 +2283,11 @@ errhand:
        
 errorhand:
     Resume Next
-   
+'    MsgBox "Error detected, err number = " & Str$(Err.Number) & ", error description: " & Err.Description, vbOKOnly + vbCritical, "zmanim error"
+'   Resume Next
 End Sub
 
-Private Sub Command1_Click()
+Private Sub Command1_Click() 'add zemanim button
    On Error GoTo errhand
    Dim AlreadyOpen As Boolean
    AlreadyOpen = False
@@ -2338,7 +2449,7 @@ Private Sub Command1_Click()
          Else
             Write #zmannum%, tmpnam$, Str$(Combo3.ListIndex), Str$(optiont%), Text4.Text, Text5.Text, Text6.Text, Str$(optionround%), stepss$
             End If
-      Case 2 'Z'manim Hayom
+      Case 2 'Z'manei Hayom
          
          If Text11.Text <> sEmpty Then
             'check for unique name
@@ -2385,7 +2496,18 @@ Private Sub Command1_Click()
           ElseIf optionround% = 1 Then
             stepss$ = Text16.Text
             End If
-          Write #zmannum%, tmpnam$, Str$(options%), Text12.Text, Text13.Text, "NA", "NA", Str$(optionround%), stepss$
+          If options% = 1 Then
+             'clock minutes before mishor sunset
+             Write #zmannum%, tmpnam$, Str$(options%), Text12.Text, "NA", "NA", "NA", Str$(optionround%), stepss$
+          ElseIf options% = 2 Then
+             'clock minutes before the visible sunset
+             Write #zmannum%, tmpnam$, Str$(options%), Text13.Text, "NA", "NA", "NA", Str$(optionround%), stepss$
+          ElseIf options% = 3 Then
+             'clock minutes before astronomical sunset
+             Write #zmannum%, tmpnam$, Str$(options%), txtAstCandles.Text, "NA", "NA", "NA", Str$(optionround%), stepss$
+             End If
+          'below is how candle lighting used to be recorded
+'          Write #zmannum%, tmpnam$, Str$(options%), Text12.Text, Text13.Text, txtAstCandles.Text, "NA", Str$(optionround%), stepss$
        
        Case 4 'Sunrises and noons
        
@@ -2595,6 +2717,15 @@ Private Sub calendarbut_Click()
    Dim sumref(7) As Double, winref(7) As Double
    
    On Error GoTo generrhand
+   
+   'check that user picked a zman
+   If List1.ListCount = 0 Then
+      Call MsgBox("It appears you haven't either defined or picked a zemanim opinion!" _
+                  & vbCrLf & "" _
+                  & vbCrLf & "Please define zemanim, or pick one of the opinions using the open button." _
+                  , vbInformation, "No zemanim defined")
+      Exit Sub
+      End If
    
 '//////////////////DST support for Israel, USA added 082921/////////////////////////////////////
     Dim stryrDST%, endyrDST%, strdaynum(1) As Integer, enddaynum(1) As Integer
@@ -3137,12 +3268,12 @@ ca10:   X1# = X2# - X1#
         D1# = yy1# * B2# / 2#
         O1# = S2# + D1#
         O2# = O1# + D1#
-        A3# = O1# / f1#
-        A4# = O2# / f1#
-        B3# = 1# - e4# * Sin(A3#) ^ 2
+        a3# = O1# / f1#
+        a4# = O2# / f1#
+        B3# = 1# - e4# * Sin(a3#) ^ 2
         B4# = B3# * Sqr(B3#) * C1#
-        C4# = 1# - e4# * Sin(A4#) ^ 2
-        C5# = Tan(A4#) * C2# * C4# ^ 2
+        C4# = 1# - e4# * Sin(a4#) ^ 2
+        C5# = Tan(a4#) * C2# * C4# ^ 2
         C6# = C5# * X1# ^ 2
         D2# = yy1# * B4# - C6#
         C6# = C6# / 3#
@@ -3151,10 +3282,10 @@ ca10:   X1# = X2# - X1#
         R3# = O2# - C6#
         R4# = R3# - C6#
         R2# = R4# / f1#
-        A2# = 1# - e4# * Sin(l1#) ^ 2
+        a2# = 1# - e4# * Sin(l1#) ^ 2
         lt = r# * (l1#)
-        A5# = Sqr(A2#) * c3#
-        d3# = X1# * A5# / Cos(R2#)
+        a5# = Sqr(a2#) * c3#
+        d3# = X1# * a5# / Cos(R2#)
 ' LON
         lg = r# * ((s1# + d3#) / f1#)
 '       THIS IS THE EASTERN HEMISPHERE!
@@ -3200,6 +3331,14 @@ coordnetz:
           td = geotz!
           End If
        End If
+       
+       'fix bug for world lat,lon when using the regular calculation routine
+       If Abs(lt) > 90 Then
+          'switch lg,lt
+          tmp = lg
+          lg = lt
+          lt = tmp
+          End If
        
     If weather% = 5 Then
         'load minimum and average temperatures for this place
@@ -3500,8 +3639,8 @@ cal:
                 End If
                 
             '**************check for polar circles**************
-            If (pi - Sgn(lr) * (D + lr) <= air + 0.002) Or (Abs(lr - D) >= pi / 2 - 0.02) Then
-               'sun doesn't set that day
+            If (pi - Sgn(lr) * (D + lr) <= air + 0.002) Or (Abs(lr - D) >= pi / 2) Then '- 0.02) Then '//EK relaxed check on 05/26/24
+               'sun doesn't rise or set that day
                t3sub = -9999
                t3sub99 = -1
                Return
@@ -3661,13 +3800,13 @@ cal:
            air2 = ZA * cd 'zenith angle
            '********************check for no twilight*************
            If air2 > pi - Sgn(lr) * (D + lr) Or air2 < Abs(lr - D) Then
-              'no dawn
+              'no twilight
               t3sub = -9999
               Return
               End If
            '**************************************************
            If Abs(((-Tan(lr) * Tan(D)) + (Cos(air2) / Cos(lr) / Cos(D)))) > 1# Then
-              'no dawn
+              'no twilight
               t3sub = -9999
               Return
               End If
@@ -3681,7 +3820,7 @@ cal:
               End If
               
            If Abs(((-Tan(lr) * Tan(D)) + (Cos(air2) / Cos(lr) / Cos(D)))) > 1# Then
-              'no dawn
+              'no twilight
               t3sub = -9999
               Return
              End If
@@ -3718,7 +3857,7 @@ newzemanim:
       
    num% = -1
    Do Until EOF(zmannum%)
-      Input #zmannum%, az$, bz$, cz$, dz$, Ez$, Fz$, GZ$, HZ$
+      Input #zmannum%, az$, bz$, cz$, dz$, ez$, Fz$, GZ$, HZ$
       'calculate the zeman and record it according to its Combo2,Combo3 number
       If Mid$(az$, 1, 4) = "Dawn" Then
       
@@ -3746,10 +3885,10 @@ newzemanim:
                    sunsets = Val(t3subb$)
                    hourszemanios = (sunsets - sunrise) / 12
                    'subtract minutes zemnanios
-                   If Str(sunrise - (Val(Ez$) / 60) * hourszemanios) < 0 Then
+                   If Str(sunrise - (Val(ez$) / 60) * hourszemanios) < 0 Then
                       t3subb$ = "none"
                    Else
-                      t3subb$ = Str(sunrise - (Val(Ez$) / 60) * hourszemanios)
+                      t3subb$ = Str(sunrise - (Val(ez$) / 60) * hourszemanios)
                       End If
                 Else
                    t3subb$ = "none"
@@ -3767,10 +3906,10 @@ newzemanim:
                    sunsets = Val(t3subb$)
                    hourszemanios = (sunsets - sunrise) / 12
                    'subtract minutes zemnanios
-                   If Str(sunrise - (Val(Ez$) / 60) * hourszemanios) < 0 Then
+                   If Str(sunrise - (Val(ez$) / 60) * hourszemanios) < 0 Then
                       t3subb$ = "none"
                    Else
-                      t3subb$ = Str(sunrise - (Val(Ez$) / 60) * hourszemanios)
+                      t3subb$ = Str(sunrise - (Val(ez$) / 60) * hourszemanios)
                       End If
                 Else
                    t3subb$ = "none"
@@ -3837,11 +3976,11 @@ newzemanim:
                 If (t3subb$ <> "none") Then
                    sunsets = Val(t3subb$)
                    hourszemanios = (sunsets - sunrise) / 12
-                   If Str(sunsets + (Val(Ez$) / 60) * hourszemanios) < 0 Then
+                   If Str(sunsets + (Val(ez$) / 60) * hourszemanios) < 0 Then
                       t3subb$ = "none"
                    Else
                       'add minutes zemnanios to sunset
-                      t3subb$ = Str(sunsets + (Val(Ez$) / 60) * hourszemanios)
+                      t3subb$ = Str(sunsets + (Val(ez$) / 60) * hourszemanios)
                       End If
                 Else
                    t3subb$ = "none"
@@ -3858,11 +3997,11 @@ newzemanim:
                 If (t3subb$ <> "none") Then
                    sunsets = Val(t3subb$)
                    hourszemanios = (sunsets - sunrise) / 12
-                   If Str(sunsets + (Val(Ez$) / 60) * hourszemanios) < 0 Then
+                   If Str(sunsets + (Val(ez$) / 60) * hourszemanios) < 0 Then
                       t3subb$ = "none"
                    Else
                       'add minutes zemnanios to sunset
-                      t3subb$ = Str(sunsets + (Val(Ez$) / 60) * hourszemanios)
+                      t3subb$ = Str(sunsets + (Val(ez$) / 60) * hourszemanios)
                       End If
                 Else
                    t3subb$ = "none"
@@ -4067,9 +4206,21 @@ newzemanim:
                 tmptime$ = LTrim$(timtem$)
                 End If
              t3sub = Val(Mid$(tmptime$, 1, 2)) + Val(Mid$(tmptime$, 4, 2)) / 60 + Val(Mid$(tmptime$, 7, 2)) / 3600
-             t3sub = t3sub - Val(dz$) / 60
+             t3sub = t3sub - Val(cz$) / 60 '091124 -new candle lighting recording method, now minute value only recorded in c$
+             't3sub = t3sub - Val(dz$) / 60 'old method, this option's minute value was recorded in d$
              zmannames(num%) = az$
              zmantimes(num%, numday%) = Str(t3sub)
+           Case 3 'minutes before the astronomical sunset
+             If astskiynum% > 0 Then
+                t3sub = Val(zmantimes(astskiynum%, numday%)) 'this is astron. sunset (if applicable)
+                t3sub = t3sub - Val(cz$) / 60 '091124 -new candle lighting recording method, now minute value only recorded in c$
+                't3sub = t3sub - Val(ez$) / 60 'old method, this option's minute value was recorded in e$
+                zmannames(num%) = az$
+                zmantimes(num%, numday%) = Str(t3sub)
+             Else
+                'raise error
+                Err.Raise vbObjectError + 513, "calendarbut", "Astron. Sunset unknown, can't calculate the candle lighting time"
+                End If
            Case Else
         End Select
 
@@ -4102,7 +4253,7 @@ newzemanim:
    
    Do Until EOF(zmannum%)
       numzman% = numzman% + 1
-      Input #zmannum%, az$, bz$, cz$, dz$, Ez$, Fz$, GZ$, HZ$
+      Input #zmannum%, az$, bz$, cz$, dz$, ez$, Fz$, GZ$, HZ$
       If Mid$(az$, 1, 6) = "Zmanim" Then
       
          'look for added or subtracted time
@@ -4134,11 +4285,11 @@ newzemanim:
                Else
                   hourszemanios = (twilight - dawn) / 12
                   If BeforeAddMin1 <> 0 Then
-                     t3sub = dawn + Val(Ez$) * hourszemanios + BeforeAddMin1 / 60#
+                     t3sub = dawn + Val(ez$) * hourszemanios + BeforeAddMin1 / 60#
                   ElseIf BeforeAddMin2 <> 0 Then
-                     t3sub = twilight + Val(Ez$) * hourszemanios + BeforeAddMin2 / 60#
+                     t3sub = twilight + Val(ez$) * hourszemanios + BeforeAddMin2 / 60#
                   Else
-                     t3sub = dawn + Val(Ez$) * hourszemanios
+                     t3sub = dawn + Val(ez$) * hourszemanios
                      End If
                   If t3sub < 0 Or t3sub >= 24 Then
                      t3sub = -9999
@@ -4301,11 +4452,11 @@ newzemanim:
            newnum% = newnum% + 1
            If reorder = True Then
               If newnum% <> listnum% Then
-                 Input #zmannum%, az$, bz$, cz$, dz$, Ez$, Fz$, GZ$, HZ$
+                 Input #zmannum%, az$, bz$, cz$, dz$, ez$, Fz$, GZ$, HZ$
                  GoTo 900
                  End If
               End If
-           Input #zmannum%, az$, bz$, cz$, dz$, Ez$, Fz$, GZ$, HZ$
+           Input #zmannum%, az$, bz$, cz$, dz$, ez$, Fz$, GZ$, HZ$
            nextnum% = nextnum% + 1
            'If LTrim$(zmantimes(newnum%, numday%)) = "none" Then
            '   t3subb$ = "none"
@@ -4437,7 +4588,6 @@ generrhand:
         End
      
      Else
-        Resume
         response = MsgBox("Zmanimform calendarbut encountered error number: " + Str(Err.Number) + ".  Do you want to abort?", vbYesNoCancel + vbCritical, "Cal Program")
         If response <> vbYes Then
            Close
@@ -4494,7 +4644,7 @@ Private Sub Form_Load()
    myfile = Dir(drivjk$ + "zmanim.tmp")
    If myfile <> sEmpty And zmanopen = True Then
       If internet = True Then Exit Sub
-      response = MsgBox("Do you wan't to record new set of parameters? (answer NO if you want to append these zmanim to previously recorded ones)", vbQuestion + vbYesNoCancel + vbDefaultButton2, "Cal Program")
+      response = MsgBox("Do you wan't to open/record new set of parameters? (answer NO if you want to use or append these zmanim to previously used ones)", vbQuestion + vbYesNoCancel + vbDefaultButton2, "Cal Program")
       If response = vbNo Then 'load last recorded parameters
         init = False
         zmanopen = False
@@ -4507,6 +4657,9 @@ Private Sub Form_Load()
               Combo2.AddItem a$
            ElseIf InStr(a$, "Twilight") Or InStr(a$, "Sunset") Then
               Combo3.AddItem a$
+              End If
+           If InStr(a$, "Astronomical Sunset") Then
+              optAstCandles.Enabled = True
               End If
            Combo1.ListIndex = Combo1.ListCount - 1
            If Val(GZ$) = -1 Then
@@ -4567,6 +4720,10 @@ Private Sub Form_Load()
          options% = 1
       Case 2
          Option10.Value = True
+         options% = 2
+      Case 3
+         optAstCandles.Value = True
+         options% = 3
       Case Else
    End Select
    'now add a listing for the mishor sunrise and sunset
@@ -4756,6 +4913,8 @@ Private Sub Option10_Click()
    Text12.Text = "0"
    Text12.Enabled = False
    UpDown9.Enabled = False
+   txtAstCandles.Enabled = True
+   updwnAstCandles.Enabled = True
    Text13.Text = "0"
    Text13.Enabled = True
    UpDown10.Enabled = True
@@ -4850,6 +5009,8 @@ Private Sub Option7_Click()
    Text6.Text = "0"
    Text6.Enabled = False
    UpDown5.Enabled = False
+   txtAstCandles.Enabled = True
+   updwnAstCandles.Enabled = True
    Text7.Text = sEmpty
 End Sub
 

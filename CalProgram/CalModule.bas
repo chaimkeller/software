@@ -32,8 +32,8 @@ Public Const SETTINGS_PROGID = "Bullzip.PDFSettings"
 Public Const UTIL_PROGID = "Bullzip.PDFUtil"
  
 Public currentdir As String, citynames$(800), cityhebnames$(800), numcities%, citnam$
-Public errorfnd As Boolean, hebcityname$, s1blk, s2blk, defdriv$, SRTMflag As Integer
-Public nearobstnez(3, 601), nearobstski(3, 601), nfind%, nfind1%, rhday%
+Public errorfnd As Boolean, hebcityname$, s1blk, s2blk, defdriv$, SRTMflag As Integer, numtotatl%
+Public nearobstnez(3, 601), nearobstski(3, 601), nfind%, nfind1%, rhday%, ZmanString() As String
 Public nrnez%(601), nrski%(601), nearnez As Boolean, nearski As Boolean, calnodevis As Boolean
 Public initdir As Boolean, tblmesag%, autocancel As Boolean, parshiotEY As Boolean
 Public Katz As Boolean, katznum%, katzhebnam$, katztotal%, NearWarning(1) As Boolean

@@ -946,6 +946,10 @@ End Sub
 
 Private Sub Form_Load()
    'version: 11/21/2008
+   Option1.Enabled = True
+   Option2.Enabled = True
+   Option3.Enabled = True
+   Option4.Enabled = True
     
     'visible times are default
     Check1.Value = vbChecked
