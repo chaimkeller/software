@@ -6181,7 +6181,7 @@ short Caldirectories()
 				//bat file's name always consists of first 4 letters of currentdir
 				sprintf( myfile, "%s%s%s%s%s", currentdir, sun, "/"
 						, Mid(erosareabat, 1, 4, buff1), ".bat" );
-
+						
 				//search for places within search radius and add vantage points to buffer
 				if ( calnearsearch( myfile, sun ) ) return -1; //error returns -1
 			}
@@ -10095,10 +10095,43 @@ char *RTrim(char * str)
 	 return str;
  }
 //Trim
+/*
+//https://www.geeksforgeeks.org/remove-spaces-from-a-given-string/
+// An efficient C++ program to remove all spaces
+// from a string
+// Function to remove all spaces from a given string
+//void removeSpaces(char *str)
+char *Trim(char *str)
+{
+    // To keep track of non-space character count
+    int count = 0;
+ 
+    // Traverse the given string. If current character
+    // is not space, then place it at index 'count++'
+    for (int i = 0; str[i]; i++)
+        if (str[i] != ' ')
+            str[count++] = str[i]; // here count is
+                                   // incremented
+    str[count] = '\0';
+    return str;
+}
+*/
+///////////////////////
+///*
 char *Trim(char *str)
 {
 	return LTrim(RTrim(str));
 }
+//*/
+//////////////////////////////
+//Trim
+/*
+char *Trim(char *str)
+{
+	return LTrim(RTrim(str));
+}
+*/
+//////////////////////////////
 
 
 //////////////////emulation of Mid function (with external buffer///////////////////////
@@ -11319,7 +11352,8 @@ alem */
 
 	if (nsetflag != 2 && nsetflag != 3 && nsetflag != 6 && nsetflag != 7 && SRTMflag < 10) //read horizon profile file
 	{
-		if (ReadProfile( fileon, &hgt, &maxang, meantemp ) ) return -2; //(-2 = file doesn't exist, or can't be read)
+		//if (ReadProfile( fileon, &hgt, &maxang, meantemp ) ) return -2; //(-2 = file doesn't exist, or can't be read)
+		if (ReadProfile( fileon, &hgt, &maxang, meantemp ) ) return -2;
 
 	}
 	else if ( SRTMflag > 9) //visible sunrise/sunset based on 30m DTM calculations
@@ -13403,7 +13437,7 @@ void InitAstConst(short *nyr, short *nyd, double *ac, double *mc,
 //        }
 		//---------------------------------------------
 		*nyf = 0;
-		if (nyd < 0) {
+		if (*nyd < 0) {
 			i__2 = *nyr;
 			for (nyri = RefYear - 1; nyri >= i__2; --nyri) {
 			nyrtst = nyri;
@@ -13417,7 +13451,7 @@ void InitAstConst(short *nyr, short *nyd, double *ac, double *mc,
 			*nyf = *nyf - nyltst;
 			}
 		}
-		else if (nyd >= 0)
+		else if (*nyd >= 0)
 		{
 			i__2 = *nyr - 1;
 			for (nyri = RefYear; nyri <= i__2; ++nyri) {
