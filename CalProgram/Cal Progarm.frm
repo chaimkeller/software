@@ -1226,24 +1226,28 @@ cd500:
       Open drivcities$ + "citynams_w1255.txt" For Input As #filcity%
       numcit% = 0: numcities% = 0: numheb% = 0
       Do Until EOF(filcity%)
-         numcit% = numcit% + 1
          Line Input #filcity%, docline$
-         If numcit% Mod 2 = 0 Then
-            'newhebcalfm.Combo1.AddItem title$ + " לנץ החמה ב" + docline$
-            'newhebcalfm.Combo6.AddItem title$ + " לשקיעת החמה ב" + docline$
-            numheb% = numheb% + 1
-            'remove the "_" from the names
-            For inam% = 1 To Len(docline$)
-               If Mid$(docline$, inam%, 1) = "_" Then
-                  Mid$(docline$, inam%, 1) = " "
-                  End If
-            Next inam%
-            cityhebnames$(numheb%) = docline$
-         Else
-            numcities% = numcities% + 1
-            citynames$(numcities%) = docline$
-            End If
-      Loop
+         If Trim$(docline$) <> sEmpty Then
+             numcit% = numcit% + 1
+    
+             If InStr(docline$, "*") Then GoTo 9 'don't include these yeshuvim - they no longer exist
+             If numcit% Mod 2 = 0 Then
+                'newhebcalfm.Combo1.AddItem title$ + " לנץ החמה ב" + docline$
+                'newhebcalfm.Combo6.AddItem title$ + " לשקיעת החמה ב" + docline$
+                numheb% = numheb% + 1
+                'remove the "_" from the names
+                For inam% = 1 To Len(docline$)
+                   If Mid$(docline$, inam%, 1) = "_" Then
+                      Mid$(docline$, inam%, 1) = " "
+                      End If
+                Next inam%
+                cityhebnames$(numheb%) = docline$
+             Else
+                numcities% = numcities% + 1
+                citynames$(numcities%) = docline$
+                End If
+             End If
+9:    Loop
       Close #filcity%
       End If
    filnetz3% = FreeFile
@@ -1845,30 +1849,50 @@ autorun2:
        Do Until EOF(filnam%)
           Input #filnam%, cityAutoEng$
           Input #filnam%, cityAutoHeb$
-          If cityAutoHeb$ = doclin$ Then
-             Close #filnam%
-             found% = 1
-             Exit Do
+          If InStr(doclin$, cityAutoHeb$) Then
+             If Len(Trim$(doclin$)) = Len(Trim$(cityAutoHeb$)) Then
+                Close #filnam%
+                found% = 1
+                Exit Do
+             Else 'do further check, since sometimes there are trailing non-printable characters
+                nchar1% = 0
+                For i% = 1 To Len(doclin$)
+                   If InStr("אבגדהוזחטילמםנןסעפףצץקרשת_-'()", Mid$(doclin$, i%, 1)) Then
+                      nchar1% = nchar1% + 1
+                      End If
+                Next i%
+                nchar2% = 0
+                For i% = 1 To Len(cityAutoHeb$)
+                   If InStr("אבגדהוזחטילמםנןסעפףצץקרשת_-'()", Mid$(cityAutoHeb$, i%, 1)) Then
+                      nchar2% = nchar2% + 1
+                      End If
+                Next i%
+                If nchar1% = nchar2% Then
+                   Close #filnam%
+                   found% = 1
+                   Exit Do
+                   End If
+                End If
              End If
        Loop
        If found% = 1 Then
           currentdir = cityAutoEng$
        Else
           Close #filnam%
-          MsgBox ("Can't find equivalent English directory name of :" & Trim$(doclin$) & "!  Aborting...")
+          MsgBox ("Can't find equivalent English directory name of :" & Trim$(doclin$) & "!  Aborting..." & vbCrLf & vbCrLf & "(Hint: check that the Hebrew spelling of the city in the citynams_w1255.txt and the citysortheb_w1255.txt files are equivalent)")
           GoTo 950
           End If
        
        'postiion directory listing at currentdir
        For i% = 0 To Dir1.ListCount - 1
-          If Dir1.List(i%) = drivcities & currentdir Then
+          If LCase$(Dir1.List(i%)) = drivcities & LCase$(currentdir) Then
             Dir1.ListIndex = i%
             Exit For
             End If
       Next i%
       
     'check for wrong Hebrew name
-    If drivcities$ & LCase$(cityAutoEng$) <> LCase$(Dir1.List(i%)) Then
+    If InStr(drivcities$ & LCase$(cityAutoEng$), LCase$(Dir1.List(i%))) = 0 Then
        Call MsgBox("Can't find the Hebrew Name:" _
                    & vbCrLf & doclin$ _
                    & vbCrLf & "in the citynams_w1255.txt file!" _
