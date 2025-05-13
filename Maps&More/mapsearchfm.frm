@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form mapsearchfm 
@@ -18,6 +18,24 @@ Begin VB.Form mapsearchfm
    MinButton       =   0   'False
    ScaleHeight     =   8055
    ScaleWidth      =   5400
+   Begin VB.CommandButton cmdB 
+      Caption         =   "B"
+      Height          =   255
+      Left            =   3600
+      TabIndex        =   73
+      ToolTipText     =   "Fix position bug by adding one grid size in longitude"
+      Top             =   840
+      Width           =   375
+   End
+   Begin VB.CommandButton cmdAdjust 
+      Caption         =   "A"
+      Height          =   255
+      Left            =   3960
+      TabIndex        =   72
+      ToolTipText     =   "Adjust coordinates to fix peak positions"
+      Top             =   840
+      Width           =   375
+   End
    Begin MSComCtl2.UpDown updwnSymm 
       Height          =   285
       Left            =   5041
@@ -31,7 +49,7 @@ Begin VB.Form mapsearchfm
       Value           =   5
       AutoBuddy       =   -1  'True
       BuddyControl    =   "txtSymm"
-      BuddyDispid     =   196609
+      BuddyDispid     =   196610
       OrigLeft        =   5160
       OrigTop         =   7680
       OrigRight       =   5415
@@ -712,7 +730,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   20
          BuddyControl    =   "Text4"
-         BuddyDispid     =   196652
+         BuddyDispid     =   196653
          OrigLeft        =   3420
          OrigTop         =   300
          OrigRight       =   3660
@@ -734,7 +752,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   15
          BuddyControl    =   "Text3"
-         BuddyDispid     =   196654
+         BuddyDispid     =   196655
          OrigLeft        =   2100
          OrigTop         =   240
          OrigRight       =   2340
@@ -1101,6 +1119,131 @@ Private Sub chkValidity_Click()
    Else
       chkProfiles.Visible = False
       End If
+End Sub
+
+'---------------------------------------------------------------------------------------
+' Procedure : cmdAdjust_Click
+' Author    : chaim
+' Date      : 5/11/2025
+' Purpose   :
+'---------------------------------------------------------------------------------------
+'
+Private Sub cmdAdjust_Click()
+   On Error GoTo cmdAdjust_Click_Error
+
+    If sky2.row <> 0 Then
+       MaxHeight = -9999
+       lat0 = Val(Maps.Text6.Text)
+       lon0 = Val(Maps.Text5.Text)
+       
+       'begin 5 grid dim left of point and with each click move another grid dim to find maximum point
+       For i% = 0 To 10 Step 1
+         waitime = Timer + 1
+         Do Until Timer > waitime
+           DoEvents
+         Loop
+         nplachos& = sky2.row
+         Maps.Text6.Text = lat0 ' latitude
+         Maps.Text5.Text = lon0 + i% * 0.5 * (1# / 3600#) 'longitude
+         Call goto_click
+         waitime = Timer + 0.01
+         Do Until Timer > waitime
+           DoEvents
+         Loop
+         HeightHere = Val(Maps.Text7.Text)
+         If HeightHere > MaxHeight Then
+            MaxHeight = HeightHere
+            latMax = Maps.Text6.Text
+            lonMax = Maps.Text5.Text
+            End If
+         Call BringWindowToTop(mapsearchfm.hwnd)
+         OverhWnd = FindWindow(vbNullString, "Overview")
+         If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+       Next i%
+       'go to maximum point
+       Maps.Text6.Text = latMax
+       Maps.Text5.Text = lonMax
+       Call goto_click
+       
+       'now search in latitude
+        MaxHeight = -9999
+       lat0 = Val(Maps.Text6.Text)
+       lon0 = Val(Maps.Text5.Text)
+       
+       'begin 5 grid dim left of point and with each click move another grid dim to find maximum point
+       For i% = -10 To 10 Step 1
+         waitime = Timer + 1
+         Do Until Timer > waitime
+           DoEvents
+         Loop
+         nplachos& = sky2.row
+         Maps.Text6.Text = lat0 + i% * 0.5 * (1# / 3600#) ' latitude
+         Maps.Text5.Text = lon0  'longitude
+         Call goto_click
+         waitime = Timer + 0.01
+         Do Until Timer > waitime
+           DoEvents
+         Loop
+         HeightHere = Val(Maps.Text7.Text)
+         If HeightHere > MaxHeight Then
+            MaxHeight = HeightHere
+            latMax = Maps.Text6.Text
+            lonMax = Maps.Text5.Text
+            End If
+         Call BringWindowToTop(mapsearchfm.hwnd)
+         OverhWnd = FindWindow(vbNullString, "Overview")
+         If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+       Next i%
+       'go to maximum point
+       Maps.Text6.Text = latMax
+       Maps.Text5.Text = lonMax
+       Call goto_click
+      
+       
+       End If
+       
+       
+   'now search in latitude
+
+   On Error GoTo 0
+   Exit Sub
+
+cmdAdjust_Click_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdAdjust_Click of Form mapsearchfm"
+End Sub
+
+'---------------------------------------------------------------------------------------
+' Procedure : cmdB_Click
+' Author    : chaim
+' Date      : 5/12/2025
+' Purpose   :
+'---------------------------------------------------------------------------------------
+'
+Private Sub cmdB_Click()
+
+   On Error GoTo cmdB_Click_Error
+    If sky2.row <> 0 Then
+       MaxHeight = -9999
+       lat0 = Val(Maps.Text6.Text)
+       lon0 = Val(Maps.Text5.Text)
+       
+         Maps.Text6.Text = lat0 ' latitude
+         Maps.Text5.Text = lon0 + (1# / 3600#) 'longitude
+         Call goto_click
+         Call BringWindowToTop(mapsearchfm.hwnd)
+         OverhWnd = FindWindow(vbNullString, "Overview")
+         If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+       
+       End If
+    
+
+   On Error GoTo 0
+   Exit Sub
+
+cmdB_Click_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdB_Click of Form mapsearchfm"
 End Sub
 
 Private Sub cmdCancelSearch_Click()
@@ -2140,48 +2283,72 @@ Private Sub Command1_Click()
                End If
                
             If SearchType% = 0 Then
-            If init = 0 Then
-               If numheights <= numSlots& Then
-                  numheights = numheights + 1
-                  searchhgts(0, numheights - 1) = kmys
-                  searchhgts(1, numheights - 1) = kmxs
-                  searchhgts(2, numheights - 1) = hgts
-                  searchhgts(3, numheights - 1) = Val(Format(Str$(Dist), "####0.0###"))
-               Else
-                  init = 1
-                  End If
-               End If
-            If init = 1 Then 'find highest points
-               For i& = 1 To numSlots&
-                  If hgts > searchhgts(2, i& - 1) Then
-                     'find minimum searchhgts, and replace it with this height
-s50:                 minhgt0 = searchhgts(2, 1)
-                     For j& = 2 To numSlots&
-                        If searchhgts(2, j&) < minhgt0 Then
-                           minhgt = searchhgts(2, j& - 1)
-                           minkmy = searchhgts(0, j& - 1)
-                           minkmx = searchhgts(1, j& - 1)
-                           mindist = searchhgts(3, j& - 1)
-                           minhgtindex = j&
-                           searchhgts(2, j&) = searchhgts(2, 0)
-                           searchhgts(0, j&) = searchhgts(0, 0)
-                           searchhgts(1, j&) = searchhgts(1, 0)
-                           searchhgts(3, j&) = searchhgts(3, 0)
-                           searchhgts(2, 1) = minhgt
-                           searchhgts(0, 1) = minkmy
-                           searchhgts(1, 1) = minkmx
-                           searchhgts(3, 1) = mindist
-                           GoTo s50
-                           End If
-                     Next j&
-                     'replace minimum height with newly found higher height
-                     searchhgts(2, 1) = hgts
-                     searchhgts(0, 1) = kmys
-                     searchhgts(1, 1) = kmxs
-                     searchhgts(3, 1) = Dist
-                     Exit For
+                If init = 0 Then
+                   If numheights <= numSlots& - 1 Then
+                      numheights = numheights + 1
+                      searchhgts(0, numheights - 1) = kmys
+                      searchhgts(1, numheights - 1) = kmxs
+                      searchhgts(2, numheights - 1) = hgts
+                      searchhgts(3, numheights - 1) = Val(Format(Str$(Dist), "####0.0###"))
+                   Else
+                      init = 1
+                      End If
+                   End If
+                If init = 1 Then 'find minimum height in buffer
+                   k& = 1
+                   minhgt0 = searchhgts(2, 0)
+                   For i& = 1 To numSlots&
+                      If hgts > searchhgts(2, i& - 1) And searchhgts(2, i& - 1) < minhgt0 Then
+                         'find minimum height
+                         minhgt0 = searchhgts(2, i& - 1)
+                         k& = i&
+                         End If
+                   Next i&
+                   'find minimum distance with same minimum height
+                   distmin = searchhgts(3, k& - 1)
+                   For i& = 1 To numSlots&
+                      If searchhgts(2, i& - 1) = minhgt0 And searchhgts(3, i& - 1) < distmin Then
+                         'record
+                         distmin = searchhgts(3, i& - 1)
+                         k& = i&
+                         End If
+                   Next i&
+                   If hgts > searchhgts(2, k& - 1) And k& <= numSlots& Then
+                     searchhgts(0, k& - 1) = kmys
+                     searchhgts(1, k& - 1) = kmxs
+                     searchhgts(2, k& - 1) = hgts
+                     searchhgts(3, k& - 1) = Val(Format(Str$(Dist), "####0.0###"))
                      End If
-                 Next i&
+                  
+                          
+                         'find minimum searchhgts, and replace it with this height
+    's50:                 minhgt0 = searchhgts(2, 1)
+    '                     For j& = 2 To numSlots&
+    '                        If searchhgts(2, j&) < minhgt0 Then
+    '                           minhgt = searchhgts(2, j& - 1)
+    '                           minkmy = searchhgts(0, j& - 1)
+    '                           minkmx = searchhgts(1, j& - 1)
+    '                           mindist = searchhgts(3, j& - 1)
+    '                           minhgtindex = j&
+    '                           searchhgts(2, j&) = searchhgts(2, 0)
+    '                           searchhgts(0, j&) = searchhgts(0, 0)
+    '                           searchhgts(1, j&) = searchhgts(1, 0)
+    '                           searchhgts(3, j&) = searchhgts(3, 0)
+    '                           searchhgts(2, 1) = minhgt
+    '                           searchhgts(0, 1) = minkmy
+    '                           searchhgts(1, 1) = minkmx
+    '                           searchhgts(3, 1) = mindist
+    '                           GoTo s50  'This is the problem
+    '                           End If
+    '                     Next j&
+    '                     'replace minimum height with newly found higher height
+    '                     searchhgts(2, 1) = hgts
+    '                     searchhgts(0, 1) = kmys
+    '                     searchhgts(1, 1) = kmxs
+    '                     searchhgts(3, 1) = Dist
+    '                     Exit For
+    '                     End If
+    '                 Next i&
                End If
             ElseIf SearchType% = 1 Then
                If init = 0 Then
@@ -2211,6 +2378,7 @@ sr250:
 sr300:
       Next kmxs
    Next kmys
+   
    
    If chkValidity.value = vbChecked And numpnts& >= 0 Then
       'check for unique valid peak, e.g., highest point is actually on slope, or near highest point beyond mosaic border
@@ -2843,8 +3011,8 @@ End Sub
 Private Sub Command12_Click()
    If sky2.row <> 0 Then
       nplachos& = sky2.row
-      Maps.Text6.Text = sky2.TextArray(skyp2(nplachos&, 1))
-      Maps.Text5.Text = sky2.TextArray(skyp2(nplachos&, 2))
+      Maps.Text6.Text = sky2.TextArray(skyp2(nplachos&, 1)) 'latitude
+      Maps.Text5.Text = sky2.TextArray(skyp2(nplachos&, 2)) 'longitude
       Call goto_click
       Call BringWindowToTop(mapsearchfm.hwnd)
       OverhWnd = FindWindow(vbNullString, "Overview")

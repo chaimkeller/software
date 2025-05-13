@@ -779,6 +779,8 @@ l50:
              filcit% = FreeFile
              Open drivcities$ + "citynams.txt" For Input As #filcit%
              Do Until EOF(filcit%)
+                engcitynam$ = "."
+                hebcitynam$ = "."
                 Input #filcit%, engcitynam$
                 Input #filcit%, hebcitynam$
                 Combo2.AddItem engcitynam$
@@ -789,6 +791,12 @@ l50:
                    End If
              Loop
 cb25:        Close #filcit%
+             If engcitynam$ = "." Or hebcitynam$ = "." Then 'citynams.txt missing vbcrlf at end so add it
+                filcit% = FreeFile
+                Open drivcities$ + "citynams.txt" For Append As #filcit%
+                Print #filcit%, vbCrLf
+                Close #filcit%
+                End If
              On Error GoTo errhand
              End If
           Combo2.Text = FileViewDir$
@@ -902,8 +910,8 @@ cb25:        Close #filcit%
          End If
       mapgraphfm.Command3.Enabled = True
       mapgraphfm.frmObstructions.Enabled = True
-      ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-      ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+      ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+      ret = SetWindowPos(mapgraphfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
       'make save files (.pr* files, fnz,fsk files and directories)
       'if save to cities directories flagged then make directory under
       'that name and make netz/skiy subdirectories with bat files and
@@ -918,13 +926,13 @@ cb25:        Close #filcit%
       '   plotfile$ = drivjk$ + "EYisroel.tmp"
       '   End If
       If Dir(plotfile$) = sEmpty Then
-         ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-         ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         ret = SetWindowPos(mapgraphfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
          response = MsgBox("Can't find the graph file: " & plotfile$, vbCritical + vbOKOnly, "Maps & More")
 '         ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-         BringWindowToTop (mapPictureform.hWnd)
+         BringWindowToTop (mapPictureform.hwnd)
 '         ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-         BringWindowToTop (mapgraphfm.hWnd)
+         BringWindowToTop (mapgraphfm.hwnd)
          GoTo ca999
          End If
       'check that eros subdirectories on d:\prom and d:\prof and d:\cities already exist
@@ -1100,9 +1108,9 @@ ca81:
          Else 'just append if flagged '<<<<<<
            myfile = Dir(dirfile$(Mode%) + "*.bat")
 '           ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-           BringWindowToTop (mapPictureform.hWnd)
+           BringWindowToTop (mapPictureform.hwnd)
 '           ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-           BringWindowToTop (mapgraphfm.hWnd)
+           BringWindowToTop (mapgraphfm.hwnd)
            If Not AutoProf Then
               response = MsgBox(myfile + " found. Do you wan't to append to this existing bat file?" + Chr(10), _
                       vbQuestion + vbYesNo, "Maps & More")
@@ -1111,8 +1119,8 @@ ca81:
               End If
 '           ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '           ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-           BringWindowToTop (mapPictureform.hWnd)
-           BringWindowToTop (mapgraphfm.hWnd)
+           BringWindowToTop (mapPictureform.hwnd)
+           BringWindowToTop (mapgraphfm.hwnd)
            If response = vbYes Then '<<
                'find last version number and increment
                batfile% = FreeFile
@@ -1175,8 +1183,8 @@ ca81:
                Kill dirfile$(Mode%) + myfile
                Name tmp2fil$ As dirfile$(Mode%) + myfile
            Else
-               ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-               ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+               ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+               ret = SetWindowPos(mapgraphfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
                If Not AutoProf Then
                   response = MsgBox("This operation will append the old bat file to bat.tmp and write a new one in it's place!" + Chr(10) + _
                                   "You still want to proceed?", vbExclamation + vbYesNo, "Maps & More")
@@ -1185,8 +1193,8 @@ ca81:
                   End If
 '               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '               ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-                BringWindowToTop (mapPictureform.hWnd)
-                BringWindowToTop (mapgraphfm.hWnd)
+                BringWindowToTop (mapPictureform.hwnd)
+                BringWindowToTop (mapgraphfm.hwnd)
                If response = vbNo Then
                   Close
                   GoTo ca999
@@ -1244,6 +1252,8 @@ ca81:
              filcit% = FreeFile
              Open drivcities$ + "citynams.txt" For Input As #filcit%
              Do Until EOF(filcit%)
+                engcitynam$ = "*" 'test values for detecting lack of vbcrlf
+                hebcitynam$ = "*"
                 Input #filcit%, engcitynam$
                 Input #filcit%, hebcitynam$
                 Combo2.AddItem engcitynam$
@@ -1255,6 +1265,9 @@ ca81:
              Close #filcit%
              filcit% = FreeFile
              Open drivcities$ + "citynams.txt" For Append As #filcit%
+             If engcitynam$ = "*" Or hebcitynam$ = "*" Then 'no crlf on end of last end, so add it to start new line
+                Print #filcit%, vbCrLf
+                End If
              Print #filcit%, Combo2.Text
              Print #filcit%, Text2.Text
              Close #filcit%
@@ -1325,7 +1338,7 @@ ca81:
                If kmyeros = kmyeroscheck And kmxeros = -kmxeroscheck And hgteroscheck = hgteros Then
                   Screen.MousePointer = vbDefault
                   For i% = 0 To Forms.count - 1
-                     ret = SetWindowPos(Forms(i%).hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+                     ret = SetWindowPos(Forms(i%).hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
                   Next i%
                   If Not AutoProf Then
                         Select Case MsgBox("You have already recorded a place with the same coordinates!" _
@@ -1341,7 +1354,7 @@ ca81:
                               Close #batfile%
                               For i% = 0 To Forms.count - 1
 '                                ret = SetWindowPos(Forms(i%).hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-                                BringWindowToTop (Forms(i%).hWnd)
+                                BringWindowToTop (Forms(i%).hwnd)
                               Next i%
                               GoTo ca999
                         
@@ -1445,8 +1458,8 @@ ca90:    FileCopy plotfile$, tmpfil$
                response = vbYes
                GoTo ca250
                End If
-            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            ret = SetWindowPos(mapgraphfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
             If Not AutoProf Then
                response = MsgBox("Do you wan't to append this profile file to the existing list? (Answer NO in order to erase the old one)?", vbQuestion + vbYesNo, "Maps & More")
             Else
@@ -1454,8 +1467,8 @@ ca90:    FileCopy plotfile$, tmpfil$
                End If
 '            ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '            ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            BringWindowToTop (mapPictureform.hWnd)
-            BringWindowToTop (mapgraphfm.hWnd)
+            BringWindowToTop (mapPictureform.hwnd)
+            BringWindowToTop (mapgraphfm.hwnd)
 ca250:      If response = vbYes Then
                'find last version number and increment
                Open dirfile$(Mode%) + cityname$ + ".bat" For Input As #batfile%
@@ -1511,13 +1524,13 @@ ca250:      If response = vbYes Then
                Kill dirfile$(Mode%) + cityname$ + ".bat"
                Name tmp2fil$ As dirfile$(Mode%) + cityname$ + ".bat"
              Else
-               ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-               ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+               ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+               ret = SetWindowPos(mapgraphfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
                response = MsgBox("This operation will erase any existing profile list!  You still want to proceed?", vbExclamation + vbYesNo, "Maps & More")
 '               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '               ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-               BringWindowToTop (mapPictureform.hWnd)
-               BringWindowToTop (mapgraphfm.hWnd)
+               BringWindowToTop (mapPictureform.hwnd)
+               BringWindowToTop (mapgraphfm.hwnd)
                If response = vbNo Then
                   Close
                   GoTo ca999
@@ -1559,19 +1572,19 @@ ca280:  If AutoScanlist Or AutoProf Then
         mapgraphfm.restorelimitsbut.Enabled = True
         mapgraphfm.Refresh
         mapPictureform.Refresh
-        ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-        ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+        ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+        ret = SetWindowPos(mapgraphfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
         response = MsgBox("Do you wan't to execute CAL PROGRAM now?", vbQuestion + vbYesNo, "Maps & More")
 ca300:  If response = vbNo Then
             Screen.MousePointer = vbDefault
 '            ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '            ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            BringWindowToTop (mapPictureform.hWnd)
-            BringWindowToTop (mapgraphfm.hWnd)
+            BringWindowToTop (mapPictureform.hwnd)
+            BringWindowToTop (mapgraphfm.hwnd)
             GoTo ca999
             End If
-        ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-        ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+        ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+        ret = SetWindowPos(mapgraphfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 ca320:  resp$ = MainDir$ & "\" '"c:\progra~1\devstu~1\vb\"
 ca325:  If Dir(resp$ & "Cal Program.exe") = sEmpty Then
            'try another possiblility
@@ -1668,7 +1681,7 @@ suns600:    Maps.CommonDialog1.CancelError = True
             Else
                Maps.CommonDialog1.FilterIndex = 0
                End If
-            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
             Maps.CommonDialog1.ShowSave
             savfile$ = Maps.CommonDialog1.FileName
             myfile = Dir(savfile$)
@@ -1682,8 +1695,8 @@ suns600:    Maps.CommonDialog1.CancelError = True
 sunerrhand:
 '     ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '     ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-     BringWindowToTop (mapPictureform.hWnd)
-     BringWindowToTop (mapgraphfm.hWnd)
+     BringWindowToTop (mapPictureform.hwnd)
+     BringWindowToTop (mapgraphfm.hwnd)
 End Sub
 
 Private Sub Command2_Click()
@@ -1843,7 +1856,7 @@ Private Sub dirsavecheck_Click()
       End If
 End Sub
 
-Private Sub Form_Load()
+Private Sub form_load()
 
    If world Then
       Text3.Text = 6
@@ -2263,8 +2276,8 @@ End Sub
 
 Private Sub TimeZonebut_Click()
    'ret = Shell("c:\windows\system\timedate.cpl", 1)
-   ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-   ret = SetWindowPos(mapgraphfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   ret = SetWindowPos(mapgraphfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    Call mouse_event(MOUSEEVENTF_MOVE, 10000, 10000, 0, 0)  'move mouse to Location item
    waitime = Timer
    Do Until Timer > waitime + 1

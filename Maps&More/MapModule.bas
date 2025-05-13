@@ -870,20 +870,20 @@ Public Sub worldheights(lg, lt, hgt)
          End If
          
       If ((IsraelDTMsource% <= 1 And DTMflag% <> 3) Or DTMflag% = 1) And Dir(USADir$, vbDirectory) <> sEmpty Then 'Dir(srtmdtm & ":/USA/", vbDirectory) <> sEmpty Then
-         XDIM = 8.33333333333333E-04 / 3#
-         YDIM = 8.33333333333333E-04 / 3#
+         XDIM = 1# / 3600# '8.33333333333333E-04 / 3#
+         YDIM = 1# / 3600# '8.33333333333333E-04 / 3#
          DEMfile$ = USADir$
          NROWS = 3601
          NCOLS = 3601
       ElseIf (IsraelDTMsource% = 2 Or DTMflag% = 2) And Dir(D3ASDir$, vbDirectory) <> sEmpty Then '(srtmdtm & ":/3AS/", vbDirectory) <> sEmpty Then
-         XDIM = 8.33333333333333E-04
-         YDIM = 8.33333333333333E-04
+         XDIM = 1# / 1200# '8.33333333333333E-04
+         YDIM = 1# / 1200#   '8.33333333333333E-04
          DEMfile$ = D3ASDir$
          NROWS = 1201
          NCOLS = 1201
       ElseIf (IsraelDTMsource% = 3 Or DTMflag% = 3) And Dir(BILDir$, vbDirectory) <> sEmpty Then '(alosdtm & ":/" & DirBil$, vbDirectory) <> sEmpty Then
-         XDIM = 8.33333333333333E-04 / 3#
-         YDIM = 8.33333333333333E-04 / 3#
+         XDIM = 1# / 3600# '8.33333333333333E-04 / 3#
+         YDIM = 1# / 3600#   '8.33333333333333E-04 / 3#
          DEMfile$ = BILDir$
          NROWS = 3600
          NCOLS = 3600
@@ -1077,11 +1077,11 @@ gtopo:
 Eroshgt:
 '   IKMY& = CInt(((lt1 - ydim * 0.5) - lt) / ydim) + 1
 '   IKMX& = CInt((lg - (lg1 + xdim * 0.5)) / xdim) + 1
-   IKMY& = CLng((lt1 - lt) / YDIM) + 1
-   IKMX& = CLng((lg - lg1) / XDIM) + 1
+   IKMY& = CLng((lt1 - lt) / YDIM)
+   IKMX& = CLng((lg - lg1) / XDIM)
    tncols = NCOLS%
    c% = worldfnum%
-   numrec& = (IKMY& - 1) * tncols + IKMX&
+   numrec& = IKMY& * tncols + IKMX&
    Get #worldfnum%, (numrec& - 1) * 2 + 1, IO%
    
    If IsraelDTMsource% <> 3 And DTMflag% <> 3 Then
