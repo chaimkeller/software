@@ -2590,15 +2590,24 @@ Profiles:
 
 			}else if (TemperatureModel >= 1) {
 
-				//use terrestrial refraction formula from Wikipedia, suitably modified to fit van der Werf ray tracing
-				PATHLENGTH = sqrt(distd*distd + pow(fabs(deltd)*0.001 - 0.5*(distd*distd/RETH),2.0));
-				if (fabs(deltd) > 1000.0) {
-					Exponent = 0.99;
-				}else{
-					Exponent = 0.9965;
+				if (TemperatureModel == 2 && TemperatureModel == 4) 
+				{
+					//don't add any terrestrial refraction
+					avref = 0.0;
 				}
+				else
+				{
+					//use terrestrial refraction formula from Wikipedia, suitably modified to fit van der Werf ray tracing
+					PATHLENGTH = sqrt(distd*distd + pow(fabs(deltd)*0.001 - 0.5*(distd*distd/RETH),2.0));
+					if (fabs(deltd) > 1000.0) {
+						Exponent = 0.99;
+					}else{
+						Exponent = 0.9965;
+					}
 
-				avref = TRpart * pow(PATHLENGTH, Exponent); //degrees
+					avref = TRpart * pow(PATHLENGTH, Exponent); //degrees
+					
+				}
 
 			}else if (TemperatureModel == 0) {
 				//no added terrestrial refraction
@@ -2808,10 +2817,14 @@ L550:
 		dist *= re;
 
 		//now if flagged, remove the new type of terrestrial refraction addition
+		/* fixed bug on 051825//////////////////////////////////////////////////////
+		////////////////also -- now never adds TR if TemperatureModel == 2 || TemperatureModel == 4
+		//so don't need to subtract later on
+		///////////////////////////////////////////////////////////////////////
 		if (TemperatureModel == 2 || TemperatureModel == 4) {
 			//remove the terrestrial refraction addition
 			deltd = hgt0 - hgt2;
-			PATHLENGTH = sqrt(distd*distd + pow(fabs(deltd)*0.001 - 0.5*(distd*distd/RETH),2.0));
+			PATHLENGTH = sqrt(dist*dist + pow(fabs(deltd)*0.001 - 0.5*(distd*distd/RETH),2.0));
 			if (fabs(deltd) > 1000.0) {
 				Exponent = 0.99;
 			}else{
@@ -2821,6 +2834,7 @@ L550:
 			avref = TRpart * pow(PATHLENGTH, Exponent); //degrees
 			prof[nk].ver[0] -= avref;
 		}
+		*/
 
 		if (prof[nk].ver[0] > MinViewAngle + 0.1) //don't print out beyond range of azimuths that were found
 		{
