@@ -18,6 +18,24 @@ Begin VB.Form mapsearchfm
    MinButton       =   0   'False
    ScaleHeight     =   8055
    ScaleWidth      =   5400
+   Begin VB.CommandButton CommandC 
+      Caption         =   "C"
+      Height          =   255
+      Left            =   360
+      TabIndex        =   75
+      ToolTipText     =   "Add hgtobs to bat file heights"
+      Top             =   840
+      Width           =   375
+   End
+   Begin VB.CommandButton CommandFix 
+      Caption         =   "Fix"
+      Height          =   255
+      Left            =   3840
+      TabIndex        =   74
+      ToolTipText     =   "Open bat file and fix recorded profiles from long shift bug"
+      Top             =   590
+      Width           =   495
+   End
    Begin VB.CommandButton cmdB 
       Caption         =   "B"
       Height          =   255
@@ -49,7 +67,7 @@ Begin VB.Form mapsearchfm
       Value           =   5
       AutoBuddy       =   -1  'True
       BuddyControl    =   "txtSymm"
-      BuddyDispid     =   196610
+      BuddyDispid     =   196613
       OrigLeft        =   5160
       OrigTop         =   7680
       OrigRight       =   5415
@@ -730,7 +748,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   20
          BuddyControl    =   "Text4"
-         BuddyDispid     =   196653
+         BuddyDispid     =   196656
          OrigLeft        =   3420
          OrigTop         =   300
          OrigRight       =   3660
@@ -752,7 +770,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   15
          BuddyControl    =   "Text3"
-         BuddyDispid     =   196655
+         BuddyDispid     =   196658
          OrigLeft        =   2100
          OrigTop         =   240
          OrigRight       =   2340
@@ -2275,7 +2293,7 @@ Private Sub Command1_Click()
         If Dist <= Val(Text3) Then '/ 2# Then  'within the search radius
             If init = 0 Then numpnts& = numpnts& + 1
             If world = True Then
-               Call worldheights(kmxs, kmys, hgts)
+               Call WorldHeights(kmxs, kmys, hgts)
             Else
                kmxs1 = kmxs
                kmys1 = kmys
@@ -2392,7 +2410,7 @@ sr300:
       For kmxs = searchhgts(1, numpnts&) - NumStepsToCheck * StepSize To searchhgts(1, numpnts&) + NumStepsToCheck * StepSize Step StepSize
         kmys = searchhgts(0, numpnts&)
         If world = True Then
-           Call worldheights(kmxs, kmys, hgts)
+           Call WorldHeights(kmxs, kmys, hgts)
         Else
            kmxs1 = kmxs
            kmys1 = kmys
@@ -2411,7 +2429,7 @@ sr300:
       For kmys = searchhgts(0, numpnts&) - NumStepsToCheck * StepSize To searchhgts(0, numpnts&) + NumStepsToCheck * StepSize Step StepSize
         kmxs = searchhgts(1, numpnts&)
         If world = True Then
-           Call worldheights(kmxs, kmys, hgts)
+           Call WorldHeights(kmxs, kmys, hgts)
         Else
            kmxs1 = kmxs
            kmys1 = kmys
@@ -2512,7 +2530,7 @@ SkipEntry:
           
           kmxs1 = pkkmx + j& * xdegkm * multstep
           If world = True Then
-             Call worldheights(kmxs1, kmys1, hgts)
+             Call WorldHeights(kmxs1, kmys1, hgts)
           Else
              Call heights(kmxs1, kmys1, hgts)
              End If
@@ -2526,7 +2544,7 @@ SkipEntry:
         
           kmxs1 = pkkmx - j& * xdegkm * multstep
           If world = True Then
-             Call worldheights(kmxs1, kmys1, hgts)
+             Call WorldHeights(kmxs1, kmys1, hgts)
           Else
              Call heights(kmxs1, kmys1, hgts)
              End If
@@ -2542,7 +2560,7 @@ SkipEntry:
           
           kmys1 = pkkmy + j& * ydegkm * multstep
           If world = True Then
-             Call worldheights(kmxs1, kmys1, hgts)
+             Call WorldHeights(kmxs1, kmys1, hgts)
           Else
              Call heights(kmxs1, kmys1, hgts)
              End If
@@ -2556,7 +2574,7 @@ SkipEntry:
         
           kmys1 = pkkmy - j& * ydegkm * multstep
           If world = True Then
-             Call worldheights(kmxs1, kmys1, hgts)
+             Call WorldHeights(kmxs1, kmys1, hgts)
           Else
              Call heights(kmxs1, kmys1, hgts)
              End If
@@ -2573,7 +2591,7 @@ SkipEntry:
           kmxs1 = pkkmx + j& * xdegkm * multstep
           kmys1 = pkkmy + j& * ydegkm * multstep
           If world = True Then
-             Call worldheights(kmxs1, kmys1, hgts)
+             Call WorldHeights(kmxs1, kmys1, hgts)
           Else
              Call heights(kmxs1, kmys1, hgts)
              End If
@@ -2588,7 +2606,7 @@ SkipEntry:
           kmxs1 = pkkmx - j& * xdegkm * multstep
           kmys1 = pkkmy - j& * ydegkm * multstep
           If world = True Then
-             Call worldheights(kmxs1, kmys1, hgts)
+             Call WorldHeights(kmxs1, kmys1, hgts)
           Else
              Call heights(kmxs1, kmys1, hgts)
              End If
@@ -2603,7 +2621,7 @@ SkipEntry:
           kmys1 = pkkmy + j& * ydegkm * multstep
           kmxs1 = pkkmx - j& * xdegkm * multstep
           If world = True Then
-             Call worldheights(kmxs1, kmys1, hgts)
+             Call WorldHeights(kmxs1, kmys1, hgts)
           Else
              Call heights(kmxs1, kmys1, hgts)
              End If
@@ -2618,7 +2636,7 @@ SkipEntry:
           kmys1 = pkkmy - j& * ydegkm * multstep
           kmxs1 = pkkmx + j& * xdegkm * multstep
           If world = True Then
-             Call worldheights(kmxs1, kmys1, hgts)
+             Call WorldHeights(kmxs1, kmys1, hgts)
           Else
              Call heights(kmxs1, kmys1, hgts)
              End If
@@ -2931,7 +2949,7 @@ Private Sub Command10_Click()
    l2 = Val(Text1.Text)
    l1 = Val(Text2.Text)
    If noheights = False Then
-       Call worldheights(l1, l2, hgt)
+       Call WorldHeights(l1, l2, hgt)
        If hgt = -9999 Then hgt = 0
        searchhgt = hgt
    Else
@@ -3141,7 +3159,7 @@ Private Sub Command15_Click()
         loncity = Val(Text2.Text)
         If world = True Then
            hgtcity = 0
-           If Not noheights Then Call worldheights(loncity, latcity, hgtcity)
+           If Not noheights Then Call WorldHeights(loncity, latcity, hgtcity)
            Write #erosfil%, Combo1.Text, latcity, -loncity, hgtcity
         Else
            hgtcity = 0
@@ -3419,7 +3437,7 @@ Private Sub Command9_Click()
    l2 = Val(Text1.Text)
    l1 = Val(Text2.Text)
    If noheights = False Then
-       Call worldheights(l1, l2, hgt)
+       Call WorldHeights(l1, l2, hgt)
        If hgt = -9999 Then hgt = 0
        searchhgt = hgt
    Else
@@ -3432,6 +3450,456 @@ Private Sub Command9_Click()
 '   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    BringWindowToTop (overhtwnd)
    Call BringWindowToTop(mapsearchfm.hwnd)
+End Sub
+
+'---------------------------------------------------------------------------------------
+' Procedure : CommandC_Click
+' Author    : chaim
+' Date      : 5/14/2025
+' Purpose   :
+'---------------------------------------------------------------------------------------
+'
+Private Sub CommandC_Click()
+   Dim OriginalBatFile$
+   Dim batfile$
+   Dim RepairDirectory$
+   Dim CoordString() As String
+   
+   On Error GoTo CommandC_Click_Error
+
+  CommonDialog1.CancelError = True
+  CommonDialog1.Filter = "cities.bat files (*.bat)|*.bat|"
+  CommonDialog1.FilterIndex = 1
+  If world = True Then
+     CommonDialog1.FileName = drivcities$ + "eros\*.bat"
+  Else
+     CommonDialog1.FileName = drivcities$ + "*.bat"
+     End If
+  CommonDialog1.ShowOpen
+  batfile$ = CommonDialog1.FileName
+  OriginalBatFile$ = batfile$
+  
+  RepairDirectory$ = Mid$(batfile$, 1, Len(batfile$) - 8)
+  
+  filbatnum% = FreeFile
+  Open OriginalBatFile$ For Input As #filbatnum%
+  
+  filtmp% = FreeFile
+  Open RepairDirectory$ & "tmpbat.bat" For Output As #filtmp%
+  
+  Line Input #filbatnum%, doclin$
+  Print #filtmp%, doclin$
+  Do Until EOF(filbatnum%)
+    Line Input #filbatnum%, doclin$
+    CoordString = Split(doclin$, ",")
+    If UBound(CoordString, 1) = 3 Then
+        batFileName$ = CoordString(0)
+        batlat = Val(CoordString(1))
+        batlon = Val(CoordString(2))
+        bathgt = Val(CoordString(3))
+        'check if height corresponds to error in lon
+        If InStr(batFileName$, "Version") Then
+           'change version number
+           Print #filtmp%, batFileName$ + "," & Trim$(Str$(batlat + 1)) + "," + Trim$(Str$(batlon)) + "," + Trim$(Str$(hgtout))
+           Exit Do
+        Else
+           Print #filtmp%, batFileName$ + "," & Format(Str$(batlat), "##0.0#####") + "," + Format(Str$(batlon - (1# / 3600#)), "###0.0#####") + "," + Trim$(Str$(bathgt + hgtobs))
+           'now run newreadDTM with these coordinates
+           End If
+        End If
+   Loop
+   Close #filbatnum%
+   Close #filtmp%
+   FileCopy OriginalBatFile$, RepairDirectory$ & "batwohgtobs_bat"
+   Kill OriginalBatFile$
+   FileCopy RepairDirectory$ & "tmpbat.bat", OriginalBatFile$
+   Kill RepairDirectory$ & "tmpbat.bat"
+
+   On Error GoTo 0
+   Exit Sub
+
+CommandC_Click_Error:
+
+    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure CommandC_Click of Form mapsearchfm"
+End Sub
+
+'---------------------------------------------------------------------------------------
+' Procedure : CommandFix_Click
+' Author    : chaim
+' Date      : 5/13/2025
+' Purpose   : fix longitutde shift error in eros profile files
+'---------------------------------------------------------------------------------------
+'
+Private Sub CommandFix_Click()
+
+   Dim CoordString() As String
+   Dim NumToFix As Long
+   Dim RepairFileName$
+   Dim RepairDirectory$
+   Dim OriginalBatFile$
+   Dim ResumeCalculation As Boolean
+   Dim ResumeNum%
+   Dim NumRejected&
+   
+   NumToFix = 0
+ 
+   On Error GoTo CommandFix_Click_Error
+    'pick eros directory to fix
+    
+  CommonDialog1.CancelError = True
+  CommonDialog1.Filter = "cities.bat files (*.bat)|*.bat|"
+  CommonDialog1.FilterIndex = 1
+  If world = True Then
+     CommonDialog1.FileName = drivcities$ + "eros\*.bat"
+  Else
+     CommonDialog1.FileName = drivcities$ + "*.bat"
+     End If
+  CommonDialog1.ShowOpen
+  batfile$ = CommonDialog1.FileName
+  OriginalBatFile$ = batfile$
+  
+  'clear buffers
+  Close
+  cmdClear.value = True
+  
+  RepairDirectory$ = Mid$(batfile$, 1, Len(batfile$) - 8)
+  
+  tmpbat% = FreeFile
+  Open App.Path & "\tmpbat.bat" For Output As #tmpbat%
+  
+  rejectnum% = FreeFile
+  Open App.Path & "\rejectfiles.txt" For Append As #rejectnum%
+  'add directory of the eros city
+  Print #rejectnum%, batfile$
+  
+  If InStr(batfile$, "netz") Then
+     netzflag% = 0
+  ElseIf InStr(batfile$, "skiy") Then
+     netzflag% = 1
+     End If
+     
+  'determine number of files to fix
+  
+  
+  'determine number of rows
+  numRows& = 0
+  NumRejected& = 0
+  openfilnum% = FreeFile
+  Open batfile$ For Input As #openfilnum%
+  Line Input #openfilnum%, doclin$ 'doc line
+  Print #tmpbat%, doclin$ 'record docline
+  Do Until EOF(openfilnum%)
+     Line Input #openfilnum%, doclin$
+     'parse coordinates, determine if longitude error can be fixed by shift of one grid space
+     'if confirmed, then recalculate the profile into a temporary file and replace the original file
+     'and update new bat file
+     CoordString = Split(doclin$, ",")
+     If UBound(CoordString, 1) = 3 Then
+        batFileName$ = CoordString(0)
+        batlat = Val(CoordString(1))
+        batlon = Val(CoordString(2))
+        bathgt = Val(CoordString(3))
+        'check if height corresponds to error in lon
+        If InStr(batFileName$, "Version") Then
+           'Print #tmpbat%, doclin$
+           'change version number
+           Print #tmpbat%, batFileName$ + "," & Trim$(Str$(batlat + 1)) + "," + Trim$(Str$(batlon)) + "," + Trim$(Str$(bathgt))
+           Exit Do
+        Else
+           Call WorldHeights(-batlon + (1# / 3600#), batlat, hgtout)
+           End If
+        If InStr(Str$(bathgt), ".8") Then
+           subtractflag = 1
+        Else
+           subtractflag = 0
+           End If
+        If Abs(hgtout - bathgt) <= subtractflag * hgtobs + 0.01 Then
+           Print #tmpbat%, batFileName$ + "," & Format(Str$(batlat), "##0.0#####") + "," + Format(Str$(batlon - (1# / 3600#)), "###0.0#####") + "," + Trim$(Str$(hgtout))
+           'now run newreadDTM with these coordinates
+        Else
+           'try finding the right place by stepping around the recorded coordinates
+           MinDiff = 99999
+           iminx_min% = 10
+           For i% = -5 To 5 Step 1
+              Call WorldHeights(-batlon + i% * (1# / 3600#), batlat, hgtout)
+              diff = Abs(bathgt - hgtout)
+              If diff < MinDiff Or (diff = MinDiff And Abs(i%) < Abs(iminx%)) Then
+                 MinDiff = diff
+                 iminx% = i%
+                 End If
+           Next i%
+           MinDiff = 99999
+           For i% = -5 To 5 Step 1
+              Call WorldHeights(-batlon + iminx% * (1# / 3600#), batlat + i% * (1# / 3600#), hgtout)
+              diff = Abs(bathgt - hgtout)
+              If diff < MinDiff Or (diff = MinDiff And Abs(i%) < Abs(iminy%)) Then
+                 MinDiff = diff
+                 iminy% = i%
+                 End If
+           Next i%
+           Call WorldHeights(-batlon + iminx% * (1# / 3600#), batlat + iminy% * (1# / 3600#), hgtout)
+           If InStr(Str$(bathgt), ".8") Then
+              subtractflag = 1
+           Else
+              subtractflag = 0
+              End If
+           If Abs(hgtout - bathgt) <= subtractflag * hgtobs + 0.01 Or (iminx% <= 1 And iminy% <= 1 And Abs(hgtout - bathgt) <= subtractflag * hgtobs + 1#) Then
+              Print #tmpbat%, batFileName$ + "," & Format(Str$(batlat + iminy% * (1# / 3600#)), "##0.0#####") + "," + Format(Str$(batlon - iminx% * (1# / 3600#)), "###0.0#####") + "," + Trim$(Str$(hgtout)) 'latest version adds observer height to batfile heights
+           Else
+              'add to reject list
+              Print #rejectnum%, doclin$ + "," + Format(Str$(bathgt), "##0.0####") + "," + Format(Str$(hgtout - bathgt), "#0.0#")
+              NumRejected& = NumRejected& - 1
+              End If
+           End If
+       End If
+     numRows& = numRows& - 1
+  Loop
+  Close #openfilnum%
+  Close #tmpbat%
+  Close #rejectnum%
+  
+  'now load up the list in the flex box and start calculating the profiles and replace the existing ones.
+   'delete any current contents of flex list
+    If Dir(drivjk_c$ & "mappoints.sav") <> sEmpty Then
+       Kill drivjk_c$ & "mappoints.sav"
+       End If
+    If Dir(drivjk_c$ & "mapstatus.sav") <> sEmpty Then
+       Kill drivjk_c$ & "mapstatus.sav"
+       End If
+    If Dir(ramdrive & ":\eros.tm7") <> sEmpty Then
+       Kill ramdrive & ":\eros.tm7"
+       End If
+       
+    If world = False Then
+       sky2.FormatString = "^Point # |^    ITMx           |^    ITMy            |^ height(m)  |^distance(km)"
+    Else
+       sky2.FormatString = "^Point #|^ latitude       |^longitude      |^height (m)|^distance(km)       "
+       End If
+       
+    AutoProf = False
+    SavedAll = False
+   
+    'now load up the new bat file
+   batfile$ = App.Path & "\tmpbat.bat"
+  
+  'determine number of rows
+  numRows& = 0
+  openfilnum% = FreeFile
+  Open batfile$ For Input As #openfilnum%
+  Line Input #openfilnum%, doclin$
+  Do Until EOF(openfilnum%)
+     Line Input #openfilnum%, doclin$
+     numRows& = numRows& + 1
+  Loop
+  'remove one row for the version line
+  numRows& = numRows& - 1
+  sky2.Rows = numRows& + 1
+  
+  If world = False Then
+     sky2.FormatString = "^Point # |^    ITMx           |^    ITMy            |^ height(m)  |^distance(km)"
+  Else
+     sky2.FormatString = "^Point #|^ latitude       |^longitude      |^height (m)|^distance(km)       "
+     End If
+
+  Seek #openfilnum%, 1 'rewind
+  If world = True Then Line Input #openfilnum%, doclin$
+  ii& = 0
+  If world = True Then
+      Do Until EOF(openfilnum%)
+        Input #openfilnum%, citynam$, lata, lono, hgto
+        If UCase(citynam$) = "VERSION" Then GoTo 500
+        ii& = ii& + 1
+        sky2.TextArray(skyp2(ii&, 0)) = ii&
+        sky2.TextArray(skyp2(ii&, 1)) = lata
+        sky2.TextArray(skyp2(ii&, 2)) = -lono
+        sky2.TextArray(skyp2(ii&, 3)) = hgto
+        sky2.TextArray(skyp2(ii&, 4)) = 0
+500
+     Loop
+ Else
+      Do Until EOF(openfilnum%)
+        Input #openfilnum%, citynam$, lata, lono, hgto
+        If UCase(citynam$) = "VERSION" Then GoTo 600
+        ii& = ii& + 1
+        sky2.TextArray(skyp2(ii&, 0)) = ii&
+        sky2.TextArray(skyp2(ii&, 1)) = lata * 1000
+        sky2.TextArray(skyp2(ii&, 2)) = 1000000 + lono * 1000
+        sky2.TextArray(skyp2(ii&, 3)) = hgto
+        sky2.TextArray(skyp2(ii&, 4)) = 0
+600
+      Loop
+  End If
+  Close #openfilnum%
+  
+  NumToFix = ii&
+  
+  mapsearchfm.ProgressBarProfs.Visible = True
+  mapsearchfm.ProgressBarProfs.Min = 0
+  mapsearchfm.ProgressBarProfs.Max = NumToFix
+  mapsearchfm.ProgressBarProfs.value = 0
+  mapsearchfm.StatusBarProg.Panels(1).Text = NumToFix
+  mapsearchfm.StatusBarProg.Panels(2).Text = "0"
+
+  mapsearchfm.ProgressBarProfs.value = 0
+
+  
+  RepairMode = True
+  mapsearchfm.cmdCheckSkipped.Visible = False
+  
+  Lognumber% = FreeFile
+  AA = Dir(App.Path & "\logRepair.txt")
+  If AA <> sEmpty Then
+     Open App.Path & "\logRepair.txt" For Input As #Lognumber%
+     Input #Lognumber, ResumeNum%
+     Close #Lognumber
+  Else
+     Open App.Path & "\logRepair.txt" For Output As #Lognumber%
+     ResumeNum% = 0
+     Print #Lognumber%, "0"
+     End If
+     
+  If ResumeNum% > 0 And ResumeNum% < NumToFix Then
+     Select Case MsgBox("Do you want to resume the interrupted session?", vbYesNo Or vbQuestion Or vbDefaultButton1, "Resume interrupted Calculation Set")
+     
+        Case vbYes
+           ResumeCalculation = True
+        Case vbNo
+           ResumeCalculation = False
+     
+     End Select
+  ElseIf ResumeNum% = NumToFix Then
+     Select Case MsgBox("It appears that the repair operation has completed." _
+                        & vbCrLf & "It is possible that the bat file wasn't transfered." _
+                        & vbCrLf & "Do you want to check?" _
+                        , vbYesNo Or vbInformation Or vbDefaultButton1, "Resume Operation")
+     
+        Case vbYes
+            ResumeCalculation = True
+    
+        Case vbNo
+            Exit Sub
+     
+     End Select
+     End If
+
+  ii& = 0
+  openfilnum% = FreeFile
+  Open batfile$ For Input As #openfilnum%
+  Line Input #openfilnum%, doclin$ 'doc line
+  Do Until EOF(openfilnum%)
+     Line Input #openfilnum%, doclin$
+     ii& = ii& + 1
+     If ii& <= mapsearchfm.ProgressBarProfs.Max Then
+        mapsearchfm.ProgressBarProfs.value = ii&
+        mapsearchfm.StatusBarProg.Panels(1) = Str(NumToFix - ii& + 1)
+        mapsearchfm.StatusBarProg.Panels(2).Text = Str(ii& - 1)
+     Else
+        mapsearchfm.ProgressBarProfs.value = mapsearchfm.ProgressBarProfs.Max
+        mapsearchfm.StatusBarProg.Panels(1) = 0
+        mapsearchfm.StatusBarProg.Panels(2) = NumToFix
+        Exit Do
+        End If
+     
+     If ResumeCalculation And ii& <= ResumeNum% Then
+        'skip
+        GoTo resume999
+        End If
+     
+     'parse coordinates, determine if longitude error can be fixed by shift of one grid space
+     'if confirmed, then recalculate the profile into a temporary file and replace the original file
+     'and update new bat file
+     CoordString = Split(doclin$, ",")
+     If UBound(CoordString, 1) = 3 Then
+        batFileName$ = CoordString(0)
+        RepairFileName$ = Mid$(batFileName$, Len(batFileName$) - 12, 12)
+        batlat = Val(CoordString(1))
+        batlon = Val(CoordString(2))
+        bathgt = Val(CoordString(3))
+        'check if height corresponds to error in lon
+        If InStr(batFileName$, "Version") Then
+           Print #tmpbat%, doclin$
+           Exit Do
+        Else
+           lat = batlat
+           lon = -batlon
+           
+           'move map to there
+           Maps.Text5.Text = lon
+           Maps.Text6.Text = lat
+           Call goto_click
+           
+'           If InStr(Str$(bathgt), ".8") Then
+'              searchhgt = bathgt - 1.8
+'           Else
+              searchhgt = bathgt 'profile generation will readd it
+'              End If
+           viewsearch = True
+           AutoProf = False
+           AutoPress = True
+           If netzflag% = 0 Then
+              Call sunrisesunset(1)
+           ElseIf netzflag% = 1 Then
+              Call sunrisesunset(0)
+              End If
+           Do Until killpicture
+              DoEvents
+           Loop
+           'fixed profile file recorded to dirjk_c & eros.tmp
+           'replace old profile file with it
+           If Dir(drivjk_c$ + "eros.tmp") <> sEmpty Then
+              If Dir(RepairDirectory$ & RepairFileName$) <> sEmpty Then
+                 Kill RepairDirectory$ & RepairFileName$
+                 End If
+              FileCopy drivjk_c$ + "eros.tmp", RepairDirectory$ & RepairFileName$
+              End If
+           viewsearch = False
+           'write loop number for restoration
+           Lognumber% = FreeFile
+           Open App.Path & "\logRepair.txt" For Output As #Lognumber%
+           Print #Lognumber%, ii&
+           Close #Lognumber%
+           
+           Call BringWindowToTop(mapsearchfm.hwnd)
+           End If
+        End If
+resume999:
+   Loop
+   Close #openfilnum%
+   RepairMode = False
+   mapsearchfm.ProgressBarProfs.Visible = False
+'   mapsearchfm.StatusBarProg.Panels(2).Text = Str(ii&)
+   mapsearchfm.cmdCheckSkipped.Visible = True
+   'backup old bat file
+   FileCopy OriginalBatFile$, RepairDirectory$ & "Unrepaired_bat"
+   'now make the tmpbat.bat the active bat file for that directory
+   If Dir(OriginalBatFile$) <> sEmpty Then
+      Kill OriginalBatFile$
+      End If
+   FileCopy App.Path & "\tmpbat.bat", OriginalBatFile$
+   
+   'remove resume file
+   If Dir(App.Path & "\logRepair.txt") <> sEmpty Then Kill App.Path & "\logRepair.txt"
+   
+   On Error GoTo 0
+   Exit Sub
+
+CommandFix_Click_Error:
+    Select Case MsgBox("The following error has been detected" _
+                       & vbCrLf & "" _
+                       & vbCrLf & "Error in procedure CommandFix_Click of Form mapsearchfm" _
+                       & vbCrLf & "Error Number: " & Err.Number _
+                       & vbCrLf & "Error Description:" & Err.Description _
+                       & vbCrLf & "" _
+                       & vbCrLf & "Do you want to resume calculations even though recovery is not guarenteedr?" _
+                       , vbYesNo Or vbExclamation Or vbDefaultButton1, "Error detected")
+    
+        Case vbYes
+            Resume Next
+        Case vbNo
+            Close
+            Screen.MousePointer = vbDefault
+    End Select
+
 End Sub
 
 '---------------------------------------------------------------------------------------

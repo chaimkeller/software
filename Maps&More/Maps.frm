@@ -5,9 +5,9 @@ Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.MDIForm Maps 
    BackColor       =   &H8000000C&
    Caption         =   "Maps & More"
-   ClientHeight    =   12930
+   ClientHeight    =   10560
    ClientLeft      =   60
-   ClientTop       =   525
+   ClientTop       =   -1845
    ClientWidth     =   14160
    Icon            =   "Maps.frx":0000
    LinkTopic       =   "MDIForm1"
@@ -480,7 +480,7 @@ Begin VB.MDIForm Maps
       Height          =   375
       Left            =   0
       TabIndex        =   20
-      Top             =   12555
+      Top             =   10185
       Width           =   14160
       _ExtentX        =   24977
       _ExtentY        =   661
@@ -1302,7 +1302,7 @@ Private Sub appendfrm_Click()
       If noheights = False Then
         lg = lon
         lt = lat
-        Call worldheights(lg, lt, hgt)
+        Call WorldHeights(lg, lt, hgt)
         If hgt = -9999 Then hgt = 0
         Maps.Text3.Text = Str$(hgt)
         hgtworld = hgt
@@ -1586,7 +1586,7 @@ mapinfobegin:
                         filsav% = FreeFile
                         Open drivjk_c$ + "skyworld.sav" For Append As #filsav%
                        'find the height at the center coordinates
-                        Call worldheights(MapInfo.loncenter, MapInfo.latcenter, newhgt) '///5/18/24 - sign was reversed, don't know why
+                        Call WorldHeights(MapInfo.loncenter, MapInfo.latcenter, newhgt) '///5/18/24 - sign was reversed, don't know why
                         If newhgt = -9999 Then newhgt = 0
                         Write #filsav%, MapInfo.name, CSng(MapInfo.loncenter), CSng(MapInfo.latcenter), CSng(newhgt)
                         Close #filsav%
@@ -5459,7 +5459,7 @@ d100:   Next i%
                     coordmode2% = 1
                     Maps.Label5.Caption = "ITMx"
                     Maps.Label6.Caption = "ITMy"
-                    Maps.Text7.Text = hgtob - 1.8 'remove observer's height added in profile calculation
+                    Maps.Text7.Text = hgtob - hgtobs 'remove observer's height added in profile calculation
                     Maps.Text5.Text = kmxob * 1000
                     Maps.Text6.Text = kmyob * 1000 + 1000000
                     kmxc = Maps.Text5.Text: kmyc = Maps.Text6.Text
@@ -5469,7 +5469,7 @@ d100:   Next i%
                    coordmode2% = 2
                    Maps.Label5.Caption = "long."
                    Maps.Label6.Caption = "latit."
-                   Maps.Text7.Text = hgtob - 1.8 'remove observer's height added in profile calculation
+                   Maps.Text7.Text = hgtob - hgtobs 'remove observer's height added in profile calculation
                    Maps.Text5.Text = -kmyob
                    Maps.Text6.Text = kmxob
                    lon = Maps.Text5.Text

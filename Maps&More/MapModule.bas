@@ -215,7 +215,7 @@ Public maxangs%, fullranges%, diflats%, diflogs%, maxangfs%, viewmodes%, fullran
 Public viewmodef%, modeval, modevalf, viewer3D As Boolean, checkdtm As Boolean, modevals, modevalfs
 Public xmin As Single, xmax As Single, ymin As Single, ymax As Single, insiderouteform As Boolean
 Public xmino As Single, xmaxo As Single, ymino As Single, ymaxo As Single, appendfile$
-Public dojump As Boolean, Ccontinue As Boolean, C10 As String, C20 As String
+Public dojump As Boolean, Ccontinue As Boolean, C10 As String, C20 As String, RepairMode As Boolean
 Public israeldtm As String * 1, israeldtmcd As Boolean, topotype%, AutoNum&, IntOld2%, cal1%
 Public israeldtmf As String * 1, israeldtmcdf As Boolean, mapSearchVis As Boolean
 Public worlddtm As String * 1, worlddtmcd As Boolean, ExplorerDir As String, plotfile$
@@ -393,7 +393,7 @@ Public Sub heights(kmx, kmy, hgt2)
             Call casgeo(kmx, kmy, lgh, lth)
             End If
          
-         Call worldheights(-lgh, lth, hgt2)
+         Call WorldHeights(-lgh, lth, hgt2)
          GoTo g99
          End If
       
@@ -848,7 +848,7 @@ Function EnumWndProc(ByVal hwnd As Long, lParam As Long) As Long    ' Increment 
     EnumWndProc = True
 End Function
 
-Public Sub worldheights(lg, lt, hgt)
+Public Sub WorldHeights(lg, lt, hgt)
    Dim leros As Long, lmag As Long
    On Error GoTo worlderror
    
@@ -1082,7 +1082,7 @@ Eroshgt:
    tncols = NCOLS%
    c% = worldfnum%
    numrec& = IKMY& * tncols + IKMX&
-   Get #worldfnum%, (numrec& - 1) * 2 + 1, IO%
+   Get #worldfnum%, (numrec& - 1) * 2 + 1, IO%  'first record number is record # = 1
    
    If IsraelDTMsource% <> 3 And DTMflag% <> 3 Then
     '   A$ = sEmpty
@@ -1260,7 +1260,7 @@ Public Sub dipcoord()
        If noheights = False Then
          lg = lono '-180# + X * 360# / SkyLightfm.mapPictureform.mapPicture.Width
          lt = lato '90# - Y * 180# / SkyLightfm.mapPictureform.mapPicture.Height
-         Call worldheights(lg, lt, hgt2)
+         Call WorldHeights(lg, lt, hgt2)
          If hgt2 = -9999 Then hgt2 = 0
        Else
          hgt2 = 0#
@@ -2939,7 +2939,7 @@ go10:   If Maps.Label5.Caption <> "ITMx" Or skymove = True Or worldmove = True O
                         'determine height at that point if not inputed already
                         If noheights = False Then 'And Maps.Text5.Text = sEmpty Or Maps.Text5.Text = "0" Then
                            lg = l2: lt = l1
-                           Call worldheights(lg, lt, hgt)
+                           Call WorldHeights(lg, lt, hgt)
                            If hgt = -9999 Then hgt = 0
                            If worldmove = True Then
                               Maps.Text3.Text = hgt
@@ -3051,7 +3051,7 @@ go10:   If Maps.Label5.Caption <> "ITMx" Or skymove = True Or worldmove = True O
                  Call heights(kmxo, kmyo, hgt)
               ElseIf noheights = False And world = True Then
                  lg = lon: lt = lat
-                 Call worldheights(lg, lt, hgt)
+                 Call WorldHeights(lg, lt, hgt)
                  If hgt = -9999 Then hgt = 0
               ElseIf noheights = True Then
                  hgt = 0#
@@ -3158,7 +3158,7 @@ Public Sub showcoord()
             lg = lon
             lt = lat
             If noheights = False Then
-               Call worldheights(lg, lt, hgt)
+               Call WorldHeights(lg, lt, hgt)
                If hgt = -9999 Then hgt = 0
                Maps.Text3.Text = Str$(hgt)
                End If
@@ -4022,7 +4022,7 @@ out50: Err.Clear
            hgtworld = Maps.Text7
         Else
           If noheights = False Then
-             Call worldheights(l1, l2, hgt)
+             Call WorldHeights(l1, l2, hgt)
              If hgt = -9999 Then hgt = 0
              Maps.Text7.Text = Str$(hgt)
              hgtworld = hgt
@@ -4174,12 +4174,15 @@ W100:
          End If
  
      'query user for treehgt
-     If Not AutoProf Or (AutoProf And AutoNum& = 0) Then
+     If (Not AutoProf Or (AutoProf And AutoNum& = 0)) And Not RepairMode Then
         treehgtStored = 0
         treehgtStr$ = InputBox("Enter tree height" & vbCrLf & "(leave zero if nothing to add)", "Add ''tree'' height to all DTM heights", 0)
         treehgt = Val(treehgtStr$)
      ElseIf AutoProf And AutoNum& > 0 Then
         treehgt = treehgtStored
+     ElseIf RepairMode Then
+        treehgt = 0
+        treehgtStored = treehgt
         End If
      
 50   'build data and header files of USGS EROS tile
@@ -4560,12 +4563,20 @@ tst2:  myfile = Dir(ramdrive + ":\*.BI1")
        waitime = Timer
        Do Until mapprogressfm.Visible = False
           DoEvents
-          If AutoProf Then
+          If AutoProf Or RepairMode Then
              If Delay% <> 0 Then
                 AddWait = Delay%
              Else
                 AddWait = 10
                 End If
+                
+             If RepairMode Then
+                If Timer > waitime + 3 Then
+                   mapprogressfm.Acceptbut.value = True
+                   GoTo exit100
+                   End If
+             End If
+             
              If Timer > waitime + AddWait Then
                 'push the button automatically after a minute
                 mapprogressfm.Acceptbut.value = True
@@ -4578,6 +4589,7 @@ tst2:  myfile = Dir(ramdrive + ":\*.BI1")
                    End If
                 End If
              End If
+exit100:
        Loop
        
        'now write batch file
@@ -4674,7 +4686,7 @@ at100: If viewer3D = True Then
        myfile = Dir(drivjk_c$ + "erostat.tmp")
        If myfile <> sEmpty Then Kill drivjk_c$ + "erostat.tmp"
        
-       Close 'close any open files
+       If Not RepairMode Then Close 'close any open files '>>Close statement that kills repairmode
        'if eros.tmp exists, erase it
        If Dir(drivjk_c$ & "eros.tmp") <> sEmpty And AutoPress = False Then Kill drivjk_c$ & "eros.tmp"
        
@@ -4920,6 +4932,18 @@ mm500: mapgraphfm.Visible = True
         .restorelimitsbut.Refresh
         .Command3.value = True 'show the obstructions
         End With
+        
+        If RepairMode Then
+           'this mode is used to fix the longitude shft bug due to the wrong record number in WorldHeights
+           'after files have been fixed, there should be no need ever again to run repair mode - EK 051425
+           waittime = Timer
+           Do Until Timer > waittime + 2 'but need five seconds for slow CPU's
+              DoEvents
+           Loop
+           killpicture = True
+           mapgraphfm.cmdExit.value = True
+           Exit Sub
+           End If
         
             
        Do While killpicture = False
@@ -5772,7 +5796,7 @@ cs50:
           lgtmp = -lg2v: lttmp = lt2v
            If bAirPath Then 'air path calculations so don't give heights
            Else
-              Call worldheights(lgtmp, lttmp, hgt2)
+              Call WorldHeights(lgtmp, lttmp, hgt2)
               End If
            If hgt2 = -9999 Then hgt2 = 0
            GoSub viewan 'find view angle
@@ -5872,7 +5896,7 @@ cs50:
           dista = dista + 6371315 * DACOS(cosang)
           'find heights
           lgtmp = -lg2v: lttmp = lt2v
-          Call worldheights(lgtmp, lttmp, hgt2)
+          Call WorldHeights(lgtmp, lttmp, hgt2)
           If hgt2 = -9999 Then hgt2 = 0
           GoSub viewan 'find view angle
           If va > viewang0 Then
@@ -7080,4 +7104,13 @@ Function GeocentricRadius(phi As Double, Optional a As Double, Optional f As Dou
    DD = (a * a * AA) ^ 2 + (b * b * BB) ^ 2
    ee = (a * AA) ^ 2 + (b * BB) ^ 2
    GeocentricRadius = Sqr(DD / ee)
+End Function
+
+Function Min(x, y)
+   If x < y Then Min = x
+   If x >= y Then Min = y
+End Function
+Function Max(x, y)
+    If x >= y Then Max = x
+    If x < y Then Max = y
 End Function

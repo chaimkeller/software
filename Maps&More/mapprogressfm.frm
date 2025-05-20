@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form mapprogressfm 
    BorderStyle     =   1  'Fixed Single
@@ -345,6 +345,7 @@ Private Sub Acceptbut_Click()
    
    accept = True
    apprn = Val(mapprogressfm.Text2.Text)
+   If RepairMode Then apprn = 0.5
    'create eros.tm6 file
    dtmfile% = FreeFile
    Open ramdrive & ":\eros.tm6" For Output As #dtmfile%
@@ -436,6 +437,7 @@ Private Sub form_load()
            Case 3 'ALOS (30 meters)
               optALOS.value = True
         End Select
+        
 '        Close #dtmfile%
 '   Else
 '       DTMflag = 0 'default is SRTM30
