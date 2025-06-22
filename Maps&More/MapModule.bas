@@ -16,6 +16,7 @@ Public Const WM_SETFOCUS = &H7
 Declare Function EnumWindows Lib "user32" (ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
 Declare Function PostMessage Lib "user32" Alias "PostMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+Declare Function CopyFile Lib "kernel32" Alias "CopyFileA" (ByVal lpExistingFileName As String, ByVal lpNewFileName As String, ByVal bFailIfExists As Long) As Long
 'Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
 'Declare Function GetWindow Lib "user32" (ByVal hwnd As Long, ByVal wCmd As Long) As Long
 'Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (ByVal hwnd As Long, ByVal lpString As String) As Long
@@ -29,8 +30,8 @@ Declare Sub keybd_event Lib "user32" (ByVal bVk As Byte, ByVal bScan As Byte, By
 Declare Sub mouse_event Lib "user32" (ByVal dwFlags As Long, ByVal dX As Long, ByVal dY As Long, ByVal cButtons As Long, ByVal dwExtraInfo As Long)
 Declare Function CloseClipboard Lib "user32" () As Long
 Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
-Declare Function GetVersion Lib "Kernel32" () As Long
-Declare Function WinExec Lib "Kernel32" (ByVal lpCmdLine As String, ByVal nCmdShow As Long) As Long
+Declare Function GetVersion Lib "kernel32" () As Long
+Declare Function WinExec Lib "kernel32" (ByVal lpCmdLine As String, ByVal nCmdShow As Long) As Long
 Declare Function ShellExecute _
                             Lib "shell32.dll" _
                             Alias "ShellExecuteA" ( _
@@ -291,7 +292,7 @@ Private Const MAX_PATH = 260
 Private Declare Sub CoTaskMemFree Lib "ole32.dll" _
     (ByVal hMem As Long)
 
-Private Declare Function lstrcat Lib "Kernel32" _
+Private Declare Function lstrcat Lib "kernel32" _
    Alias "lstrcatA" (ByVal lpString1 As String, _
    ByVal lpString2 As String) As Long
    
@@ -1082,7 +1083,7 @@ Eroshgt:
    tncols = NCOLS%
    c% = worldfnum%
    numrec& = IKMY& * tncols + IKMX&
-   Get #worldfnum%, (numrec& - 1) * 2 + 1, IO%  'first record number is record # = 1
+   Get #worldfnum%, numrec& * 2 + 1, IO%  'first record number is record # = 1
    
    If IsraelDTMsource% <> 3 And DTMflag% <> 3 Then
     '   A$ = sEmpty
@@ -5355,9 +5356,11 @@ diskerrhandler:
       For i% = 0 To Forms.count - 1
          ret = SetWindowPos(Forms(i%).hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
       Next i%
-      response = MsgBox("Encountered error #: " & Trim$(Str$(Err.Number)) & vbLf & _
-                        Err.Description & vbLf & _
-                        "Want to retry?", vbOKCancel + vbCritical, "Maps & More")
+      If Err.Number <> 55 Then 'if file already open error encountered proceed to next statement
+         response = MsgBox("Encountered error #: " & Trim$(Str$(Err.Number)) & vbLf & _
+                    Err.Description & vbLf & _
+                    "Want to retry?", vbOKCancel + vbCritical, "Maps & More")
+         End If
       Resume Next
       If response = vbOK Then
          For i% = 0 To Forms.count - 1

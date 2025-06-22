@@ -6,8 +6,8 @@ Begin VB.MDIForm Maps
    BackColor       =   &H8000000C&
    Caption         =   "Maps & More"
    ClientHeight    =   10560
-   ClientLeft      =   60
-   ClientTop       =   -1845
+   ClientLeft      =   2520
+   ClientTop       =   2805
    ClientWidth     =   14160
    Icon            =   "Maps.frx":0000
    LinkTopic       =   "MDIForm1"
@@ -2126,66 +2126,67 @@ ce10: MsgBox "Can't locate necessary directories! ABORTING program...Sorry", vbC
       
 5:
       'now look for 3dExplorer in program files directory
-   If s12% = 0 Then
-       s13% = 0
-       For i% = 1 To numdriv%
-    '   For i% = 4 To numdriv%
-          drivlet$ = Mid$(driveletters$, i%, 1)
-          ChDrive drivlet$
-          mypath = drivlet$ + ":\" ' Set the path.
-          myname = LCase(Dir(mypath, vbDirectory))   ' Retrieve the first entry.
-          Do While myname <> sEmpty   ' Start the loop.
-             'Ignore the current directory and the encompassing directory.
-             If myname <> "." And myname <> ".." Then
-                'Use bitwise comparison to make sure MyName is a directory.
-                If (GetAttr(mypath & myname) And vbDirectory) = vbDirectory Then
-                   myname = LCase(myname)
-    
-                   If s12% = 0 And s13% = 0 And InStr(LCase(myname), "program files") <> 0 Then
-                      myfile = Dir(drivlet$ + ":\" & myname & "\3dExplorer\", vbDirectory)
-                      If myfile <> sEmpty Then
-                         s13% = 1: D3dExplorerDir$ = drivlet$ + ":\" & myname & "\3dExplorer\"
-                         Exit For
-                         End If
-                      End If
-                      
-                   End If
-                End If
-             myname = Dir 'Get next entry
-          Loop
-       Next i%
-   End If
+   If s12% = 0 Then GoTo nextstep
+'       s13% = 0
+'       For i% = 1 To numdriv%
+'    '   For i% = 4 To numdriv%
+'          drivlet$ = Mid$(driveletters$, i%, 1)
+'          ChDrive drivlet$
+'          mypath = drivlet$ + ":\" ' Set the path.
+'          myname = LCase(Dir(mypath, vbDirectory))   ' Retrieve the first entry.
+'          Do While myname <> sEmpty   ' Start the loop.
+'             'Ignore the current directory and the encompassing directory.
+'             If myname <> "." And myname <> ".." Then
+'                'Use bitwise comparison to make sure MyName is a directory.
+'                If (GetAttr(mypath & myname) And vbDirectory) = vbDirectory Then
+'                   myname = LCase(myname)
+'
+'                   If s12% = 0 And s13% = 0 And InStr(LCase(myname), "program files") <> 0 Then
+'                      myfile = Dir(drivlet$ + ":\" & myname & "\3dExplorer\", vbDirectory)
+'                      If myfile <> sEmpty Then
+'                         s13% = 1: D3dExplorerDir$ = drivlet$ + ":\" & myname & "\3dExplorer\"
+'                         Exit For
+'                         End If
+'                      End If
+'
+'                   End If
+'                End If
+'             myname = Dir 'Get next entry
+'          Loop
+'       Next i%
+'   End If
    
-   If s12% = 0 And s13% = 0 Then
-       s14% = 0
-       For i% = 1 To numdriv%
-    '   For i% = 4 To numdriv%
-          drivlet$ = Mid$(driveletters$, i%, 1)
-          ChDrive drivlet$
-          mypath = drivlet$ + ":\" ' Set the path.
-          myname = LCase(Dir(mypath, vbDirectory))   ' Retrieve the first entry.
-          Do While myname <> sEmpty   ' Start the loop.
-             'Ignore the current directory and the encompassing directory.
-             If myname <> "." And myname <> ".." Then
-                'Use bitwise comparison to make sure MyName is a directory.
-                If (GetAttr(mypath & myname) And vbDirectory) = vbDirectory Then
-                   myname = LCase(myname)
-    
-                   If s12% = 0 And s13% = 0 And s14% = 0 And InStr(LCase(myname), "program files (x86)") <> 0 Then
-                      myfile = Dir(drivlet$ + ":\" & myname & "\3dExplorer\", vbDirectory)
-                      If myfile <> sEmpty Then
-                         s14% = 1: D3dExplorerDir$ = drivlet$ + ":\" & myname & "\3dExplorer\"
-                         Exit For
-                         End If
-                      End If
-                      
-                   End If
-                End If
-             myname = Dir 'Get next entry
-          Loop
-       Next i%
-       End If
+   If s12% = 0 And s13% = 0 Then GoTo nextstep
+'       s14% = 0
+'       For i% = 1 To numdriv%
+'    '   For i% = 4 To numdriv%
+'          drivlet$ = Mid$(driveletters$, i%, 1)
+'          ChDrive drivlet$
+'          mypath = drivlet$ + ":\" ' Set the path.
+'          myname = LCase(Dir(mypath, vbDirectory))   ' Retrieve the first entry.
+'          Do While myname <> sEmpty   ' Start the loop.
+'             'Ignore the current directory and the encompassing directory.
+'             If myname <> "." And myname <> ".." Then
+'                'Use bitwise comparison to make sure MyName is a directory.
+'                If (GetAttr(mypath & myname) And vbDirectory) = vbDirectory Then
+'                   myname = LCase(myname)
+'
+'                   If s12% = 0 And s13% = 0 And s14% = 0 And InStr(LCase(myname), "program files (x86)") <> 0 Then
+'                      myfile = Dir(drivlet$ + ":\" & myname & "\3dExplorer\", vbDirectory)
+'                      If myfile <> sEmpty Then
+'                         s14% = 1: D3dExplorerDir$ = drivlet$ + ":\" & myname & "\3dExplorer\"
+'                         Exit For
+'                         End If
+'                      End If
+'
+'                   End If
+'                End If
+'             myname = Dir 'Get next entry
+'          Loop
+'       Next i%
+'       End If
 
+nextstep:
    'determine if DTMs are present, and where they are
 
     'check for other exe files that must reside in the jk_c directory
