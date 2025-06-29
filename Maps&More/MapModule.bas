@@ -1083,7 +1083,7 @@ Eroshgt:
    tncols = NCOLS%
    c% = worldfnum%
    numrec& = IKMY& * tncols + IKMX&
-   Get #worldfnum%, numrec& * 2 + 1, IO%  'first record number is record # = 1
+   Get #worldfnum%, numrec& * 2 + 1, IO%   'first record number is record # = 1, each height is a 2 byte (8 bit) interger
    
    If IsraelDTMsource% <> 3 And DTMflag% <> 3 Then
     '   A$ = sEmpty
