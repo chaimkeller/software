@@ -13,6 +13,7 @@ Public CurrentFitFileIndex As Integer
 Public OriginalNumPlotFiles As Integer
 Public MaxX As Double, MinX As Double, MaxY As Double, MinY As Double
 Public SplineType%, FitMethod%, SplineDeg%, FileAddSave() As String, NumAddSave As Integer
+Public LSerr As Double
 
 
 ' The function.
@@ -178,7 +179,7 @@ Dim solution() As Double
 
 GaussianElimination_Error:
 
-    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure GaussianElimination of Module modPolyFit"
+    MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure GaussianElimination of Module modPolyFit"
 End Function
 
 

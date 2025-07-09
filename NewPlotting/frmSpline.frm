@@ -1,11 +1,12 @@
 VERSION 5.00
+Object = "{6B7E6392-850A-101B-AFC0-4210102A8DA7}#1.3#0"; "COMCTL32.OCX"
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
 Object = "{825967DA-1756-11D3-B695-ED78B587442C}#30.0#0"; "FlexListBox.ocx"
 Begin VB.Form frmSpline 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Spline and Polynomial Fits"
-   ClientHeight    =   9390
+   ClientHeight    =   9600
    ClientLeft      =   45
    ClientTop       =   330
    ClientWidth     =   3735
@@ -14,9 +15,30 @@ Begin VB.Form frmSpline
    LockControls    =   -1  'True
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   9390
+   ScaleHeight     =   9600
    ScaleWidth      =   3735
    StartUpPosition =   3  'Windows Default
+   Begin ComctlLib.StatusBar stBarError 
+      Align           =   2  'Align Bottom
+      Height          =   375
+      Left            =   0
+      TabIndex        =   29
+      Top             =   9225
+      Width           =   3735
+      _ExtentX        =   6588
+      _ExtentY        =   661
+      SimpleText      =   ""
+      _Version        =   327682
+      BeginProperty Panels {0713E89E-850A-101B-AFC0-4210102A8DA7} 
+         NumPanels       =   1
+         BeginProperty Panel1 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
+            AutoSize        =   2
+            TextSave        =   ""
+            Key             =   ""
+            Object.Tag             =   ""
+         EndProperty
+      EndProperty
+   End
    Begin VB.Frame frmDetails 
       Caption         =   "Details"
       Height          =   975
@@ -24,6 +46,17 @@ Begin VB.Form frmSpline
       TabIndex        =   25
       Top             =   2640
       Width           =   1695
+      Begin VB.CheckBox chkBestFit 
+         Caption         =   "Best Fit"
+         Height          =   255
+         Left            =   140
+         Style           =   1  'Graphical
+         TabIndex        =   30
+         ToolTipText     =   "Iterate polynomial degree until best LSE is reached"
+         Top             =   640
+         Visible         =   0   'False
+         Width           =   975
+      End
       Begin VB.ComboBox cmbSpline 
          Height          =   315
          Left            =   120
@@ -146,7 +179,7 @@ Begin VB.Form frmSpline
       Begin VB.CheckBox chkAuto 
          Caption         =   "Auto Record"
          BeginProperty Font 
-            Name            =   "MS Serif"
+            Name            =   "Arial"
             Size            =   6.75
             Charset         =   177
             Weight          =   400
@@ -192,7 +225,7 @@ Begin VB.Form frmSpline
             GridColor       =   -2147483624
             AllowUserResizing=   3
             BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-               Name            =   "MS Sans Serif"
+               Name            =   "Arial"
                Size            =   9.75
                Charset         =   177
                Weight          =   400
@@ -299,7 +332,7 @@ Begin VB.Form frmSpline
          BackColorUnselected=   -2147483624
          BackColorSelected=   16384
          BeginProperty FontSelected {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
+            Name            =   "Arial"
             Size            =   8.25
             Charset         =   177
             Weight          =   700
@@ -708,14 +741,37 @@ Private Sub cmdFit_Click()
                    degree = 1
                    End If
                    
-                If degree = 0 Then degree = 1
-                PolyDeg = degree
-                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
-                If ier = -1 Then Exit Sub
+                If chkBestFit.Value = vbUnchecked Then
+                    If degree = 0 Then degree = 1
+                    PolyDeg = degree
+                    Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                    If ier = -1 Then Exit Sub
+                    ShowError
+                Else 'increase degree from 2 to maximum until maximum least squared error is found
+                    MinLSErrr = 9999
+                    For degree = 2 To MaxPolyDeg
+                            PolyDeg = degree
+                            Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                            If ier = -1 Then Exit Sub
+                            ShowError
+                           If LSerr < MinLSErrr Then
+                               MinLSErrr = LSerr
+                               DegBest = degree
+                               cmbDeg.Text = degree
+                           ElseIf LSerr >= MinLSErr Then
+                               DegBest = degree - 1
+                               Exit For
+                               End If
+                    Next degree
+                    PolyDeg = degree
+                    cmbDeg.Text = degree
+                    Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                    If ier = -1 Then Exit Sub
+                    ShowError
+                    End If
             
                 With flxGridFit
-                    .Rows = PolyDeg + 2
-                    If cmbDeg.Text >= 2 And chkCurvature.Value = vbChecked Then .Rows = PolyDeg + 3
+                    .Rows = PolyDeg + 3
                     .Cols = 2
                     .ColAlignment(0) = 1
                     .ColAlignment(1) = 0
@@ -736,7 +792,7 @@ Private Sub cmdFit_Click()
                     
                 End With
                 
-                Call AutosizeGridColumns(flxGridFit, degree + 2, 100)
+                Call AutosizeGridColumns(flxGridFit, degree + 3, 100)
                 
                 'now overplot the file and the fit
                 'create temperorary two column fit file with the requested number of points
@@ -763,6 +819,12 @@ Private Sub cmdFit_Click()
                       End If
                 Next J
                 Close #filetmp%
+                
+                'added 070625
+                'show the least square error of the fit to the points
+                frmSpline.stBarError.Panels(1).Text = "Least Squared Error = " & Format(Str$(LSerr), "0.00E+00")
+'                flxGridFit.TextMatrix(PolyDeg + 2, 0) = "LeastSqureError"
+'                flxGridFit.TextMatrix(PolyDeg + 2, 1) = Format(Str$(LSerr), "0.00E+00")
                 
                 If cmbDeg.Text >= 2 And chkCurvature.Value = vbChecked Then
                    With flxGridFit
@@ -1322,13 +1384,42 @@ WizardSection:
                     degree = 1
                     End If
                     
-                If degree = 0 Then degree = 1
-                PolyDeg = degree
-                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
-                If ier = -1 Then Exit Sub
+'                If degree = 0 Then degree = 1
+'                PolyDeg = degree
+'                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+'                If ier = -1 Then Exit Sub
+'                ShowError
+                If chkBestFit.Value = vbUnchecked Then
+                    If degree = 0 Then degree = 1
+                    PolyDeg = degree
+                    Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                    If ier = -1 Then Exit Sub
+                    ShowError
+                Else 'increase degree from 2 to maximum until maximum least squared error is found
+                    MinLSErrr = 9999
+                    For degree = 2 To MaxPolyDeg
+                            PolyDeg = degree
+                            Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                            If ier = -1 Then Exit Sub
+                            ShowError
+                           If LSerr < MinLSErrr Then
+                               MinLSErrr = LSerr
+                               DegBest = degree
+                               cmbDeg.Text = degree
+                           ElseIf LSerr >= MinLSErr Then
+                               DegBest = degree - 1
+                               Exit For
+                               End If
+                    Next degree
+                    PolyDeg = degree
+                    cmbDeg.Text = degree
+                    Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                    If ier = -1 Then Exit Sub
+                    ShowError
+                    End If
             
                 With flxGridFit
-                    .Rows = PolyDeg + 2
+                    .Rows = PolyDeg + 3
                     .Cols = 2
                     .ColAlignment(0) = 1
                     .ColAlignment(1) = 0
@@ -1349,8 +1440,8 @@ WizardSection:
                     
                 End With
                 
-                Call AutosizeGridColumns(flxGridFit, degree + 2, 100)
-                
+                Call AutosizeGridColumns(flxGridFit, degree + 3, 100)
+                    
                 'now overplot the file and the fit
                 'create temperorary two column fit file with the requested number of points
                 NumFitSteps = Val(txtNumFitPnts.Text)
@@ -1732,10 +1823,10 @@ Exit Sub
 
 cmdFit_Click_Error:
 
-    If Err.Number = 9 And testfile% = 1 Then Resume Next
+    If err.Number = 9 And testfile% = 1 Then Resume Next
     
     Screen.MousePointer = vbDefault
-    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdFit_Click of Form frmSpline"
+    MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure cmdFit_Click of Form frmSpline"
     Fitting = False
     Close
     
@@ -1755,7 +1846,7 @@ Private Sub cmdRecord_Click()
    Open App.Path & "\Fit-coefficients.txt" For Append As #fileoutcoef%
    Print #fileoutcoef%, String(40, "=") 'demarcation
    Print #fileoutcoef%, FileRoot(PlotInfo(7, CurrentFitFileIndex - 1))
-   Print #fileoutcoef%, "Polynomical coeficients of Plot program's LS fit to" & Str(cmbDeg.ListIndex + 1) & "th degree polynomial."
+   Print #fileoutcoef%, "Polynomical coeficients of Plot program's LS fit to" & Str(cmbDeg.Text) & "th degree polynomial."
    
     For J = 0 To BestCoeffs.Count - 1
        doclin$ = Str(J) & ",    " & BestCoeffs.item(J + 1)
@@ -1769,7 +1860,7 @@ Private Sub cmdRecord_Click()
 
 cmdRecord_Click_Error:
 
-    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure cmdRecord_Click of Form frmSpline"
+    MsgBox "Error " & err.Number & " (" & err.Description & ") in procedure cmdRecord_Click of Form frmSpline"
     
 End Sub
 
@@ -1890,13 +1981,42 @@ Private Sub cmdWizard_Click()
                 
                  ' Find a good fit.
                 degree = cmbDeg.ListIndex + 1
-                If degree = 0 Then degree = 1
-                PolyDeg = degree
-                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
-                If ier = -1 Then Exit Sub
+'                If degree = 0 Then degree = 1
+'                PolyDeg = degree
+'                Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+'                If ier = -1 Then Exit Sub
+'                ShowError
+                If chkBestFit.Value = vbUnchecked Then
+                    If degree = 0 Then degree = 1
+                    PolyDeg = degree
+                    Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                    If ier = -1 Then Exit Sub
+                    ShowError
+                Else 'increase degree from 2 to maximum until maximum least squared error is found
+                    MinLSErrr = 9999
+                    For degree = 2 To MaxPolyDeg
+                            PolyDeg = degree
+                            Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                            If ier = -1 Then Exit Sub
+                            ShowError
+                           If LSerr < MinLSErrr Then
+                               MinLSErrr = LSerr
+                               DegBest = degree
+                               cmbDeg.Text = degree
+                           ElseIf LSerr >= MinLSErr Then
+                               DegBest = degree - 1
+                               Exit For
+                               End If
+                    Next degree
+                    PolyDeg = degree
+                    cmbDeg.Text = degree
+                    Set BestCoeffs = FindPolynomialLeastSquaresFit(PtX, PtY, degree, ier)
+                    If ier = -1 Then Exit Sub
+                    ShowError
+                    End If
             
                 With flxGridFit
-                    .Rows = PolyDeg + 2
+                    .Rows = PolyDeg + 3
                     .Cols = 2
                     .ColAlignment(0) = 1
                     .ColAlignment(1) = 0
@@ -1917,8 +2037,7 @@ Private Sub cmdWizard_Click()
                     
                 End With
                 
-                Call AutosizeGridColumns(flxGridFit, degree + 2, 100)
-
+                Call AutosizeGridColumns(flxGridFit, degree + 3, 100)
 
             ElseIf optSpline.Value = True Then
             
@@ -2002,7 +2121,7 @@ On Error GoTo errhand
       
 errhand:
     Close
-    MsgBox "Error detected, error number: " & Str(Err.Number) & vbCrLf & "Error description: " & Err.Description, vbCritical + vbOKOnly, "File error"
+    MsgBox "Error detected, error number: " & Str(err.Number) & vbCrLf & "Error description: " & err.Description, vbCritical + vbOKOnly, "File error"
 
 End Sub
 
@@ -2053,7 +2172,7 @@ Private Sub Form_Load()
      .Top = frmSetCond.Top
   End With
   
-  MaxPolyDeg = 12
+  MaxPolyDeg = 15
   
   notAlreadyFitted = True
 
@@ -2159,6 +2278,7 @@ Private Sub Form_Load()
           optPoly.Value = True
           cmbDeg.Visible = True
           cmbSpline.Visible = False
+          chkBestFit.Visible = True
           cmdRecord.Visible = True
           chkAuto.Visible = True
           frmFitResults.Visible = True
@@ -2169,6 +2289,7 @@ Private Sub Form_Load()
           optSpline.Value = True
           cmbSpline.Visible = True
           frmFitResults.Visible = False
+          chkBestFit.Visible = True
           cmdRecord.Visible = False
           chkAuto.Visible = False
           If SplineType% = 0 Then SplineType% = 2
@@ -2191,6 +2312,7 @@ Private Sub Form_Load()
          FitMethod% = 1
          optPoly.Value = True
          cmbSpline.Visible = False
+         chkBestFit.Visible = True
          frmFitParam.Visible = True
          frmFitResults.Visible = False
          cmdRecord.Visible = True
@@ -2328,6 +2450,7 @@ Private Sub optPoly_Click()
       cmdRecord.Visible = True
       chkAuto.Visible = True
       cmbSpline.Visible = False
+      chkBestFit.Visible = True
       FitMethod% = 1
       chkCurvature.Visible = True
       End If
@@ -2339,9 +2462,17 @@ Private Sub optSpline_Click()
       cmdRecord.Visible = False
       chkAuto.Visible = False
       cmbSpline.Visible = True
+      chkBestFit.Visible = False
       FitMethod% = 2
       cmbSpline.ListIndex = 1
       cmbDeg.Visible = False
       chkCurvature.Visible = False
       End If
+End Sub
+' Display the error.
+Private Sub ShowError()
+
+    ' Get the error.
+    LSerr = Sqr(ErrorSquared(PtX, PtY, BestCoeffs))
+'    txtError.Text = Format$(err)
 End Sub
