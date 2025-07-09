@@ -757,7 +757,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   20
          BuddyControl    =   "Text4"
-         BuddyDispid     =   196656
+         BuddyDispid     =   196657
          OrigLeft        =   3420
          OrigTop         =   300
          OrigRight       =   3660
@@ -779,7 +779,7 @@ Begin VB.Form mapsearchfm
          _Version        =   393216
          Value           =   15
          BuddyControl    =   "Text3"
-         BuddyDispid     =   196658
+         BuddyDispid     =   196659
          OrigLeft        =   2100
          OrigTop         =   240
          OrigRight       =   2340
@@ -2694,10 +2694,10 @@ sr300:
           '             RE = EllipRad(CDbl(searchhgts(0, numpnts&)))
           
                        If Abs(cosang - 1) > 0.000000001 Then
-                           Dist = 6371.315 * DACOS(cosang)
+                            Dist = 6371.315 * DACOS(cosang)
                        Else
-                           Dist = 0
-                           Dist = 6371.315 * Sqr((X1 - X2) ^ 2 + (Y1 - Y2) ^ 2)
+                            Dist = 0
+                            Dist = 6371.315 * Sqr((X1 - X2) ^ 2 + (Y1 - Y2) ^ 2)
                            End If
                     Else
                           'distance in kilometers
