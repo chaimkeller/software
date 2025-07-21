@@ -114,6 +114,7 @@ Public Function FileRoot(item As String) As String
 
     'return the file name without the directory information
     Dim Prefixs() As String
+    Dim TokenString() As String
     
     Prefixs = Split(item, "\")
     If UBound(Prefixs) > 0 Then
@@ -121,10 +122,14 @@ Public Function FileRoot(item As String) As String
         End If
         
     'now check that there are no extraneous characters at the end
-    pos% = InStr(Len(FileRoot) - 5, FileRoot, ".")
-    If Len(FileRoot) - pos% > 3 Then
-       FileRoot = Mid$(FileRoot, 1, Len(FileRoot) - 1)
-       End If
+    TokenString = Split(FileRoot, ".")
+    Ext$ = TokenString(UBound(TokenString))
+    'check if last character is alphanumeric, if it is, don't truncate
+    C$ = Mid$(LCase$(Ext$), Len(Ext$), 1)
+    If InStr("abcdefghijklmnopqrstuvwxyz0123456789", C$) <> 0 Then
+    Else
+          FileRoot = Mid$(FileRoot, 1, Len(FileRoot) - 1)
+          End If
     
 End Function
 Public Function RemoveTermination(item As String) As String
