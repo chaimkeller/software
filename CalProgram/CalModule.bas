@@ -85,6 +85,7 @@ Public optiondmish%, optiontmish%, dirnet$, RoundSeconds%, myear0%, fshabos0%, h
 Public yrstrt%(1), yrend%(1), visauto As Boolean, mishorauto As Boolean, astauto As Boolean
 Public BeginningYear$, EndYear$, NumCivilYears%, NumCivilYearsInc%, BeginCivilRun As Boolean
 Public PDFprinter As Boolean, SunriseCalc As Boolean, SunsetCalc As Boolean, LastItem$
+Public GlobalWarmingCorrection As Boolean
 'Public MaxHourZemanios As Double
 Public Type BrowseInfo
     lngHwnd        As Long
@@ -5592,6 +5593,7 @@ Dim FilePathBil As String
 Dim FileNameBil As String
 
 Dim tncols As Long, IKMY&, IKMX&, numrec&, IO%, Tempmode%
+Dim lat_w As Double
 
 FilePathBil = App.Path & "\WorldClim_bil"
 If Dir(FilePathBil, vbDirectory) <> sEmpty Then
@@ -5607,6 +5609,42 @@ Else
        Exit Sub
        End If
     End If
+    
+'''''''''''''''''new 072925''''''''''''''''''''''''''
+'add adhoc GlobalWarning effect
+'//effect of global warming on weather zones from carbon soot
+'//assume that global warming will take over the effect within the next 50 years
+'//and then be optimistic and assume that it stabilizes
+
+    If (GlobalWarmingCorrection) Then
+        '//use simple model for effect of Global Warming
+        'have to figure out what is FirstSecularYr
+        FirstSecularYr = yrheb - 5785 + 2024
+        END_SUN_APPROX = 2050
+        If (FirstSecularYr < END_SUN_APPROX) Then
+           If (lat >= (FirstSecularYr - 2000) * 0.07) Then
+               lt_w = lat - (FirstSecularYr - 2000) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
+                                                          '//"Carbon soot may be driving the expansion of the tropics-not CO2
+           ElseIf (lt < -(FirstSecularYr - 2000) * 0.07) Then
+               lt_w = lat + (FirstSecularYr - 2000) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
+           Else
+               lt_w = lat
+               End If
+        Else
+           If (lat >= 3.5) Then
+               lt_w = lat - 3.5 ' //include effect of global warming from Robert J. Allen, UCR
+           ElseIf (lat < -3.5) Then
+               lt_w = lat + 3.5  '//include effect of global warming from Robert J. Allen, UCR
+           Else
+               lt_w = lat
+               End If
+           End If
+    Else
+        lt_w = lat
+        End If
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''
+
 'first extract minimum temperatures
 
  Tempmode% = 0
@@ -5654,7 +5692,7 @@ T50:
        filein% = FreeFile
        Open FilePathBil For Binary As #filein%
    
-        Y = lat
+        Y = lt_w 'lat
         X = lon
         
         IKMY& = CLng((ULYMAP - Y) / YDIM) + 1

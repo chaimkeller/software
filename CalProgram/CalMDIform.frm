@@ -134,6 +134,10 @@ Begin VB.MDIForm CalMDIform
          Caption         =   "&Add hour for DST"
          Checked         =   -1  'True
       End
+      Begin VB.Menu mnuGlobalWarmingCorrection 
+         Caption         =   "&Global Warning Correction"
+         Checked         =   -1  'True
+      End
       Begin VB.Menu exitfm 
          Caption         =   "E&xit"
       End
@@ -898,6 +902,10 @@ If internet = True Then
       End If
    End If
    Close #filuser%
+   
+   'set value for GlobalWarmingCorrection flag based on default checked state of the Global Warming Correction Menu Item
+   GlobalWarmingCorrection = mnuGlobalWarmingCorrection.Checked
+   
 Exit Sub
 
 errhand:
@@ -992,6 +1000,26 @@ Private Sub mnuDST_Click()
     Else
        mnuDST.Checked = True
        End If
+End Sub
+
+Private Sub mnuPaperFormat_Click()
+   If Not PageFormatVis Then
+      Pageformatfm.Visible = True
+   Else
+      BringWindowToTop (Pageformatfm.hwnd)
+      End If
+End Sub
+
+Private Sub mnuGlobalWarmingCorrection_Click()
+    If mnuGlobalWarmingCorrection.Checked Then
+          
+       mnuGlobalWarmingCorrection.Checked = False
+       GlobalWarmingCorrection = False
+    Else
+       mnuGlobalWarmingCorrection.Checked = True
+       GlobalWarmingCorrection = True
+       End If
+
 End Sub
 
 Private Sub mnuStndRef_Click()
