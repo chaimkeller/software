@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Begin VB.Form mapLimitsfm 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Analysis Limits"
@@ -15,6 +15,23 @@ Begin VB.Form mapLimitsfm
    ScaleHeight     =   9750
    ScaleWidth      =   4785
    ShowInTaskbar   =   0   'False
+   Begin VB.Frame frmGlobalWarming 
+      Caption         =   "Global Warming"
+      Height          =   460
+      Left            =   120
+      TabIndex        =   50
+      Top             =   6160
+      Width           =   4455
+      Begin VB.CheckBox chkGlobalWarming 
+         Caption         =   "Use global warming adjustment for temperatures"
+         Height          =   195
+         Left            =   360
+         TabIndex        =   51
+         ToolTipText     =   "Adjust the WordClim model by shifting the latitude based on years from 2020"
+         Top             =   200
+         Width           =   3735
+      End
+   End
    Begin VB.Frame frmTemp 
       Caption         =   "Refraction-Temperature -Modeling"
       Height          =   515
@@ -195,7 +212,7 @@ Begin VB.Form mapLimitsfm
       Height          =   375
       Left            =   3240
       TabIndex        =   24
-      Top             =   6000
+      Top             =   5600
       Width           =   195
       _ExtentX        =   423
       _ExtentY        =   661
@@ -229,7 +246,7 @@ Begin VB.Form mapLimitsfm
       Left            =   960
       TabIndex        =   22
       ToolTipText     =   "Use user defined extent number (2-10)"
-      Top             =   6040
+      Top             =   5640
       Width           =   1575
    End
    Begin VB.TextBox Text5 
@@ -248,7 +265,7 @@ Begin VB.Form mapLimitsfm
       Left            =   2640
       TabIndex        =   25
       Text            =   "1.2"
-      Top             =   6000
+      Top             =   5600
       Width           =   615
    End
    Begin VB.Frame frmRadar 
@@ -387,7 +404,7 @@ Begin VB.Form mapLimitsfm
       Left            =   2640
       TabIndex        =   23
       Text            =   "2"
-      Top             =   6000
+      Top             =   5640
       Visible         =   0   'False
       Width           =   540
    End
@@ -403,7 +420,7 @@ Begin VB.Form mapLimitsfm
          Strikethrough   =   0   'False
       EndProperty
       ForeColor       =   &H00800000&
-      Height          =   2300
+      Height          =   1815
       Left            =   120
       TabIndex        =   17
       Top             =   4320
@@ -422,7 +439,7 @@ Begin VB.Form mapLimitsfm
          Height          =   315
          Left            =   180
          TabIndex        =   21
-         Top             =   1320
+         Top             =   980
          Value           =   -1  'True
          Width           =   4215
       End
@@ -437,10 +454,10 @@ Begin VB.Form mapLimitsfm
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Height          =   195
+         Height          =   210
          Left            =   180
          TabIndex        =   20
-         Top             =   1020
+         Top             =   780
          Width           =   4275
       End
       Begin VB.OptionButton Option4 
@@ -457,7 +474,7 @@ Begin VB.Form mapLimitsfm
          Height          =   255
          Left            =   180
          TabIndex        =   19
-         Top             =   660
+         Top             =   520
          Width           =   4215
       End
       Begin VB.OptionButton Option3 
@@ -474,7 +491,7 @@ Begin VB.Form mapLimitsfm
          Height          =   255
          Left            =   180
          TabIndex        =   18
-         Top             =   360
+         Top             =   300
          Width           =   4275
       End
    End
@@ -872,6 +889,9 @@ Private Sub Command1_Click()
       If Val(Text3) <> 0 Then diflats% = Text3
       modevals = Val(Text5)
       End If
+      
+   GlobalWarmingCorrection = chkGlobalWarming.value
+   
    If record = True Then
      TemperatureModel% = cmbModelTemp.ListIndex - 1
      maxangf% = maxang%
@@ -889,6 +909,7 @@ Private Sub Command1_Click()
      filnum% = FreeFile
      AziStep% = Val(txtAngRes)
      AziStepf% = AziStep%
+     GlobalWarmingCorrection = chkGlobalWarming.value
      Open drivjk$ + "mapposition.sav" For Output As #filnum%
      'If hgtpos = sEmpty Then hgtpos = 0
      f1 = 1: If kmxsky > 1000 Then f1 = 0.001
@@ -909,6 +930,7 @@ Private Sub Command1_Click()
      Write #filnum%, IgnoreTiles%
      Write #filnum%, autoazirange%
      Write #filnum%, TemperatureModel%
+     Write #filnum%, GlobalWarmingCorrection
      Close #filnum%
      End If
      
@@ -1016,6 +1038,10 @@ Private Sub form_load()
      chkIgnoreTiles.value = vbChecked
   ElseIf IgnoreTiles% = 0 Then
      chkIgnoreTiles.value = vbUnchecked
+     End If
+     
+  If GlobalWarmingCorrection = 1 Then
+     chkGlobalWarming.value = vbChecked
      End If
   
 '  If TemperatureModel% = 1 Then

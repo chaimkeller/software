@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form mapsearchfm 
@@ -91,6 +91,7 @@ Begin VB.Form mapsearchfm
          Strikethrough   =   0   'False
       EndProperty
       Height          =   285
+      HelpContextID   =   7
       Left            =   4850
       TabIndex        =   70
       Text            =   "15"
@@ -2548,7 +2549,7 @@ sr300:
 '            mapPictureform.mapPicture.DrawMode = dm
 '            '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
    
-             If chkValidity.value = vbChecked And numpnts& > 0 Then
+             If chkValidity.value = vbChecked And numpnts& >= 0 Then
                 'check for unique valid peak, i.e.,, highest point is not on slope, or real highest point is beyond mosaic border
                 Dim StepSize As Double
                 Dim NumStepsToCheck As Integer
@@ -2731,6 +2732,7 @@ SkipEntry:
     Dim SymmPeakArray() As Integer
     Dim numSymmPeaks&, numSlope%
     numSlope% = Val(txtSymm.Text) 'number of grid steps to check for descending slope
+    'numSlope% = 7 'debugging////////////////////////////////
     Dim SlopeOut() As Single
     Dim FileSlopeName$, slopenum%
     ReDim SlopeOut(7, numSlope% - 1) As Single
@@ -2984,17 +2986,17 @@ SkipEntry:
                 Print #slopenum%, Str$(-joutput& * mult) & "," & Format(Str$(SlopeOut(3, joutput& - 1)), "#0.0###")
             Next joutput&
             Print #slopenum%, "0.0, 1.0"
-            For j& = 1 To numSlope%
+            For joutput& = 1 To numSlope%
                 Print #slopenum%, Str$(joutput& * mult) & "," & Format(Str$(SlopeOut(2, joutput& - 1)), "#0.0###")
-            Next j&
+            Next joutput&
             Close #slopenum%
             'diagonal files
             FileSlopeName$ = App.Path & "\FS" & Trim$(Str$(pkkmx)) & "-" & Trim$(Str$(pkkmy)) & "-dpppk.txt"
             slopenum% = FreeFile
             Open FileSlopeName$ For Output As #slopenum%
-            For j& = numSlope% To 1 Step -1
+            For joutput& = numSlope% To 1 Step -1
                 Print #slopenum%, Str$(-joutput& * mult) & "," & Format(Str$(SlopeOut(5, joutput& - 1)), "#0.0###")
-            Next j&
+            Next joutput&
             Print #slopenum%, "0.0, 1.0"
             For joutput& = 1 To numSlope%
                 Print #slopenum%, Str$(joutput& * mult) & "," & Format(Str$(SlopeOut(4, joutput& - 1)), "#0.0###")
@@ -4148,7 +4150,7 @@ End Sub
 ' Purpose   :
 '---------------------------------------------------------------------------------------
 '
-Private Sub Form_Load()
+Private Sub form_load()
    On Error GoTo form_load_Error
 
    mapsearchfm.Width = 4770

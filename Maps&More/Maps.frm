@@ -2590,6 +2590,7 @@ map50:
       Input #filnum%, IgnoreTiles%
       Input #filnum%, autoazirange%
       Input #filnum%, TemperatureModel%
+      Input #filnum%, GlobalWarmingCorrection
       Close #filnum%
       
       Dim srtmdtmcdtmp As Boolean
@@ -6869,6 +6870,7 @@ Private Sub MDIform_queryunload(Cancel As Integer, UnloadMode As Integer)
     Write #filnum%, IgnoreTiles%
     Write #filnum%, autoazirange%
     Write #filnum%, TemperatureModel%
+    Write #filnum%, GlobalWarmingCorrection
     Close #filnum%
 
    'shut off terraviewer if still activated

@@ -239,6 +239,7 @@ Public AutoPress As Boolean, IsraelDTMsource%, OnlyExtractFile As Boolean, EastO
 Public CalculateProfile As Integer, SearchCrossSection As Boolean, SearchCrossObstruct As Boolean
 Public rderos2_use As Boolean, IgnoreTiles%, autoazirange%, NoCDWarning As Boolean, TemperatureModel%
 Public MainDir$, Turbo2cdDir$, USADir$, GEOTOPO30Dir$, D3ASDir$, SamplesDir$, D3dExplorerDir$, ErosCitiesDir$, BILDir$
+Public GlobalWarmingCorrection As Integer
 
 '----------------GPS global constants------------------------
 Public Const MAX_PORT = 15 'maximum number of com ports to search
@@ -4280,6 +4281,7 @@ skipcheck:
        tmpflag% = 3
        Input #filtmp%, treehgtch
        tmflag% = 0
+       Input #filtmp%, GlobalWarmingCorrectionh
        Close #filtmp%
        myfile2 = Dir(filn33$)
        'L2ch - L2 < 0.08 And L1ch - L1 < 0.08 And
@@ -4293,7 +4295,7 @@ skipcheck:
           (Abs(beglatch - beglat) < 0.05 And Abs(endlatch - endlat) < 0.05) And _
           noVoidflagch = noVoidflag And CalculateProfilech = CalculateProfile And AziStepch = AziStepf% * 0.01 And _
           IgnoreTilesch = IgnoreTiles% And TemperatureModelch = TemperatureModel% And MeanTempch = MeanTemp And _
-          treehgtch = treehgt Then
+          treehgtch = treehgt And GlobalWarmingCorrection = GlobalWarmingCorrectionh Then
           mapprogressfm.Visible = True
           mapEROSDTMwarn.Visible = False
           beglog = beglogch
@@ -4314,6 +4316,7 @@ skipcheck:
           Write #filtmp%, TemperatureModel%
           Write #filtmp%, MeanTemp
           Write #filtmp%, treehgt
+          Write #filtmp%, GlobalWarmingCorrection
           Close #filtmp%
           'write eros.tm5 file detailing if this is sunrise,sunset, or both views
           Open ramdrive + ":\eros.tm5" For Output As #filtmp%
@@ -4343,6 +4346,7 @@ skipcheck:
          tmpflag% = 3
          Input #filtmp%, treehgt
          tmpflag% = 0
+         Input #filtmp%, GlobalWarmingCorrectionh
          Close #filtmp%
          'L2ch - L2 < 0.08 And L1ch - L1 < 0.08 And
          skip = False
@@ -4352,7 +4356,7 @@ skipcheck:
             (sunmode% <= 0 And endlogch - endlog >= -0.0001 And Abs(beglogch - beglog) < 0.05 And _
             Abs(hgtch - hgtworld) < 0.1)) And _
             Abs(beglatch - beglat) < 0.05 And Abs(endlatch - endlat) < 0.05 And _
-            noVoidflagch = noVoidflag Then
+            noVoidflagch = noVoidflag And GlobalWarmingCorrectionh = GlobalWarmingCorrection Then
             mapprogressfm.Visible = True
             mapEROSDTMwarn.Visible = False
             beglog = beglogch
@@ -4372,6 +4376,7 @@ skipcheck:
             Write #filtmp%, TemperatureModel%
             Write #filtmp%, MeanTemp
             Write #filtmp%, treehgt
+            Write #filtmp%, GlobalWarmingCorrection
             Close #filtmp%
             Open ramdrive + ":\eros.tm5" For Output As #filtmp%
             Write #filtmp%, sunmode%, modeval
@@ -4414,6 +4419,7 @@ skipcheck:
      Write #filtmp%, TemperatureModel%
      Write #filtmp%, MeanTemp
      Write #filtmp%, treehgt
+     Write #filtmp%, GlobalWarmingCorrection
      Close #filtmp%
      Open ramdrive + ":\eros.tm5" For Output As #filtmp%
      If DTMflag <= 0 Then
@@ -4648,6 +4654,7 @@ at100: If viewer3D = True Then
        Write #filtmp%, TemperatureModel%
        Write #filtmp%, MeanTemp
        Write #filtmp%, treehgt
+       Write #filtmp%, GlobalWarmingCorrection
        Close filtm3num%
        'define default drives to write to
        ChDrive "c"
@@ -6552,13 +6559,19 @@ rhal:
       
         '/////////////////////changes of 061120/////////////////////////////////
          'add Terrestrial Refraction Type Calculation flag to each line in scanlist.txt
+         'also add GlobalWarmingCorrection flag value to each line in scanlist.txt -- added 073025
+         Dim GlobalWarmingFlag As Integer
+         GlobalWarmingFlag = 0 'default is off
+         If (GlobalWarmingCorrection) Then
+            GlobalWarmingFlag = 1
+            End If
         filtmp1% = FreeFile
         Open drivjk_c$ & "viewout.tmp" For Input As #filtmp1%
         filtmp2% = FreeFile
         Open drivjk_c$ & "scanlist.txt" For Output As #filtmp2%
         Do Until EOF(filtmp1%)
            Line Input #filtmp1%, doclin$
-           Print #filtmp2%, doclin$ & "," & Str$(TemperatureModel%)
+           Print #filtmp2%, doclin$ & "," & Str$(TemperatureModel%) & "," & Str$(GlobalWarmingFlag)
         Loop
         Close #filtmp1%
         Close #filtmp2%
@@ -6903,7 +6916,7 @@ ULYMAP = 89.9958333333333 'top left corner latitude of bil files
 
 Dim FilePathBil As String
 Dim FileNameBil As String
-Dim DirPath$
+Dim DirPath$, lt_w As Double
 
 Dim tncols As Long, IKMY&, IKMX&, numrec&, IO%, Tempmode%
 
@@ -6931,6 +6944,42 @@ Else
            End If
         End If
     End If
+    
+'''''''''''''''''new 072925''''''''''''''''''''''''''
+'add adhoc GlobalWarning effect
+'//effect of global warming on weather zones from carbon soot
+'//assume that global warming will take over the effect within the next 50 years
+'//and then be optimistic and assume that it stabilizes
+
+    If (GlobalWarmingCorrection = 1) Then
+        '//use simple model for effect of Global Warming
+        'have to figure out what is FirstSecularYr
+        FirstSecularYr = Year(Date)
+        END_SUN_APPROX = 2050
+        If (FirstSecularYr < END_SUN_APPROX) Then
+           If (lat >= (FirstSecularYr - 2000) * 0.07) Then
+               lt_w = lat - (FirstSecularYr - 2000) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
+                                                          '//"Carbon soot may be driving the expansion of the tropics-not CO2
+           ElseIf (lt < -(FirstSecularYr - 2000) * 0.07) Then
+               lt_w = lat + (FirstSecularYr - 2000) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
+           Else
+               lt_w = lat
+               End If
+        Else
+           If (lat >= 3.5) Then
+               lt_w = lat - 3.5 ' //include effect of global warming from Robert J. Allen, UCR
+           ElseIf (lat < -3.5) Then
+               lt_w = lat + 3.5  '//include effect of global warming from Robert J. Allen, UCR
+           Else
+               lt_w = lat
+               End If
+           End If
+    Else
+        lt_w = lat
+        End If
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''
+
 'first extract minimum temperatures
 
  Tempmode% = 0
@@ -6979,7 +7028,7 @@ T50:
        FileIn% = FreeFile
        Open FileNameBil For Binary As #FileIn%
    
-        y = lat
+        y = lt_w
         x = lon
         
         IKMY& = CLng((ULYMAP - y) / YDIM) + 1
