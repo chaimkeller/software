@@ -16,6 +16,7 @@
 #include <conio.h>
 #include <ctype.h>
 #include <string.h>
+#include <time.h>
 
 
 #ifdef _DEBUG
@@ -23,6 +24,8 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+#define END_SUN_APPROX 2050
 
 /////////////////////////////////////////////////////////////////////////////
 // CNewreadDTMDlg dialog
@@ -100,6 +103,7 @@ char drivlet[2] = "c";
 char bufFileName[255] = "";
 char doclin[255] = ""; //used for fget_CR reading of one line of file
 char seps[]   = " ,\t\n"; //used for strtok parsing the above one line of the file
+int GlobalWarmingCorrection = 0;
 
 
 //int Profile( double kmyo,double kmxo, double hgt, double mang, double aprn,double nnetz,double modval, 
@@ -265,6 +269,7 @@ w2000:
 		fscanf( stream, "%d\n", &TemperatureModel);
 		fscanf( stream, "%lg\n", &Tground); //degrees Celsius
 		fscanf( stream, "%lg\n", &treehgt); //meterse
+		fscanf( stream, "%d\n", &GlobalWarmingCorrection);
 
 		if (Tground == 0) {
 			ier = Temperatures(lat0,lon0,MinT,AvgT,MaxT);
@@ -3082,6 +3087,62 @@ short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short
 		return -1;
 	}
 	*/
+
+	//effect of global warming on weather zones from carbon soot
+	//assume that global warming will take over the effect within the next 50 years
+    //and then be optimistic and assume that it stabilizes
+	//assume first secular year of Hebrew Calendar to be this year
+
+
+	if (GlobalWarmingCorrection == 1)
+	{
+		//estimate the first secular year to be the current year
+		time_t timer;
+		struct tm* tm_info;
+
+		time(&timer);
+		tm_info = localtime(&timer);
+
+		int FirstSecularYr = tm_info->tm_year + 1900;
+		
+		//use simple model for effect of Global Warming
+		if (FirstSecularYr < END_SUN_APPROX)
+		{
+		   if (lt >= (FirstSecularYr - 2000) * 0.07)
+		   {
+			   lt -= (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
+														  //"Carbon soot may be driving the expansion of the tropics-not CO2
+		   }
+		   else if (lt < -(FirstSecularYr - 2000) * 0.07)
+		   {
+			   lt += (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
+		   }
+		   else
+		   {
+			   ; //no shift
+		   }
+		}
+		else
+		{
+		   if (lt >= 3.5)
+		   {
+			   lt -= 3.5; //include effect of global warming from Robert J. Allen, UCR
+		   }
+		   else if (lt < - 3.5)
+		   {
+			   lt += 3.5; //include effect of global warming from Robert J. Allen, UCR
+		   }
+		   else
+		   {
+			   ; //no shift
+		   }
+		}
+	}
+	else
+	{
+		; //no shift;
+	}
+
 
 	//first extract minimum temperatures, then average temperatures
 
