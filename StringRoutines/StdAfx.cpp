@@ -839,7 +839,7 @@ bool Windows = false; //debugging flag, if Windows always write out output file 
 /*//////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////PROGRAM INTRODUCTION//////////////////////////////////////
-version: 10/15/2020
+version: 07/29/25
 These routines calculate all the zemanim for the chaitables.com website.
 This program works as a cgi program on a webserver.  Tables are writen to stdout = the web page, in html.
 When graphs are drawn, they are written in Html5 canvas javascript
@@ -927,12 +927,14 @@ The values set for debugging the program are simply the cgi arguments that are p
 38 made AddCushion = 1 the default (adds a cushion)
 39 For SingleDay, use its ground Temperature only for figuring out the terrestrial refraction and the horizon profile
 40 fixed bug that didn't detect surveyor EY measurements, if detected now won't modify view angles with TR
+41 fixed but in InitWeatherRegions where lt and lg were reversed
+42 added global warming add hoc fix to the Temperatures model when GlobalWarmingCorrection = 1
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 15.0f;
+float vernum = 16.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -995,7 +997,7 @@ __asm{
 
 //================================================================================
 	////////////////process inputed parameters for php pages///////////////
-	if (argc != 26) // && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug
+	if (argc != 26 ) // && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug
 	{
 		/* working as CGI  */
 
@@ -1158,19 +1160,19 @@ __asm{
 		CGI = 1;
 
    }
-/*//<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
+/*<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Astr" ); //"Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
 		strcpy( MetroArea, "Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "USA" ); //"Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
-		g_yrheb = 5758; //5783; //5782; //5781; //5779;//5776; //5775;
+		g_yrheb = 5786; //5783; //5782; //5781; //5779;//5776; //5775;
 		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
 		typezman = 8; // acc. to which opinion
-		optionheb = true; //false; //true; //false; //true;//false;
+		optionheb = false; //true; //false; //true; //false; //true;//false;
 		RoundSecondsin = 5; //1;//5;
 
 		///unique to Chai tables
@@ -1181,16 +1183,16 @@ __asm{
 		GoldenLight = 0; //1;
 
 		//test lat,lon, hgt inputs 32.027585
-		eroslatitudestr = "31.754"; //"31.7487155576439"; //"39.357909"; ///"55.398869"; //"31.706938"; //"30.960207"; //"37.683140"; //"30.92408"; //"31.858246"; //"31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
-		eroslongitudestr = "-35.165"; //"-35.238133306709"; //"76.688175";//"3.388176"; //"-35.123139"; //"-35.195719"; //"119.170837"; //"-34.96542"; //"-35.158354"; //"-35.217";//"0.2074"; //"-35.201774";//"-35.217059"; //"-35.247203";//"1.11254";//"-34.841867";//"-35.004566";//"99.201608";//"-34.83177";//"74.222"; //"-34.83177"; //"-34.851612"; //-35.164481"; //-35.239226491"; //"-35.239291"; //"21.89521";
-		eroshgtstr = "0"; //"700"; //"787.23"; //"29.70"; //"2843.73"; //"495.0"; //"644.26"; //"800";//"0";//"684.3";//"164.1";//"26.93";//"68.69";//"2274.5"; //"63.5";//"22.72"; //"63.5";//"788.19"; //832.3"; //"832"; //"83.2";
+		eroslatitudestr = "39.356726"; //"31.754"; //"31.7487155576439"; //"39.357909"; ///"55.398869"; //"31.706938"; //"30.960207"; //"37.683140"; //"30.92408"; //"31.858246"; //"31.789";//"51.472"; //"31.820158";//"31.815051"; //"31.8424065";//"52.33324";//"32.027585";//"32.483266";//"19.434381";//"32.08900"; //"40.09553"; //"32.08900"; //"31.046051"; //31.864977"; //31.805789354"; //"31.806467"; //"64.135338"; //as inputed from cgi as strings
+		eroslongitudestr = "76.693487"; //"-35.165"; //"-35.238133306709"; //"76.688175";//"3.388176"; //"-35.123139"; //"-35.195719"; //"119.170837"; //"-34.96542"; //"-35.158354"; //"-35.217";//"0.2074"; //"-35.201774";//"-35.217059"; //"-35.247203";//"1.11254";//"-34.841867";//"-35.004566";//"99.201608";//"-34.83177";//"74.222"; //"-34.83177"; //"-34.851612"; //-35.164481"; //-35.239226491"; //"-35.239291"; //"21.89521";
+		eroshgtstr = "141"; //"0"; //"700"; //"787.23"; //"29.70"; //"2843.73"; //"495.0"; //"644.26"; //"800";//"0";//"684.3";//"164.1";//"26.93";//"68.69";//"2274.5"; //"63.5";//"22.72"; //"63.5";//"788.19"; //832.3"; //"832"; //"83.2";
 		erosaprnstr = "0.5";//"1.5";//"0.5";
 		erosdiflatstr = "1";
 		erosdiflogstr = "1"; //"2";
 
 
 		searchradiusin = 3; //0.8; //0.4; //2; //8; //1; //8; //1;//4; //0.9;
-		geotz = 2; //-5; //2; //0;//-5; //2; //-5; //2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
+		geotz = -5; //2; //0;//-5; //2; //-5; //2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
 		sunsyes = 1;//0; //1;//0; //= 1 print individual sunrise/sunset tables
 					 //= 0 don't print individual sunrise/sunset tables
 
@@ -13695,7 +13697,7 @@ L590:
 }
 
 ////////////////////InitWeatherRegions/////////////////////////////////////
-void InitWeatherRegions( double *lg, double *lt,
+void InitWeatherRegions( double *lt, double *lg,
 						 short *nweather, short *ns1, short *ns2,
 						 short *ns3, short *ns4, double *WinTemp,
 						 short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[])
@@ -18428,7 +18430,7 @@ L550:
     //no file output for this version of the program
 	if (!CGI || Windows)
 	{
-		if ( f =fopen("C:/JK_C/EROS.TMP", "w" ) )
+		if ( f =fopen("C:/JK_C/EROS_SR0.TMP", "w" ) )
 		{
 			if (!VDW_REF) {
 				fprintf( f, "%s\n", "Lati,Long,hgt,startkmx,sofkmx,dkmx,dkmy,APPRNR" );
@@ -19671,6 +19673,50 @@ short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short
 		return -1;
 	}
 	*/
+
+	//effect of global warming on weather zones from carbon soot
+	//assume that global warming will take over the effect within the next 50 years
+    //and then be optimistic and assume that it stabilizes
+
+	if (GlobalWarmingCorrection == 1)
+	{
+		//use simple model for effect of Global Warming
+		if (FirstSecularYr < END_SUN_APPROX)
+		{
+		   if (lt >= (FirstSecularYr - 2000) * 0.07)
+		   {
+			   lt -= (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
+														  //"Carbon soot may be driving the expansion of the tropics-not CO2
+		   }
+		   else if (lt < -(FirstSecularYr - 2000) * 0.07)
+		   {
+			   lt += (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
+		   }
+		   else
+		   {
+			   ; //no shift
+		   }
+		}
+		else
+		{
+		   if (lt >= 3.5)
+		   {
+			   lt -= 3.5; //include effect of global warming from Robert J. Allen, UCR
+		   }
+		   else if (lt < - 3.5)
+		   {
+			   lt += 3.5; //include effect of global warming from Robert J. Allen, UCR
+		   }
+		   else
+		   {
+			   ; //no shift
+		   }
+		}
+	}
+	else
+	{
+		; //no shift;
+	}
 
 	//first extract minimum temperatures, then average temperatures
 
