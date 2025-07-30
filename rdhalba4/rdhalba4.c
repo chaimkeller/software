@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 //#include <conio.h> -- used for getch diagnostics, uncomment for diagnostics
 #include "f2c.h"
 
@@ -17,7 +18,9 @@
 #define hfix_(x) ((shortint)x) //short integer cast
 #define jfix_(x) ((integer)x) //long integer cast
 
-short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] );
+#define END_SUN_APPROX 2050
+
+short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[], int GlobalWarmingCorrection );
 int WhichJKC();
 int WhichVB();
 int WhichDTM();
@@ -66,7 +69,7 @@ static integer c__512 = 512;
     double tan(doublereal), cos(doublereal), sin(doublereal), atan(doublereal);
     integer s_wsfe(cilist *), do_fio(integer *, char *, ftnlen), e_wsfe(void),
 	     f_inqu(inlist *);
-	short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] );
+	short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[], int GlobalWarmingCorrection );
     /* Local variables */
     static doublereal startkmx, d__;
     static integer i__, j;
@@ -135,6 +138,7 @@ static integer c__512 = 512;
 	logical TROld_Type = FALSE_; //True to use old terrestrial refraction, False to use new wikipedia expression
 	static integer TemperatureModel = 1;  // flag for terrestrial refraction type written to end of each
 										  // scanlist.txt line by Maps & MOre /////added 061120///////////
+	static integer GlobalWarmingCorrection = 0; //flag for Global Warming Correction - default is off ///added 073025
 	double TRfudge = 1.0; //5.0; //increase TR to mimic inversion layers, usually set = 1.0
 	double Tground = 15; //degrees Celsius, temperature at ground elevation of observer
 	char Header[255] = "";
@@ -314,6 +318,7 @@ L8:
 	do_lio(&c__5, &c__1, (char *)&mang, (ftnlen)sizeof(doublereal));
 	do_lio(&c__5, &c__1, (char *)&aprn, (ftnlen)sizeof(doublereal));
 	do_lio(&c__3, &c__1, (char *)&TemperatureModel, (ftnlen)sizeof(integer));
+	do_lio(&c__3, &c__1, (char *)&GlobalWarmingCorrection, (ftnlen)sizeof(integer)); //added 073025 - add global warming correction value
 	e_rsle(); //close the scanlist.txt file
 
 	////////////////added 10/30/22/////////////////////////////////////////////
@@ -504,7 +509,7 @@ L32:
 			if (TemperatureModel <= 2)
 			{
 				//now determine the mean average temperatures
-				ier = Temperatures(lt,-lg, MinT, AvgT, MaxT);
+				ier = Temperatures(lt,-lg, MinT, AvgT, MaxT, GlobalWarmingCorrection);
 
 				if (ier == 0) {
 
@@ -1683,7 +1688,7 @@ L10:
 /* Main program alias */ int rdhalba6_ () { MAIN__ (); return 0; }
 
 
-short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[] )
+short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short MaxTemp[], int GlobalWarmingCorrection )
 {
 
 	//extract the WorldClim averaged minimum and average temperature for months 1-12 for this lat,lon
@@ -1736,6 +1741,62 @@ short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short
 		return -1;
 	}
 	*/
+
+	//effect of global warming on weather zones from carbon soot
+	//assume that global warming will take over the effect within the next 50 years
+    //and then be optimistic and assume that it stabilizes
+
+	if (GlobalWarmingCorrection == 1)
+	{
+		//use simple model for effect of Global Warming
+		//assume current year is the FirstSecularYr
+
+		int FirstSecularYr = 2025;
+
+	    time_t timer;
+		struct tm* tm_info;
+
+		time(&timer);
+		tm_info = localtime(&timer);
+
+		FirstSecularYr = tm_info->tm_year + 1900;
+
+		if (FirstSecularYr < END_SUN_APPROX)
+		{
+		   if (lt >= (FirstSecularYr - 2000) * 0.07)
+		   {
+			   lt -= (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
+														  //"Carbon soot may be driving the expansion of the tropics-not CO2
+		   }
+		   else if (lt < -(FirstSecularYr - 2000) * 0.07)
+		   {
+			   lt += (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
+		   }
+		   else
+		   {
+			   ; //no shift
+		   }
+		}
+		else
+		{
+		   if (lt >= 3.5)
+		   {
+			   lt -= 3.5; //include effect of global warming from Robert J. Allen, UCR
+		   }
+		   else if (lt < - 3.5)
+		   {
+			   lt += 3.5; //include effect of global warming from Robert J. Allen, UCR
+		   }
+		   else
+		   {
+			   ; //no shift
+		   }
+		}
+	}
+	else
+	{
+		; //no shift;
+	}	
 
 	//first extract minimum temperatures, then average temperatures
 
