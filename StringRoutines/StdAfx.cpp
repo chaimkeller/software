@@ -70,6 +70,8 @@ char *strupr(char *str);
 void FilterString(char s[]);
 char *ReplaceChar(const char *s);
 int replaceSpaces(char str[], const short MaxLength);
+void remove_quotes(char *str);
+void extract_and_replace(char* str, int start, int length);
 
 ///////////other functions/////////////////////
 void hebnum(short k, char *hebnumch );
@@ -399,6 +401,9 @@ char buff3[10000] = "";
 char filroot[255] = "";
 char myfile[255] = "";
 
+/////////////////diagnostic error buffer///////////////////////////
+//char Errorbuff[1000] = "";  //uncomment for diagnostics
+
 //////global non string variables///////
 short ntrcalc = 5;  //used for ReadProfile and netzskiy calculations, if = 4 then flags surveyor data, and no TR modifications
 short sortzman[50];
@@ -460,8 +465,8 @@ bool Geofinder = false; //flag to redirect to chai_geofinder.php
 bool IgnoreInsuffAzimuthRange = true; //true to return "*" if past the profile's azimuth range limit
 
 bool AllowShavinginEY = false; //true to allow unlimited shaving for EY
-short GlobalWarmingCorrection = 1; //shift latitude when determining  ground temmperature to reflect
-									 //Global Warming
+short GlobalWarmingCorrection = 2000; //shift latitude when determining  ground temmperature to reflect
+									 //Global Warming starting at this year
 
 /////////////First Light flag -- new flag for Version 20 initiated on 091920/////////////////
 short GoldenLight = 0; //0 for no GoldenLight calculation
@@ -928,7 +933,7 @@ The values set for debugging the program are simply the cgi arguments that are p
 39 For SingleDay, use its ground Temperature only for figuring out the terrestrial refraction and the horizon profile
 40 fixed bug that didn't detect surveyor EY measurements, if detected now won't modify view angles with TR
 41 fixed but in InitWeatherRegions where lt and lg were reversed
-42 added global warming add hoc fix to the Temperatures model when GlobalWarmingCorrection = 1
+42 added global warming add hoc fix to the Temperatures model when GlobalWarmingCorrection = year to start correction
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
@@ -997,7 +1002,7 @@ __asm{
 
 //================================================================================
 	////////////////process inputed parameters for php pages///////////////
-	if (argc != 26 ) // && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug
+	if (argc != 26) // && argc != 1 ) //<--comment out the "&& argc != 1) for cgi, uncomment to debug
 	{
 		/* working as CGI  */
 
@@ -1164,21 +1169,21 @@ __asm{
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "Astr" ); //"Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( MetroArea, "Baltimore"); //"Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "USA" ); //"Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
-		g_yrheb = 5786; //5783; //5782; //5781; //5779;//5776; //5775;
+		g_yrheb = 5785; //5783; //5782; //5781; //5779;//5776; //5775;
 		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
 		typezman = 8; // acc. to which opinion
 		optionheb = false; //true; //false; //true; //false; //true;//false;
 		RoundSecondsin = 5; //1;//5;
 
 		///unique to Chai tables
-		numUSAcities1 = 29; //27; //4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area  (in c:/cities Lakewood = 29, but in web it is 27)
-		numUSAcities2 = 1; //15; //1; //4; //1; //2; //7;//0; //75; //city area
-		searchradius = 3; //0.4; //8; //1; //8; //1;//4;//1; //search area
+		numUSAcities1 = 4; //29; //27; //4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area  (in c:/cities Lakewood = 29, but in web it is 27)
+		numUSAcities2 = 19; //1; //4; //1; //2; //7;//0; //75; //city area
+		searchradius = 0.8; //3; //0.4; //8; //1; //8; //1;//4;//1; //search area
 		yesmetro = 0; //0; //1; //0;  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
 		GoldenLight = 0; //1;
 
@@ -1191,7 +1196,7 @@ __asm{
 		erosdiflogstr = "1"; //"2";
 
 
-		searchradiusin = 3; //0.8; //0.4; //2; //8; //1; //8; //1;//4; //0.9;
+		searchradiusin = 0.8; //3; //0.8; //0.4; //2; //8; //1; //8; //1;//4; //0.9;
 		geotz = -5; //2; //0;//-5; //2; //-5; //2; //-8; //2;//0;//-6; //2;//-5; //2; //0;//-8;
 		sunsyes = 1;//0; //1;//0; //= 1 print individual sunrise/sunset tables
 					 //= 0 don't print individual sunrise/sunset tables
@@ -1201,8 +1206,8 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 10; //0; //10; //0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
-		SRTMflag = 10; //0; //10; //0;//10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
+		types = 0; //10; //0; //10; //0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		SRTMflag = 0; //10; //0; //10; //0;//10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
     	exactcoordinates = true; //false;  //= false, use averaged data points' coordinates
@@ -5837,6 +5842,11 @@ void ErrorHandler( short mode, short ier )
 				//can't open profile file
 				InternalError = true;
 				errornum = 28;
+				/*
+				//diagnostics
+				sprintf(errorstr, "Can't open profile file: %s in routine netzski6",Errorbuff);
+				//diagnostics
+				*/
 				strcpy (errorstr, "Can't open profile file in routine netzski6" );
 			}
 			else if (ier == -3)
@@ -6657,7 +6667,79 @@ short netzskiy( char *bat, char *sun )
 		//fscanf( stream, "\"%27c\",%Lg,%Lg,%Lg", doclin, &lonbat, &latbat, &hgtbat );
 		//so it is necessary to parse out the name and coordinates in order to make
 		//this operation platform independent
+
+		//another fix try
+						//now extract city name and coordinates
+		const short NUMENTRIES = 4;
+		char strarr[NUMENTRIES][MAXDBLSIZE];
+
 		fgets_CR( doclin, 255, stream );
+		remove_quotes(doclin);
+
+		if ( ParseString( doclin, ",", strarr, NUMENTRIES ) )
+		{
+			ErrorHandler( 6, 3);; //can't read line of text in cities5 file
+			return -1;
+		}
+		else //extract text
+		{
+			//bat file name
+			strcpy( buff, &strarr[0][0] );
+			//rsuch extract the last 12 letters which compose the profile name
+			Mid( buff, strlen(buff) - 11, 12 );
+			buff[12] = 0;
+			sprintf( myfile, "%s%s%s%s", currentdir, sun, "/", buff );
+
+			kmx = atof( &strarr[1][0] );
+			kmy = atof( &strarr[2][0] );
+			hgt = atof( &strarr[3][0] );
+		}
+
+		if (InStr( strlwr(doclin), "version" )) //reached end of "bat" file, record version number
+		{
+			progvernum = (short)kmx;
+			break;
+		}
+
+
+		/*
+		//full fix that avoids all the Mid's and Instr, etc.
+		char *tokbuff;
+
+		//try another fix
+		remove_quotes(doclin); //remove any quotes in line of bat file that are found in older ones
+		tokbuff = strtok(doclin, ","); //buff contains name of the profile file
+		sprintf( myfile, "%s%s%s%s", currentdir, sun, "/", tokbuff );
+
+		tokbuff = strtok(doclin, ","); //kmx value
+		kmx = atof(tokbuff);
+
+		if (InStr( strlwr(doclin), "version" )) //reached end of "bat" file, record version number
+		{
+			progvernum = (short)kmx;
+			break;
+		}
+
+		tokbuff = strtok(doclin, ","); //kmy value
+		kmy = atof(tokbuff);
+
+		tokbuff = strtok(doclin, ","); //hgt value
+		hgt = atof(buff);
+		*/
+
+		/*
+		working fix
+		buff[0]=0;
+		strcpy(buff,doclin);
+		//remove quotes as is often present in older "bat" files
+		remove_quotes(buff);
+		pos = InStr(1, buff, ",");
+		extract_and_replace(buff, pos - 12, 12);
+		sprintf( myfile, "%s%s%s%s", currentdir, sun, "/", buff );
+		*/
+
+		/*
+		this needed fixing
 		pos = InStr( 1, doclin, "," );
 		//check if quotation mark precedes is as is the format for old "bat" files
 		addpos = 0;
@@ -6669,6 +6751,10 @@ short netzskiy( char *bat, char *sun )
 		strcat( buff, "\0"); //terminate the string
 		//remove quotation marks if they exits
 		Replace(buff, '"', ' ' );
+		*/
+
+		/*
+		this was working part
 		sprintf( myfile, "%s%s%s%s", currentdir, sun, "/", Trim(buff) ); //myfile = path/name of city
 
 		pos1 = InStr( pos + 1, doclin, "," );
@@ -6684,6 +6770,7 @@ short netzskiy( char *bat, char *sun )
 		kmy = atof( Mid(doclin, pos1 + 1, pos - pos1 - 1, buff ));
 
 		hgt = atof( Mid(doclin, pos + 1, strlen(doclin) - pos, buff ));
+		*/
 
 		///////////////////////////////////////added 101420//////////////////////////////////////////////
 		//N.b., hgt read from the bat file may be typically be in error by 1.8 m (the ypical observer height added in)
@@ -6746,6 +6833,15 @@ ny500:
 				return -1;
 			}
 			strcpy( &fileo[0][nplac[0] - 1][0], myfile );
+
+			/*
+			//diagnostics -add name to log file
+			Errorbuff[0]=0;
+			sprintf(Errorbuff, "netzskiy file added: %s",myfile);
+			//diagnostics
+			*/
+
+
 			latbat[0][nplac[0] - 1] = kmy;
 			lonbat[0][nplac[0] - 1] = kmx;
 			hgtbat[0][nplac[0] - 1] = hgt;
@@ -6964,6 +7060,13 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 			}
 
 		}
+
+		/*
+		//diagnostics -add name to log file
+		Errorbuff[0]=0;
+		sprintf(Errorbuff, "netzskiy file added: %s",myfile);
+		//diagnostics
+		*/
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
 					    &nweather, &meantemp, adhocrise, adhocset, &ns1, &ns2, &ns3, &ns4, &WinTemp,
@@ -7186,6 +7289,13 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 			}
 
 		}
+
+		/*
+		//diagnostics -add name to log file
+		Errorbuff[0]=0;
+		sprintf(Errorbuff, "netzskiy file added: %s",myfile);
+		//diagnostics
+		*/
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
 					    &nweather, &meantemp, adhocrise, adhocset, &ns1, &ns2, &ns3, &ns4, &WinTemp,
@@ -7468,6 +7578,13 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 			tabletyp = 1; //visible sunset index of tims
 			SRTMflag = 11; //calculate visible sunset profile/sunset table for the  golden light coordinates
 		}
+
+		/*
+		//diagnostics -add name to log file
+		Errorbuff[0]=0;
+		sprintf(Errorbuff, "netzskiy file added: %s",myfile);
+		//diagnostics
+		*/
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
 					    &nweather, &meantemp, adhocrise, adhocset, &ns1, &ns2, &ns3, &ns4, &WinTemp,
@@ -10435,6 +10552,42 @@ char *strupr(char *str)
  return(str);
 }
 
+////////////////remove_quotes///////////////
+/// remove quotes in string but not apostrophies
+/////////////////////////////////////////////
+void remove_quotes(char *str) {
+    int i, j = 0;
+    for (i = 0; str[i]; i++) {
+        if (str[i] != '"' && str[i] != '\'') {
+            str[j++] = str[i];
+        }
+    }
+    str[j] = '\0'; // Null-terminate the modified string
+}
+
+////////////////extract_and_replace//////////////////////
+//replace string with substring -- emulates VB6 Mid function
+//////////////////////////////////////////////////////////
+void extract_and_replace(char* str, int start, int length) {
+    int str_len = strlen(str);
+
+    // Validate input
+    if (start < 0 || start >= str_len || length < 0) {
+        str[0] = '\0'; // Clear string if invalid
+        return;
+    }
+
+    // Adjust length if it goes beyond the end of the string
+    if (start + length > str_len) {
+        length = str_len - start;
+    }
+
+    // Move the desired substring to the beginning
+    memmove(str, str + start, length);
+    str[length] = '\0'; // Null-terminate the new string
+}
+
+
 //////////////////LoadTitlesSponsors///////////////////
 short LoadTitlesSponsors()
 ////////////////////////////////////////////////////////
@@ -11039,7 +11192,7 @@ short LoadConstants( short zmanyes, short typezman, char filzman[] )
 		MaxWinLen = 11.1; //maximum length of day to look for winter inversion layers
 		WinterPercent = 1.0; //default is set to not use this filtering option, i.e.,accept 100 percent
 		HorizonInv = 0.01; //only add adhoc inversion fix if calculated view angle is less than HorizonInv
-		GlobalWarmingCorrection = 1; //default - use latitude shift model for global warming
+		GlobalWarmingCorrection = 2000; //default - use latitude shift model for global warming starting from this year
 
 		//////////////////astronomical constants///////////////////
 		ac0 = cd * .9856003; //change in the mean anamolay per day
@@ -13716,48 +13869,26 @@ void InitWeatherRegions( double *lt, double *lg,
 
     if (geo) //rest of the world uses geographic coordinates of longitude and latitude
 	{
-		//effect of global warming on weather zones from carbon soot
-		//assume that global warming will take over the effect within the next 50 years
-        //and then be optimistic and assume that it stabilizes
-
-		if (GlobalWarmingCorrection == 1)
+		//model effect of global warning by latitude shift to the equator
+		//based on observed effect of Carbon Soot (BC) on atmospheric models
+		//see Robert J. Allen, UCR,"Carbon soot may be driving the expansion of the tropics-not CO2
+		//be optimistic and assume that global warming stops after 2050, at that point need updated temperature models
+														  
+		if (GlobalWarmingCorrection > 0)
 		{
 			//use simple model for effect of Global Warming
 			if (FirstSecularYr < END_SUN_APPROX)
 			{
-			   if (*lt >= (FirstSecularYr - 2000) * 0.07)
-			   {
-				   lt_w = *lt - (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
-															  //"Carbon soot may be driving the expansion of the tropics-not CO2
-			   }
-			   else if (*lt < -(FirstSecularYr - 2000) * 0.07)
-			   {
-				   lt_w = *lt + (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
-			   }
-			   else
-			   {
-				   lt_w = 0.0;
-			   }
+			   (*lt > 0) ? lt_w = __max(*lt - (FirstSecularYr - GlobalWarmingCorrection) * 0.07, 0.0) : lt_w = __min(*lt + (FirstSecularYr - GlobalWarmingCorrection) * 0.07, 0.0);
 			}
 			else
 			{
-			   if (*lt >= 3.5)
-			   {
-				   lt_w = *lt - 3.5; //include effect of global warming from Robert J. Allen, UCR
-			   }
-			   else if (*lt < - 3.5)
-			   {
-				   lt_w = *lt + 3.5; //include effect of global warming from Robert J. Allen, UCR
-			   }
-			   else
-			   {
-				   lt_w = 0.0;
-			   }
+			   (*lt >= 0) ? lt_w = __max(*lt - 3.5, 0.0): lt_w = __min(*lt + 3.5, 0.0);
 			}
 		}
 		else
 		{
-			lt_w = *lt;
+			lt_w = *lt; //no shift
 		}
 
 		if (!VDW_REF) {
@@ -19674,48 +19805,26 @@ short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short
 	}
 	*/
 
-	//effect of global warming on weather zones from carbon soot
+	//effect of global warming can be modeled similar to effect of carbon soot, see A.J. Allen, Nature
 	//assume that global warming will take over the effect within the next 50 years
     //and then be optimistic and assume that it stabilizes
+	//
 
-	if (GlobalWarmingCorrection == 1)
+	if (GlobalWarmingCorrection > 0)
 	{
 		//use simple model for effect of Global Warming
 		if (FirstSecularYr < END_SUN_APPROX)
 		{
-		   if (lt >= (FirstSecularYr - 2000) * 0.07)
-		   {
-			   lt -= (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
-														  //"Carbon soot may be driving the expansion of the tropics-not CO2
-		   }
-		   else if (lt < -(FirstSecularYr - 2000) * 0.07)
-		   {
-			   lt += (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
-		   }
-		   else
-		   {
-			   ; //no shift
-		   }
+		   (lt > 0) ? lt = __max(lt - (FirstSecularYr - GlobalWarmingCorrection) * 0.07, 0.0) : lt = __min(lt + (FirstSecularYr - GlobalWarmingCorrection) * 0.07, 0.0);
 		}
 		else
 		{
-		   if (lt >= 3.5)
-		   {
-			   lt -= 3.5; //include effect of global warming from Robert J. Allen, UCR
-		   }
-		   else if (lt < - 3.5)
-		   {
-			   lt += 3.5; //include effect of global warming from Robert J. Allen, UCR
-		   }
-		   else
-		   {
-			   ; //no shift
-		   }
+		   (lt >= 0) ? lt = __max(lt - 3.5, 0.0): lt = __min(lt + 3.5, 0.0);
 		}
 	}
 	else
 	{
-		; //no shift;
+		; //no shift
 	}
 
 	//first extract minimum temperatures, then average temperatures

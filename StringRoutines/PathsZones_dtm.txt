@@ -5,7 +5,7 @@ Windows (10)
 c:/Inetpub/cgi-bin/
 c:/Inetpub/cgi-bin/
 c:/Inetpub/webpub/
-c:/cities/
+c:/jk/public_html/cities/
 c:/usa/
 c:/3AS/
 c:/DevStudio/Vb/WorldClim_bil/
@@ -101,4 +101,4 @@ Mexico_City_heb.zma
 11.1
 1.0
 0.01
-0
+1

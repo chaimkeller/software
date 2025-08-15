@@ -3094,7 +3094,7 @@ short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short
 	//assume first secular year of Hebrew Calendar to be this year
 
 
-	if (GlobalWarmingCorrection == 1)
+	if (GlobalWarmingCorrection > 0)
 	{
 		//estimate the first secular year to be the current year
 		time_t timer;
@@ -3108,14 +3108,14 @@ short Temperatures(double lt, double lg, short MinTemp[], short AvgTemp[], short
 		//use simple model for effect of Global Warming
 		if (FirstSecularYr < END_SUN_APPROX)
 		{
-		   if (lt >= (FirstSecularYr - 2000) * 0.07)
+		   if (lt >= (FirstSecularYr - GlobalWarmingCorrection) * 0.07)
 		   {
-			   lt -= (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
+			   lt -= (FirstSecularYr - GlobalWarmingCorrection) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
 														  //"Carbon soot may be driving the expansion of the tropics-not CO2
 		   }
-		   else if (lt < -(FirstSecularYr - 2000) * 0.07)
+		   else if (lt < -(FirstSecularYr - GlobalWarmingCorrection) * 0.07)
 		   {
-			   lt += (FirstSecularYr - 2000) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
+			   lt += (FirstSecularYr - GlobalWarmingCorrection) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
 		   }
 		   else
 		   {
