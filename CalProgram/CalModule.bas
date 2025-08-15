@@ -85,7 +85,7 @@ Public optiondmish%, optiontmish%, dirnet$, RoundSeconds%, myear0%, fshabos0%, h
 Public yrstrt%(1), yrend%(1), visauto As Boolean, mishorauto As Boolean, astauto As Boolean
 Public BeginningYear$, EndYear$, NumCivilYears%, NumCivilYearsInc%, BeginCivilRun As Boolean
 Public PDFprinter As Boolean, SunriseCalc As Boolean, SunsetCalc As Boolean, LastItem$
-Public GlobalWarmingCorrection As Boolean
+Public GlobalWarmingCorrection As Integer
 'Public MaxHourZemanios As Double
 Public Type BrowseInfo
     lngHwnd        As Long
@@ -5616,17 +5616,17 @@ Else
 '//assume that global warming will take over the effect within the next 50 years
 '//and then be optimistic and assume that it stabilizes
 
-    If (GlobalWarmingCorrection) Then
+    If (GlobalWarmingCorrection > 0) Then
         '//use simple model for effect of Global Warming
         'have to figure out what is FirstSecularYr
         FirstSecularYr = yrheb - 5785 + 2024
         END_SUN_APPROX = 2050
         If (FirstSecularYr < END_SUN_APPROX) Then
-           If (lat >= (FirstSecularYr - 2000) * 0.07) Then
-               lt_w = lat - (FirstSecularYr - 2000) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
+           If (lat >= (FirstSecularYr - GlobalWarmingCorrection) * 0.07) Then
+               lt_w = lat - (FirstSecularYr - GlobalWarmingCorrection) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
                                                           '//"Carbon soot may be driving the expansion of the tropics-not CO2
-           ElseIf (lt < -(FirstSecularYr - 2000) * 0.07) Then
-               lt_w = lat + (FirstSecularYr - 2000) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
+           ElseIf (lt < -(FirstSecularYr - GlobalWarmingCorrection) * 0.07) Then
+               lt_w = lat + (FirstSecularYr - GlobalWarmingCorrection) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
            Else
                lt_w = lat
                End If

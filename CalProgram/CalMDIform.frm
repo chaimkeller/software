@@ -136,7 +136,6 @@ Begin VB.MDIForm CalMDIform
       End
       Begin VB.Menu mnuGlobalWarmingCorrection 
          Caption         =   "&Global Warning Correction"
-         Checked         =   -1  'True
       End
       Begin VB.Menu exitfm 
          Caption         =   "E&xit"
@@ -903,9 +902,42 @@ If internet = True Then
    End If
    Close #filuser%
    
+   'try to determine the state of the globalwarmingcorrection flag based on what was set my Maps&More
    'set value for GlobalWarmingCorrection flag based on default checked state of the Global Warming Correction Menu Item
-   GlobalWarmingCorrection = mnuGlobalWarmingCorrection.Checked
-   
+   'determine value of global warming correction
+
+    If Dir(drivjk$ + "mapposition.sav") <> "" Then
+        filmap% = FreeFile
+        Open drivjk$ + "mapposition.sav" For Input As #filmap%
+        Input #filmap%, kmxc, kmyc, hgtpos
+        Input #filmap%, lon, lat, hgtworld
+        Input #filmap%, maxangf%, diflogf%, diflatf%, fullrangef%, viewmodef%, modevalf
+        Input #filmap%, DTMflag
+        Input #filmap%, maxangfs%, diflogfs%, diflatfs%, fullrangefs%, viewmodefs%, modevalfs
+        Input #filmap%, CalculateProfile
+        Input #filmap%, AziStepf%
+        Input #filmap%, rderos2_use
+        Input #filmap%, IgnoreTiles%
+        Input #filmap%, autoazirange%
+        Input #filmap%, TemperatureModel%
+        Input #filmap%, GlobalWarmingCorrection
+        Close #filmap%
+        If GlobalWarmingCorrection > 0 Then
+           mnuGlobalWarmingCorrection.Checked = True
+        Else
+           mnuGlobalWarmingCorrection.Checked = False
+           End If
+
+    Else
+      If mnuGlobalWarmingCorrection.Checked Then
+         GlobalWarmingCorrection = 2000 'year 2000 is default
+         mnuGlobalWarmingCorrection.Checked = True
+      Else
+         GlobalWarmingCorrection = 0
+         mnuGlobalWarmingCorrection.Caption = False
+         End If
+      End If
+
 Exit Sub
 
 errhand:
@@ -1012,12 +1044,74 @@ End Sub
 
 Private Sub mnuGlobalWarmingCorrection_Click()
     If mnuGlobalWarmingCorrection.Checked Then
-          
-       mnuGlobalWarmingCorrection.Checked = False
-       GlobalWarmingCorrection = False
+    
+        If Dir(drivjk$ + "mapposition.sav") <> "" Then
+            filmap% = FreeFile
+            Open drivjk$ + "mapposition.sav" For Input As #filmap%
+            Input #filmap%, kmxc, kmyc, hgtpos
+            Input #filmap%, lon, lat, hgtworld
+            Input #filmap%, maxangf%, diflogf%, diflatf%, fullrangef%, viewmodef%, modevalf
+            Input #filmap%, DTMflag
+            Input #filmap%, maxangfs%, diflogfs%, diflatfs%, fullrangefs%, viewmodefs%, modevalfs
+            Input #filmap%, CalculateProfile
+            Input #filmap%, AziStepf%
+            Input #filmap%, rderos2_use
+            Input #filmap%, IgnoreTiles%
+            Input #filmap%, autoazirange%
+            Input #filmap%, TemperatureModel%
+            Input #filmap%, GlobalWarmingCorrection
+            Close #filmap%
+            If GlobalWarmingCorrection > 0 Then
+               Select Case MsgBox("Maps & More activated the GlobalWarming correction and you are attempting to ignore it." _
+                                  & vbCrLf & "" _
+                                  & vbCrLf & "Do you really want to ignore it ffor the calendar calculations?" _
+                                  , vbYesNoCancel Or vbQuestion Or vbDefaultButton2, "GlobalWarming Correction")
+               
+                Case vbYes
+                   mnuGlobalWarmingCorrection.Checked = False
+                   GlobalWarmingCorrection = 0
+               
+                Case vbNo
+               
+                Case vbCancel
+               
+               End Select
+               End If
+        Else
+            mnuGlobalWarmingCorrection.Checked = False
+            GlobalWarmingCorrection = 0
+            End If
+           
+
     Else
        mnuGlobalWarmingCorrection.Checked = True
-       GlobalWarmingCorrection = True
+       'determine value from MapPosition file if it exists, else set default
+        If Dir(drivjk$ + "mapposition.sav") <> "" Then
+            filmap% = FreeFile
+            Open drivjk$ + "mapposition.sav" For Input As #filmap%
+            Input #filmap%, kmxc, kmyc, hgtpos
+            Input #filmap%, lon, lat, hgtworld
+            Input #filmap%, maxangf%, diflogf%, diflatf%, fullrangef%, viewmodef%, modevalf
+            Input #filmap%, DTMflag
+            Input #filmap%, maxangfs%, diflogfs%, diflatfs%, fullrangefs%, viewmodefs%, modevalfs
+            Input #filmap%, CalculateProfile
+            Input #filmap%, AziStepf%
+            Input #filmap%, rderos2_use
+            Input #filmap%, IgnoreTiles%
+            Input #filmap%, autoazirange%
+            Input #filmap%, TemperatureModel%
+            Input #filmap%, GlobalWarmingCorrection
+            Close #filmap%
+            If GlobalWarmingCorrection > 0 Then
+               mnuGlobalWarmingCorrection.Checked = True
+            Else
+               mnuGlobalWarmingCorrection.Checked = False
+               End If
+       Else 'set defatuls
+          mnuGlobalWarmingCorrection.Checked = True
+          GlobalWarmingCorrection = 2000
+          End If
+       
        End If
 
 End Sub
