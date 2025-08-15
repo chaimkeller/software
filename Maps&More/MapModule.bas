@@ -6562,8 +6562,8 @@ rhal:
          'also add GlobalWarmingCorrection flag value to each line in scanlist.txt -- added 073025
          Dim GlobalWarmingFlag As Integer
          GlobalWarmingFlag = 0 'default is off
-         If (GlobalWarmingCorrection) Then
-            GlobalWarmingFlag = 1
+         If (GlobalWarmingCorrection > 0) Then
+            GlobalWarmingFlag = GlobalWarmingCorrection
             End If
         filtmp1% = FreeFile
         Open drivjk_c$ & "viewout.tmp" For Input As #filtmp1%
@@ -6951,17 +6951,17 @@ Else
 '//assume that global warming will take over the effect within the next 50 years
 '//and then be optimistic and assume that it stabilizes
 
-    If (GlobalWarmingCorrection = 1) Then
+    If (GlobalWarmingCorrection > 0) Then
         '//use simple model for effect of Global Warming
         'have to figure out what is FirstSecularYr
         FirstSecularYr = Year(Date)
         END_SUN_APPROX = 2050
         If (FirstSecularYr < END_SUN_APPROX) Then
-           If (lat >= (FirstSecularYr - 2000) * 0.07) Then
-               lt_w = lat - (FirstSecularYr - 2000) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
+           If (lat >= (FirstSecularYr - GlobalWarmingCorrection) * 0.07) Then
+               lt_w = lat - (FirstSecularYr - GlobalWarmingCorrection) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
                                                           '//"Carbon soot may be driving the expansion of the tropics-not CO2
-           ElseIf (lt < -(FirstSecularYr - 2000) * 0.07) Then
-               lt_w = lat + (FirstSecularYr - 2000) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
+           ElseIf (lt < -(FirstSecularYr - GlobalWarmingCorrection) * 0.07) Then
+               lt_w = lat + (FirstSecularYr - GlobalWarmingCorrection) * 0.07 '//include effect of global warming from Robert J. Allen, UCR,
            Else
                lt_w = lat
                End If

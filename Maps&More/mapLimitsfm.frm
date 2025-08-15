@@ -22,14 +22,62 @@ Begin VB.Form mapLimitsfm
       TabIndex        =   50
       Top             =   6160
       Width           =   4455
+      Begin MSComCtl2.UpDown updwnGW 
+         Height          =   285
+         Left            =   3120
+         TabIndex        =   53
+         Top             =   120
+         Width           =   255
+         _ExtentX        =   450
+         _ExtentY        =   503
+         _Version        =   393216
+         Value           =   2000
+         AutoBuddy       =   -1  'True
+         BuddyControl    =   "GWtxt"
+         BuddyDispid     =   196663
+         OrigLeft        =   3960
+         OrigTop         =   120
+         OrigRight       =   4215
+         OrigBottom      =   375
+         Max             =   2100
+         Min             =   2000
+         Wrap            =   -1  'True
+      End
+      Begin VB.TextBox GWtxt 
+         Alignment       =   2  'Center
+         Height          =   285
+         Left            =   2640
+         TabIndex        =   52
+         Text            =   "2000"
+         ToolTipText     =   "Starting year to adjust WorldClim ground temperatures"
+         Top             =   120
+         Width           =   480
+      End
       Begin VB.CheckBox chkGlobalWarming 
-         Caption         =   "Use global warming adjustment for temperatures"
+         Caption         =   "Activate R.J. Allen adjustment"
          Height          =   195
-         Left            =   360
+         Left            =   120
          TabIndex        =   51
          ToolTipText     =   "Adjust the WordClim model by shifting the latitude based on years from 2020"
          Top             =   200
-         Width           =   3735
+         Width           =   2415
+      End
+      Begin VB.Label lblGW 
+         Caption         =   "Starting Year"
+         BeginProperty Font 
+            Name            =   "MS Serif"
+            Size            =   6.75
+            Charset         =   177
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   180
+         Left            =   3480
+         TabIndex        =   54
+         Top             =   200
+         Width           =   855
       End
    End
    Begin VB.Frame frmTemp 
@@ -890,7 +938,11 @@ Private Sub Command1_Click()
       modevals = Val(Text5)
       End If
       
-   GlobalWarmingCorrection = chkGlobalWarming.value
+   If (chkGlobalWarming.value) Then
+      GlobalWarmingCorrection = Val(GWtxt.Text)
+   Else
+      GlobalWarmingCorrection = 0
+      End If
    
    If record = True Then
      TemperatureModel% = cmbModelTemp.ListIndex - 1
@@ -909,7 +961,11 @@ Private Sub Command1_Click()
      filnum% = FreeFile
      AziStep% = Val(txtAngRes)
      AziStepf% = AziStep%
-     GlobalWarmingCorrection = chkGlobalWarming.value
+     If chkGlobalWarming.value Then
+        GlobalWarmingCorrection = Val(GWtxt.Text)
+     Else
+        GlobalWarmingCorrection = 0
+        End If
      Open drivjk$ + "mapposition.sav" For Output As #filnum%
      'If hgtpos = sEmpty Then hgtpos = 0
      f1 = 1: If kmxsky > 1000 Then f1 = 0.001
@@ -1040,8 +1096,9 @@ Private Sub form_load()
      chkIgnoreTiles.value = vbUnchecked
      End If
      
-  If GlobalWarmingCorrection = 1 Then
+  If GlobalWarmingCorrection > 0 Then
      chkGlobalWarming.value = vbChecked
+     GWtxt.Text = GlobalWarmingCorrection
      End If
   
 '  If TemperatureModel% = 1 Then
