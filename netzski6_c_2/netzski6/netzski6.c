@@ -29,6 +29,8 @@ struct {
 #define t3s_1 t3s_
 #define MAXDBLSIZE 100 //maximum character size of data elements to be read using ParseString
 #define MAXNUMPLACES 999 //added 071422 maximum number of places that can be manipulated
+#define END_SUN_APPROX 2050  //last year to use the soot global warming model
+
 
 /* Table of constant values */
 
@@ -49,8 +51,9 @@ static doublereal c_b180 = 0.5; //reduced vdw exponent for astronomical altitude
 static doublereal c_b181 = -0.2; //exponent for eps <----
 static doublereal c_press = 1.0856; //vdw pressure exponent for view angle = 0 degrees
 
-short Temperatures(double lt, double lg, integer MinTemp[], integer AvgTemp[], integer MaxTemp[] );
+short Temperatures(double lt, double lg, integer MinTemp[], integer AvgTemp[], integer MaxTemp[], integer nstrtyr, integer GlobalWarmingCorrection );
 short lenMonth( short x);
+int WhichJK();
 
 ////////////functions that emulate MS VB 6.0 functions//////////
 int InStr( short nstart, char * str, char * str2 );
@@ -194,6 +197,7 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
 	static char *ext3; 
 	////////////////////////////////////////////////////
 
+	static int GlobalWarmingCorrection;
 
 	static integer nplac[2];
     static char fileo[27];
@@ -269,7 +273,7 @@ logical FixProfHgtBug = FALSE_; //added 101520 to fix the bug in newreadDTM that
 	logical EnableSunriseInv = FALSE_; //flag to subtract time for suspected inversion at this day
 	logical EnableSunsetInv = FALSE_; //flag to subtract time for suspected inversion at this day
 
-	logical ReadTemps = TRUE_;  //true to read from netzskiy.tme, false to read directly from WorldClim binary files
+	logical ReadTemps = TRUE_;  //true to read from netzskiy.tm3, false to read directly from WorldClim binary files
 	doublereal AddTemp = 0;
 	doublereal TRfudge = 1.0; //0.95;//increasing positive lapse rate will lower the TR as well as the total atm refraction
 	doublereal TRfudgeVis = 1.0;
@@ -451,6 +455,7 @@ outine. */
 /* 		MT is Minimum Temperature Array, AT is Average Temperature Array */
 /*	    VERSION 20 -- add option to add additional cushion to times (handling problem won't print green times) */
 /*		Version 22 -- add option to change refraction based on inputed Lapse Rate
+/*      Version 23 -- added handling of GlobalWarmingCorrection based of R.J. Allen soot effect
 */
     pi = acos(-1.);
     cd = pi / 180.;
@@ -646,6 +651,10 @@ L7:
 	ext3 = (char *)malloc(ext3, 4 * 2 * numfil * sizeof(char));
 	/////////////////////////////////////////////////////////////////////////////////////////
 
+	if (!ReadTemps) {
+		GlobalWarmingCorrection = WhichJK();
+	}
+
 	/*
 	if (strstr(locname, 'eros'))
 	{
@@ -773,7 +782,7 @@ L7:
 			lg = kmxo;
 		}
 
-		ier = Temperatures(lt,-lg, mint, avgt, maxt);
+		ier = Temperatures(lt,-lg, mint, avgt, maxt, nstrtyr, GlobalWarmingCorrection);
 
 	}else{ //read the temmperatures from the netzskiy.tm3 file
 		s_rsle(&io___49);
@@ -829,7 +838,7 @@ L7:
 				lg = kmxo;
 			}
 
-			ier = Temperatures(lt,-lg, mint, avgt, maxt);
+			ier = Temperatures(lt,-lg, mint, avgt, maxt, nstrtyr, GlobalWarmingCorrection);
 		}
 	}
 
@@ -2115,7 +2124,7 @@ L700:
 
 			if (fabs(check) > 1)
 			{
-				//perpetual day/night, no sunset, print out error and write flags for Cal Program
+				//perpetual day/night, or this calc. method failed, print out error and write flags for Cal Program
 				//then skip to next day
 				ErrorCode = -2;
 				goto ErrorHandler;
@@ -2243,6 +2252,9 @@ L700:
 		    air += (1 - cos(aas) * .0167) * .2667 * cd;
 /*              calculate sunset */
 
+			//////////////changes EK 060224///////////////////////////
+			//sr2 = acos(check) * ch;
+			///*
 			//////////////changes EK 061922///////////////////////////
 			//check for perpetual night or day
 			check = -tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
@@ -2252,7 +2264,6 @@ L700:
 			{
 				//no sunrise, print out error messages and write flags and goto next day
 				ErrorCode = -1;
-				goto ErrorHandler;
 			}
 			else
 			{
@@ -2261,6 +2272,7 @@ L700:
 		    //sr2 = acos(-tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
 			//    cos(d__))) * ch;
 			///////////////////////////////////////////////////
+			//*/
 
 		    sr2 *= hr;
 		    tss = (t6 + sr2) / hr;
@@ -2269,8 +2281,12 @@ L700:
 /*              calculate sunrise */
 		    decl_(&dy1, &mp, &mc, &ap, &ac, &ms, &aas, &es, &ob, &d__)
 			    ;
+			//////////////////changes EK 060224///////////////////////////
+			//sr1 = acos(check) * ch;
+			///*
 			//////////////////chages EK 061922//////////////////////////////////////
-			//check for perpetual night or day
+			//check for perpetual night or day, or this calculaton method failed 
+			//needs methothical search for sunrise based on search of solar altitudes
 			check = -tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
 			    cos(d__));
 			if (fabs(check) > 1) 
@@ -2283,6 +2299,7 @@ L700:
 			{
 				sr1 = acos(check) * ch;
 			}
+			//*/
 		    //sr1 = acos(-tan(lr) * tan(d__) + cos(air) / (cos(lr) * 
 			//    cos(d__))) * ch;
 			///////////////////////////////////////////////////////
@@ -4097,7 +4114,7 @@ L10:
 
 /* Main program alias */ int netzski6_ () { MAIN__ (); return 0; }
 
-short Temperatures(double lt, double lg, integer MinTemp[], integer AvgTemp[], integer MaxTemp[] )
+short Temperatures(double lt, double lg, integer MinTemp[], integer AvgTemp[], integer MaxTemp[], integer nstrtyr, integer GlobalWarmingCorrection)
 {
 
 	//extract the WorldClim averaged minimum and average temperature for months 1-12 for this lat,lon
@@ -4136,6 +4153,53 @@ short Temperatures(double lt, double lg, integer MinTemp[], integer AvgTemp[], i
 		return -1;
 	}
 	*/
+
+	//effect of global warming can be modeled similar to effect of carbon soot, see A.J. Allen, Nature
+	//assume that global warming will take over the effect within the next 50 years
+    //and then be optimistic and assume that it stabilizes
+	//
+
+	if (GlobalWarmingCorrection > 0)
+	{
+		//estimate the first secular year to be the current year
+		
+		//use simple model for effect of Global Warming
+		if (nstrtyr < END_SUN_APPROX)
+		{
+		   if (lt >= (nstrtyr - GlobalWarmingCorrection) * 0.07)
+		   {
+			   lt -= (nstrtyr - GlobalWarmingCorrection) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
+														  //"Carbon soot may be driving the expansion of the tropics-not CO2
+		   }
+		   else if (lt < -(nstrtyr - GlobalWarmingCorrection) * 0.07)
+		   {
+			   lt += (nstrtyr - GlobalWarmingCorrection) * 0.07; //include effect of global warming from Robert J. Allen, UCR,
+		   }
+		   else
+		   {
+			   ; //no shift
+		   }
+		}
+		else
+		{
+		   if (lt >= 3.5)
+		   {
+			   lt -= 3.5; //include effect of global warming from Robert J. Allen, UCR
+		   }
+		   else if (lt < - 3.5)
+		   {
+			   lt += 3.5; //include effect of global warming from Robert J. Allen, UCR
+		   }
+		   else
+		   {
+			   ; //no shift
+		   }
+		}
+	}
+	else
+	{
+		; //no shift;
+	}
 
 	//first extract minimum temperatures, then average temperatures
 
@@ -4366,4 +4430,44 @@ char *fgets_CR( char *str, short strsize, FILE *stream )
 	//RemoveCRLF( str ); //remove CR and LF at end of MS line
 	return str;
 }
+
+//////////////////////////////////////////////////
+//function determine which drive contains c:/jk/mapposition.sav and then reads GlobalWarmingCorrection flag
+int WhichJK()
+{
+	FILE *stream;
+	char testdrv[13] = "cdefghijklmn";
+	char drivlet[2] = "c";
+	char jkdir[255] = "";
+	char doclin[255] = "";
+	int i;
+	for (i=1; i<= strlen(testdrv); i++)
+	{
+		drivlet[0] = testdrv[i - 1];
+		drivlet[1] = 0;
+		strcpy(jkdir, (const char *)drivlet);
+		strcat(jkdir, ":\\jk\\mapposition.sav" );
+		if ( (stream = fopen( jkdir, "r" )) != NULL )
+		{
+			while (!feof(stream)) {
+			   doclin[0] = 0; //clear buffer
+               fgets_CR(doclin, sizeof(doclin), stream);
+			}
+		}
+		fclose(stream);
+		return atoi(doclin[0]);
+
+	}
+	/*
+	char *jkdir;
+	jkdir = "c:\\jk_c\\eros.tm3";
+	if ( (stream = fopen( jkdir, "r" )) != NULL )
+	   return 1;
+	jkdir = "e:\\jk_c\\eros.tm3";
+	if ( (stream = fopen( jkdir, "r" )) != NULL )
+	   return 2;
+	*/
+	return 0; //return 0 if didn't find anything
+}
+////////////////////////////////////////////////////////////
 
