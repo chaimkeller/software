@@ -35,7 +35,7 @@ Begin VB.Form calcoordfm
          Height          =   375
          Left            =   1620
          TabIndex        =   9
-         ToolTipText     =   "name of the place (English)"
+         ToolTipText     =   "name of the place"
          Top             =   1860
          Width           =   2235
       End
@@ -199,7 +199,8 @@ Private Sub Command1_Click()
     eroscitylong(citynodenum%) = Val(Text4.Text)
     eroscitylat(citynodenum%) = Val(Text5.Text)
     eroscityhgt(citynodenum%) = Val(Text6.Text)
-    eroscity$ = Text1.Text
+'    eroscity$ = Text1.Text
+    PlaceName$ = Text1.Text
     eroscityarea(citynodenum%) = eroscityarea(citynodenum% - 1)
     erosareabat = eroscityarea(citynodenum%)
     eroslongitude = eroscitylong(citynodenum%)

@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Begin VB.Form SunriseSunset 
    BackColor       =   &H00C0FFFF&
    BorderStyle     =   1  'Fixed Single
@@ -1046,7 +1046,7 @@ Private Sub OKbut0_Click()
    Dim Coords() As String, kmxAT As Double, kmyAT As Double
    Dim ltAT As Double, lgAT As Double
    Dim MinTK(12) As Integer, AvgTK(12) As Integer, MaxTK(12) As Integer, ier As Integer
-   Dim StrArr() As String
+   Dim StrArr() As String, batname$
    
    On Error GoTo OKbuterhand
    
@@ -1494,6 +1494,7 @@ Private Sub OKbut0_Click()
       If SunriseSunset.Check1.Value = vbChecked Or SunriseSunset.Check4.Value = vbChecked Or SunriseSunset.Check6.Value = vbChecked Then
          myfile = Dir(currentdir + "\netz\*.bat")
          If myfile <> sEmpty Then
+            batname$ = currentdir + "\netz\" + myfile
             Open currentdir + "\netz\" + myfile For Input As #erosfil%
             Input #erosfil%, hebcityname$, geotz!
             Close #erosfil%
@@ -1506,6 +1507,7 @@ Private Sub OKbut0_Click()
       ElseIf SunriseSunset.Check2.Value = vbChecked Or SunriseSunset.Check5.Value = vbChecked Or SunriseSunset.Check7.Value = vbChecked Then
          myfile = Dir(currentdir + "\skiy\*.bat")
          If myfile <> sEmpty Then
+            batname$ = currentdir + "\netz\" + myfile
             Open currentdir + "\skiy\" + myfile For Input As #erosfil%
             Input #erosfil%, hebcityname$, geotz!
             Close #erosfil%
@@ -1729,33 +1731,49 @@ Private Sub OKbut0_Click()
       If eros = True And currentdir = drivcities$ + "eros\visual_tmp" Then
          'newhebcalfm.Combo2.AddItem " קו רוחב: " + Str$(eroslatitude) + ", קו אורך: " + Str$(eroslongitude) + ")" + " - מידי יום ביומו" + ") " + eroscity$ + "  מבוסס על הזריחה המוקדמת ביותר הנראית מעל האופק המזרחי האמיתי, מנקודה כלשהי מסביב הישוב  "
          'newhebcalfm.Combo2.AddItem heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + ")" + heb1$(19) + ") " + eroscity$ + heb1$(20)
+         
+         PlaceNameTmp$ = sEmpty
+         If calnodevis And Not IsraelNeighborhood Then
+            If Trim$(PlaceName$) <> sEmpty Then
+               PlaceNameTmp$ = PlaceName$
+            Else
+               PlaceNameTmp$ = eroscity$
+               End If
+         ElseIf Not calnodevis And Not IsraelNeighborhood Then
+            PlaceNameTmp$ = eroscity$
+            End If
+            
          If SRTMflag = 0 Then
-            newhebcalfm.Combo2.AddItem "(" & heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + " ) " + eroscity$ + heb1$(49) & " " & Trim$(Str$(searchradius)) & " " & heb1$(61)
+            newhebcalfm.Combo2.AddItem "(" & heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + " ) " + PlaceNameTmp$ + heb1$(49) & " " & Trim$(Str$(searchradius)) & " " & heb1$(61)
          ElseIf SRTMflag = 1 Then
-            newhebcalfm.Combo2.AddItem "(" & heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + " ) " + eroscity$ + heb1$(51) & " " & Trim$(Str$(searchradius)) & " " & heb1$(61)
+            newhebcalfm.Combo2.AddItem "(" & heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + " ) " + PlaceNameTmp$ + heb1$(51) & " " & Trim$(Str$(searchradius)) & " " & heb1$(61)
          ElseIf SRTMflag = 2 Then
-            newhebcalfm.Combo2.AddItem "(" & heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + " ) " + eroscity$ + heb1$(53) & " " & Trim$(Str$(searchradius)) & " " & heb1$(61)
+            newhebcalfm.Combo2.AddItem "(" & heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + " ) " + PlaceNameTmp$ + heb1$(53) & " " & Trim$(Str$(searchradius)) & " " & heb1$(61)
          ElseIf SRTMflag = 9 Then
-            newhebcalfm.Combo2.AddItem "(" & heb1$(17) + Str$(eroslongitude) + heb1$(18) + Str$(eroslatitude) + " ) " + eroscity$ + heb1$(58) & " " & Trim$(Str$(searchradius)) & " " & heb1$(61)
+            newhebcalfm.Combo2.AddItem "(" & heb1$(17) + Str$(eroslongitude) + heb1$(18) + Str$(eroslatitude) + " ) " + PlaceNameTmp$ + heb1$(58) & " " & Trim$(Str$(searchradius)) & " " & heb1$(61)
             End If
             
          If IsraelNeighborhood Then
             newhebcalfm.Combo2.AddItem heb1$(58) & " " & Trim$(Str$(searchradius)) & " " & heb1$(61) & eroshebcity$ & " (" & heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + " ) "
             End If
             
+         If optionheb And PlaceName$ <> sEmpty Then
+            newhebcalfm.Combo2.AddItem heb1$(58) & " " & Trim$(Str$(searchradius)) & " " & heb1$(61) & PlaceName$ & " (" & heb1$(17) + Str$(eroslatitude) + heb1$(18) + Str$(eroslongitude) + " ) "
+            End If
+            
          If optionheb = False Then
             If SRTMflag = 0 Then
                'newhebcalfm.Combo2.AddItem "Based on the earliest sunrise that is seen on any day anywhere within the search radius around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
-               newhebcalfm.Combo2.AddItem "GTOPO30 DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
+               newhebcalfm.Combo2.AddItem "GTOPO30 DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & PlaceNameTmp$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
             ElseIf SRTMflag = 1 Then
-               newhebcalfm.Combo2.AddItem "SRTM-2 DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
+               newhebcalfm.Combo2.AddItem "SRTM-2 DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & PlaceNameTmp$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
                If eroscountry$ = "USA" Then
-                  newhebcalfm.Combo2.AddItem "30m NED DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
+                  newhebcalfm.Combo2.AddItem "30m NED DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & PlaceNameTmp$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
                   End If
             ElseIf SRTMflag = 2 Then
-               newhebcalfm.Combo2.AddItem "SRTM-1 DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
+               newhebcalfm.Combo2.AddItem "SRTM-1 DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & PlaceNameTmp$ & "; longitude: " & Str(eroslongitude) & ", latitude: " & Str(eroslatitude)
             ElseIf SRTMflag = 9 Then
-               newhebcalfm.Combo2.AddItem "Israel DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & eroscity$ & "; ITMy: " & Str(eroslatitude) & ", ITMx: " & Str(eroslongitude)
+               newhebcalfm.Combo2.AddItem "Israel DTM based calculations of the earliest sunrise within " & Trim$(Str$(searchradius)) & "km. around " & PlaceNameTmp$ & "; ITMy: " & Str(eroslatitude) & ", ITMx: " & Str(eroslongitude)
                End If
             End If
          End If
@@ -2895,7 +2913,7 @@ oke5: If lngTimerID <> 0 Then
          MsgBox "SunriseSunset can't read the CD-ROM!, start from the beginning!", vbExclamation, "Cal Program"
       ElseIf Err.Number = 53 Then
          filchk$ = fileo$
-         MsgBox "SunriseSunset couldn't find the file: " & filchk$ & " listed in the .BAT file!" & vbCrLf & vbCrLf & _
+         MsgBox "SunriseSunset couldn't find the file: " & filchk$ & " listed in the .BAT file:" & batname$ & vbCrLf & vbCrLf & _
          "Line in bat file is: " & doclin$ & vbCrLf & vbCrLf & _
          "Start from the beginning.", vbExclamation, "Cal Program"
          Close

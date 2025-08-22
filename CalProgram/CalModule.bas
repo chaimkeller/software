@@ -85,7 +85,7 @@ Public optiondmish%, optiontmish%, dirnet$, RoundSeconds%, myear0%, fshabos0%, h
 Public yrstrt%(1), yrend%(1), visauto As Boolean, mishorauto As Boolean, astauto As Boolean
 Public BeginningYear$, EndYear$, NumCivilYears%, NumCivilYearsInc%, BeginCivilRun As Boolean
 Public PDFprinter As Boolean, SunriseCalc As Boolean, SunsetCalc As Boolean, LastItem$
-Public GlobalWarmingCorrection As Integer
+Public GlobalWarmingCorrection As Integer, PlaceName$
 'Public MaxHourZemanios As Double
 Public Type BrowseInfo
     lngHwnd        As Long
