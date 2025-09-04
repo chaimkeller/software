@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Begin VB.Form Zmanimform 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Define Z'manim Parameters"
@@ -1800,9 +1800,11 @@ Private Sub loadbut_Click()
 '  Open drivjk$ + "zmanim.tmp" For Output As zmannew%
   ZmanTitle$ = sEmpty
   numtotatl% = -1
+  sedraflag% = 0
   Do Until EOF(zmannum%)
      Input #zmannum%, a$, b$, c$, D$, e$, f$, GZ$, HZ$
      If a$ = "sedra/holidays" Then
+        sedraflag% = 1
         Input #zmannum%, trflag%
         If trflag% = 0 Then
            optNoParshiot.Value = True
@@ -1858,7 +1860,7 @@ zm100:
 '  Close #zmannew%
   Close #filsort%
   
-  If neworder = True And numsort% < numtotal% Then 'add the sorted order to the resort list
+  If neworder = True And (numsort% < numtotal% Or sedraflag% = 1) Then 'add the sorted order to the resort list
                                                    'if numsort%< numtotal%
      List1.Clear
      filsort% = FreeFile
@@ -3268,12 +3270,12 @@ ca10:   X1# = X2# - X1#
         D1# = yy1# * B2# / 2#
         O1# = S2# + D1#
         O2# = O1# + D1#
-        a3# = O1# / f1#
-        a4# = O2# / f1#
-        B3# = 1# - e4# * Sin(a3#) ^ 2
+        A3# = O1# / f1#
+        A4# = O2# / f1#
+        B3# = 1# - e4# * Sin(A3#) ^ 2
         B4# = B3# * Sqr(B3#) * C1#
-        C4# = 1# - e4# * Sin(a4#) ^ 2
-        C5# = Tan(a4#) * C2# * C4# ^ 2
+        C4# = 1# - e4# * Sin(A4#) ^ 2
+        C5# = Tan(A4#) * C2# * C4# ^ 2
         C6# = C5# * X1# ^ 2
         D2# = yy1# * B4# - C6#
         C6# = C6# / 3#
@@ -3282,10 +3284,10 @@ ca10:   X1# = X2# - X1#
         R3# = O2# - C6#
         R4# = R3# - C6#
         R2# = R4# / f1#
-        a2# = 1# - e4# * Sin(l1#) ^ 2
+        A2# = 1# - e4# * Sin(l1#) ^ 2
         lt = r# * (l1#)
-        a5# = Sqr(a2#) * c3#
-        d3# = X1# * a5# / Cos(R2#)
+        A5# = Sqr(A2#) * c3#
+        d3# = X1# * A5# / Cos(R2#)
 ' LON
         lg = r# * ((s1# + d3#) / f1#)
 '       THIS IS THE EASTERN HEMISPHERE!
