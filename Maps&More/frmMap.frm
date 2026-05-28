@@ -385,7 +385,7 @@ End Sub
 '
 Private Sub cmdMoveMaps_Click()
     Dim StrTxt() As String
-    Dim N As Long
+    Dim n As Long
     Dim E As Long
     Dim lat As Double
     Dim lon As Double
@@ -439,8 +439,8 @@ Private Sub cmdMoveMaps_Click()
             lat = Val(txtLat.Text)
             lon = Val(txtLong.Text)
             'convert lat lon to ITM
-            Call wgs842ics(lat, lon, N, E)
-            kmy = N
+            Call wgs842ics(lat, lon, n, E)
+            kmy = n
             kmx = E
             Maps.Text5.Text = kmx
             Maps.Text6.Text = kmy
@@ -645,9 +645,9 @@ Private Sub Command3_Click()
     .CancelError = True
     .Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*|"
     .FilterIndex = 1
-    .FileName = App.Path + "\*.json"
+    .fileName = App.Path + "\*.json"
     .ShowOpen
-    JASONfile$ = .FileName
+    JASONfile$ = .fileName
   End With
   
   FileJSN% = FreeFile

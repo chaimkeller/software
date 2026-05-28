@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "Comdlg32.ocx"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form mapsearchfm 
@@ -1184,7 +1184,7 @@ Private Sub cmdAdjust_Click()
             latMax = Maps.Text6.Text
             lonMax = Maps.Text5.Text
             End If
-         Call BringWindowToTop(mapsearchfm.hwnd)
+         Call BringWindowToTop(mapsearchfm.hWnd)
          OverhWnd = FindWindow(vbNullString, "Overview")
          If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
        Next i%
@@ -1218,7 +1218,7 @@ Private Sub cmdAdjust_Click()
             latMax = Maps.Text6.Text
             lonMax = Maps.Text5.Text
             End If
-         Call BringWindowToTop(mapsearchfm.hwnd)
+         Call BringWindowToTop(mapsearchfm.hWnd)
          OverhWnd = FindWindow(vbNullString, "Overview")
          If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
        Next i%
@@ -1259,7 +1259,7 @@ Private Sub cmdB_Click()
          Maps.Text6.Text = lat0 ' latitude
          Maps.Text5.Text = lon0 + (1# / 3600#) 'longitude
          Call goto_click
-         Call BringWindowToTop(mapsearchfm.hwnd)
+         Call BringWindowToTop(mapsearchfm.hWnd)
          OverhWnd = FindWindow(vbNullString, "Overview")
          If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
        
@@ -1411,14 +1411,14 @@ Private Sub cmdCheckSkipped_Click()
          mRows& = mRows& + 1
       Loop
       Close #savfil%
-      sky2.Rows = mRows& + 1
+      sky2.rows = mRows& + 1
       
       sky2.Clear
       savfil% = FreeFile
       Open tmpfile$ For Input As #savfil%
       i& = 1
       Do Until EOF(savfil%)
-         If i& > sky2.Rows - 1 Then Exit Do
+         If i& > sky2.rows - 1 Then Exit Do
          Input #savfil%, savlat, savlon, savhgt, savdis
          sky2.TextArray(skyp2(i&, 0)) = i&
          sky2.TextArray(skyp2(i&, 1)) = savlat
@@ -1532,7 +1532,7 @@ uoa100:
    skymove = False
    worldmove = False
    Skycoord% = 0
-   Call BringWindowToTop(mapsearchfm.hwnd)
+   Call BringWindowToTop(mapsearchfm.hWnd)
    searchhgt = savhgt
    viewsearch = True
    Call sunrisesunset(sunmode%)
@@ -1582,7 +1582,7 @@ Private Sub cmdMoveGoogleMap_Click()
       frmMap.Command2.value = True
    Else
       frmMap.Visible = True
-      Call BringWindowToTop(frmMap.hwnd)
+      Call BringWindowToTop(frmMap.hWnd)
       frmMap.txtLat.Text = Text1.Text
       frmMap.txtLong.Text = Text2.Text
       frmMap.Command2.value = True
@@ -1594,120 +1594,157 @@ Private Sub cmdPlotSearchPnts_Click()
 
    On Error GoTo cmdPlotSearchPnts_Click_Error
    
-   If PlotSearchPoints Then
-      'button pressed twice, so erase plot points
-      If SearchVis Then
-         SearchVis = False
-         blitpictures
-         End If
-      PlotSearchPoints = False
-      Exit Sub
-      End If
-
-    For j& = 1 To sky2.Rows - 1
-      nplachos& = j&
-      If nplachos& = 0 Then Exit Sub
-      If world = False Then
-         If InStr(sky2.FormatString, "ITMx") <> 0 Then
-            skymove = True
-            Skycoord% = 2
-            skyx = sky2.TextArray(skyp2(nplachos&, 1))
-            skyy = sky2.TextArray(skyp2(nplachos&, 2))
-            If skyx = "0" And skyy = "0" Then GoTo p500
-            'convert kmx,kmy to screen coordinates
-            Call ScreenToGeo(x, y, skyx, skyy, 2, ier%)
-         ElseIf InStr(sky2.FormatString, "latitude") <> 0 Then
-            lati = sky2.TextArray(skyp2(nplachos&, 1))
-            lons = sky2.TextArray(skyp2(nplachos&, 2))
-            'convert lon,lat to screen coordinates
-            Call ScreenToGeo(x, y, lons, lati, 2, ier%)
+   If Not ViewerVis Then 'plotting using older method
+   
+       If PlotSearchPoints Then
+          'button pressed twice, so erase plot points
+          If SearchVis Then
+             SearchVis = False
+             blitpictures
+             End If
+          PlotSearchPoints = False
+          Exit Sub
+          End If
+    
+        For j& = 1 To sky2.rows - 1
+          nplachos& = j&
+          If nplachos& = 0 Then Exit Sub
+          If world = False Then
+             If InStr(sky2.FormatString, "ITMx") <> 0 Then
+                skymove = True
+                Skycoord% = 2
+                skyx = sky2.TextArray(skyp2(nplachos&, 1))
+                skyy = sky2.TextArray(skyp2(nplachos&, 2))
+                If skyx = "0" And skyy = "0" Then GoTo p500
+                'convert kmx,kmy to screen coordinates
+                Call ScreenToGeo(x, y, skyx, skyy, 2, ier%)
+             ElseIf InStr(sky2.FormatString, "latitude") <> 0 Then
+                lati = sky2.TextArray(skyp2(nplachos&, 1))
+                lons = sky2.TextArray(skyp2(nplachos&, 2))
+                'convert lon,lat to screen coordinates
+                Call ScreenToGeo(x, y, lons, lati, 2, ier%)
+                End If
             End If
-        End If
-      
-      If world = True Then
-         lons = sky2.TextArray(skyp2(nplachos&, 2))
-         lati = sky2.TextArray(skyp2(nplachos&, 1))
-         'convert lon,lat to screen coordinates
-         Call ScreenToGeo(x, y, lons, lati, 2, ier%)
-         End If
-    
-      'plot the points
-      mapPictureform.mapPicture.DrawWidth = 2 '2 * mag
-      mapPictureform.mapPicture.Circle (x, y), 20, 255 '20 * mag, 255
-      mapPictureform.mapPicture.DrawWidth = 1 '1 * mag
-    
+          
+          If world = True Then
+             lons = sky2.TextArray(skyp2(nplachos&, 2))
+             lati = sky2.TextArray(skyp2(nplachos&, 1))
+             'convert lon,lat to screen coordinates
+             Call ScreenToGeo(x, y, lons, lati, 2, ier%)
+             End If
+        
+          'plot the points
+          mapPictureform.mapPicture.DrawWidth = 2 '2 * mag
+          mapPictureform.mapPicture.Circle (x, y), 20, 255 '20 * mag, 255
+          mapPictureform.mapPicture.DrawWidth = 1 '1 * mag
+        
 p500:
-    Next j&
+        Next j&
+        
+        'if a mosaic search, plot the mosaic boundaries
+        If optMosaic.value = True Then
+            If world Then
+                     ydegkm = 180 / (PI * 6371.315) 'degrees per km latitude
+                     xdegkm = 180 / (PI * 6371.315 * Cos(cd * Val(Text1))) 'degrees per km longitude
+                     MosaicStepx = Val(txtMosaic.Text) * xdegkm '= mosaic x size in degrees
+                     MosaicStepy = Val(txtMosaic.Text) * ydegkm '= mosaic y size in degrees
+                     BegMosaicY = Val(Text1) - Val(Text3) * ydegkm  '= beginning of mosaic search in y = center lat - search radius
+                     EndMosaicY = Val(Text1) + Val(Text3) * ydegkm  '= end of mosaic search in y = center lat + search radius
+                     BegMosaicX = Val(Text2) - Val(Text3) * xdegkm  '= beginning of mosaic search in x = center lon - search radius
+                     EndMosaicX = Val(Text2) + Val(Text3) * xdegkm  '= end of mosaic search in x = center lon + search radius
+              Else
+                     ydegkm = del * 1000
+                     xdegkm = del * 1000
+                     MosaicStepx = Val(txtMosaic.Text) * 1000
+                     MosaicStepy = Val(txtMosaic.Text) * 1000
+                     BegMosaicY = Val(Text1) - Val(Text3 * 1000)
+                     EndMosaicY = Val(Text1) + Val(Text3 * 1000) - MosaicStepy
+                     BegMosaicX = Val(Text2) - Val(Text3 * 1000)
+                     EndMosaicX = Val(Text2) + Val(Text3 * 1000) - MosaicStepx
+                     End If
+           
+              numMosaicX& = (EndMosaicX - BegMosaicX) / MosaicStepx
+              numMosaicY& = (EndMosaicY - BegMosaicY) / MosaicStepy
+        
+             For iMosaicY% = 1 To numMosaicY& + 1
+                   For jMosaicX% = 1 To numMosaicX&
+                        iYMosaic = BegMosaicY + (iMosaicY% - 1) * MosaicStepy
+                        iXMosaic = BegMosaicX + (jMosaicX% - 1) * MosaicStepx
+      ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+                        lati = iYMosaic
+                        lons = iXMosaic
+                        Call ScreenToGeo(x, y, lons, lati, 2, ier%)
+                        xo = x
+                        yo = y
+                        lat2 = lati '+ MosaicStepy
+                        lons2 = lons + MosaicStepx
+                        Call ScreenToGeo(x, y, lons2, lat2, 2, ier%)
+                        mapPictureform.mapPicture.Line (xo, yo)-(x, y), QBColor(1)
+                         
+                    Next jMosaicX%
+             Next iMosaicY%
     
-    'if a mosaic search, plot the mosaic boundaries
-    If optMosaic.value = True Then
-        If world Then
-                 ydegkm = 180 / (pi * 6371.315) 'degrees per km latitude
-                 xdegkm = 180 / (pi * 6371.315 * Cos(cd * Val(Text1))) 'degrees per km longitude
-                 MosaicStepx = Val(txtMosaic.Text) * xdegkm '= mosaic x size in degrees
-                 MosaicStepy = Val(txtMosaic.Text) * ydegkm '= mosaic y size in degrees
-                 BegMosaicY = Val(Text1) - Val(Text3) * ydegkm  '= beginning of mosaic search in y = center lat - search radius
-                 EndMosaicY = Val(Text1) + Val(Text3) * ydegkm  '= end of mosaic search in y = center lat + search radius
-                 BegMosaicX = Val(Text2) - Val(Text3) * xdegkm  '= beginning of mosaic search in x = center lon - search radius
-                 EndMosaicX = Val(Text2) + Val(Text3) * xdegkm  '= end of mosaic search in x = center lon + search radius
-          Else
-                 ydegkm = del * 1000
-                 xdegkm = del * 1000
-                 MosaicStepx = Val(txtMosaic.Text) * 1000
-                 MosaicStepy = Val(txtMosaic.Text) * 1000
-                 BegMosaicY = Val(Text1) - Val(Text3 * 1000)
-                 EndMosaicY = Val(Text1) + Val(Text3 * 1000) - MosaicStepy
-                 BegMosaicX = Val(Text2) - Val(Text3 * 1000)
-                 EndMosaicX = Val(Text2) + Val(Text3 * 1000) - MosaicStepx
-                 End If
-       
-          numMosaicX& = (EndMosaicX - BegMosaicX) / MosaicStepx
-          numMosaicY& = (EndMosaicY - BegMosaicY) / MosaicStepy
+             'now the vertical lines
+             For jMosaicX% = 1 To numMosaicX& + 1
+                   For iMosaicY% = 1 To numMosaicY&
+                        iYMosaic = BegMosaicY + (iMosaicY% - 1) * MosaicStepy
+                        iXMosaic = BegMosaicX + (jMosaicX% - 1) * MosaicStepx
+      ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+                        lati = iYMosaic
+                        lons = iXMosaic
+                        Call ScreenToGeo(x, y, lons, lati, 2, ier%)
+                        xo = x
+                        yo = y
+                        lat2 = lati + MosaicStepy
+                        lons2 = lons '+ MosaicStepx
+                        Call ScreenToGeo(x, y, lons2, lat2, 2, ier%)
+                        mapPictureform.mapPicture.Line (xo, yo)-(x, y), QBColor(1)
+                         
+                    Next iMosaicY%
+             Next jMosaicX%
     
-         For iMosaicY% = 1 To numMosaicY& + 1
-               For jMosaicX% = 1 To numMosaicX&
-                    iYMosaic = BegMosaicY + (iMosaicY% - 1) * MosaicStepy
-                    iXMosaic = BegMosaicX + (jMosaicX% - 1) * MosaicStepx
-  ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-                    lati = iYMosaic
-                    lons = iXMosaic
-                    Call ScreenToGeo(x, y, lons, lati, 2, ier%)
-                    xo = x
-                    yo = y
-                    lat2 = lati '+ MosaicStepy
-                    lons2 = lons + MosaicStepx
-                    Call ScreenToGeo(x, y, lons2, lat2, 2, ier%)
-                    mapPictureform.mapPicture.Line (xo, yo)-(x, y), QBColor(1)
-                     
-                Next jMosaicX%
-         Next iMosaicY%
+             End If
+             
+    Else 'plotting on nweer method using the frmViewer
+    
+       If PlotSearchPoints Then
+          'button pressed twice, so erase plot points
+          If SearchVis Then
+             SearchVis = False
+             frmViewer.RedrawView 'redraw map to clear it
+             End If
+          PlotSearchPoints = False
+          Exit Sub
+          End If
+          
+        Dim latp As Double, lonp As Double
+        Dim imgX As Double, imgY As Double
+        Dim scrX As Double, scrY As Double
+          
+        For j& = 1 To sky2.rows - 1
+        
+          nplachos& = j&
+          If nplachos& = 0 Then Exit Sub
+          
+             lonp = sky2.TextArray(skyp2(nplachos&, 2))
+             latp = sky2.TextArray(skyp2(nplachos&, 1))
+             'convert lon,lat to screen coordinates
+             
+             Call frmViewer.PlotGeoPoints(latp, lonp)
 
-         'now the vertical lines
-         For jMosaicX% = 1 To numMosaicX& + 1
-               For iMosaicY% = 1 To numMosaicY&
-                    iYMosaic = BegMosaicY + (iMosaicY% - 1) * MosaicStepy
-                    iXMosaic = BegMosaicX + (jMosaicX% - 1) * MosaicStepx
-  ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-                    lati = iYMosaic
-                    lons = iXMosaic
-                    Call ScreenToGeo(x, y, lons, lati, 2, ier%)
-                    xo = x
-                    yo = y
-                    lat2 = lati + MosaicStepy
-                    lons2 = lons '+ MosaicStepx
-                    Call ScreenToGeo(x, y, lons2, lat2, 2, ier%)
-                    mapPictureform.mapPicture.Line (xo, yo)-(x, y), QBColor(1)
-                     
-                Next iMosaicY%
-         Next jMosaicX%
-
-         End If
+        Next j&
+          
+          
+          
+        End If
+        
+        
     
     PlotSearchPoints = True
     
     SearchVis = True
 
-Call BringWindowToTop(mapsearchfm.hwnd)
+Call BringWindowToTop(mapsearchfm.hWnd)
 
    On Error GoTo 0
    Exit Sub
@@ -1754,14 +1791,14 @@ Private Sub cmdReLoad_Click()
          mRows& = mRows& + 1
       Loop
       Close #savfil%
-      sky2.Rows = mRows& + 1
+      sky2.rows = mRows& + 1
       
       sky2.Clear
       savfil% = FreeFile
       Open drivjk_c$ & "mappoints.sav" For Input As #savfil%
       i& = 1
       Do Until EOF(savfil%)
-         If i& > sky2.Rows - 1 Then Exit Do
+         If i& > sky2.rows - 1 Then Exit Do
          Input #savfil%, savlat, savlon, savhgt, savdis
          sky2.TextArray(skyp2(i&, 0)) = i&
          sky2.TextArray(skyp2(i&, 1)) = savlat
@@ -1938,7 +1975,7 @@ Private Sub cmdSaveAll_Click()
    
    'new interface 061422 //////////////////////////////////////////////
    
-   ret = SetWindowPos(mapsearchfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   ret = SetWindowPos(mapsearchfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 
    frmMsgBox.MsgCstm "Do you want to append these points to the former list?", "Saving search results", mbQuestion, 1, False, _
                      "Yes, append", "No, start a new list", "Cancel"
@@ -1981,7 +2018,7 @@ Private Sub cmdSaveAll_Click()
             Exit Sub
    End Select
 
-   For i& = 1 To sky2.Rows - 1
+   For i& = 1 To sky2.rows - 1
        
      'save the highlighted item's coordinates into the temporary buffer
      savlat = sky2.TextArray(skyp2(i&, 1))
@@ -2013,7 +2050,7 @@ Private Sub cmdSaveAll_Click()
               worldmove = False
               End If
            Skycoord% = 0
-           Call BringWindowToTop(mapsearchfm.hwnd)
+           Call BringWindowToTop(mapsearchfm.hWnd)
            response = MsgBox("Record this point in the buffer?", _
                        vbQuestion + vbYesNoCancel, "Maps & More")
            If response = vbYes Then
@@ -2143,7 +2180,7 @@ End Sub
 
 Private Sub Command1_Click()
    'perform search
-   Dim Dist As Double
+   Dim dist As Double
    Dim cosang As Double
    Dim numpnts&
       
@@ -2173,8 +2210,8 @@ Private Sub Command1_Click()
    mapsearchfm.Width = 5490
    mapsearchfm.frmProg.Visible = True
    mapsearchfm.Refresh
-   mapsearchfm.progSearch.Min = 0
-   mapsearchfm.progSearch.value = 0
+   mapsearchfm.progsearch.Min = 0
+   mapsearchfm.progsearch.value = 0
    
    Screen.MousePointer = vbHourglass
    numheights = 0
@@ -2221,8 +2258,8 @@ Private Sub Command1_Click()
         'Example 45° latitude and 1 arc second: cos(45) * 30.866666667 = 0.7071067811865476 * 30.866666667 = 21.82602931286047
         'Example 60° latitude and 1 arc second: cos(60) * 30.866666667 = 0.5000000000000001 * 30.866666667 = 15.433333333500004
       If SearchType% = 0 Then 'simple search
-            ydegkm = 180 / (pi * 6371.315)   'degrees per km latitude
-            xdegkm = 180 / (pi * 6371.315 * Cos(cd * Val(Text1)))   'degrees per km longitude
+            ydegkm = 180 / (PI * 6371.315)   'degrees per km latitude
+            xdegkm = 180 / (PI * 6371.315 * Cos(cd * Val(Text1)))   'degrees per km longitude
             If (Text3 < 1) Then ydegkm = xdegkm 'for a small search radius, use the same step size for x and y
             y11 = Val(Text1) - Val(Text3) * ydegkm '- del * ydegkm 'move beyond the borders by del
             y12 = Val(Text1) + Val(Text3) * ydegkm '+ del * ydegkm
@@ -2240,8 +2277,8 @@ Private Sub Command1_Click()
             ReDim searchhgts(3, Val(Text4) + 1)
         
       ElseIf SearchType% = 1 Then 'mosaic search
-            ydegkm = 180 / (pi * 6371.315) 'degrees per km latitude
-            xdegkm = 180 / (pi * 6371.315 * Cos(cd * Val(Text1))) 'degrees per km longitude
+            ydegkm = 180 / (PI * 6371.315) 'degrees per km latitude
+            xdegkm = 180 / (PI * 6371.315 * Cos(cd * Val(Text1))) 'degrees per km longitude
             MosaicStepx = Val(txtMosaic.Text) * xdegkm '= mosaic x size in degrees
             MosaicStepy = Val(txtMosaic.Text) * ydegkm '= mosaic y size in degrees
             BegMosaicY = Val(Text1) - Val(Text3) * ydegkm  '= beginning of mosaic search in y = center lat - search radius
@@ -2314,7 +2351,7 @@ Private Sub Command1_Click()
             numsearchpnts& = numMosaic& * numSearchX& * numSearchY&
             End If
         End If
-   mapsearchfm.progSearch.Max = numsearchpnts&
+   mapsearchfm.progsearch.Max = numsearchpnts&
    
    nn& = 0
    numMos& = 0
@@ -2351,7 +2388,7 @@ Private Sub Command1_Click()
                       numSearchX& = 2 * (x12 - x11) / (xdegkm * Val(txtStep.Text))
                       numSearchY& = 2 * (y12 - y11) / (ydegkm * Val(txtStep.Text))
                       numsearchpnts& = numSearchX& * numSearchY&
-                      mapsearchfm.progSearch.Max = numsearchpnts&
+                      mapsearchfm.progsearch.Max = numsearchpnts&
                  
                       ReDim searchhgts(3, Val(Text4) + 1)
                       End If
@@ -2369,10 +2406,10 @@ Private Sub Command1_Click()
                                  If CancelSearch Then GoTo sr500
                                  If world = True Then
                             '           dist = Sqr(((kmxs - Val(Text2)) / xdegkm) ^ 2 + ((kmys - Val(Text1)) / ydegkm) ^ 2)
-                                       X1 = Cos(Val(Text1) * cd) * Cos(Val(Text2) * cd)
-                                       X2 = Cos(kmys * cd) * Cos(kmxs * cd)
-                                       Y1 = Cos(Val(Text1) * cd) * Sin(Val(Text2) * cd)
-                                       Y2 = Cos(kmys * cd) * Sin(kmxs * cd)
+                                       x1 = Cos(Val(Text1) * cd) * Cos(Val(Text2) * cd)
+                                       x2 = Cos(kmys * cd) * Cos(kmxs * cd)
+                                       y1 = Cos(Val(Text1) * cd) * Sin(Val(Text2) * cd)
+                                       y2 = Cos(kmys * cd) * Sin(kmxs * cd)
                                        Z1 = Sin(Val(Text1) * cd)
                                        Z2 = Sin(kmys * cd)
                                        'this is a calculation of
@@ -2382,21 +2419,21 @@ Private Sub Command1_Click()
                                        'this is considerably smaller than the straight line distance
                                        'for large distances.  To calculate that distance you
                                        'need to use the CrossSection option
-                                        cosang = X1 * X2 + Y1 * Y2 + Z1 * Z2
+                                        cosang = x1 * x2 + y1 * y2 + Z1 * Z2
                             
                                         If Abs(cosang - 1) > 0.000000001 Then
-                                            Dist = 6371.315 * DACOS(cosang)
+                                            dist = 6371.315 * DACOS(cosang)
                                         Else
-                                            Dist = 0
-                                            Dist = 6371.315 * Sqr((X1 - X2) ^ 2 + (Y1 - Y2) ^ 2)
+                                            dist = 0
+                                            dist = 6371.315 * Sqr((x1 - x2) ^ 2 + (y1 - y2) ^ 2)
                                             End If
                                       
-                                         DistCenter = Dist
+                                         DistCenter = dist
                                          
                                          If SearchType% = 1 And chkRectSearch.value = vbChecked Then ''square search region
                                                 'kmxs and kmys are within the mosaic by definition
                                                 'record distance from center
-                                                Dist = 0 'flag to include
+                                                dist = 0 'flag to include
                                                 End If
                                                 
 '                                         '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -2408,14 +2445,14 @@ Private Sub Command1_Click()
 '                                         ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
                                Else
-                                      Dist = 0.0005 * Sqr((kmxs - Val(Text2)) ^ 2 + (kmys - Val(Text1)) ^ 2)
-                                      DistCenter = Dist
+                                      dist = 0.0005 * Sqr((kmxs - Val(Text2)) ^ 2 + (kmys - Val(Text1)) ^ 2)
+                                      DistCenter = dist
                                      If SearchType% = 1 And chkRectSearch.value = vbChecked Then 'square search region
-                                           Dist = 0 'flag to include
+                                           dist = 0 'flag to include
                                            End If
                                       End If
                                         
-                               If Dist <= Val(Text3) Then '/ 2# Then  'within the search radius ' this is wrong
+                               If dist <= Val(Text3) Then '/ 2# Then  'within the search radius ' this is wrong
                                     If init = 0 Then
                                          numpnts& = numpnts& + 1
                                          End If
@@ -2525,10 +2562,10 @@ sr250:
                              nn& = nn& + 1
                              newCaption$ = "Searching...  " & Trim$(Str$(CInt((nn& / numsearchpnts&) * 100))) & " % complete"
                              If newCaption$ <> mapsearchfm.Caption Then mapsearchfm.Caption = newCaption$
-                             If nn& >= mapsearchfm.progSearch.Max Then
+                             If nn& >= mapsearchfm.progsearch.Max Then
                                   GoTo sr300
                                   End If
-                             mapsearchfm.progSearch.value = nn&
+                             mapsearchfm.progsearch.value = nn&
 sr300:
                    Next i_kmx&
             Next i_kmy&
@@ -2678,10 +2715,10 @@ sr300:
                 'determine distance between high places
                 If world = True Then
           '            dist = Sqr(((kmxs - Val(Text2)) / xdegkm) ^ 2 + ((kmys - Val(Text1)) / ydegkm) ^ 2)
-                       X1 = Cos(searchhgts(0, ipromity&) * cd) * Cos(searchhgts(0, ipromity&) * cd)
-                       X2 = Cos(searchhgts(0, numpnts&) * cd) * Cos(searchhgts(1, numpnts&) * cd)
-                       Y1 = Cos(searchhgts(0, ipromity&) * cd) * Sin(searchhgts(0, ipromity&) * cd)
-                       Y2 = Cos(searchhgts(0, numpnts&) * cd) * Sin(searchhgts(1, numpnts&) * cd)
+                       x1 = Cos(searchhgts(0, ipromity&) * cd) * Cos(searchhgts(0, ipromity&) * cd)
+                       x2 = Cos(searchhgts(0, numpnts&) * cd) * Cos(searchhgts(1, numpnts&) * cd)
+                       y1 = Cos(searchhgts(0, ipromity&) * cd) * Sin(searchhgts(0, ipromity&) * cd)
+                       y2 = Cos(searchhgts(0, numpnts&) * cd) * Sin(searchhgts(1, numpnts&) * cd)
                        Z1 = Sin(searchhgts(0, ipromity&) * cd)
                        Z2 = Sin(searchhgts(0, numpnts&) * cd)
                        'this is a calculation of
@@ -2691,20 +2728,20 @@ sr300:
                        'this is considerably smaller than the straight line distance
                        'for large distances.  To calculate that distance you
                        'need to use the CrossSection option
-                       cosang = X1 * X2 + Y1 * Y2 + Z1 * Z2
+                       cosang = x1 * x2 + y1 * y2 + Z1 * Z2
           '             RE = EllipRad(CDbl(searchhgts(0, numpnts&)))
           
                        If Abs(cosang - 1) > 0.000000001 Then
-                            Dist = 6371.315 * DACOS(cosang)
+                            dist = 6371.315 * DACOS(cosang)
                        Else
-                            Dist = 0
-                            Dist = 6371.315 * Sqr((X1 - X2) ^ 2 + (Y1 - Y2) ^ 2)
+                            dist = 0
+                            dist = 6371.315 * Sqr((x1 - x2) ^ 2 + (y1 - y2) ^ 2)
                            End If
                     Else
                           'distance in kilometers
-                          Dist = 0.001 * Sqr((searchhgts(1, numpnts&) - searchhgts(1, ipromity&)) ^ 2 + (searchhgts(0, numpnts&) - searchhgts(0, ipromity&)) ^ 2)
+                          dist = 0.001 * Sqr((searchhgts(1, numpnts&) - searchhgts(1, ipromity&)) ^ 2 + (searchhgts(0, numpnts&) - searchhgts(0, ipromity&)) ^ 2)
                           End If
-                    If Dist < 0.25 * Val(txtMosaic.Text) Then
+                    If dist < 0.25 * Val(txtMosaic.Text) Then
                           If searchhgts(2, numpnts&) > searchhgts(2, ipromity&) Then
                               'remove previous points by switching
                               searchhgts(0, ipromity&) = searchhgts(0, numpnts&)
@@ -3043,7 +3080,7 @@ sr500:
    'or form highest to lowest elevation
    'and place them into Flex-Grid
     If SearchType% = 0 Then numpnts& = numSlots&
-    sky2.Rows = numpnts& + 2 '1 'Val(Text4) + 1
+    sky2.rows = numpnts& + 2 '1 'Val(Text4) + 1
     If world = True Then
         For i& = 0 To numpnts& '- 1 'Val(Text4)
             
@@ -3156,7 +3193,7 @@ sr650:
     'highlight first row
     sky2.SelectionMode = flexSelectionByRow
     sky2.HighLight = flexHighlightWithFocus
-    If sky2.Rows > 1 Then sky2.row = 1
+    If sky2.rows > 1 Then sky2.row = 1
     
     'reclaim memory
     ReDim searchhgts(0, 0)
@@ -3172,7 +3209,7 @@ Command1_Click_Error:
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Command1_Click of Form mapsearchfm"
 End Sub
 Function skyp2(row As Long, col As Integer) As Long
-     skyp2 = row * sky2.Cols + col
+     skyp2 = row * sky2.cols + col
 End Function
 
 Private Sub Command10_Click()
@@ -3191,7 +3228,7 @@ Private Sub Command10_Click()
    viewsearch = False
 '   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    BringWindowToTop (OverhWnd)
-   Call BringWindowToTop(mapsearchfm.hwnd)
+   Call BringWindowToTop(mapsearchfm.hWnd)
 End Sub
 
 Private Sub Command11_Click()
@@ -3262,7 +3299,7 @@ Private Sub Command12_Click()
       Maps.Text6.Text = sky2.TextArray(skyp2(nplachos&, 1)) 'latitude
       Maps.Text5.Text = sky2.TextArray(skyp2(nplachos&, 2)) 'longitude
       Call goto_click
-      Call BringWindowToTop(mapsearchfm.hwnd)
+      Call BringWindowToTop(mapsearchfm.hWnd)
       OverhWnd = FindWindow(vbNullString, "Overview")
       If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
       End If
@@ -3272,7 +3309,7 @@ Private Sub Command13_Click()
     Maps.Text6.Text = Text1.Text
     Maps.Text5.Text = Text2.Text
     Call goto_click
-    Call BringWindowToTop(mapsearchfm.hwnd)
+    Call BringWindowToTop(mapsearchfm.hWnd)
     OverhWnd = FindWindow(vbNullString, "Overview")
 '    If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 End Sub
@@ -3290,12 +3327,12 @@ Private Sub Command14_Click()
   CommonDialog1.Filter = "cities.bat files (*.bat)|*.bat|"
   CommonDialog1.FilterIndex = 1
   If world = True Then
-     CommonDialog1.FileName = drivcities$ + "eros\*.bat"
+     CommonDialog1.fileName = drivcities$ + "eros\*.bat"
   Else
-     CommonDialog1.FileName = drivcities$ + "*.bat"
+     CommonDialog1.fileName = drivcities$ + "*.bat"
      End If
   CommonDialog1.ShowOpen
-  batfile$ = CommonDialog1.FileName
+  batfile$ = CommonDialog1.fileName
   
   'determine number of rows
   numRows& = 0
@@ -3306,7 +3343,7 @@ Private Sub Command14_Click()
      Line Input #openfilnum%, doclin$
      numRows& = numRows& + 1
   Loop
-  sky2.Rows = numRows& + 1
+  sky2.rows = numRows& + 1
   
   If world = False Then
      sky2.FormatString = "^Point # |^    ITMx           |^    ITMy            |^ height(m)  |^distance(km)"
@@ -3361,7 +3398,7 @@ Private Sub Command15_Click()
       For i% = 0 To nncity%
          If Combo1.Text = subcitnams(i%) Then
             Beep
-            ret = SetWindowPos(mapsearchfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+            ret = SetWindowPos(mapsearchfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
             'lResult = FindWindow(vbNullString, mapsearchfm.hWnd)
             'Call BringWindowToTop(lResult)
             response = MsgBox("Neighborhood has already been recorded, do you wan't to overwrite?", vbExclamation + vbYesNo, "Maps & More Warning")
@@ -3369,13 +3406,13 @@ Private Sub Command15_Click()
 '               ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
                BringWindowToTop (OverhWnd)
-               BringWindowToTop (mapPictureform.hwnd)
+               BringWindowToTop (mapPictureform.hWnd)
                Exit Sub
             Else
 '               ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '               ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
                BringWindowToTop (OverhWnd)
-               BringWindowToTop (mapPictureform.hwnd)
+               BringWindowToTop (mapPictureform.hWnd)
                Exit For
                End If
             End If
@@ -3488,30 +3525,32 @@ Private Sub Command2_Click()
 End Sub
 
 Private Sub dosort()
-   If sky2.Rows > 2 Then
+   If sky2.rows > 2 Then
     sky2.row = 1
     If HeightSort Then 'sort descending by height
        sky2.col = 3
        sky2.ColSel = 3
-       sky2.RowSel = sky2.Rows - 1
+       sky2.RowSel = sky2.rows - 1
        sky2.Sort = 2 'generic descending
     Else 'sort ascending by distance
        sky2.col = 4
        sky2.ColSel = 4
-       sky2.RowSel = sky2.Rows - 1
+       sky2.RowSel = sky2.rows - 1
        sky2.Sort = 1 'generic ascending
        End If
     End If
 End Sub
 
 Private Sub cmdClear_Click()
-   If mapsearchfm.sky2.Rows > 0 Then
+   If mapsearchfm.sky2.rows > 0 Then
       resp = MsgBox("Clear the search results and buffer?", vbQuestion + vbYesNo, "Maps&More")
       If resp = vbYes Then
          sky2.Clear
-         If SearchVis Then
+         If SearchVis And Not ViewerVis Then
             SearchVis = False
             blitpictures
+         ElseIf ViewerVis Then
+            frmViewer.RedrawView 'redraw the map to clear it of plotted search results
             End If
          End If
       End If
@@ -3549,7 +3588,7 @@ Private Sub Command5_Click()
    viewsearch = False
 '   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    BringWindowToTop (OverhWnd)
-   Call BringWindowToTop(mapsearchfm.hwnd)
+   Call BringWindowToTop(mapsearchfm.hWnd)
 End Sub
 
 Private Sub Command6_Click()
@@ -3563,7 +3602,7 @@ Private Sub Command6_Click()
    viewsearch = False
 '   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    BringWindowToTop (OverhWnd)
-   Call BringWindowToTop(mapsearchfm.hwnd)
+   Call BringWindowToTop(mapsearchfm.hWnd)
 End Sub
 
 Private Sub Command7_Click()
@@ -3654,7 +3693,7 @@ Private Sub Command8_Click()
            frmMap.Command2.value = True
            
            Call goto_click
-           Call BringWindowToTop(mapsearchfm.hwnd)
+           Call BringWindowToTop(mapsearchfm.hWnd)
            OverhWnd = FindWindow(vbNullString, "Map")
 '           If OverhWnd <> 0 Then BringWindowToTop (OverhWnd) 'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
            End If
@@ -3679,7 +3718,7 @@ Private Sub Command9_Click()
    viewsearch = False
 '   ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    BringWindowToTop (overhtwnd)
-   Call BringWindowToTop(mapsearchfm.hwnd)
+   Call BringWindowToTop(mapsearchfm.hWnd)
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -3701,12 +3740,12 @@ Private Sub CommandC_Click()
   CommonDialog1.Filter = "cities.bat files (*.bat)|*.bat|"
   CommonDialog1.FilterIndex = 1
   If world = True Then
-     CommonDialog1.FileName = drivcities$ + "eros\*.bat"
+     CommonDialog1.fileName = drivcities$ + "eros\*.bat"
   Else
-     CommonDialog1.FileName = drivcities$ + "*.bat"
+     CommonDialog1.fileName = drivcities$ + "*.bat"
      End If
   CommonDialog1.ShowOpen
-  batfile$ = CommonDialog1.FileName
+  batfile$ = CommonDialog1.fileName
   OriginalBatFile$ = batfile$
   
   RepairDirectory$ = Mid$(batfile$, 1, Len(batfile$) - 8)
@@ -3781,12 +3820,12 @@ Private Sub CommandFix_Click()
   CommonDialog1.Filter = "cities.bat files (*.bat)|*.bat|"
   CommonDialog1.FilterIndex = 1
   If world = True Then
-     CommonDialog1.FileName = drivcities$ + "eros\*.bat"
+     CommonDialog1.fileName = drivcities$ + "eros\*.bat"
   Else
-     CommonDialog1.FileName = drivcities$ + "*.bat"
+     CommonDialog1.fileName = drivcities$ + "*.bat"
      End If
   CommonDialog1.ShowOpen
-  batfile$ = CommonDialog1.FileName
+  batfile$ = CommonDialog1.fileName
   OriginalBatFile$ = batfile$
   
   'clear buffers
@@ -3926,7 +3965,7 @@ nextloop:
   Loop
   'remove one row for the version line
   numRows& = numRows& - 1
-  sky2.Rows = numRows& + 1
+  sky2.rows = numRows& + 1
   
   If world = False Then
      sky2.FormatString = "^Point # |^    ITMx           |^    ITMy            |^ height(m)  |^distance(km)"
@@ -4098,7 +4137,7 @@ nextloop:
            Print #Lognumber%, ii&
            Close #Lognumber%
            
-           Call BringWindowToTop(mapsearchfm.hwnd)
+           Call BringWindowToTop(mapsearchfm.hWnd)
            End If
         End If
 resume999:
@@ -4211,7 +4250,7 @@ Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     OverhWnd = FindWindow(vbNullString, "Overview")
     If OverhWnd = 0 Then
 '       ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-       BringWindowToTop (mapPictureform.hwnd)
+       BringWindowToTop (mapPictureform.hWnd)
        End If
     If world = False Then
       lResult = FindWindow(vbNullString, terranam$)
@@ -4356,7 +4395,7 @@ Private Sub sky2_DblClick()
 '            ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
             BringWindowToTop (OverhWnd)
 '            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            BringWindowToTop (mapPictureform.hwnd)
+            BringWindowToTop (mapPictureform.hWnd)
             'Call BringWindowToTop(OverhWnd)
             dx1 = -1000 '-30 '30
             dy1 = -1000 '-240 '60
@@ -4377,18 +4416,24 @@ Private Sub sky2_DblClick()
             Call mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0) 'move mouse to Location item
             Call mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0) 'move mouse to Location item
 '            ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-            BringWindowToTop (mapsearchfm.hwnd)
+            BringWindowToTop (mapsearchfm.hWnd)
             waitime = Timer + 2
             Do Until Timer > waitime
                DoEvents
             Loop
-            Call BringWindowToTop(mapsearchfm.hwnd)
+            Call BringWindowToTop(mapsearchfm.hWnd)
             Exit Sub
             End If
          End If
      worldmove = True
      lon = sky2.TextArray(skyp2(nplachos&, 2))
      lat = sky2.TextArray(skyp2(nplachos&, 1))
+     hgt = sky2.TextArray(skyp2(nplachos&, 3))
+     If ViewerVis Then
+        Maps.Text5.Text = lon
+        Maps.Text6.Text = lat
+        Maps.Text7.Text = hgt
+        End If
      'Call form_queryunload(i%, j%)
      Call goto_click
      jumpworld = False
@@ -4398,7 +4443,7 @@ Private Sub sky2_DblClick()
      'Call BringWindowToTop(OverhWnd)
      'ret = SetWindowPos(OverhWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
      'ret = SetWindowPos(mapsearchfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-     Call BringWindowToTop(mapsearchfm.hwnd)
+     Call BringWindowToTop(mapsearchfm.hWnd)
      Exit Sub
      End If
   'Call form_queryunload(i%, j%)
@@ -4407,7 +4452,7 @@ Private Sub sky2_DblClick()
   worldmove = False
   skymove = False
   Skycoord% = 0
-  Call BringWindowToTop(mapsearchfm.hwnd)
+  Call BringWindowToTop(mapsearchfm.hWnd)
 End Sub
 
 '---------------------------------------------------------------------------------------
@@ -4450,7 +4495,7 @@ Sub RunOnAutomatic()
 
    'New interface
 '   ret = SetWindowPos(mapsearchfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-   BringWindowToTop (mapsearchfm.hwnd)
+   BringWindowToTop (mapsearchfm.hWnd)
    
    frmMsgBox.MsgCstm "Click sunrise or sunset horizon profile buttons:", "Horizon calculations", mbInformation, 1, False, _
                      "Sunrise profiles", "Sunset profiles", "Cancel"
@@ -4586,12 +4631,20 @@ uoa100:
    lon = savlon
    lat = savlat
    worldmove = True
+   If ViewerVis Then
+      Maps.Text5.Text = lon
+      Maps.Text6.Text = lat
+      If Not noheights Then
+         Call WorldHeights(lon, lt, hgt)
+         Maps.Text7.Text = hgt
+         End If
+      End If
    Call goto_click
    jumpworld = False
    skymove = False
    worldmove = False
    Skycoord% = 0
-   Call BringWindowToTop(mapsearchfm.hwnd)
+   Call BringWindowToTop(mapsearchfm.hWnd)
    searchhgt = savhgt
    viewsearch = True
    Call sunrisesunset(sunmode%)

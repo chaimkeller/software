@@ -1,6 +1,6 @@
 Attribute VB_Name = "MapModule"
 '*****************Windows API functions, subroutines and constants*********
-Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Declare Function DefWindowProc Lib "user32" Alias "DefWindowProcA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 Public Const WM_GETTEXT = &HD
 Declare Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
 Public Const SM_CXSCREEN = 0
@@ -14,28 +14,28 @@ Public Const EWX_SHUTDOWN = 1
 Public Const WM_COMMAND = &H111
 Public Const WM_SETFOCUS = &H7
 Declare Function EnumWindows Lib "user32" (ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
-Declare Function PostMessage Lib "user32" Alias "PostMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+Declare Function PostMessage Lib "user32" Alias "PostMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
 Declare Function CopyFile Lib "kernel32" Alias "CopyFileA" (ByVal lpExistingFileName As String, ByVal lpNewFileName As String, ByVal bFailIfExists As Long) As Long
 'Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
 'Declare Function GetWindow Lib "user32" (ByVal hwnd As Long, ByVal wCmd As Long) As Long
 'Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (ByVal hwnd As Long, ByVal lpString As String) As Long
-Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
+Declare Function SetWindowPos Lib "user32" (ByVal hWnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
 Declare Function EnumChildWindows Lib "user32" (ByVal hWndParent As Long, ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
-Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hwnd As Long, ByVal lpString As String, ByVal cch As Long) As Long
+Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hWnd As Long, ByVal lpString As String, ByVal cch As Long) As Long
 Declare Function FindWindow Lib "user32" Alias "FindWindowA" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
-Declare Function MoveWindow Lib "user32" (ByVal hwnd As Long, ByVal x As Long, ByVal y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
-Declare Function BringWindowToTop Lib "user32" (ByVal hwnd As Long) As Long
+Declare Function MoveWindow Lib "user32" (ByVal hWnd As Long, ByVal x As Long, ByVal y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
+Declare Function BringWindowToTop Lib "user32" (ByVal hWnd As Long) As Long
 Declare Sub keybd_event Lib "user32" (ByVal bVk As Byte, ByVal bScan As Byte, ByVal dwFlags As Long, ByVal dwExtraInfo As Long)
-Declare Sub mouse_event Lib "user32" (ByVal dwFlags As Long, ByVal dX As Long, ByVal dY As Long, ByVal cButtons As Long, ByVal dwExtraInfo As Long)
+Declare Sub mouse_event Lib "user32" (ByVal dwFlags As Long, ByVal dx As Long, ByVal dy As Long, ByVal cButtons As Long, ByVal dwExtraInfo As Long)
 Declare Function CloseClipboard Lib "user32" () As Long
-Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
+Declare Function ShowWindow Lib "user32" (ByVal hWnd As Long, ByVal nCmdShow As Long) As Long
 Declare Function GetVersion Lib "kernel32" () As Long
 Declare Function WinExec Lib "kernel32" (ByVal lpCmdLine As String, ByVal nCmdShow As Long) As Long
 Declare Function ShellExecute _
                             Lib "shell32.dll" _
                             Alias "ShellExecuteA" ( _
-                            ByVal hwnd As Long, _
+                            ByVal hWnd As Long, _
                             ByVal lpOperation As String, _
                             ByVal lpFile As String, _
                             ByVal lpParameters As String, _
@@ -173,7 +173,7 @@ Public Const hgtobs As Double = 1.8
 
 '*********************program constants and parameters*************
 Public Const cd As Double = 1.74532927777778E-02 'conv deg to rad
-Public Const pi As Double = 3.14159265358979
+Public Const PI As Double = 3.14159265358979
 Public Const defaultmapwidth = 4206.93 'default width of map form
 Public Const defaultmapheight = 7086.3 'default height of map form
 Public Const defaultmaptop = 1480 'default top of map form
@@ -192,7 +192,7 @@ Public coordmode%, dragx, dragy, kmxc, kmyc, nplac%, Tdxname As String, MapLatCe
 Public X50c As Single, Y50c As Single, kmx50c, kmy50c, hgt50c, TdxhWnd As Long, SavedAll As Boolean
 Public X400c As Single, Y400c As Single, kmx400c, kmy400c, hgt400c, bn%(4)
 Public kmxorigin, kmyorigin, picold$(9), bufx(2, 4), bufy(2, 4), bufwi(2, 4), bufhi(2, 4)
-Public maphi, mapwi, maphi2, mapwi2, nhwnd As Long, tblbuttons%(30), FileEdit As Boolean
+Public maphi, mapwi, maphi2, mapwi2, nhwnd As Long, tblbuttons%(31), FileEdit As Boolean
 Public gotojump As Boolean, coordmode2%, mapxdif, mapydif, kmxcd, kmycd, newRootNum As Integer
 Public scrolling2 As Boolean, noheights As Boolean, dragbox As Boolean, MapFormatVis As Boolean
 Public drag1x As Single, drag1y As Single, drag2x As Single, drag2y As Single
@@ -239,7 +239,7 @@ Public AutoPress As Boolean, IsraelDTMsource%, OnlyExtractFile As Boolean, EastO
 Public CalculateProfile As Integer, SearchCrossSection As Boolean, SearchCrossObstruct As Boolean
 Public rderos2_use As Boolean, IgnoreTiles%, autoazirange%, NoCDWarning As Boolean, TemperatureModel%
 Public MainDir$, Turbo2cdDir$, USADir$, GEOTOPO30Dir$, D3ASDir$, SamplesDir$, D3dExplorerDir$, ErosCitiesDir$, BILDir$
-Public GlobalWarmingCorrection As Integer
+Public GlobalWarmingCorrection As Integer, MapPictureVis As Boolean, EditedCPPoints As Boolean, ViewerVis As Boolean
 
 '----------------GPS global constants------------------------
 Public Const MAX_PORT = 15 'maximum number of com ports to search
@@ -305,7 +305,7 @@ Private Declare Function SHGetPathFromIDList Lib "shell32" _
    
 'variables that define the imported map picture file
 Private Type MapInfos
-   name As String 'root name of the map picture file (i.e., without the path and extension)
+   Name As String 'root name of the map picture file (i.e., without the path and extension)
    type As Integer  'bmp = 0, gif = 1, jpg = 2
    xsize As Integer 'pixel x size of map
    ysize As Integer 'pixel y size of map
@@ -380,13 +380,13 @@ Public Sub heights(kmx, kmy, hgt2)
          'Call casgeo(kmx, kmy, lgh, lth)
 
          If ggpscorrection = True Then 'apply conversion from Clark geoid to WGS84
-            Dim N As Long
+            Dim n As Long
             Dim E As Long
             Dim lat As Double
             Dim lon As Double
-            N = kmy
+            n = kmy
             E = kmx
-            Call ics2wgs84(N, E, lat, lon)
+            Call ics2wgs84(n, E, lat, lon)
             lgh = lon
             lth = lat
             'Call casgeo(kmx, kmy, lgh, lth)
@@ -437,49 +437,49 @@ Public Sub casgeo(kmx, kmy, lg, lt)
 'converts ITM to geo using Clark geoid
         G1# = kmy - 1000000
         G2# = kmx
-        r# = 57.2957795131
-        B2# = 0.03246816
+        R# = 57.2957795131
+        b2# = 0.03246816
         f1# = 206264.806247096
         s1# = 126763.49
         S2# = 114242.75
         e4# = 0.006803480836
-        C1# = 0.0325600414007
-        C2# = 2.55240717534E-09
+        c1# = 0.0325600414007
+        c2# = 2.55240717534E-09
         c3# = 0.032338519783
-        X1# = 1170251.56
-        Y1# = 1126867.91
-        Y2# = G1#
+        x1# = 1170251.56
+        y1# = 1126867.91
+        y2# = G1#
 '       GN & GE
-        X2# = G2#
-        If (X2# > 700000#) Then GoTo ca5
-        X1# = X1# - 1000000#
-ca5:    If (Y2# > 550000#) Then GoTo ca10
-        Y1# = Y1# - 1000000#
-ca10:   X1# = X2# - X1#
-        Y1# = Y2# - Y1#
-        D1# = Y1# * B2# / 2#
+        x2# = G2#
+        If (x2# > 700000#) Then GoTo ca5
+        x1# = x1# - 1000000#
+ca5:    If (y2# > 550000#) Then GoTo ca10
+        y1# = y1# - 1000000#
+ca10:   x1# = x2# - x1#
+        y1# = y2# - y1#
+        D1# = y1# * b2# / 2#
         O1# = S2# + D1#
         O2# = O1# + D1#
-        A3# = O1# / f1#
+        a3# = O1# / f1#
         A4# = O2# / f1#
-        B3# = 1# - e4# * Sin(A3#) ^ 2#
-        B4# = B3# * Sqr(B3#) * C1#
+        b3# = 1# - e4# * Sin(a3#) ^ 2#
+        B4# = b3# * Sqr(b3#) * c1#
         C4# = 1# - e4# * Sin(A4#) ^ 2#
-        C5# = Tan(A4#) * C2# * C4# ^ 2#
-        C6# = C5# * X1# ^ 2#
-        D2# = Y1# * B4# - C6#
+        C5# = Tan(A4#) * c2# * C4# ^ 2#
+        C6# = C5# * x1# ^ 2#
+        D2# = y1# * B4# - C6#
         C6# = C6# / 3#
 'LAT
         l1# = (S2# + D2#) / f1#
         R3# = O2# - C6#
         R4# = R3# - C6#
         R2# = R4# / f1#
-        A2# = 1# - e4# * Sin(l1#) ^ 2#
-        lt = r# * (l1#)
-        A5# = Sqr(A2#) * c3#
-        d3# = X1# * A5# / Cos(R2#)
+        a2# = 1# - e4# * Sin(l1#) ^ 2#
+        lt = R# * (l1#)
+        A5# = Sqr(a2#) * c3#
+        d3# = x1# * A5# / Cos(R2#)
 ' LON
-        lg = r# * ((s1# + d3#) / f1#)
+        lg = R# * ((s1# + d3#) / f1#)
 '       THIS IS THE EASTERN HEMISPHERE!
         lg = -lg
         If ggpscorrection = True Then
@@ -493,12 +493,12 @@ End Sub
 
 Public Sub GEOUTM(L11, L22, Z%, G1, G2)
 '      INTRINSIC SIN, COS, SQR
-       Dim a As Double, A0 As Double, A1 As Double, A2 As Double
-       Dim A3 As Double, A4 As Double, A5 As Double, l2 As Double
-       Dim b As Double, B0 As Double, B1 As Double, c As Double
-       Dim C1 As Double, D As Double, E As Double, l1 As Double
-       Dim L0 As Double, p As Double, r As Double, s1 As Double
-       Dim T1 As Double, T2 As Double, T3 As Double, X1 As Double
+       Dim a As Double, A0 As Double, a1 As Double, a2 As Double
+       Dim a3 As Double, A4 As Double, A5 As Double, l2 As Double
+       Dim b As Double, B0 As Double, b1 As Double, c As Double
+       Dim c1 As Double, D As Double, E As Double, l1 As Double
+       Dim L0 As Double, p As Double, R As Double, s1 As Double
+       Dim T1 As Double, T2 As Double, T3 As Double, x1 As Double
 
       l1 = L11
       l2 = -L22
@@ -512,28 +512,28 @@ Public Sub GEOUTM(L11, L22, Z%, G1, G2)
       D = 2.10868032448E-08
       E0 = 3.99957158294E-11
       f = 7.25992839731E-14
-      r = 57.2957795131
+      R = 57.2957795131
 '    UTM Zones begin at the International Date Line (180 West and proceed
 '     east in 6 increments.
 '     The Central Meridian = -180+(Z%-1)*6+3
       Z% = Int((l2 + 180#) / 6#) + 1
 5     L0 = l2 - (-180 + (Z% - 1) * 6 + 3)
-      s1 = Sin(l1 / r)
-      C1 = Cos(l1 / r)
-      T1 = s1 / C1
-      T2 = E * C1 ^ 2
-      B1 = A0 * (l1 / r) - B0 / 2# * Sin(2# * l1 / r) + c / 4# * Sin(4# * l1 / r) - D / 6# * Sin(6# * l1 _
-      / r) + E0 / 8# * Sin(8# * l1 / r) - f / 10# * Sin(10# * l1 / r)
-      B1 = B1 * a * (1# - p)
-      X1 = a / Sqr(1# - p * s1 ^ 2)
-      A1 = 1# / r * X1 * C1
+      s1 = Sin(l1 / R)
+      c1 = Cos(l1 / R)
+      T1 = s1 / c1
+      T2 = E * c1 ^ 2
+      b1 = A0 * (l1 / R) - B0 / 2# * Sin(2# * l1 / R) + c / 4# * Sin(4# * l1 / R) - D / 6# * Sin(6# * l1 _
+      / R) + E0 / 8# * Sin(8# * l1 / R) - f / 10# * Sin(10# * l1 / R)
+      b1 = b1 * a * (1# - p)
+      x1 = a / Sqr(1# - p * s1 ^ 2)
+      a1 = 1# / R * x1 * c1
       T3 = T1 ^ 2
-      A2 = 1# / 2# * X1 * C1 ^ 2 * T1 / r ^ 2
-      A3 = 1# / 6# * X1 * C1 ^ 3 * (1# - T3 + T2) / r ^ 3
-      A4 = 1# / 24# * X1 * C1 ^ 4 * T1 * (5# - T3 + 9# * T2 + 4 * T2 ^ 2) / r ^ 4
-      A5 = 1# / 120# * X1 * C1 ^ 5 * (5# - 18# * T3 + T1 ^ 4 + 14# * T2 - 58# * T3 * T2) / r ^ 5
-      G1 = B1 + A2 * L0 ^ 2 + A4 * L0 ^ 4
-      G2 = 500000# + A1 * L0 + A3 * L0 ^ 3 + A5 * L0 ^ 5
+      a2 = 1# / 2# * x1 * c1 ^ 2 * T1 / R ^ 2
+      a3 = 1# / 6# * x1 * c1 ^ 3 * (1# - T3 + T2) / R ^ 3
+      A4 = 1# / 24# * x1 * c1 ^ 4 * T1 * (5# - T3 + 9# * T2 + 4 * T2 ^ 2) / R ^ 4
+      A5 = 1# / 120# * x1 * c1 ^ 5 * (5# - 18# * T3 + T1 ^ 4 + 14# * T2 - 58# * T3 * T2) / R ^ 5
+      G1 = b1 + a2 * L0 ^ 2 + A4 * L0 ^ 4
+      G2 = 500000# + a1 * L0 + a3 * L0 ^ 3 + A5 * L0 ^ 5
 End Sub
 
 
@@ -606,12 +606,12 @@ End Sub
 
 
 Public Sub UTMGEO(G11, G22, Z11, L11, L22)
-      Dim a As Double, A0 As Double, b As Double, B1 As Double, B2 As Double
-      Dim B3 As Double, B4 As Double, B5 As Double, c As Double, C1 As Double
+      Dim a As Double, A0 As Double, b As Double, b1 As Double, b2 As Double
+      Dim b3 As Double, B4 As Double, B5 As Double, c As Double, c1 As Double
       Dim D As Double, D1 As Double, E As Double, E0 As Double, EP As Double
       Dim f As Double, G0 As Double, G1 As Double, G2 As Double, l1 As Double
-      Dim l2 As Double, p As Double, r As Double, s1 As Double, T1 As Double
-      Dim T2 As Double, T3 As Double, X1 As Double
+      Dim l2 As Double, p As Double, R As Double, s1 As Double, T1 As Double
+      Dim T2 As Double, T3 As Double, x1 As Double
       Dim Z As Integer, M As Integer
       Z = Z11
       G1 = G11
@@ -626,35 +626,35 @@ Public Sub UTMGEO(G11, G22, Z11, L11, L22)
       D = 2.10868032448E-08
       E0 = 3.99957158294E-11
       f = 7.25992839731E-14
-      r = 57.2957795131
+      R = 57.2957795131
       EP = 0.001
       G0 = G2 - 500000#
       M = 0
       l1 = (2# * G1) / (a + b)
 '    ROUTINE POLY
 5     s1 = Sin(l1)
-      C1 = Cos(l1)
-      T1 = s1 / C1
-      T2 = E * C1 ^ 2
-      B1 = A0 * (l1) - B0 / 2# * Sin(2# * l1) + c / 4# * Sin(4# * l1) - D / 6# * Sin(6# * l1) + _
+      c1 = Cos(l1)
+      T1 = s1 / c1
+      T2 = E * c1 ^ 2
+      b1 = A0 * (l1) - B0 / 2# * Sin(2# * l1) + c / 4# * Sin(4# * l1) - D / 6# * Sin(6# * l1) + _
            E0 / 8# * Sin(8# * l1) - f / 10# * Sin(10# * l1)
-      B1 = B1 * a * (1# - p)
-      X1 = a / Sqr(1# - p * s1 ^ 2)
+      b1 = b1 * a * (1# - p)
+      x1 = a / Sqr(1# - p * s1 ^ 2)
 '     END ROUTINE POLY
-      D1 = G1 - B1
+      D1 = G1 - b1
       If (M = 0) Then GoTo 10
       If (Abs(D1) < EP) Then GoTo 15
 10    l1 = l1 + (2# * D1 / (a + b))
       M = M + 1
       GoTo 5
-15    B1 = 1# / (X1 * C1)
+15    b1 = 1# / (x1 * c1)
       T3 = T1 ^ 2
-      B2 = -(T1 * (1# + T2) / (2# * X1 ^ 2))
-      B3 = -(1# / (6# * X1 ^ 3 * C1) * (1# + 2 * T3 + T2))
-      B4 = T1 / (24# * X1 ^ 4) * (5# - 3# * T3 + 7# * T2)
-      B5 = 1# / (120# * X1 ^ 5 * C1) * (5# + 28# * T3 + 24# * T1 ^ 4)
-      l1 = r * (l1 + (B2 * G0 ^ 2 + B4 * G0 ^ 4))
-      l2 = r * (B1 * G0 + B3 * G0 ^ 3 + B5 * G0 ^ 5) + Z
+      b2 = -(T1 * (1# + T2) / (2# * x1 ^ 2))
+      b3 = -(1# / (6# * x1 ^ 3 * c1) * (1# + 2 * T3 + T2))
+      B4 = T1 / (24# * x1 ^ 4) * (5# - 3# * T3 + 7# * T2)
+      B5 = 1# / (120# * x1 ^ 5 * c1) * (5# + 28# * T3 + 24# * T1 ^ 4)
+      l1 = R * (l1 + (b2 * G0 ^ 2 + B4 * G0 ^ 4))
+      l2 = R * (b1 * G0 + b3 * G0 ^ 3 + B5 * G0 ^ 5) + Z
       L11 = l1
       L22 = l2
 End Sub
@@ -834,15 +834,15 @@ Public Function EnumFunc2(ByVal hWndChild As Long, ByVal lParam As Long) As Bool
       End If
    EnumFunc2 = True 'continue searching
 End Function
-Function EnumWndProc(ByVal hwnd As Long, lParam As Long) As Long    ' Increment count    lParam = lParam + 1    ' Get window title and insert into ListBox    Dim s As String    s = WindowTextFromWnd(hWnd)    If s <> sEmpty Then        lstEnumRef.AddItem s
+Function EnumWndProc(ByVal hWnd As Long, lParam As Long) As Long    ' Increment count    lParam = lParam + 1    ' Get window title and insert into ListBox    Dim s As String    s = WindowTextFromWnd(hWnd)    If s <> sEmpty Then        lstEnumRef.AddItem s
     ' Get 3D Explorer window title
     Dim s As String
     s = String(255, 0)
-    size = GetWindowText(hwnd, s, Len(s))
+    size = GetWindowText(hWnd, s, Len(s))
     s = Left$(s, size)
     If Mid$(s, 1, 6) = "3DXUSA" Then
        Tdxname = s
-       TdxhWnd = hwnd
+       TdxhWnd = hWnd
        EnumWndProc = False 'Return False to stop enumerating
        Exit Function
     Else
@@ -1010,7 +1010,7 @@ gtopo:
       If myfile = sEmpty Then
          mapEROSDTMwarn.Visible = True
 '         ret = SetWindowPos(mapEROSDTMwarn.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-         BringWindowToTop (mapEROSDTMwarn.hwnd)
+         BringWindowToTop (mapEROSDTMwarn.hWnd)
          mapEROSDTMwarn.Label3.Caption = numCD%
          leros = FindWindow(vbNullString, "         USGS EROS DEM CD not found!")
          If leros > 0 Then
@@ -1106,46 +1106,46 @@ mer130:
            'swap the two bytes using their hex representation
            'e.g., ABCD --> CDAB, etc.
            If Len(A0$) = 4 Then
-              A1$ = Mid$(A0$, 1, 2)
-              A2$ = Mid$(A0$, 3, 2)
-              If Mid$(A2$, 3, 1) = "0" And Mid$(A2$, 3, 2) <> "0" Then
-                 A2$ = Mid$(A0$, 4, 1)
-              ElseIf Mid$(A2$, 3, 1) = "0" And Mid$(A2$, 3, 2) = "0" Then
-                 A2$ = sEmpty
+              a1$ = Mid$(A0$, 1, 2)
+              a2$ = Mid$(A0$, 3, 2)
+              If Mid$(a2$, 3, 1) = "0" And Mid$(a2$, 3, 2) <> "0" Then
+                 a2$ = Mid$(A0$, 4, 1)
+              ElseIf Mid$(a2$, 3, 1) = "0" And Mid$(a2$, 3, 2) = "0" Then
+                 a2$ = sEmpty
                  End If
-              AA$ = A2$ + A1$
+              AA$ = a2$ + a1$
            ElseIf Len(A0$) = 3 Then
-              A1$ = "0" + Mid$(A0$, 1, 1)
-              A2$ = Mid$(A0$, 2, 2)
-              If Mid$(A0$, 2, 1) = "0" Then A2$ = Mid$(A0$, 3, 1)
-              AA$ = A2$ + A1$
+              a1$ = "0" + Mid$(A0$, 1, 1)
+              a2$ = Mid$(A0$, 2, 2)
+              If Mid$(A0$, 2, 1) = "0" Then a2$ = Mid$(A0$, 3, 1)
+              AA$ = a2$ + a1$
            ElseIf Len(A0$) = 2 Or Len(A0$) = 1 Then
-              A1$ = "00"
-              A2$ = A0$
-              AA$ = A2$ + A1$
+              a1$ = "00"
+              a2$ = A0$
+              AA$ = a2$ + a1$
               End If
         
             'convert swaped hexadecimel to an integer value
             leng% = Len(LTrim$(RTrim$(AA$)))
             integ1& = 0
             For j% = leng% To 1 Step -1
-                v$ = Mid$(LTrim$(RTrim$(AA$)), j%, 1)
-                If InStr("ABCDEF", v$) <> 0 Then
-                   If v$ = "A" Then
+                V$ = Mid$(LTrim$(RTrim$(AA$)), j%, 1)
+                If InStr("ABCDEF", V$) <> 0 Then
+                   If V$ = "A" Then
                       NO& = 10
-                   ElseIf v$ = "B" Then
+                   ElseIf V$ = "B" Then
                       NO& = 11
-                   ElseIf v$ = "C" Then
+                   ElseIf V$ = "C" Then
                       NO& = 12
-                   ElseIf v$ = "D" Then
+                   ElseIf V$ = "D" Then
                       NO& = 13
-                   ElseIf v$ = "E" Then
+                   ElseIf V$ = "E" Then
                       NO& = 14
-                   ElseIf v$ = "F" Then
+                   ElseIf V$ = "F" Then
                       NO& = 15
                       End If
                 Else
-                   NO& = Val(v$)
+                   NO& = Val(V$)
                   End If
                If j% = leng% - 3 Then
                   integ1& = integ1& + 4096 * NO&
@@ -1177,10 +1177,10 @@ worlderror:
       hgt = 0
       Exit Sub
       End If
-   ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+   ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
    response = MsgBox("An error in reading the CD has occured! Do you wish to try again?", vbCritical + vbRetryCancel, "Maps & More")
 '   ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-   BringWindowToTop (mapPictureform.hwnd)
+   BringWindowToTop (mapPictureform.hWnd)
    If response = vbCancel Then Exit Sub
    Resume
 End Sub
@@ -1199,7 +1199,7 @@ Public Function DACOS(XX As Double) As Double
    ElseIf XX = -1# Then
       DACOS = 180# * cd
    Else
-      DACOS = -Atn(XX / Sqr(-XX * XX + 1)) + pi / 2
+      DACOS = -Atn(XX / Sqr(-XX * XX + 1)) + PI / 2
       End If
 End Function
 Public Function atan2(ByVal y As Double, ByVal x As Double) _
@@ -1272,16 +1272,16 @@ Public Sub dipcoord()
        hgt1 = 0: If Maps.Text7.Text <> sEmpty Then hgt1 = Maps.Text7.Text
        lg2 = -lono '(-180# + X * 360# / mapPictureform.mapPicture.Width)
        lt2 = lato '90# - Y * 180# / mapPictureform.mapPicture.Height
-       X1 = Cos(lt1 * cd) * Cos(lg1 * cd)
-       X2 = Cos(lt2 * cd) * Cos(lg2 * cd)
-       Y1 = Cos(lt1 * cd) * Sin(lg1 * cd)
-       Y2 = Cos(lt2 * cd) * Sin(lg2 * cd)
+       x1 = Cos(lt1 * cd) * Cos(lg1 * cd)
+       x2 = Cos(lt2 * cd) * Cos(lg2 * cd)
+       y1 = Cos(lt1 * cd) * Sin(lg1 * cd)
+       y2 = Cos(lt2 * cd) * Sin(lg2 * cd)
        Z1 = Sin(lt1 * cd)
        Z2 = Sin(lt2 * cd)
        'distance is Re * Angle between vectors
        'cos(Angle between unit vectors) = Dot product of unit vectors
-       cosang = X1 * X2 + Y1 * Y2 + Z1 * Z2
-       distkm = 6371.315 * DACOS(cosang)
+       cosang = x1 * x2 + y1 * y2 + Z1 * Z2
+       distKM = 6371.315 * DACOS(cosang)
        'distkm = 6371.315 * Sqr((X1 - X2) ^ 2 + (Y1 - Y2) ^ 2 + (Z1 - Z2) ^ 2)
     Else
        kmxcd = kmxsky
@@ -1314,13 +1314,13 @@ Public Sub dipcoord()
 '          kmxcd = ITM1
 '          kmycd = ITM2
 '          End If
-       distkm = Sqr((kmxoo - kmxcd) ^ 2 + (kmyoo - kmycd) ^ 2) * 0.001
+       distKM = Sqr((kmxoo - kmxcd) ^ 2 + (kmyoo - kmycd) ^ 2) * 0.001
        End If
-    If distkm <= 0.005 Then
+    If distKM <= 0.005 Then
        Maps.Text4.Text = "0"
        Maps.Text2.Text = "0"
        Maps.Text3.Text = hgt2
-       Maps.Text1.Text = LTrim$(Format(distkm, "###,##0.000"))
+       Maps.Text1.Text = LTrim$(Format(distKM, "###,##0.000"))
        Exit Sub
        End If
 
@@ -1343,28 +1343,28 @@ Public Sub dipcoord()
        lg1 = lg
        lt1 = lt
        End If
-     X1 = Cos(lt1 * cd) * Cos(lg1 * cd)
-     X2 = Cos(lt2 * cd) * Cos(lg2 * cd)
-     Y1 = Cos(lt1 * cd) * Sin(lg1 * cd)
-     Y2 = Cos(lt2 * cd) * Sin(lg2 * cd)
+     x1 = Cos(lt1 * cd) * Cos(lg1 * cd)
+     x2 = Cos(lt2 * cd) * Cos(lg2 * cd)
+     y1 = Cos(lt1 * cd) * Sin(lg1 * cd)
+     y2 = Cos(lt2 * cd) * Sin(lg2 * cd)
      Z1 = Sin(lt1 * cd)
      Z2 = Sin(lt2 * cd)
      RE = 6371315#
      re1 = (hgt1 + RE)
      re2 = (hgt2 + RE)
-     X1 = re1 * X1
-     Y1 = re1 * Y1
+     x1 = re1 * x1
+     y1 = re1 * y1
      Z1 = re1 * Z1
-     X2 = re2 * X2
-     Y2 = re2 * Y2
+     x2 = re2 * x2
+     y2 = re2 * y2
      Z2 = re2 * Z2
      dist1 = re1
      dist2 = re2
-     Angle = DACOS((X1 * X2 + Y1 * Y2 + Z1 * Z2) / (dist1 * dist2))
-     viewang = Atn((-re1 + re2 * Cos(Angle)) / (re2 * Sin(Angle)))
-     D = (dist1 - dist2 * Cos(Angle)) / dist1
-     x1d = X1 * (1 - D) - X2
-     y1d = Y1 * (1 - D) - Y2
+     angle = DACOS((x1 * x2 + y1 * y2 + Z1 * Z2) / (dist1 * dist2))
+     viewang = Atn((-re1 + re2 * Cos(angle)) / (re2 * Sin(angle)))
+     D = (dist1 - dist2 * Cos(angle)) / dist1
+     x1d = x1 * (1 - D) - x2
+     y1d = y1 * (1 - D) - y2
      z1d = Z1 * (1 - D) - Z2
      'x1p = -Y1
      'y1p = X1
@@ -1379,8 +1379,8 @@ Public Sub dipcoord()
      z1s = Cos(lt1 * cd)
      azisin = (x1s * x1d + y1s * y1d + z1s * z1d)
      azi = Atn(azisin / azicos)
-     If world = True Then distkm = Angle * RE * 0.001
-     Maps.Text1.Text = LTrim$(Format(distkm, "###,##0.000"))
+     If world = True Then distKM = angle * RE * 0.001
+     Maps.Text1.Text = LTrim$(Format(distKM, "###,##0.000"))
      Maps.Text4.Text = LTrim$(Format(viewang / cd, "##0.000"))
      Maps.Text2.Text = LTrim$(Format(azi / cd, "##0.000"))
      Maps.Text3.Text = hgt2
@@ -2349,14 +2349,14 @@ bl100: xorigin = sizewx / 2# - (lonc + (mag - 1) * fudx / mag - worldxorigin) / 
        mapPictureform.Width = defaultmapwidth '0.469 * mapwi
        mapPictureform.Visible = True
 '       ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-       BringWindowToTop (mapPictureform.hwnd)
+       BringWindowToTop (mapPictureform.hWnd)
     ElseIf mapPictureform.Visible = False Then
        mapPictureform.Top = defaultmaptop
        mapPictureform.Height = maphi2
        mapPictureform.Width = mapwi2
        mapPictureform.Visible = True
 '       ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-       BringWindowToTop (mapPictureform.hwnd)
+       BringWindowToTop (mapPictureform.hWnd)
        End If
 
     If world = True Then
@@ -2442,7 +2442,7 @@ errblit:
 End Sub
 Public Sub skyTERRAgoto()
    Dim lResult As Long, xwin As Long, ywin As Long, winw As Long, winh As Long, winp As Long
-   Dim dX As Long, dY As Long, bVk As Byte, ljump As Long, lerror As Long, lResult2 As Long
+   Dim dx As Long, dy As Long, bVk As Byte, ljump As Long, lerror As Long, lResult2 As Long
    'lResult = FindWindow(vbNullString, terranam$)
    If routeload = True Or Maps.Timer2.Enabled = True Then Exit Sub
 skyt5: lResult = FindWindow(vbNullString, terranam$)
@@ -2460,16 +2460,16 @@ skyt5: lResult = FindWindow(vbNullString, terranam$)
    erreturn% = 0
 skyt10:
    If Maps.Label5.Caption = "SKYx" Then
-      C1$ = Maps.Text5.Text
-      C2$ = Maps.Text6.Text
+      c1$ = Maps.Text5.Text
+      c2$ = Maps.Text6.Text
       'C1p = C1$: C2p = T2
    ElseIf Maps.Label5.Caption = "ITMx" Then
       'convert to SKY coordinates
       ITM1 = Maps.Text5.Text
       ITM2 = Maps.Text6.Text
       Call ITMSKY(ITM1, ITM2, T1, T2, 1)
-      C1$ = T1
-      C2$ = T2
+      c1$ = T1
+      c2$ = T2
       'C1p = T1: C2p = T2
    ElseIf Maps.Label4.Caption = "UTMx" Then
       'convert from UTM to ITM and then to SKY
@@ -2496,15 +2496,15 @@ skyt10:
          ITM2 = Fix(0.5 + kmxg)
          End If
       Call ITMSKY(ITM1, ITM2, T1, T2, 1)
-      C1$ = T1
-      C2$ = T2
+      c1$ = T1
+      c2$ = T2
       'C1p = T1: C2p = T2
       End If
 
    'C3$ = "-500"
    'in new version need to jump to X or Y boxes and click
    Clipboard.Clear
-   Clipboard.SetText C1$
+   Clipboard.SetText c1$
 '   Clipboard.SetText SkyLightfm.Text4.Text
    'C1$ = SkyLightfm.Text4.Text
    ret = CloseClipboard()
@@ -2632,7 +2632,7 @@ sky50: Call keybd_event(VK_SHIFT, 0, 0, 0) 'enter SKYx
        Call keybd_event(VK_TAB, 0, KEYEVENTF_KEYUP, 0)
 
        Clipboard.Clear
-       Clipboard.SetText C2$
+       Clipboard.SetText c2$
        'Clipboard.SetText SkyLightfm.Text1.Text
        ret = CloseClipboard()
        Call keybd_event(VK_SHIFT, 0, 0, 0) 'enters SKYy
@@ -2665,12 +2665,12 @@ sky50: Call keybd_event(VK_SHIFT, 0, 0, 0) 'enter SKYx
           ElseIf erreturn% > 6 Then
              'display error message and exit routine after 6th attempt
              ret = SetWindowPos(lResult, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-             ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+             ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
              response = MsgBox("Something is wrong with the goto coordinates!", vbOKOnly + vbCritical, "Maps & more")
 '             ret = SetWindowPos(lResult, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
              BringWindowToTop (lResult)
-             BringWindowToTop (mapPictureform.hwnd)
+             BringWindowToTop (mapPictureform.hWnd)
              Exit Sub
              End If
           GoTo skyt10
@@ -2825,6 +2825,15 @@ Public Sub goto_click()
 '        If mapPictureform.Visible = True Then
 '           ret = SetWindowPos(mapPictureform.hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
 '           End If
+        If ViewerVis Then
+           'moving to coordinates on frmViewer
+            BringWindowToTop (frmViewer.hWnd)
+            Dim LatViewer As Double, LonViewer As Double
+            LonViewer = Val(Maps.Text5.Text)
+            LatViewer = Val(Maps.Text6.Text)
+            Call frmViewer.CenterMapOnGeo(LatViewer, LonViewer)
+            Exit Sub
+            End If
 
         If world = True Then
            'check the coordinates
@@ -3092,7 +3101,7 @@ go10:   If Maps.Label5.Caption <> "ITMx" Or skymove = True Or worldmove = True O
         Call blitpictures
         If mapPictureform.Visible = True And worldmove = False Then
 '           ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-           BringWindowToTop (mapPictureform.hwnd)
+           BringWindowToTop (mapPictureform.hWnd)
            Exit Sub
            End If
         lResult = FindWindow(vbNullString, terranam$)
@@ -3519,8 +3528,8 @@ r20:  lOpen = FindWindow(vbNullString, "Open")
 r50:  If lOpen = 0 Then GoTo r20
       Call BringWindowToTop(lOpen)
       Clipboard.Clear
-      C1$ = terradir$ + "\*.trf"
-      Clipboard.SetText C1$
+      c1$ = terradir$ + "\*.trf"
+      Clipboard.SetText c1$
       Call keybd_event(VK_SHIFT, 0, 0, 0)
       Call keybd_event(VK_INSERT, 0, 0, 0)
       Call keybd_event(VK_INSERT, 0, KEYEVENTF_KEYUP, 0)
@@ -4215,10 +4224,10 @@ W100:
              (Dir(USADir$, vbDirectory) = sEmpty And _
              Dir(D3ASDir$, vbDirectory) = sEmpty) Then
              Screen.MousePointer = vbDefault
-             ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+             ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
              response = MsgBox("Can't find the SRTM tiles!", vbOKOnly + vbExclamation, "Maps & More")
 '             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-             BringWindowToTop (mapPictureform.hwnd)
+             BringWindowToTop (mapPictureform.hWnd)
              Maps.Toolbar1.Buttons(26).value = tbrUnpressed
              Maps.Toolbar1.Buttons(27).value = tbrUnpressed
              Screen.MousePointer = vbDefault
@@ -4229,10 +4238,10 @@ W100:
        ElseIf DTMflag = 3 Then 'ALOS
           If Dir(BILDir$, vbDirectory) = sEmpty Then
              Screen.MousePointer = vbDefault
-             ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+             ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
              response = MsgBox("Can't find the ALOS tiles!", vbOKOnly + vbExclamation, "Maps & More")
 '             ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-             BringWindowToTop (mapPictureform.hwnd)
+             BringWindowToTop (mapPictureform.hWnd)
              Maps.Toolbar1.Buttons(26).value = tbrUnpressed
              Maps.Toolbar1.Buttons(27).value = tbrUnpressed
              Screen.MousePointer = vbDefault
@@ -4251,10 +4260,10 @@ W100:
             numCD% = 5
             End If
          Screen.MousePointer = vbDefault
-         ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+         ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
          response = MsgBox("Please insert USGS EROS CD#" + LTrim$(Str(numCD%)) + " in the CD drive, and try again.", vbOKOnly + vbExclamation, "Maps & More")
 '         ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-         BringWindowToTop (mapPictureform.hwnd)
+         BringWindowToTop (mapPictureform.hWnd)
          Maps.Toolbar1.Buttons(26).value = tbrUnpressed
          Maps.Toolbar1.Buttons(27).value = tbrUnpressed
          Screen.MousePointer = vbDefault
@@ -4395,9 +4404,9 @@ skipcheck:
             End If
          ElseIf checkdtm = True And Not NoCDWarning Then
 '            ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-            BringWindowToTop (mapPictureform.hwnd)
+            BringWindowToTop (mapPictureform.hWnd)
             response = MsgBox("USGS EROS CD not found!  Please enter the appropriate CD, and then press the DTM button!", vbCritical + vbOKOnly, "Maps & More")
-            ret = SetWindowPos(mapPictureform.hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+            ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
             NoCDWarning = True
             Exit Sub
          End If
@@ -4562,7 +4571,7 @@ tst2:  myfile = Dir(ramdrive + ":\*.BI1")
        End With
        If skip = True Then mapprogressfm.Text2 = apch
 '       ret = SetWindowPos(mapprogressfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-       BringWindowToTop (mapprogressfm.hwnd)
+       BringWindowToTop (mapprogressfm.hWnd)
        '>>>>>>>>>>>>>>>>>>>>>>>>>>>auto section<<<<<<<<<<<<<<<<<<<<<<<<<<
        
        Screen.MousePointer = vbDefault
@@ -4771,7 +4780,7 @@ ts5: endflag% = 0
              mapprogressfm.Visible = True
              mapEROSDTMwarn.Visible = False
 '             ret = SetWindowPos(mapprogressfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-             BringWindowToTop (mapprogressfm.hwnd)
+             BringWindowToTop (mapprogressfm.hWnd)
              With mapprogressfm
                .ProgressBar1.Visible = True
                .StatusBar1.Panels(1) = "Calculating the profile"
@@ -4829,7 +4838,7 @@ mm450:    Do Until lResult = 0
                 End If
    
 '             ret = SetWindowPos(mapprogressfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-             BringWindowToTop (mapprogressfm.hwnd)
+             BringWindowToTop (mapprogressfm.hWnd)
              myfile = Dir(drivjk_c$ + Trim$(Str$(nstat%)))
              tmpfil% = FreeFile
              If myfile <> sEmpty Then
@@ -4908,7 +4917,7 @@ ms700:
 
 mm500: mapgraphfm.Visible = True
 '       ret = SetWindowPos(mapgraphfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-       BringWindowToTop (mapgraphfm.hwnd)
+       BringWindowToTop (mapgraphfm.hWnd)
        '>>>>>>>>>>>>>>>>>>>>>>>>>>>auto section<<<<<<<<<<<<<<<<<<<<<<<<<<
        waitime = Timer
        firstime% = 1
@@ -4993,7 +5002,7 @@ mm500: mapgraphfm.Visible = True
        'If Dir(drivjk$ + "eros.tmp") <> sEmpty Then Kill drivjk$ + "eros.tmp"
 
 '       ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-       BringWindowToTop (mapPictureform.hwnd)
+       BringWindowToTop (mapPictureform.hWnd)
        GoTo mm999
 mm600: init% = 0
 mm650: If routeload = True Or showroute = True Then GoTo mm999
@@ -5320,8 +5329,8 @@ findCD:
       NCOLS = 7200
       End If
 
-    ret = SetWindowPos(mapPictureform.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-    ret = SetWindowPos(mapprogressfm.hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+    ret = SetWindowPos(mapPictureform.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
+    ret = SetWindowPos(mapprogressfm.hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
     Screen.MousePointer = vbDefault
     response = MsgBox("Please insert USGS EROS CD#" + LTrim$(Str$(numCD%)) + " and enter OK after it has finished loading", vbInformation + vbOKCancel, "Maps & More")
     If response = vbCancel Then
@@ -5340,8 +5349,8 @@ findCD:
        mapPictureform.Refresh
 '       ret = SetWindowPos(mapPictureform.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
 '       ret = SetWindowPos(mapprogressfm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-       BringWindowToTop (mapPictureform.hwnd)
-       BringWindowToTop (mapprogressfm.hwnd)
+       BringWindowToTop (mapPictureform.hWnd)
+       BringWindowToTop (mapprogressfm.hWnd)
        End If
 Return
 
@@ -5361,7 +5370,7 @@ diskerrhandler:
          Exit Sub
          End If
       For i% = 0 To Forms.count - 1
-         ret = SetWindowPos(Forms(i%).hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
+         ret = SetWindowPos(Forms(i%).hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
       Next i%
       If Err.Number <> 55 Then 'if file already open error encountered proceed to next statement
          response = MsgBox("Encountered error #: " & Trim$(Str$(Err.Number)) & vbLf & _
@@ -5372,7 +5381,7 @@ diskerrhandler:
       If response = vbOK Then
          For i% = 0 To Forms.count - 1
 '            ret = SetWindowPos(Forms(i%).hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE + SWP_NOSIZE)
-            BringWindowToTop (Forms(i%).hwnd)
+            BringWindowToTop (Forms(i%).hWnd)
          Next i%
          Resume
       Else
@@ -5456,10 +5465,10 @@ cs50:
        runit1 = (crosssectionpnt(1, 0) - crosssectionpnt(0, 0))
        runit2 = (crosssectionpnt(1, 1) - crosssectionpnt(0, 1))
     Else
-       X1 = Cos(lt1 * cd) * Cos(lg1 * cd)
-       X2 = Cos(lt2 * cd) * Cos(lg2 * cd)
-       Y1 = Cos(lt1 * cd) * Sin(lg1 * cd)
-       Y2 = Cos(lt2 * cd) * Sin(lg2 * cd)
+       x1 = Cos(lt1 * cd) * Cos(lg1 * cd)
+       x2 = Cos(lt2 * cd) * Cos(lg2 * cd)
+       y1 = Cos(lt1 * cd) * Sin(lg1 * cd)
+       y2 = Cos(lt2 * cd) * Sin(lg2 * cd)
        Z1 = Sin(lt1 * cd)
        Z2 = Sin(lt2 * cd)
        End If
@@ -5471,7 +5480,7 @@ cs50:
           'check for obstructions every 10 meters
           sectnumpnt& = Abs(runit1) * 0.1
        Else
-          sectnumpnt& = Abs(X2 - X1) * 6371315# * Cos(lt1 * cd) / 30
+          sectnumpnt& = Abs(x2 - x1) * 6371315# * Cos(lt1 * cd) / 30
           End If
        
        If sectnumpn& > 500 Then sectnumpnt& = 500
@@ -5613,7 +5622,7 @@ cs50:
        
        dista = 0
        'total distance in radians is:
-       Dist = 2 * DASIN(Sqr((Sin((lt1 - lt2) * cd / 2)) ^ 2 + _
+       dist = 2 * DASIN(Sqr((Sin((lt1 - lt2) * cd / 2)) ^ 2 + _
             Cos(lt1 * cd) * Cos(lt2 * cd) * (Sin((lg1 - lg2) * cd / 2)) ^ 2))
        'this formula fails for small angles
        'D = cd * atan2((Sin(lt1 * cd) * Sin(lt2 * cd) + Cos(lt1 * cd) * Cos(lt2 * cd) * Cos((lg1 - lg2) * cd)), Sqr((Cos(lt2 * cd) * Sin((lg1 - lg2) * cd)) ^ 2 + (Cos(lt1 * cd) * Sin(lt2 * cd) - Sin(lt1 * cd) * Cos(lt2 * cd) * Cos((lg1 - lg2) * cd)) ^ 2))
@@ -5632,8 +5641,8 @@ cs50:
            sn = i& / (sectnumpnt& - 1)
            
            'way points, see Aviation Formulary V1.4
-           a = Sin((1 - sn) * Dist) / Sin(Dist)
-           b = Sin(sn * Dist) / Sin(Dist)
+           a = Sin((1 - sn) * dist) / Sin(dist)
+           b = Sin(sn * dist) / Sin(dist)
            xx1 = a * Cos(lt1 * cd) * Cos(lg1 * cd) + b * Cos(lt2 * cd) * Cos(lg2 * cd)
            yy1 = a * Cos(lt1 * cd) * Sin(lg1 * cd) + b * Cos(lt2 * cd) * Sin(lg2 * cd)
            zz1 = a * Sin(lt1 * cd) + b * Sin(lt2 * cd)
@@ -5801,7 +5810,7 @@ cs50:
 '          'cos(Angle between unit vectors) = Dot product of unit vectors
 '          cosang = X1X * X2X + Y1Y * Y2Y + Z1Z * Z2Z
 '          dista = dista + 6371315 * DACOS(cosang)
-          dista = 6371315 * sn * Dist
+          dista = 6371315 * sn * dist
           'now find the height at lg2,lt2
           lgtmp = -lg2v: lttmp = lt2v
            If bAirPath Then 'air path calculations so don't give heights
@@ -5988,10 +5997,10 @@ viewan:
      Z2v = re2 * Z2v
      dist1 = re1
      dist2 = re2
-     Angle = DACOS((X1v * X2v + Y1v * Y2v + Z1v * Z2v) / (dist1 * dist2))
-     viewang = Atn((-re1 + re2 * Cos(Angle)) / (re2 * Sin(Angle)))
+     angle = DACOS((X1v * X2v + Y1v * Y2v + Z1v * Z2v) / (dist1 * dist2))
+     viewang = Atn((-re1 + re2 * Cos(angle)) / (re2 * Sin(angle)))
      va = viewang / cd
-     D = (dist1 - dist2 * Cos(Angle)) / dist1
+     D = (dist1 - dist2 * Cos(angle)) / dist1
      x1d = X1v * (1 - D) - X2v
      y1d = Y1v * (1 - D) - Y2v
      z1d = Z1v * (1 - D) - Z2v
@@ -6308,11 +6317,11 @@ f50:  If Mid$(doc1$, 2, 8) <> uniqroot$ Then
         'now determine temperature for terrestrial refraction
          If Not TempSet Then
          If ggpscorrection = True Then 'apply conversion from Clark geoid to WGS84
-            Dim N As Long
+            Dim n As Long
             Dim E As Long
-            N = kmy * 1000 + 1000000
+            n = kmy * 1000 + 1000000
             E = kmx * 1000
-            Call ics2wgs84(N, E, lat, lon)
+            Call ics2wgs84(n, E, lat, lon)
          Else
             Call casgeo(kmx * 1000, kmy * 1000 + 1000000, lon, lat)
             lon = -lon
@@ -6436,7 +6445,7 @@ ey500:
    FileCopy drivjk_c$ + "scanlist.txt", drivjk_c$ + "viewin.tmp"
    FileViewName = drivjk_c$ + "scanlist.txt"
    mapFileViewfm.Visible = True
-   ret = ShowWindow(mapFileViewfm.hwnd, 1)
+   ret = ShowWindow(mapFileViewfm.hWnd, 1)
    FileView = True
    Screen.MousePointer = vbDefault
    FileView = True
@@ -6599,7 +6608,7 @@ rhal:
    'to do with it.  This uses the VB version of analyze.bas
    mapAnalyzefm.Visible = True
 '   ret = SetWindowPos(mapAnalyzefm.hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE + SWP_NOMOVE)
-   BringWindowToTop (mapAnalyzefm.hwnd)
+   BringWindowToTop (mapAnalyzefm.hWnd)
    
    'Then graph the results, and then the user can
    'push the calendar button and the profile will be
@@ -6813,7 +6822,7 @@ Sub FindSearchResult(x As Single, y As Single)
    If ier% < 0 Then Exit Sub
    
    'now search through the DataGrid for the nearest point
-   For i& = 1 To mapsearchfm.sky2.Rows - 1
+   For i& = 1 To mapsearchfm.sky2.rows - 1
         GeoX = mapsearchfm.sky2.TextArray(mapsearchfm.skyp2(i&, 1))
         GeoY = mapsearchfm.sky2.TextArray(mapsearchfm.skyp2(i&, 2))
         If world = True Then
@@ -6823,14 +6832,14 @@ Sub FindSearchResult(x As Single, y As Single)
            GeoY = tmpGeoX
            End If
         If i& = 1 Then
-           Dist = Sqr((GeoX0 - GeoX) ^ 2 + (GeoY0 - GeoY) ^ 2)
+           dist = Sqr((GeoX0 - GeoX) ^ 2 + (GeoY0 - GeoY) ^ 2)
            GeoXmin = GeoX
            GeoYmin = GeoY
            geoi& = i&
         Else
            distNew = Sqr((GeoX0 - GeoX) ^ 2 + (GeoY0 - GeoY) ^ 2)
-           If distNew < Dist Then
-              Dist = distNew
+           If distNew < dist Then
+              dist = distNew
               GeoXmin = GeoX
               GeoYmin = GeoY
               geoi& = i&
@@ -6841,7 +6850,7 @@ Sub FindSearchResult(x As Single, y As Single)
    'now move that row to the first position
    mapsearchfm.sky2.RowPosition(geoi&) = 1
    mapsearchfm.sky2.row = 1 'highlight this row
-   BringWindowToTop (mapsearchfm.hwnd)
+   BringWindowToTop (mapsearchfm.hWnd)
    
    Screen.MousePointer = vbDefault
    Exit Sub
@@ -6935,7 +6944,7 @@ Else
                     & vbCrLf & FilePathBil _
                     & vbCrLf & vbCrLf & "Please select the correct direcotry location." _
                     , vbExclamation, "Missing bil file directory")
-        DirPath$ = BrowseForFolder(Drukfrm.hwnd, "Choose Directory")
+        DirPath$ = BrowseForFolder(Drukfrm.hWnd, "Choose Directory")
         If Dir(DirPath$, vbDirectory) <> "" Then
            FilePathBil = DirPath$
         Else
@@ -7152,10 +7161,10 @@ Function GeocentricRadius(phi As Double, Optional a As Double, Optional f As Dou
    Dim AA As Double, BB As Double
    AA = Cos(phi * cd)
    BB = Sin(phi * cd)
-   Dim DD As Double, ee As Double
-   DD = (a * a * AA) ^ 2 + (b * b * BB) ^ 2
+   Dim dd As Double, ee As Double
+   dd = (a * a * AA) ^ 2 + (b * b * BB) ^ 2
    ee = (a * AA) ^ 2 + (b * BB) ^ 2
-   GeocentricRadius = Sqr(DD / ee)
+   GeocentricRadius = Sqr(dd / ee)
 End Function
 
 Function Min(x, y)
