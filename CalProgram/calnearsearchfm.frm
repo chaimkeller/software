@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 Begin VB.Form calnearsearchfm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Search for contributing sites"
@@ -966,7 +966,7 @@ ret50:
          
             End If
          End If
-      response = MsgBox(Combo1.Text & " directory not found for this place!", vbCritical + vbOKOnly, "Cal Program")
+      response = MsgBox(Combo1.Text & " directory not found for this place!" & vbCrLf & vbCrLf & "Check if there is a "".bat"" file.", vbCritical + vbOKOnly, "Cal Program")
       Exit Sub
       End If
       StatusBar1.Visible = True
