@@ -976,7 +976,7 @@ generrhand:
         ElseIf Err.Number = 76 Then
            Resume Next
            End If
-        response = MsgBox("CalMDIform encountered error number: " + Str(Err.Number) + vbLf & Err.Description & vbLf & "Do you want to abort?", vbYesNoCancel + vbCritical, "Cal Program")
+'        response = MsgBox("CalMDIform encountered error number: " + Str(Err.Number) + vbLf & Err.Description & vbLf & "Do you want to abort?", vbYesNoCancel + vbCritical, "Cal Program")
         If response <> vbYes Then
            Close
            Exit Sub

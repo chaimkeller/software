@@ -966,7 +966,7 @@ ret50:
          
             End If
          End If
-      response = MsgBox(Combo1.Text & " directory not found for this place!" & vbCrLf & vbCrLf & "Check if there is a "".bat"" file.", vbCritical + vbOKOnly, "Cal Program")
+      response = MsgBox(Combo1.Text & " directory not found for this place!" & vbCrLf & vbCrLf & "Make sure there is a "".bat"" file.", vbCritical + vbOKOnly, "Cal Program")
       Exit Sub
       End If
       StatusBar1.Visible = True

@@ -2277,7 +2277,6 @@ errhand:
 '   Resume Next
    MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Combo1_Click of Form Zmanimform" & vbCrLf & "Do you want to resume?", vbYesNo
     response = MsgBox("Zmanimform calendarbut encountered error number: " + Str(Err.Number) + ".  Do you want to resume?", vbYesNoCancel + vbCritical, "Cal Program")
-    Resume
     If response <> vbYes Then
        Resume Next
     Else
