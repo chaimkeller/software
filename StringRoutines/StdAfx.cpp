@@ -32,7 +32,7 @@
 
 
 //////////////////////global array bounds///////////////////////////////////////
-#define MAXCGIVARS 37 //maximum number of cgi variables
+#define MAXCGIVARS 40 //maximum number of cgi variables
 #define MAXDBLSIZE 100 //maximum character size of data elements to be read using ParseString
 #define WIDTHFIELD 0 //0 for false - use predetermined html cell widths, = 1 for letting program determine it
 #define INPUT_TYPE 1 //0 for post, 1 for get
@@ -252,7 +252,8 @@ char drivjk[255] = ""; //path to hebrew strings
 char drivweb[255] = ""; //path to web files
 char drivfordtm[255] = ""; //path to fordtm (temp directory)
 char drivcities[255] = ""; //path to cities directory
-char drivdtm[255] = ""; //path to 30 m dtm directories
+char drivdtm[255] = ""; //path to 30 m dtm directories "USA" EY tiles from JKH's DTM
+char drivdtm2[255] = ""; //path to 30 m dtm directory "US2" NED 30 m of the USA, and SRTM 30 m of the world
 char drivtas[255] = ""; //path to 90 m dtm directory
 char drivTemp[255] = "";//path to WorldClim 2.1 temperature bil files
 
@@ -472,6 +473,10 @@ short GlobalWarmingCorrection = 2000; //shift latitude when determining  ground 
 short GoldenLight = 0; //0 for no GoldenLight calculation
 					   //1 for GoldenLight calculation, first pass
 					   //2 for GoldenLight calculation second pass
+
+/////////////////////flag using the 30m DTM residing in /US2/ instead of the one residing in /USA/
+short DTMflag = 0; //0 for GTOPO30 DTM, 1 for JKH DTM of EY, 2 for NED,SRTM 30m, -1 for 90 meter SRTM, default: NED/SRTM
+
 
 typedef struct _strucGold
 {
@@ -934,7 +939,8 @@ The values set for debugging the program are simply the cgi arguments that are p
 40 fixed bug that didn't detect surveyor EY measurements, if detected now won't modify view angles with TR
 41 fixed but in InitWeatherRegions where lt and lg were reversed
 42 added global warming add hoc fix to the Temperatures model when GlobalWarmingCorrection = year to start correction
-
+43 added new DTM directory that contains the NED 30 m DEM and the SRTM 30 m DTM that used to reside in the US server (now defunct)
+   cgi determines which directory to use and sets DTMflag which is now global variable
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
@@ -1158,9 +1164,28 @@ __asm{
 		///////////////////////////DST support switch/////////////////////////////
 		//if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_DST") ), "Not found") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "false") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "OFF") )
  		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "false") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DST")), "OFF") )
-          DSTcheck = false; //ignore any DST rules
+		{
+			DSTcheck = false; //ignore any DST rules
+		}
+		else //make DST checking the default
+		{
+			DSTcheck = true;
+		}
 
-		//////////////////////////////////////////////////////////////////////////
+		////////////////////////////DTM type support////////////////////////////////
+		if (!strcmp(TableType, "Astr"))
+		{
+			if (strstr(Trim(getpair(&NumCgiInputs, "cgi_DTMs") ), "Not found") || strstr(Trim(getpair(&NumCgiInputs, "cgi_DTMs")), "OFF" ) )
+			{
+				DTMflag = 2; //US2 has all the tiles, so make it the default
+			}
+			else
+			{
+
+				DTMflag = atoi(getpair(&NumCgiInputs, "cgi_DTMs"));
+			}
+		}
+		/////////////////////////////////////////////////////////////////////////////
 
 		CGI = 1;
 
@@ -1967,9 +1992,9 @@ __asm{
 			parshiotflag = 2; //somewhere in the diaspora
 
 			//figure out where it is for determining its DST mode
-			if ( lat > 32.5 && geotz >= -8 && geotz <= -5 )
+			if ( lat > 24.5 && geotz >= -8 && geotz <= -5 )
 			{
-				strcpy(eroscountry, "USA");
+				strcpy(eroscountry, "USA"); //include Canada with these rules
 			}
 			else if ( lat > 37 && lat < 65 && lon > -25 && geotz >= 0 && geotz <= 1 )
 			{
@@ -5896,10 +5921,10 @@ void ErrorHandler( short mode, short ier )
                  //can't allocate memory for uni5 array or missing tiles
                  InternalError = true;
                  errornum = 38;
-//				 if (!HebrewInterface)
+//				 if (!HebrewInterface) //diagnostics!!!!!!!!!!!!!!!!!//
 //				 {
 
-					sprintf( filroot, "%s%s%s%s%s%s%s%s%s\n", "Missing DTM tiles detected!",
+					sprintf( filroot, "%s%s%s%s%s%s%s%s\n", "Missing DTM tiles detected!",
                                                        "<br>",
                                                        "(a) Your chosen coordinates may be outside supported geographic regions (see <a href=\"http://www.chaitables.com/Introduction_to_DTM_calculations.html\">documentation</a>).",
                                                        "<br>", "(b) The chosen region for the calculation extends out to the ocean (there are no DTM tiles for oceans).",
@@ -6618,10 +6643,10 @@ short netzskiy( char *bat, char *sun )
 {
 
 	double kmx, kmy, hgt, hgt0;
-	short pos = 0, pos1 = 0, found, addpos;
+	short pos = 0, pos1 = 0, found; //, addpos;
 	short fillen = 0;
 	short const MAXARRSIZE = 6; //number of data in line = array size of strarr
-	char strarr[MAXARRSIZE][MAXDBLSIZE]; //array to contain the data elements
+	//char strarr[MAXARRSIZE][MAXDBLSIZE]; //array to contain the data elements
 
 
 	if (!strcmp(bat, "")) //check for nonexisting bat file
@@ -10873,6 +10898,9 @@ short LoadConstants( short zmanyes, short typezman, char filzman[] )
 				fgets_CR( doclin, 255, stream);
 				strcpy( drivTemp, doclin );
 
+				fgets_CR( doclin, 255, stream);
+				strcpy( drivdtm2, doclin );
+
 				ipath = 0;
 				break;
 
@@ -11036,13 +11064,14 @@ short LoadConstants( short zmanyes, short typezman, char filzman[] )
 
 		//else if abortprog == false then use defaults
 
-		strcpy( drivjk, "/home/chkeller/public_html/new.chaitables.com/cgi-bin/" ); //path to hebrew strings
-		strcpy( drivweb, "/home/chkeller/public_html/new.chaitables.com/cgi-bin/" ); //path to web files
-		strcpy( drivfordtm, "/home/chkeller/public_html/new.chaitables.com/cgi-bin/" ); //path to fordtm (tmp dir)
-		strcpy( drivcities, "/home/chkeller/public_html/new.chaitables.com/cities/" ); //path to cities directory
-		strcpy( drivdtm, "/home/chkeller/public_html/new.chaitables.com/USA/" ); //path to 30m DTM files and GTOPO30
-		strcpy( drivtas, "/home/chkeller/public_html/new.chaitalbes.com/3AS/" ); //path to 90 m DTM files
-		strcpy( drivTemp, "/home/chaitables/public_html/WorldClim_bil/" ); //path to WorldClim 2.1 bil format temperature files
+		strcpy( drivjk, "/var/www/html/cgi-bin/" ); //path to hebrew strings
+		strcpy( drivweb, "/var/www/html/cgi-bin/" ); //path to web files
+		strcpy( drivfordtm, "/var/www/html/cgi-bin/" ); //path to fordtm (tmp dir)
+		strcpy( drivcities, "/var/www/html/cities/" ); //path to cities directory
+		strcpy( drivdtm, "/var/www/html/USA/" ); //path to 30m DTM files and GTOPO30
+		strcpy( drivtas, "/var/www/html/3AS/" ); //path to 90 m DTM files
+		strcpy( drivTemp, "/var/www/html/WorldClim_bil/" ); //path to WorldClim 2.1 bil format temperature files
+		strcpy( drivdtm2, "/var/www/html/US2/" ); //path to 30m DTM files and GTOPO30
 
 
 		//now write error message to Log File
@@ -16891,7 +16920,10 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
     //char worlddtm[]="";
     //bool worlddtmcd;
     //char tmpfil[81];
-    int DTMflag = 1; //default DTM = 30 m DTM masquerading as 30 m SRTM hgt files
+	/////////////////052726 now one of the function parameters////////////////////////
+    //int DTMflag = 1; //default DTM = 30 m DTM masquerading as 30 m SRTM hgt files or NED files
+					 //if using US2, then DTMflag = 3
+	//////////////////////////////////////////////////////////////////////
     bool IgnoreMissingTiles;
 	IgnoreMissingTiles = g_IgnoreMissingTiles;
     short calcProfile = 1; //=1 for calculating profile, = 0 for not calculating profile
@@ -17061,7 +17093,7 @@ short readDTM( double *kkmxo, double *kkmyo, double *khgt, short *kmaxang,
 	{
 		totnumtiles = 4;
 	}
-	else //SRTM
+	else //SRTM 30 m format
 	{
 	  lg1SRTM = (int)beglog;
 	  if (beglog < 0 && (beglog < lg1SRTM) ) lg1SRTM -= 1;
@@ -17242,11 +17274,17 @@ ret2:	;
 			sprintf( &filn[0], "%s%s%s%s%s", drivdtm, &filt1[iter][0], "/", &filt1[iter][0], "\0" );
 			numCD = whichCDs[iter];
 			}
-			else //SRTM data
+			else if (DTMflag == 1) //JKH DTM in SRTM hgt format
 			{
 			//strncpy( &filt[0], (const char *)filt1[iter], 7 );
 			//strncpy( filn + 7, (const char *)filt1[iter], 7);
 			sprintf(&filn[0], "%s%s", drivdtm, &filt1[iter][0] );
+			}
+			else if (DTMflag == 2) //NED or SRTM 30 m DEMs in SRTM hgt format
+			{
+			//strncpy( &filt[0], (const char *)filt1[iter], 7 );
+			//strncpy( filn + 7, (const char *)filt1[iter], 7);
+			sprintf(&filn[0], "%s%s", drivdtm2, &filt1[iter][0] );
 			}
 
 			gototag = 2;
@@ -17766,7 +17804,9 @@ else if (DTMflag > 0) //SRTM data, determine number of tiles
 			//sprintf( filnn, "%s", drivdtm);
 			//strncpy( filnn + 1, ":\\", 2 );
 
-			if (DTMflag == 1) // 30 meter
+			//DTMflag == 0 not handled yet
+
+			if (DTMflag >= 1) // 30 meter
 			{
 				nrows = 3601;
 				ncols = 3601;
@@ -17776,7 +17816,7 @@ else if (DTMflag > 0) //SRTM data, determine number of tiles
 				////strncpy( filnn + 7, (const char *)filt1[itnum], 7 );
 				sprintf( filnn, "%s%s", drivdtm, &filt1[itnum][0] );
 			}
-			else if (DTMflag == 2) //100 meter
+			else if (DTMflag < 0) //90 meter
 			{
 				nrows = 1201;
 				ncols = 1201;
@@ -17840,7 +17880,7 @@ dtmfiles:
 		    //strncpy( DTMfile + 18, ".DEM", 4 );
 		    //strncpy( DTMfile + 22, "\0", 1);
 		}
-		else //SRTM DTM data
+		else //SRTM DTM format, either 90m, or 30m
 		{
             sprintf( DTMfile, "%s%s%s", filn, ".hgt", "\0");
 
@@ -17954,6 +17994,13 @@ retry:	if ( (stream = fopen( (const char *)DTMfile, "rb" )) == NULL)
 						goto retry;
 						}
 						else if (DTMflag == 2)
+						{
+						//strncpy( DTMfile, (const char *)worlddtm, 1);
+						sprintf( DTMfile, "%s%s%s", drivdtm2, "Z000000.hgt", "\0");
+    					//strncpy( DTMfile + 1, ":\\USA\\Z000000.hgt\0", 18);
+						goto retry;
+						}
+						else if (DTMflag < 0)
 						{
 						//strncpy( DTMfile, (const char *)worlddtm, 1);
 						sprintf( DTMfile, "%s%s%s", drivtas, "Z000000.hgt", "\0");
@@ -18202,12 +18249,12 @@ Profiles:
 			*/
 
 /*          if range >= 40 km and SRTM-1, then reduce step size to ~ 60m */
-			if (range > 40. && DTMflag == 1 && SRTMflag != 11)
+			if (range > 40. && DTMflag >= 1 && SRTMflag != 11)
 			{
 				numskip = 2;
 			}
 
-			if (SRTMflag == 11 && DTMflag == 1) //further optimizations to reduce server cpu usage
+			if (SRTMflag == 11 && DTMflag >= 1) //further optimizations to reduce server cpu usage
 			{
 				if (range >= 40. && range < 60) {
 					numskip = 2; }
@@ -18245,12 +18292,12 @@ Profiles:
 			*/
 
 /*          if range >= 40 km and SRTM-1, then increase step size to ~ 60 m */
-			if (range > 40. && DTMflag == 1 && SRTMflag != 10)
+			if (range > 40. && DTMflag >= 1 && SRTMflag != 10)
 			{
 				numskip = 2;
 			}
 
-			if (SRTMflag == 10 && DTMflag == 1) //further optimizations in lieu of unnecessary accuracy to reduce server cpu usage
+			if (SRTMflag == 10 && DTMflag >= 1) //further optimizations in lieu of unnecessary accuracy to reduce server cpu usage
 			{
 				if (range >= 40. && range < 60) {
 					numskip = 2; }
@@ -18281,7 +18328,7 @@ Profiles:
 			if (range <= 20.) {
 				maxang = maxang0; }
 /*          if distance <= 40 km and SRTM-1, then reduce stepsize */
-			if (range <= 40. && DTMflag == 1) {
+			if (range <= 40. && DTMflag >= 1) {
 				numskip = 1;}
 		}
 
