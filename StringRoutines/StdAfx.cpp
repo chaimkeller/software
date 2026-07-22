@@ -1461,7 +1461,7 @@ __asm{
 				ast = true;
 				types = 3;
 				break;
-			case 6:
+			case 6: //visible sunrise and sunset
 			case 7:
 			case 8:
 				break;
@@ -2064,6 +2064,9 @@ __asm{
 				avekmy[1] = lat;
 				avehgt[1] = hgt;
 		  		break;
+			case 6: //visible sunrise
+				distlim = distlims[3];
+				CushionAmount = cushion[3];
 			case 8:
 				nplac[0] = 1;
 				nplac[1] = 1;
