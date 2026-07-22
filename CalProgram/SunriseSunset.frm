@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomct2.ocx"
 Begin VB.Form SunriseSunset 
    BackColor       =   &H00C0FFFF&
    BorderStyle     =   1  'Fixed Single
@@ -1085,6 +1085,9 @@ Private Sub OKbut0_Click()
         ElseIf InStr(doclin$, "[candle_lighting]") <> 0 Then
            flgheb% = 5
            iheb% = 0
+        ElseIf InStr(doclin$, "[fast_days]") <> 0 Then
+           flgheb% = 6
+           iheb% = 0
            End If
         
         Select Case flgheb%
@@ -1100,6 +1103,8 @@ Private Sub OKbut0_Click()
              heb5$(iheb%) = doclin$
            Case 5
              heb6$(iheb%) = doclin$
+           Case 6
+             heb7$(iheb%) = doclin$
         End Select
         
         iheb% = iheb% + 1

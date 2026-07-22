@@ -705,7 +705,6 @@ c3error:
    Exit Sub
 
 Toolbar1_ButtonClick_Error:
-
     MsgBox "Error " & Err.Number & " (" & Err.Description & ") in procedure Toolbar1_ButtonClick of Form Zmanimlistfm"
 End Sub
 Function skyp2(row As Integer, col As Integer) As Long

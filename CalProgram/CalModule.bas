@@ -45,7 +45,7 @@ Public currentdrive As String, startedscan As Boolean, nearauto As Boolean, near
 Public nearyesval As Boolean, netzskiyok As Boolean, arrStrSedra(1, 54) As String
 Public ntmp%, nstat%, nstato%, tmpsetflg%, CN4netz$, CN4skiy$, arrStrParshiot(1, 62) As String
 Public paperheight, paperwidth, leftmargin, rightmargin, topmargin, bottommargin
-Public captmp$, suntop%, nn4%, numchecked%, rescale As Boolean, holidays(1, 11) As String
+Public captmp$, suntop%, nn4%, numchecked%, rescale As Boolean, holidays(3, 13) As String
 Public netzski$(1, 1000), First As Boolean, hebleapyear As Boolean, dayRoshHashono%, PaperFormatVis As Boolean
 Public nchecked%(999), magnify As Boolean, nearcolor As Boolean, yeartype%, RefHebYear%, RefCivilYear%
 Public newhebout As Boolean, hebcal As Boolean, Marginshow As Boolean, SponsorLine$, TitleLine$
@@ -80,7 +80,7 @@ Public zmannetz As Boolean, zmanskiy As Boolean, zmantotal% ', yl1%, yl2%
 Public vis As Boolean, ast As Boolean, mis As Boolean, vis0%, mis0%, ast0%, resortbutton As Boolean, savehtml As Boolean
 Public avekmxnetz, avekmynetz, avehgtnetz, avekmxskiy, avekmyskiy, avehgtskiy
 Public internet As Boolean, servnam$, dirint$, zmanyes%, typezman%, zmantype%
-Public heb1$(70), heb2$(20), heb3$(32), heb4$(8), heb5$(40), heb6$(10), nettype$, eroscountry$
+Public heb1$(70), heb2$(20), heb3$(32), heb4$(8), heb5$(40), heb6$(10), heb7$(12), nettype$, eroscountry$
 Public optiondmish%, optiontmish%, dirnet$, RoundSeconds%, myear0%, fshabos0%, htmldir$
 Public yrstrt%(1), yrend%(1), visauto As Boolean, mishorauto As Boolean, astauto As Boolean
 Public BeginningYear$, EndYear$, NumCivilYears%, NumCivilYearsInc%, BeginCivilRun As Boolean
@@ -702,10 +702,16 @@ Sub LoadParshiotNames()
          ElseIf doclin$ = "[engholidays]" Then 'English Yom Tovim names
             PMode% = 1
             numhol% = 0
+         ElseIf doclin$ = "[hebfasts]" Then 'English Fast days names
+            PMode% = 2
+            numhol% = 0
+         ElseIf doclin$ = "[engfasts]" Then 'Hebrew Fast days names
+            PMode% = 3
+            numhol% = 0
          ElseIf doclin$ <> sEmpty And PMode% <> -1 Then
             holidays(PMode%, numhol%) = doclin$
             numhol% = numhol% + 1
-         ElseIf doclin$ = sEmpty And PMode% = 1 Then
+         ElseIf doclin$ = sEmpty And PMode% = 3 Then
             'finished
             Exit Do
             End If
@@ -1007,59 +1013,93 @@ Sub InsertHolidays(calday$, i%, k%)
        End If
    
   '=======================================================
-   'add in week day holidays
+   'add in week day holidays and fast days
    If optionheb Then
       Select Case Trim$(caldate$)
-         Case heb5$(1), heb5$(2)
+         Case heb5$(1), heb5$(2) 'Rosh Hashona
             calday$ = calday$ & heb5$(36) & holidays(0, 0)
-         Case heb5$(3)
+         Case heb7$(1) 'fast: Tzom Gedalia
+            calday$ = calday$ & heb5$(36) & holidays(2, 0)
+         Case heb5$(3) 'Yom Hakipurim
             calday$ = calday$ & heb5$(36) & holidays(0, 1)
-         Case heb5$(4)
+         Case heb5$(4) 'Succos
             calday$ = calday$ & heb5$(36) & holidays(0, 2)
          Case heb5$(5)
-            If parshiotEY Then
+            If parshiotEY Then 'Chol Hamoed Succos
                calday$ = calday$ & heb5$(36) & holidays(0, 3)
-            ElseIf parshiotdiaspora Then
+            ElseIf parshiotdiaspora Then 'Second day Succos for diaspora
                calday$ = calday$ & heb5$(36) & holidays(0, 2)
                End If
-         Case heb5$(6), heb5$(7), heb5$(8), heb5$(9), heb5$(10)
+         Case heb5$(6), heb5$(7), heb5$(8), heb5$(9), heb5$(10) 'Chol Hamoed Succos
             calday$ = calday$ & heb5$(36) & holidays(0, 3)
-         Case heb5$(11)
+         Case heb5$(11) 'Shmini Ateros
             calday$ = calday$ & heb5$(36) & holidays(0, 4)
-         Case heb5$(12)
+         Case heb5$(12) 'Simchas Torah
             If parshiotdiaspora Then calday$ = calday$ & heb5$(36) & holidays(0, 5)
          Case heb5$(13), heb5$(14), heb5$(15), heb5$(16), _
               heb5$(17), heb5$(18), heb5$(19), heb5$(20), heb5$(21) 'Chanukah
               If (yeartype% = 2 Or yeartype% = 3) And caldate$ = heb5$(21) Then GoTo remU
               calday$ = calday$ & heb5$(36) & holidays(0, 6)
-         Case heb5$(22), heb5$(23)
+         Case heb7$(2) 'Fast 10th of Teves
+              calday$ = calday$ & heb5$(36) & holidays(2, 1)
+         Case heb7$(3), heb7$(4) 'Taanis Ester (early( Purim Prosim on Sunday
+              If calday$ = heb4$(5) Then 'can't fast on Shabbos, so fast moved to last Thursday
+                 calday$ = calday$ & heb5$(36) & holidays(2, 2)
+                 End If
+         Case heb7$(5), heb7$(6) 'Taanis Ester
+            If calday$ <> heb4$(7) Then 'can't fast on Shabbos
+               calday$ = calday$ & heb5$(36) & holidays(2, 2)
+               End If
+         Case heb5$(22), heb5$(23) 'Purim
             calday$ = calday$ & heb5$(36) & holidays(0, 7)
-         Case heb5$(24), heb5$(25)
+         Case heb5$(24), heb5$(25) 'Shushan Purim
             calday$ = calday$ & heb5$(36) & holidays(0, 8)
-         Case heb5$(26)
+         Case heb5$(37), heb5$(38) 'look for Purim Meshulash
+            If calday$ = heb4$(1) Then 'this is Purim Meshulash
+               calday$ = calday$ & heb5$(36) & holidays(0, 12)
+               End If
+         Case heb5$(26) 'Pesach
             calday$ = calday$ & heb5$(36) & holidays(0, 9)
          Case heb5$(27)
-            If parshiotEY Then
+            If parshiotEY Then 'Chol Hamoed Pesach
                 calday$ = calday$ & heb5$(36) & holidays(0, 10)
-            ElseIf parshiotdiaspora Then
+            ElseIf parshiotdiaspora Then 'second day Pesach for diaspora
                 calday$ = calday$ & heb5$(36) & holidays(0, 9)
                End If
-         Case heb5$(28), heb5$(29), heb5$(30), heb5$(31)
+         Case heb5$(28), heb5$(29), heb5$(30), heb5$(31) 'Chol Hamoed Pesach
             calday$ = calday$ & heb5$(36) & holidays(0, 10)
-         Case heb5$(32)
+         Case heb5$(32) 'last day of Pesach
             calday$ = calday$ & heb5$(36) & holidays(0, 9)
-         Case heb5$(33)
+         Case heb5$(33) '2nd last day of Peasch for diaspora
             If parshiotdiaspora Then calday$ = calday$ & heb5$(36) & holidays(0, 9)
-         Case heb5$(34)
+         Case heb5$(34) 'Shavuos
             calday$ = calday$ & heb5$(36) & holidays(0, 11)
-         Case heb5$(35)
+         Case heb5$(35) '2nd day of Shavuos for diaspora
             If parshiotdiaspora Then calday$ = calday$ & heb5$(36) & holidays(0, 11)
+         Case heb7$(7) 'Fast: 17th of Tamuz
+            If calday$ <> heb4$(7) Then 'can't fast on Shabbos
+               calday$ = calday$ & heb5$(36) & holidays(2, 3)
+               End If
+         Case heb7$(8) 'check for delayed fast of 17th of Tamuz
+            If calday$ = heb4$(1) Then 'fast held on Sunday
+               calday$ = calday$ & heb5$(36) & holidays(2, 4)
+               End If
+         Case heb7$(9) 'Tisha B'Av
+            If calday$ <> heb4$(7) Then 'can't fast on Shabbos
+               calday$ = calday$ & heb5$(36) & holidays(2, 5)
+               End If
+         Case heb7$(10) 'Tisha B'Av delayed
+            If calday$ = heb4$(1) Then '10th of Av on Sunday, fast today
+               calday$ = calday$ & heb5$(36) & holidays(2, 6)
+               End If
          Case Else
       End Select
    Else
       Select Case Trim$(caldate$)
-        Case "1-Tishrey", "2-Tishrey" 'Rosh Hoshono
+        Case "1-Tishrey", "2-Tishrey" 'Rosh Hoshona
            calday$ = holidays(1, 0) & ",_" & calday$
+        Case "3-Tishrey" 'Tzom Gedalia
+           calday$ = holidays(3, 0) & ",_" & calday$
         Case "10-Tishrey" 'Yom Hakipurim
            calday$ = holidays(1, 1) & ",_" & calday$
         Case "15-Tishrey" 'Succos
@@ -1073,28 +1113,42 @@ Sub InsertHolidays(calday$, i%, k%)
         Case "17-Tishrey", "18-Tishrey", "19-Tishrey", _
               "20-Tishrey", "21-Tishrey" 'Chol Hamoed Succos
            calday$ = holidays(1, 3) & ",_" & calday$
-        Case "22-Tishrey" 'Shmini Azeres
+        Case "22-Tishrey" 'Shmini Azeros
            calday$ = holidays(1, 4) & ",_" & calday$
         Case "23-Tishrey" 'Simchas Torah
            If parshiotdiaspora Then calday$ = holidays(1, 5) & ",_" & calday$
         Case "25-Kislev", "26-Kislev", "27-Kislev", "28-Kislev", _
              "29-Kislev", "30-Kislev", "1-Teves", "2-Teves", "3-Teves"
               If (yeartype% = 2 Or yeartype% = 3) And caldate$ = "3-Teves" Then GoTo remU
-             calday$ = holidays(1, 6) & ",_" & calday$
+             calday$ = holidays(1, 6) & ",_" & calday$ 'Chanukah
+        Case "10-Teves" 'Fast 10th of Teves
+           calday$ = holidays(3, 1) & ",_" & calday$
+        Case "11-Adar", "11-Adar II" 'Taanis Ester (early) Purim Prozim on Sunday
+           If calday$ = "Thursday" Then 'can't fast on Shabbos, fast moved to last Thursday
+              calday$ = holidays(3, 2) & ",_" & calday$
+              End If
+        Case "13-Adar", "13-Adar II" 'Taanis Ester
+           If calday$ <> "Shabbos" Then
+              calday$ = holidays(3, 2) & ",_" & calday$
+              End If
         Case "14-Adar", "14-Adar II" 'Purim
            calday$ = holidays(1, 7) & ",_" & calday$
         Case "15-Adar", "15-Adar II" 'Shushan Purim
            calday$ = holidays(1, 8) & ",_" & calday$
+        Case "16-Adar", "16-Adar II" 'look for Purim Meshulash
+           If calday$ = "Sunday" Then
+              calday$ = holidays(1, 12) & ",_" & calday$
+              End If
         Case "15-Nisan" 'Pesach
            calday$ = holidays(1, 9) & ",_" & calday$
-        Case "16-Nisan" 'Second day Pesach for diaspora
-           If parshiotEY Then
+        Case "16-Nisan"
+           If parshiotEY Then 'Chol Hamoed Pesach
               calday$ = holidays(1, 10) & ",_" & calday$
-           ElseIf parshiotdiaspora Then
+           ElseIf parshiotdiaspora Then '2nd day Pesach for diaspora
               calday$ = holidays(1, 9) & ",_" & calday$
               End If
         Case "17-Nisan", "18-Nisan", "19-Nisan", "20-Nisan"
-           calday$ = holidays(1, 10) & ",_" & calday$
+           calday$ = holidays(1, 10) & ",_" & calday$ 'Chol Hamoed Pesach
         Case "21-Nisan" 'last day of Pesach
            calday$ = holidays(1, 9) & ",_" & calday$
         Case "22-Nisan" 'Second day last day of Pesach for diaspora
@@ -1103,6 +1157,22 @@ Sub InsertHolidays(calday$, i%, k%)
            calday$ = holidays(1, 11) & ",_" & calday$
         Case "7-Sivan" 'Second day of Shavuos for diaspora
            If parshiotdiaspora Then calday$ = holidays(1, 11) & ",_" & calday$
+        Case "17-Tamuz" 'Fast 17th of Tamuz
+           If calday$ <> "Shabbos" Then 'can't fast on Shabbos
+              calday$ = holidays(3, 3) & ",_" & calday$
+              End If
+        Case "18-Tamuz" 'check for delayed fast of 17tho of Tamuz
+           If calday$ = "Sunday" Then 'fast held on Sunday
+              calday$ = holidays(3, 4) & ",_" & calday$
+              End If
+        Case "9-Av" 'Tisha B'Av
+           If calday$ <> "Shabbos" Then 'can't fast on Shabbos
+              calday$ = holidays(3, 5) & ",_" & calday$
+              End If
+        Case "10-Av" 'check for delayed fast
+           If calday$ = "Sunday" Then '10th of Av on Sunday, fast today
+              calday$ = holidays(3, 6) & ",_" & calday$
+              End If
         Case Else 'don't change anything
      End Select
      End If
