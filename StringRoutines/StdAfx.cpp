@@ -326,7 +326,8 @@ char heb6[10][100];//[candle_ligthing] NOTICE largest hebrew string is 20 charac
 char heb7[30][100];//Hebrew alphabet in Unicode
 char heb8[25][255];//Hebrew error messages
 char heb9[16][255]; //PlotGraphHTML5 Hebrew strings
-char holidays[2][12][255]; //NOTICE: largest holiday string is 40 characters long
+char heb10[12][255]; //Hebrew fast dates
+char holidays[4][14][255]; //NOTICE: largest holiday string is 40 characters long
 char arrStrParshiot[2][63][255]; //NOTICE: largest parshia name is 40 characters long
 char arrStrSedra[2][63][255]; //NOTICE: Sedra length must equla Parshiot name
 char stortim[2][13][31][40]; //actually stors times, parshios, days, etc.
@@ -945,7 +946,7 @@ The values set for debugging the program are simply the cgi arguments that are p
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
 //////////////version number for 30m DTM tables/////////////
-float vernum = 16.0f;
+float vernum = 17.0f;
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[])
@@ -1194,15 +1195,15 @@ __asm{
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "BY" ); //"Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "Baltimore"); //"Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
-		strcpy( country, "USA" ); //"Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
+		strcpy( MetroArea, "acco" ); //"Baltimore"); //"Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( country, "Israel" ); //"USA" ); //"Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
-		g_yrheb = 5785; //5783; //5782; //5781; //5779;//5776; //5775;
-		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
-		typezman = 8; // acc. to which opinion
-		optionheb = false; //true; //false; //true; //false; //true;//false;
+		g_yrheb = 5781; //5783; //5782; //5781; //5779;//5776; //5775;
+		zmanyes = 1; //0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
+		typezman = 3; //8; // acc. to which opinion
+		optionheb = true; //false; //true; //false; //true; //false; //true;//false;
 		RoundSecondsin = 5; //1;//5;
 
 		///unique to Chai tables
@@ -2316,6 +2317,11 @@ short RdHebStrings()
 					flgheb = 7;
 					iheb = 0;
 				}
+				else if (strstr( doclin,"[fast_days]" ))
+				{
+					flgheb = 8;
+					iheb = 0;
+				}
 
 				if (strlen(Trim(doclin)) > 0 ) //ignore blank lines containing just "\n"
 				{
@@ -2354,6 +2360,10 @@ short RdHebStrings()
 						case 7:
 							strcpy( &heb9[iheb][0], doclin );
 							//newlen = replaceSpaces(&heb9[iheb][0], 255);
+							break;
+						case 8:
+							strcpy( &heb10[iheb][0], doclin );
+							if (checkForSpaces) newlen = replaceSpaces(&heb10[iheb][0], 255);
 							break;
 					}
 
@@ -2572,6 +2582,16 @@ short LoadParshiotNames()
 					PMode = 3;
 					numhol = 0;
 				}
+				else if (strstr( doclin,"[hebfasts]")) //Hebrew Yom Tovim names
+				{
+					PMode = 4;
+					numhol = 0;
+				}
+				else if (strstr( doclin,"[engfasts]")) //English Yom Tovim names
+				{
+					PMode = 5;
+					numhol = 0;
+				}
 
 				else if (strlen(doclin) > 1) //ignore blank lines
 				{
@@ -2584,6 +2604,8 @@ short LoadParshiotNames()
 							break;
 						case 2:
 						case 3:
+						case 4:
+						case 5:
 							sprintf( &holidays[PMode - 2][numhol][0], doclin, "\0");
 							numhol++;
 							break;
@@ -3071,6 +3093,14 @@ ih50:
 		{
                 sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[0][0][0]);
 		}
+		else if ( !strcmp(caldayHeb, &heb10[1][0]) && strcmp(calday, &heb4[7][0]) ) //Fast of Gedalia, but can't be on Shabbos
+		{
+				sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[2][0][0]);
+		}
+		else if ( !strcmp(caldayHeb, &heb10[11][0]) && !strcmp(calday, &heb4[1][0]) ) //look for delayed Fast of Gedalia on 4th of Tishrey on Sunday
+		{
+                sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[2][0][0]);
+		}
 		else if ( !strcmp(caldayHeb, &heb5[3][0]))
 		{
                 sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[0][1][0]);
@@ -3091,15 +3121,15 @@ ih50:
 		          !strcmp(caldayHeb, &heb5[7][0]) ||
 		          !strcmp(caldayHeb, &heb5[8][0]) ||
 		          !strcmp(caldayHeb, &heb5[9][0]) ||
-		          !strcmp(caldayHeb, &heb5[10][0]) )
+		          !strcmp(caldayHeb, &heb5[10][0]) )  //Chol HaMoed Succos
 		{
                 sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[0][3][0]);
 		}
-		else if ( !strcmp(caldayHeb, &heb5[11][0]) )
+		else if ( !strcmp(caldayHeb, &heb5[11][0]) ) //Shmini Atzeres
 		{
                 sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[0][4][0]);
 		}
-		else if ( !strcmp(caldayHeb, &heb5[12][0]) && parshiotflag == 2)
+		else if ( !strcmp(caldayHeb, &heb5[12][0]) && parshiotflag == 2) //Shmini Atzeres 2nd day of diaspora
 		{
                 sprintf( buff1,"%s%s%s",calday, &heb5[36][0], &holidays[0][5][0]);
 		}
@@ -3117,7 +3147,19 @@ ih50:
 			{
 				goto remU;
 			}
-	                sprintf( buff1,"%s%s%s",calday, &heb5[36][0], &holidays[0][6][0]);
+	            sprintf( buff1,"%s%s%s",calday, &heb5[36][0], &holidays[0][6][0]);
+		}
+		else if ( !strcmp(caldayHeb, &heb10[2][0])) //Fast of 10th of Teves
+		{
+                sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[2][1][0]);
+		}
+		else if ( (!strcmp(caldayHeb, &heb10[3][0]) || !strcmp(caldayHeb, &heb10[4][0]) ) && !strcmp(calday, &heb4[5][0])) //check for early Taanis Ester on Thursday when Purim Protzim falls on Sunday
+		{
+                sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[2][2][0]);
+		}
+		else if ( (!strcmp(caldayHeb, &heb10[5][0]) || !strcmp(caldayHeb, &heb10[6][0])) && strcmp(calday, &heb4[7][0]) ) //Taanis Ester, can't be on Shabbos
+		{
+                sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[2][2][0]);
 		}
 		else if ( !strcmp(caldayHeb, &heb5[22][0]) ||
 		          !strcmp(caldayHeb, &heb5[23][0]) ) //Purim
@@ -3128,6 +3170,10 @@ ih50:
 		          !strcmp(caldayHeb, &heb5[25][0]) ) //Shushan Purim
 		{
 	                sprintf( buff1,"%s%s%s",calday, &heb5[36][0], &holidays[0][8][0]);
+		}
+		else if ( (!strcmp(caldayHeb, &heb5[38][0]) || !strcmp(caldayHeb, &heb5[39][0])) && !strcmp(calday, &heb4[1][0]) ) //look for Purim Meshulash when 17 of Adar is on Sunday
+		{
+				sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[0][12][0]);
 		}
 		else if ( !strcmp(caldayHeb, &heb5[26][0]) ) //Pesach
 		{
@@ -3156,13 +3202,35 @@ ih50:
 		{
 	                sprintf( buff1,"%s%s%s",calday, &heb5[36][0], &holidays[0][9][0]);
 		}
-		else if ( !strcmp(caldayHeb, &heb5[34][0]) ) //Simachas Torah
+		else if ( !strcmp(caldayHeb, &heb5[34][0]) ) //Shavuos
 		{
 	                sprintf( buff1,"%s%s%s",calday, &heb5[36][0], &holidays[0][11][0]);
 		}
-		else if ( !strcmp(caldayHeb, &heb5[35][0]) && parshiotflag == 2) //Simchas Torah diaspora parshiot
+		else if ( !strcmp(caldayHeb, &heb5[35][0]) && parshiotflag == 2) //2nd day of Shavuos of diaspora
 		{
 	                sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[0][11][0]);
+		}
+		else if ( !strcmp(caldayHeb, &heb10[7][0]) ) //17th of Tamuz
+		{
+
+			if ( strcmp(calday, &heb4[7][0]) ) //check that it isn't Shabbos, otherwise fast is postponed to Sunday
+			{
+                sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[2][3][0]);
+			}
+		}
+		else if ( !strcmp(caldayHeb, &heb10[8][0]) && !strcmp(calday, &heb4[1][0]) ) //18th of Tamuz
+		{
+			//check that it Sunday, then this is delayed 17tho of Tamuz fast
+                sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[2][4][0]);
+
+		}
+		else if ( !strcmp(caldayHeb, &heb10[9][0]) && strcmp(calday, &heb4[7][0])) //Tisha B'av, not om Shabbos
+		{
+                sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[2][5][0]);
+		}
+		else if ( !strcmp(caldayHeb, &heb10[10][0]) && !strcmp(calday, &heb4[1][0])) //10th of Av, when falls on Sunday (Tash B'Av nidheh)
+		{
+                sprintf( buff1,"%s%s%s", calday, &heb5[36][0], &holidays[2][6][0]);
 		}
 		else
 		{
@@ -3179,6 +3247,22 @@ ih50:
 		{
 				sprintf( buff1, "%s%s%s", &holidays[1][0][0], ",_", calday );
 				strcpy( calday, buff1 );
+		}
+		else if ( !strcmp( caldayHeb, "3-Tishrey") ) //Tzom Gedalia
+		{
+			if ( strcmp( calday, "Shabbos") ) //can't fast on Shabbos, pushed off to Sunday
+			{
+				sprintf( buff1, "%s%s%s", &holidays[3][0][0], ",_", calday );
+				strcpy( calday, buff1 );
+			}
+		}
+		else if ( !strcmp( caldayHeb, "4-Tishrey") ) //look for delayed Tzom Gedalia
+		{
+			if ( !strcmp( calday, "Sunday") ) //can't fast on Shabbos, pushed off to Sunday
+			{
+				sprintf( buff1, "%s%s%s", &holidays[3][0][0], ",_", calday );
+				strcpy( calday, buff1 );
+			}
 		}
 		else if ( !strcmp( caldayHeb, "10-Tishrey") ) //Yom Hakipurim
 		{
@@ -3233,7 +3317,7 @@ ih50:
                           !strcmp(caldayHeb, "30-Kislev") ||
                           !strcmp(caldayHeb, "1-Teves") ||
                           !strcmp(caldayHeb, "2-Teves") ||
-                          !strcmp(caldayHeb, "3-Teves") )
+                          !strcmp(caldayHeb, "3-Teves") ) //Chanukah
 		{
 			if ((g_yeartype == 2 || g_yeartype == 3) && !strcmp( caldayHeb,"3-Teves") )
 			{
@@ -3241,6 +3325,27 @@ ih50:
 			}
 			sprintf( buff1, "%s%s%s", &holidays[1][6][0], ",_", calday );
 			strcpy( calday, buff1 );
+		}
+		else if ( !strcmp( caldayHeb, "10-Teves") ) //Fast of 10th of Teves
+		{
+				sprintf( buff1, "%s%s%s", &holidays[3][1][0], ",_", calday );
+				strcpy( calday, buff1 );
+		}
+		else if ( !strcmp(caldayHeb, "11-Adar") || !strcmp(caldayHeb, "11-Adar II") ) //check for early Taanis Ester when Purim Prozim falls on Sunday
+		{
+			if ( !strcmp( calday, "Thursday") ) //can't fast on Shabbos, fast moved to last Thursday
+			{
+				sprintf( buff1, "%s%s%s", &holidays[3][2][0], ",_", calday );
+				strcpy( calday, buff1 );
+			}
+		}
+		else if ( !strcmp(caldayHeb, "13-Adar") || !strcmp(caldayHeb, "13-Adar II") ) //Taanis Ester
+		{
+			if ( strcmp( calday, "Shabbos") ) //can't fast on Shabbos, fast moved to last Thursday
+			{
+				sprintf( buff1, "%s%s%s", &holidays[3][2][0], ",_", calday );
+				strcpy( calday, buff1 );
+			}
 		}
 		else if ( !strcmp(caldayHeb, "14-Adar") || !strcmp(caldayHeb, "14-Adar II") ) //Purim
 		{
@@ -3251,6 +3356,14 @@ ih50:
 		{
 			sprintf( buff1, "%s%s%s", &holidays[1][8][0], ",_", calday );
 			strcpy( calday, buff1 );
+		}
+		else if ( !strcmp(caldayHeb, "16-Adar") || !strcmp(caldayHeb, "16-Adar II") ) //look for Purim Meshulash
+		{
+			if ( !strcmp( calday, "Sunday") ) //Purim Meshulash (3rd day of Purim for Arim Chomot) is on Sunday
+			{
+				sprintf( buff1, "%s%s%s", &holidays[1][12][0], ",_", calday );
+				strcpy( calday, buff1 );
+			}
 		}
 		else if ( !strcmp(caldayHeb, "15-Nisan")) //Pesach
 		{
@@ -3273,7 +3386,7 @@ ih50:
 		else if ( !strcmp(caldayHeb, "17-Nisan") ||
                           !strcmp(caldayHeb, "18-Nisan") ||
                           !strcmp(caldayHeb, "19-Nisan") ||
-                          !strcmp(caldayHeb, "20-Nisan") )
+                          !strcmp(caldayHeb, "20-Nisan") ) //Chol Hamoed
 		{
 			sprintf( buff1, "%s%s%s", &holidays[1][10][0], ",_", calday );
 			strcpy( calday, buff1 );
@@ -3311,6 +3424,38 @@ ih50:
 			{
 			sprintf( buff1, "%s%s%s", &holidays[1][11][0], ",_", calday );
 			strcpy( calday, buff1 );
+			}
+		}
+		else if ( !strcmp(caldayHeb, "17-Tamuz") ) //Fast of the 17th of Tamuz
+		{
+			if ( strcmp( calday, "Shabbos") ) //can't fast on Shabbos
+			{
+				sprintf( buff1, "%s%s%s", &holidays[3][3][0], ",_", calday );
+				strcpy( calday, buff1 );
+			}
+		}
+		else if ( !strcmp(caldayHeb, "18-Tamuz") ) //check for Fast of the 17th of Tamuz delayed to Sunday
+		{
+			if ( !strcmp( calday, "Sunday") )
+			{
+				sprintf( buff1, "%s%s%s", &holidays[3][4][0], ",_", calday );
+				strcpy( calday, buff1 );
+			}
+		}
+		else if ( !strcmp(caldayHeb, "9-Av") ) //Tisha B'Av
+		{
+			if ( strcmp( calday, "Shabbos") ) //can't fast on Shabbos
+			{
+				sprintf( buff1, "%s%s%s", &holidays[3][5][0], ",_", calday );
+				strcpy( calday, buff1 );
+			}
+		}
+		else if ( !strcmp(caldayHeb, "10-Av") ) //check for postponed Fast of Tisha B'Av
+		{
+			if ( !strcmp( calday, "Sunday") ) //Fast held on Sunday
+			{
+				sprintf( buff1, "%s%s%s", &holidays[3][6][0], ",_", calday );
+				strcpy( calday, buff1 );
 			}
 		}
 		else //don't change anything
