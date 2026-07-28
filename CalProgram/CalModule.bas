@@ -1019,7 +1019,13 @@ Sub InsertHolidays(calday$, i%, k%)
          Case heb5$(1), heb5$(2) 'Rosh Hashona
             calday$ = calday$ & heb5$(36) & holidays(0, 0)
          Case heb7$(1) 'fast: Tzom Gedalia
-            calday$ = calday$ & heb5$(36) & holidays(2, 0)
+            If calday$ <> heb4$(7) Then 'can't fast on Shabbos
+               calday$ = calday$ & heb5$(36) & holidays(2, 0)
+               End If
+         Case heb7$(11) 'look for delayed Tzom Gedalia
+            If calday$ = heb4$(1) Then 'this is Sunday Tzom Gedalia
+               calday$ = calday$ & heb5$(36) & holidays(2, 0)
+               End If
          Case heb5$(3) 'Yom Hakipurim
             calday$ = calday$ & heb5$(36) & holidays(0, 1)
          Case heb5$(4) 'Succos
@@ -1099,7 +1105,13 @@ Sub InsertHolidays(calday$, i%, k%)
         Case "1-Tishrey", "2-Tishrey" 'Rosh Hoshona
            calday$ = holidays(1, 0) & ",_" & calday$
         Case "3-Tishrey" 'Tzom Gedalia
-           calday$ = holidays(3, 0) & ",_" & calday$
+           If calday$ <> "Shabbos" Then
+              calday$ = holidays(3, 0) & ",_" & calday$
+              End If
+        Case "4-Tishrey" 'check for delayed Fast Gedalia
+           If calday$ = "Sunday" Then
+              calday$ = holidays(3, 0) & ",_" & calday$
+              End If
         Case "10-Tishrey" 'Yom Hakipurim
            calday$ = holidays(1, 1) & ",_" & calday$
         Case "15-Tishrey" 'Succos
