@@ -54,8 +54,10 @@
 char *LTrim(char * p);
 char *RTrim(char * p);
 char *Trim(char * str);
-char *Mid(char *str, short nstart, short nsize, char buff[]);
-char *Mid(char *str, short nstart, short nsize);
+//char *Mid(char *str, int nstart, int nsize, char buff[]);
+char *Mid(const char *str, int nstart, int nsize, char buff[]); //copilot's safe version 07/30/26
+//char *Mid(char *str, short nstart, short nsize);
+char *Mid(char *str, int nstart, int nsize); //copilot's safe version 07/30/26
 int InStr( short nstart, char * str, char * str2 );
 int InStr( char * str, char * str2 );
 char *Replace( char *str, char Old, char New);
@@ -6020,7 +6022,7 @@ void ErrorHandler( short mode, short ier )
 				sprintf(errorstr, "Can't open profile file: %s in routine netzski6",Errorbuff);
 				//diagnostics
 				*/
-				strcpy (errorstr, "Can't open profile file in routine netzski6" );
+				strcpy (errorstr, "Can't open profile file in routine netzski6" ); //<--comment out for diagnostics
 			}
 			else if (ier == -3)
 			{
@@ -10425,7 +10427,7 @@ char *Trim(char *str)
 */
 //////////////////////////////
 
-
+/*
 //////////////////emulation of Mid function (with external buffer///////////////////////
 char *Mid(char *str, short nstart, short nsize, char buff[])
 //used for extracting substrings without changing original string
@@ -10448,7 +10450,38 @@ char *Mid(char *str, short nstart, short nsize, char buff[])
 	//strcpy( buff, buff1);
 	return buff;
 }
+*/
 
+//////////////////emulation of Mid function (with external buffer///////////////////////
+////////////////// Safe Mid function (external buffer) //////////////////////
+char *Mid(const char *str, int nstart, int nsize, char buff[])
+////////////////////////////////////////////////////////////////////////////
+{
+    // VB-style: substring begins at position 1 (not 0)
+
+    int lenstr = strlen(str);
+
+    // Clamp start to valid range
+    if (nstart < 1) nstart = 1;
+
+    // If start is beyond end ? return empty string
+    if (nstart > lenstr) {
+        buff[0] = '\0';
+        return buff;
+    }
+
+    // Adjust size if substring runs past end
+    if (nstart - 1 + nsize > lenstr)
+        nsize = lenstr - (nstart - 1);
+
+    // Copy substring safely
+    memcpy(buff, str + (nstart - 1), nsize);
+    buff[nsize] = '\0';
+
+    return buff;
+}
+
+/*
 //////////////////emulation of Mid function with 3 parameters///////////////////////
 char *Mid(char *str, short nstart, short nsize)
 //used for changing the original string -- i.e., used for truncating string
@@ -10468,6 +10501,36 @@ char *Mid(char *str, short nstart, short nsize)
 	str[nsize] = 0;
 	return str;
 }
+*/
+
+////////////////// emulation of Mid function with 3 parameters ///////////////////////
+char *Mid(char *str, int nstart, int nsize)
+// used for changing the original string -- i.e., used for truncating string
+////////////////////////////////////////////////////////////////////////////////////
+{
+    // VB-style: substring begins at nstart = 1 (not 0)
+
+    int lenstr = strlen(str);
+
+    // clamp start to valid range (1-based)
+    if (nstart < 1) nstart = 1;
+    if (nstart > lenstr) {
+        // start beyond end ? return empty string
+        str[0] = '\0';
+        return str;
+    }
+
+    // adjust size if it runs past the end
+    if (nstart - 1 + nsize > lenstr)
+        nsize = lenstr - (nstart - 1);
+
+    // move substring to beginning (use memmove for safety)
+    memmove(str, str + (nstart - 1), nsize);
+    str[nsize] = '\0';
+
+    return str;
+}
+
 
 
 ///////////////////emulation of InStr(3 parameters)////////////////////
