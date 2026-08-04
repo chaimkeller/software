@@ -407,7 +407,6 @@ char myfile[255] = "";
 
 /////////////////diagnostic error buffer///////////////////////////
 //char Errorbuff[1000] = "";  //uncomment for diagnostics
-void sanitize_utf8(char *s);
 
 //////global non string variables///////
 short ntrcalc = 5;  //used for ReadProfile and netzskiy calculations, if = 4 then flags surveyor data, and no TR modifications
@@ -3914,7 +3913,6 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 
 	if (optionheb)
 	{
-	    //sanitize_utf8(doclin);
 		fprintf( stdout, "%s%s%s\n", "<p style=\"text-align:center\"><font size = '3' dir='rtl'>", doclin, "</font></p>"); //print the legend for the csv, htm, and zip files
 	}
 	else
@@ -13768,31 +13766,6 @@ short WriteHtmlClosing()
 	fprintf(stdout,"%s\n", "<p>");
 
 	if ((SRTMflag > 9) && optionheb) fprintf( stdout, "%s\n", "</bdo>");
-
-
-	//////////////attempt to cleanup nonprinting characters
-	if (optionheb)
-	{
-		fprintf(stdout,
-		"<script>\n"
-		"(function() {\n"
-		"  function cleanText(node) {\n"
-		"    if (node.nodeType === Node.TEXT_NODE) {\n"
-		"      node.nodeValue = node.nodeValue.replace(/[\\uFFFD]/g, '');\n"
-		"      node.nodeValue = node.nodeValue.replace(/[^\\u0009\\u000A\\u000D\\u0020-\\uD7FF\\uE000-\\uFFFD]/g, '');\n"
-		"    } else {\n"
-		"      for (let i = 0; i < node.childNodes.length; i++) {\n"
-		"        cleanText(node.childNodes[i]);\n"
-		"      }\n"
-		"    }\n"
-		"  }\n"
-		"  cleanText(document.body);\n"
-		"})();\n"
-		"</script>\n");
-	}
-
-	//////////////////////////////////////////////////////
-
 	fprintf(stdout, "%s\n", "</body>");
 	fprintf(stdout, "%s\n", "</html>");
 
@@ -20627,75 +20600,6 @@ int replaceSpaces(char str[], const short MaxLength)
  
     return new_length;
 }
-
-
-/////////////////remove non-printable characters from legend, etc////j080426///////
-/*
-void sanitize_utf8(char *s)
-{
-    unsigned char *p = (unsigned char *)s;
-    unsigned char *w = (unsigned char *)s;
-
-    while (*p)
-    {
-        unsigned char c = *p;
-
-        // allow ASCII printable + space
-        if (c >= 32 && c <= 126)
-        {
-            *w++ = c;
-            p++;
-        }
-        // allow UTF-8 lead bytes and their continuation bytes
-        else if (c >= 0xC2 && c <= 0xF4)
-        {
-            int needed = 0;
-            if (c <= 0xDF) needed = 1;       // 2-byte
-            else if (c <= 0xEF) needed = 2;  // 3-byte
-            else needed = 3;                 // 4-byte
-
-            // copy lead + continuation bytes if they look valid
-            *w++ = c;
-            p++;
-            while (needed-- && (*p & 0xC0) == 0x80)
-            {
-                *w++ = *p++;
-            }
-        }
-        else
-        {
-            // drop control / invalid bytes
-            p++;
-        }
-    }
-
-    *w = '\0';
-}
-*/
-
-void sanitize_utf8(char *s)
-{
-    unsigned char *p = (unsigned char *)s;
-    unsigned char *w = (unsigned char *)s;
-
-    while (*p)
-    {
-        // Check for UTF-8 replacement character: EF BF BD
-        if (p[0] == 0xEF && p[1] == 0xBF && p[2] == 0xBD)
-        {
-            // Skip the 3-byte sequence
-            p += 3;
-            continue;
-        }
-
-        // Otherwise copy the byte normally
-        *w++ = *p++;
-    }
-
-    *w = '\0';
-}
-
-
 
 
 ////////////////////////ARCHIVES////////////////////////////
