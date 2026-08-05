@@ -95,6 +95,7 @@ void heb12monthHTML(short setflag);
 void heb13monthHTML(short setflag);
 void timestring( short ii, short k, short iii);
 void parseit( char outdoc[], bool *closerow, short linnum, short mode);
+void parseit2( char outdoc[], bool *closerow, short *daynum, short mode);
 short CheckInputs(char *strlat, char *strlon, char *strhgt);
 short Caldirectories();
 short SunriseSunset(short types, bool *adhocrise, bool *adhocset, short ExtTemp[]);
@@ -578,6 +579,9 @@ bool CloudWind = false;
 /////////////////////calculate times according to DST////////////////////////
 bool DSTcheck = true;
 //////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////flag for new Zemanim format///////////////
+bool NewZmanTableFormat = true;
 
 /************************Conversions from ITM to WGS84, etc*********************/
 //*****************************************************************************************************
@@ -3759,6 +3763,8 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 
 	///////////////write html,version of sorted zmanim table////////////////////
 
+	////////////////////////////////This is Title section///////////////////////////////////
+
 	//write html header if not already written before writing the individual sunrise/sunset tables
 	if (sunsyes == 0) WriteHtmlHeader();
 
@@ -3846,6 +3852,11 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 		fprintf( stdout, buff1);
 	}
 
+	////////////////////////////end of Title lines/////////////////////////////
+
+
+	///////////////////////now generate the legend/////////////////////////////////
+
 	//generate table column legend
 	//after 75 characters
 	short MaxHdrLen = 100, numLines = 0;
@@ -3925,6 +3936,8 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 	//fprintf( stdout, "%s\n", "<br/>"); //spacers between columnheaders and time
 	//fprintf( stdout, "%s\n", "<br/>");
 
+	///////////////////////////////////end of legend   processing//////////////////////////////////
+
 	if (optionheb)
 	{
 		fprintf( stdout, "%s\n", "<table border='1' cellpadding='1' cellspacing='1' align='center' dir='rtl'>");
@@ -3968,9 +3981,58 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 
 	//now create the actual table
 	numday = -1;
-	for (i = 1; i <= endyr; i++)
+	for (i = 1; i <= endyr; i++)  //loop over the number months of the Hebrew year
 	{
-		if (g_mmdate[1][i - 1] > g_mmdate[0][i - 1])
+		if (i > 1 && NewZmanTableFormat) //print out new number legend
+		{
+			//end last table for last month, and begin new one
+			fprintf( stdout, "%s\n", "          </table>");
+
+			fprintf( stdout, "%s\n", "<p></p>");
+
+			if (optionheb)
+			{
+				fprintf( stdout, "%s\n", "<table border='1' cellpadding='1' cellspacing='1' align='center' dir='rtl'>");
+			}
+			else
+			{
+				fprintf( stdout, "%s\n", "<table border='1' cellpadding='1' cellspacing='1' align='center'>");
+			}
+
+
+			//create table's column headers
+			linnum = 1; //column headers are first row in the htm document
+
+			doclin[0] = '\0'; //initialzie "doclin"
+
+			//add new line tag for this first line
+			fprintf( stdout, "%s\n", "    <tr>");
+
+			nn = 0;
+			for (m = 1; m <= numsort + 3; m++)
+			{
+				if (optionheb)
+				{
+					hebnum(m, ch);
+				}
+				else
+				{
+					nn = nn + 1;
+					itoa( nn, ch, 10);
+				}
+
+				strcpy( doclin, ch);
+
+				if (m == numsort + 3)
+				{
+					closerow = true;
+				}
+        			parseit( doclin, &closerow, linnum, 0);
+				//doclin$ = doclin$ & comma$ & spacerb$ & ch$ & spacera$
+			}
+		}
+
+		if (g_mmdate[1][i - 1] > g_mmdate[0][i - 1]) //Hebrew month days from g_madate[0] to g_mdate[1]
 		{
 
 			if (i > 1 && g_mmdate[0][i - 1] == 1)
@@ -4015,12 +4077,24 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 					//add new line tag for each new line
 					fprintf( stdout, "%s\n", "    <tr>");
 
-					sprintf( doclin, "%s%s", caldayHeb, "\0" );
-					parseit( doclin, &closerow, linnum, 1);
-					sprintf( doclin, "%s%s", calday, "\0");
-					parseit( doclin, &closerow, linnum, 2);
-					sprintf( doclin, "%s%s", caldayEng, "\0" );
- 					parseit( doclin, &closerow, linnum, 3);
+					if (!NewZmanTableFormat) 
+					{
+						sprintf( doclin, "%s%s", caldayHeb, "\0" );
+						parseit( doclin, &closerow, linnum, 1);
+						sprintf( doclin, "%s%s", calday, "\0");
+						parseit( doclin, &closerow, linnum, 2);
+						sprintf( doclin, "%s%s", caldayEng, "\0" );
+ 						parseit( doclin, &closerow, linnum, 3);
+					}
+					else
+					{
+						sprintf( doclin, "%s%s", caldayHeb, "\0" );
+						parseit2( doclin, &closerow, &dayweek, 1);
+						sprintf( doclin, "%s%s", calday, "\0");
+						parseit2( doclin, &closerow, &dayweek, 2);
+						sprintf( doclin, "%s%s", caldayEng, "\0" );
+ 						parseit2( doclin, &closerow, &dayweek, 3);
+					}
 
 					if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
 						&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
@@ -4037,7 +4111,8 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 							{
 								closerow = true;
 							}
-							parseit( doclin, &closerow, linnum, 0);
+							//parseit( doclin, &closerow, linnum, 0);
+							parseit2( doclin, &closerow, &dayweek, 0);
 						}
 
 					}
@@ -4083,12 +4158,24 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 					//add new line tag for each new line
 					fprintf( stdout, "%s\n", "    <tr>");
 
-					sprintf( doclin, "%s%s", caldayHeb, "\0" );
-					parseit( doclin, &closerow, linnum, 1);
-					sprintf( doclin, "%s%s", calday, "\0");
-					parseit( doclin, &closerow, linnum, 2);
-					sprintf( doclin, "%s%s", caldayEng, "\0" );
- 					parseit( doclin, &closerow, linnum, 3);
+					if (!NewZmanTableFormat) 
+					{
+						sprintf( doclin, "%s%s", caldayHeb, "\0" );
+						parseit( doclin, &closerow, linnum, 1);
+						sprintf( doclin, "%s%s", calday, "\0");
+						parseit( doclin, &closerow, linnum, 2);
+						sprintf( doclin, "%s%s", caldayEng, "\0" );
+ 						parseit( doclin, &closerow, linnum, 3);
+					}
+					else
+					{
+						sprintf( doclin, "%s%s", caldayHeb, "\0" );
+						parseit2( doclin, &closerow, &dayweek, 1);
+						sprintf( doclin, "%s%s", calday, "\0");
+						parseit2( doclin, &closerow, &dayweek, 2);
+						sprintf( doclin, "%s%s", caldayEng, "\0" );
+ 						parseit2( doclin, &closerow, &dayweek, 3);
+					}
 
 					if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
 						&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
@@ -4105,7 +4192,8 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 							{
 								closerow = true;
 							}
-							parseit( doclin, &closerow, linnum, 0);
+							//parseit( doclin, &closerow, linnum, 0);
+							parseit2( doclin, &closerow, &dayweek, 0);
 						}
 
 					}
@@ -4117,7 +4205,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 
 			}
 
-			yrn++; //next year
+			yrn++; //next civil year
 			myear++;
 			yl = YearLength( &myear );
 
@@ -4149,13 +4237,25 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 				{
 					//add new line tag for each new line
 					fprintf( stdout, "%s\n", "    <tr>");
-
-					sprintf( doclin, "%s%s", caldayHeb, "\0" );
-					parseit( doclin, &closerow, linnum, 1);
-					sprintf( doclin, "%s%s", calday, "\0");
-					parseit( doclin, &closerow, linnum, 2);
-					sprintf( doclin, "%s%s", caldayEng, "\0" );
- 					parseit( doclin, &closerow, linnum, 3);
+					
+					if (!NewZmanTableFormat) 
+					{
+						sprintf( doclin, "%s%s", caldayHeb, "\0" );
+						parseit( doclin, &closerow, linnum, 1);
+						sprintf( doclin, "%s%s", calday, "\0");
+						parseit( doclin, &closerow, linnum, 2);
+						sprintf( doclin, "%s%s", caldayEng, "\0" );
+ 						parseit( doclin, &closerow, linnum, 3);
+					}
+					else
+					{
+						sprintf( doclin, "%s%s", caldayHeb, "\0" );
+						parseit2( doclin, &closerow, &dayweek, 1);
+						sprintf( doclin, "%s%s", calday, "\0");
+						parseit2( doclin, &closerow, &dayweek, 2);
+						sprintf( doclin, "%s%s", caldayEng, "\0" );
+ 						parseit2( doclin, &closerow, &dayweek, 3);
+					}
 
 					if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
 						&dy, caldayHeb, &dayweek, &mp, &mc, &ap, &ac,  &ms, &aas, &es, &ob,
@@ -4172,7 +4272,8 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 							{
 								closerow = true;
 							}
-							parseit( doclin, &closerow, linnum, 0);
+							//parseit( doclin, &closerow, linnum, 0);
+							parseit2( doclin, &closerow, &dayweek, 0);
 						}
 
 					}
@@ -4250,6 +4351,88 @@ void parseit( char outdoc[], bool *closerow, short linnum, short mode)
 	//parse lines looking for spaces
 
 	if (linnum % 2 == 0)
+	{
+
+		sprintf( buff1, "%s%s%s", "        <td width=\"", widthtim, "\" bgcolor=\"#ffff00\" >" );
+		fprintf(stdout, "%s\n", buff1 );
+	}
+	else
+	{
+		sprintf( buff1, "%s%s%s", "        <td width=\"", widthtim, "\" >" );
+		fprintf(stdout, "%s\n", buff1 );
+	}
+
+	sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font size=\"2\" >", Trim(timlet), "</font></p>" );
+	fprintf(stdout, "%s\n", buff1);
+	fprintf(stdout, "%s\n", "        </td>");
+
+
+	if (*closerow) //end of row signaled, so print end of row tags
+	{
+		fprintf(stdout, "%s\n", "    </tr>");
+		*closerow = false;
+	}
+
+
+}
+
+////////////////parseit2//uses daynum to highlight only Shabbosim//////////////////////////
+void parseit2( char outdoc[], bool *closerow, short *daynum, short mode)
+{
+	//parseit: adds tags to html, and accumlates text for the csv file
+
+	char widthtim[4] = "";
+	static char timlet[255] = "";
+	//static char l_buff[255] = "";
+
+	strcpy( timlet, Trim(&outdoc[0]) );
+
+	if (WIDTHFIELD)
+	{
+		//program will independently determine witdth field
+		itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
+	}
+	else
+	{
+		//use set values for the different fields
+
+		switch (mode)
+		{
+		case -1:
+			itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
+			break;
+		case 0: //time string, example 4:32, 17:32
+			strcpy( widthtim, "30" );
+			break;
+		case 1: //Hebrew date
+		    if (optionheb)
+		    {
+      			strcpy( widthtim, "70" );
+            }
+            else
+            {
+      			strcpy( widthtim, "90" );
+            }
+			break;
+		case 2: //Day plus holidays
+		    if (optionheb)
+		    {
+      			strcpy( widthtim, "120" );
+            }
+            else
+            {
+      			strcpy( widthtim, "200" );
+            }
+			break;
+		case 3: //Civil date
+			strcpy( widthtim, "80" );
+			break;
+		}
+	}
+
+	//parse lines looking for spaces
+
+	if (*daynum % 7 == 0)  //on Shabbos *daynum = 7, so highlight it only
 	{
 
 		sprintf( buff1, "%s%s%s", "        <td width=\"", widthtim, "\" bgcolor=\"#ffff00\" >" );
