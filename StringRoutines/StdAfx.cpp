@@ -32,7 +32,7 @@
 
 
 //////////////////////global array bounds///////////////////////////////////////
-#define MAXCGIVARS 40 //maximum number of cgi variables
+#define MAXCGIVARS 45 //maximum number of cgi variables
 #define MAXDBLSIZE 100 //maximum character size of data elements to be read using ParseString
 #define WIDTHFIELD 0 //0 for false - use predetermined html cell widths, = 1 for letting program determine it
 #define INPUT_TYPE 1 //0 for post, 1 for get
@@ -88,14 +88,14 @@ void InsertHolidays(char *caldayHeb, char *caldayEng, char *calday,
 					short yl, short *ntotshabos, short *dayweek, short *fshabos,
 					short *nshabos,	short *addmon, short iheb );
 char *hebyear(char *yrcal, short yr);
-short WriteTables(char TitleZman[], short numsort, short numzman,
+short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, bool nusachSefard,
 				  double *avekmxzman, double *avekmyzman, double *avehgtzman,
 				  short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 void heb12monthHTML(short setflag);
 void heb13monthHTML(short setflag);
 void timestring( short ii, short k, short iii);
-void parseit( char outdoc[], bool *closerow, short linnum, short mode);
-void parseit2( char outdoc[], bool *closerow, short *daynum, short mode);
+void parseit( char outdoc[], bool *closerow, short linnum, short numcol, short mode);
+void parseit2( char outdoc[], bool *closerow, short *daynum, short numcol, short mode);
 short CheckInputs(char *strlat, char *strlon, char *strhgt);
 short Caldirectories();
 short SunriseSunset(short types, bool *adhocrise, bool *adhocset, short ExtTemp[]);
@@ -113,14 +113,17 @@ short iswhite(char c);
 short find_first_nonwhite_character(char *str, short start_pos);
 short find_last_nonwhite_character(char *str, short start_pos);
 short ParseData( char *doclin, char *sep, double arr[], short NUMENTRIES, short MAXARRsize );
-short ParseString( char *doclin, char *sep, char strarr[][MAXDBLSIZE], short NUMENTRIES );
-char *fgets_CR( char *str, short strsize, FILE *stream );
+//short ParseString( char *doclin, char *sep, char strarr[][MAXDBLSIZE], short NUMENTRIES );
+short ParseString(const char *doclin, const char *sep,
+                  char arr[][MAXDBLSIZE], short NUMENTRIES); //Copilot replacement
+//char *fgets_CR( char *str, short strsize, FILE *stream );
+char *fgets_CR(char *str, int strsize, FILE *stream); //Copilot replacement
 char *RemoveCRLF( char *str );
 
 char *IsoToUnicode( char *str );
 short LoadConstants(short zmanyes, short typezman, char filzman[] );
 short LoadTitlesSponsors();
-short PrintMultiColTable(char filzman[], short ExtTemp[] );
+short PrintMultiColTable(char filzman[], short ExtTemp[], bool sefira, bool nusachSefard);
 char *round( double tim, short stepps, short accurr, short sp, short *DST, 
 			 char t3subb[], const short mode );
 char *EngCalDate(short ndy, short EngYear, short yl, char *caldate );
@@ -247,6 +250,13 @@ short DayNumber(short ylyd, short mon, short mday);
 short IsDST(char *country, char *city, short StartDay[], short EndDay[] );
 /////////////////////////////////////////////////////////////////////
 
+/////////////sefiras Haomer functions///////////////////
+static char *load(const char *key);
+char *hebrew_number(int n);
+char *hebrew_abbrev(int n);
+char *english_ordinal(int n);
+char *omer_output(int day, int optionheb, int fullcount, short mode);
+bool ShowSefira = true;
 
 /************file folder paths/weather modeling****************/
 //eventually these will be stored in a file with a php interface
@@ -330,7 +340,7 @@ char heb7[30][100];//Hebrew alphabet in Unicode
 char heb8[25][255];//Hebrew error messages
 char heb9[16][255]; //PlotGraphHTML5 Hebrew strings
 char heb10[12][255]; //Hebrew fast dates
-char holidays[4][14][255]; //NOTICE: largest holiday string is 40 characters long
+char holidays[4][16][255]; //NOTICE: largest holiday string is 40 characters long
 char arrStrParshiot[2][63][255]; //NOTICE: largest parshia name is 40 characters long
 char arrStrSedra[2][63][255]; //NOTICE: Sedra length must equla Parshiot name
 char stortim[2][13][31][40]; //actually stors times, parshios, days, etc.
@@ -348,8 +358,8 @@ char monthh[2][15][50];  //Heberw month strings
 short maxzemanim = 50; //maximum number of zemanim that can be calculated
 ////////////////////////////////////////////////////////////////////
 
-char zmannames[50][8][200]; //parsed elements of zemanim parameters
-char zmantitles[50][200]; //sorted zman legend names
+char zmannames[50][15][1255]; //parsed elements of zemanim parameters
+char zmantitles[50][1255]; //sorted zman legend names
 char c_zmantimes[50][9];  //contains sorted zemanim as time strings
 double zmantimes[50];     //unsorted zemanim as fractional hours
 short zmannumber[2][50];
@@ -398,8 +408,8 @@ char TableType[5] = "";
 char DomainName[255] = "";
 
 /////////////////////global static string/buffers////////////////////////////
-char doclin[1600] = "";
-char buff[10000] = "";
+char doclin[20000] = "";
+char buff[20000] = "";
 char buff1[1600] = "";
 char buff2[10000] = "";
 char buff3[10000] = "";
@@ -407,7 +417,15 @@ char filroot[255] = "";
 char myfile[255] = "";
 
 /////////////////diagnostic error buffer///////////////////////////
-//char Errorbuff[1000] = "";  //uncomment for diagnostics
+char Errorbuff[1500] = "";  //uncomment for diagnostics
+void WriteErrorString(char *errorstr, int *Write_flag );
+bool diagnostics = false;
+bool diagnostics2 = false;
+bool diagnostics3 = false;
+bool diagnostics4 = false;
+int Write_flag = 0;
+/////////////////////////////////////////////////////////
+
 void sanitize_utf8(char *s);
 
 //////global non string variables///////
@@ -582,6 +600,12 @@ bool DSTcheck = true;
 
 ///////////////////////////////////flag for new Zemanim format///////////////
 bool NewZmanTableFormat = true;
+
+//////////////////////////////////////sof zman Achila/Sreifa/////////////////////
+char SofZmanAchilaStr[255] = "";
+char SofZmanSreifaStr[255] = "";
+double SofZmanAchila = -9999;
+double SofZmanSreifa = -9999;
 
 /************************Conversions from ITM to WGS84, etc*********************/
 //*****************************************************************************************************
@@ -949,6 +973,7 @@ The values set for debugging the program are simply the cgi arguments that are p
 42 added global warming add hoc fix to the Temperatures model when GlobalWarmingCorrection = year to start correction
 43 added new DTM directory that contains the NED 30 m DEM and the SRTM 30 m DTM that used to reside in the US server (now defunct)
    cgi determines which directory to use and sets DTMflag which is now global variable
+42 added taanisim, sof zman achila and sreifa, and serifas haomer to zamenei hayom
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
@@ -989,6 +1014,8 @@ int main(int argc, char* argv[])
 	short foundcity = 0;
 	bool adhocrise = true;
 	bool adhocset = false;
+	bool sefira;
+	bool nusachSefard;
 
 	////////////////////if first entry is not = -9999, then using external temperatures inputed by user/////
 	////////////////////to calculat the vdw scaling factors//////////////////////////////////////
@@ -1195,6 +1222,21 @@ __asm{
 		}
 		/////////////////////////////////////////////////////////////////////////////
 
+		//////////////////////Sefiras Haomer///////////////////////////
+		sefira = false;
+		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_sefira")), "ON") )
+		{
+			sefira = true; //add cushions for thermal inversion region for simsets
+		}
+
+		////////////////////////Nusach Sefard////////////////////////
+		nusachSefard = false;
+		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_nusach")), "ON") )
+        {
+			nusachSefard = true; //add cushions for thermal inversion region for simsets
+		}
+
+
 		CGI = 1;
 
    }
@@ -1202,21 +1244,21 @@ __asm{
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "BY" ); //"Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Chai"); //;"BY" ); //"Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "acco" ); //"Baltimore"); //"Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( MetroArea, "Jerusalem" ); //"acco" ); //"Baltimore"); //"Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
 		strcpy( country, "Israel" ); //"USA" ); //"Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
-		g_yrheb = 5781; //5783; //5782; //5781; //5779;//5776; //5775;
+		g_yrheb = 5786; //5783; //5782; //5781; //5779;//5776; //5775;
 		zmanyes = 1; //0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
-		typezman = 3; //8; // acc. to which opinion
-		optionheb = true; //false; //true; //false; //true; //false; //true;//false;
+		typezman = 8; //3; //8; // acc. to which opinion
+		optionheb = false; //true; //false; //true; //false; //true; //false; //true;//false;
 		RoundSecondsin = 5; //1;//5;
 
 		///unique to Chai tables
-		numUSAcities1 = 4; //29; //27; //4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area  (in c:/cities Lakewood = 29, but in web it is 27)
-		numUSAcities2 = 19; //1; //4; //1; //2; //7;//0; //75; //city area
-		searchradius = 0.8; //3; //0.4; //8; //1; //8; //1;//4;//1; //search area
+		numUSAcities1 = 3; //4; //29; //27; //4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area  (in c:/cities Lakewood = 29, but in web it is 27)
+		numUSAcities2 = 78; //19; //1; //4; //1; //2; //7;//0; //75; //city area
+		searchradius = 1.0; //0.8; //3; //0.4; //8; //1; //8; //1;//4;//1; //search area
 		yesmetro = 0; //0; //1; //0;  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
 		GoldenLight = 0; //1;
 
@@ -2165,7 +2207,7 @@ __asm{
 
 	if (zmanyes) //print zemanim tables
 	{
-		if (PrintMultiColTable(filzman, ExtTemp)) return -1;
+		if (PrintMultiColTable(filzman, ExtTemp, sefira, nusachSefard)) return -1;
 	}
 
 	if (WriteHtmlClosing()) return -1; //write the html closing info and close the stream
@@ -3672,7 +3714,7 @@ char *hebyear(char *yrcal, short yr)
 
 
 //////////////////////////////////1////////////////////////////////
-short WriteTables(char TitleZman[], short numsort, short numzman,
+short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, bool nusachSefard,
 				  double *avekmxzman, double *avekmyzman, double *avehgtzman,
 				  short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[])
 ///////////////////////////////////////////////////////////////////////
@@ -3947,43 +3989,48 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 		fprintf( stdout, "%s\n", "<table border='1' cellpadding='1' cellspacing='1' align='center'>");
 	}
 
-
-	//create table's column headers
-	linnum = 1; //column headers are first row in the htm document
-
-	doclin[0] = '\0'; //initialzie "doclin"
-
-	//add new line tag for this first line
-	fprintf( stdout, "%s\n", "    <tr>");
-
-	nn = 0;
-	for (m = 1; m <= numsort + 3; m++)
+	/*
+	if (!SingleDay)
 	{
-		if (optionheb)
-		{
-			hebnum(m, ch);
-		}
-		else
-		{
-			nn = nn + 1;
-			itoa( nn, ch, 10);
-		}
+		//create table's column headers
+		linnum = 1; //column headers are first row in the htm document
 
-		strcpy( doclin, ch);
+		doclin[0] = '\0'; //initialzie "doclin"
 
-		if (m == numsort + 3)
+		//add new line tag for this first line
+		fprintf( stdout, "%s\n", "    <tr>");
+
+		nn = 0;
+		for (m = 1; m <= numsort + 3; m++)
 		{
-			closerow = true;
+			if (optionheb)
+			{
+				hebnum(m, ch);
+			}
+			else
+			{
+				nn = nn + 1;
+				itoa( nn, ch, 10);
+			}
+
+			strcpy( doclin, ch);
+
+			if (m == numsort + 3)
+			{
+				closerow = true;
+			}
+        		parseit( doclin, &closerow, linnum, 0, 0);
+			//doclin$ = doclin$ & comma$ & spacerb$ & ch$ & spacera$
 		}
-        	parseit( doclin, &closerow, linnum, 0);
-		//doclin$ = doclin$ & comma$ & spacerb$ & ch$ & spacera$
 	}
-
+	*/
+	int omer_count = 0; //used for sefiras haomer
 	//now create the actual table
 	numday = -1;
 	for (i = 1; i <= endyr; i++)  //loop over the number months of the Hebrew year
 	{
-		if (i > 1 && NewZmanTableFormat) //print out new number legend
+		/* //////////////////////deprecated 081126/////////////////now written in each month loop//////////////////
+		if (NewZmanTableFormat && !SingleDay) //print out new number legend
 		{
 			//end last table for last month, and begin new one
 			fprintf( stdout, "%s\n", "          </table>");
@@ -4027,12 +4074,14 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 				{
 					closerow = true;
 				}
-        			parseit( doclin, &closerow, linnum, 0);
+        			parseit( doclin, &closerow, linnum, 0, 0);
 				//doclin$ = doclin$ & comma$ & spacerb$ & ch$ & spacera$
 			}
+			
 		}
+		*/////////////////////////////////////////////////////////////////////////////////
 
-		if (g_mmdate[1][i - 1] > g_mmdate[0][i - 1]) //Hebrew month days from g_madate[0] to g_mdate[1]
+		if (g_mmdate[1][i - 1] > g_mmdate[0][i - 1]) //Hebrew month civil calendar days from g_madate[0] to g_mdate[1]
 		{
 
 			if (i > 1 && g_mmdate[0][i - 1] == 1)
@@ -4048,8 +4097,60 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 			k = 0;
 			//strcpy( totdoc, "\0");
 
-			for (j = g_mmdate[0][i - 1]; j <= g_mmdate[1][i - 1]; j++)
+			for (j = g_mmdate[0][i - 1]; j <= g_mmdate[1][i - 1]; j++) //days of the Hebrew wmonth according to civil calendar days
 			{
+
+				//divide zemanim table according to months, a table for each month, and add legend bar on top of each month
+				if (NewZmanTableFormat && ( (!SingleDay && j == g_mmdate[0][i - 1]) || (SingleDay && SingleYr == nyr && SingleDayNum == j ))) //print out new number legend
+				{
+					//end last table for last month, and begin new one
+					fprintf( stdout, "%s\n", "          </table>");
+
+					fprintf( stdout, "%s\n", "<p></p>");
+
+					if (optionheb)
+					{
+						fprintf( stdout, "%s\n", "<table border='1' cellpadding='1' cellspacing='1' align='center' dir='rtl'>");
+					}
+					else
+					{
+						fprintf( stdout, "%s\n", "<table border='1' cellpadding='1' cellspacing='1' align='center'>");
+					}
+
+
+					//create table's column headers
+					linnum = 1; //column headers are first row in the htm document
+
+					doclin[0] = '\0'; //initialzie "doclin"
+
+					//add new line tag for this first line
+					fprintf( stdout, "%s\n", "    <tr>");
+
+					nn = 0;
+					for (m = 1; m <= numsort + 3; m++)
+					{
+						if (optionheb)
+						{
+							hebnum(m, ch);
+						}
+						else
+						{
+							nn = nn + 1;
+							itoa( nn, ch, 10);
+						}
+
+						strcpy( doclin, ch);
+
+						if (m == numsort + 3)
+						{
+							closerow = true;
+						}
+        					parseit( doclin, &closerow, linnum, 0, 0);
+						//doclin$ = doclin$ & comma$ & spacerb$ & ch$ & spacera$
+					}
+					
+				}
+
 				numday++;
 				k++;
 
@@ -4080,20 +4181,20 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 					if (!NewZmanTableFormat) 
 					{
 						sprintf( doclin, "%s%s", caldayHeb, "\0" );
-						parseit( doclin, &closerow, linnum, 1);
+						parseit( doclin, &closerow, linnum, 0, 1);
 						sprintf( doclin, "%s%s", calday, "\0");
-						parseit( doclin, &closerow, linnum, 2);
+						parseit( doclin, &closerow, linnum, 0, 2);
 						sprintf( doclin, "%s%s", caldayEng, "\0" );
- 						parseit( doclin, &closerow, linnum, 3);
+ 						parseit( doclin, &closerow, linnum, 0, 3);
 					}
 					else
 					{
 						sprintf( doclin, "%s%s", caldayHeb, "\0" );
-						parseit2( doclin, &closerow, &dayweek, 1);
+						parseit2( doclin, &closerow, &dayweek, 0, 1);
 						sprintf( doclin, "%s%s", calday, "\0");
-						parseit2( doclin, &closerow, &dayweek, 2);
+						parseit2( doclin, &closerow, &dayweek, 0, 2);
 						sprintf( doclin, "%s%s", caldayEng, "\0" );
- 						parseit2( doclin, &closerow, &dayweek, 3);
+ 						parseit2( doclin, &closerow, &dayweek, 0, 3);
 					}
 
 					if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
@@ -4111,8 +4212,140 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 							{
 								closerow = true;
 							}
-							//parseit( doclin, &closerow, linnum, 0);
-							parseit2( doclin, &closerow, &dayweek, 0);
+
+							if (!NewZmanTableFormat) 
+							{
+								parseit( doclin, &closerow, linnum, 0, 0);
+							}
+							else
+							{
+								parseit2( doclin, &closerow, &dayweek, 0, 0);
+							}
+						}
+
+
+						////////////////////////sof zman Achila/Sreifa 081026//////////////////////////////////////////
+						
+						if  (	( !strcmp(caldayHeb, &heb6[5][0]) || !strcmp(caldayHeb, "14-Nisan") ) 
+							 && (SofZmanAchila != -9999 && SofZmanSreifa != -9999) )
+						{
+							Trim(Replace( &holidays[0][13][0], '_', ' ' ));
+							Trim(Replace( &holidays[0][14][0], '_', ' ' ));
+							
+							fprintf( stdout, "%s\n", "    </tr>");
+
+							if (!NewZmanTableFormat) 
+							{
+								sprintf( doclin, "%s%s", caldayHeb, "\0" );
+								parseit( doclin, &closerow, linnum, 0, 1);
+
+								if (!optionheb)
+								{
+									if ( strstr( calday, "Shabbos") ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s%s%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "   Sof Zman Sreifas Chometz: ", SofZmanSreifaStr, "\0");
+									}
+								}
+								else
+								{
+									if ( strstr(calday, &heb4[7][0]) ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s: %s   %s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, &holidays[0][14][0], SofZmanSreifaStr, "\0");
+									}
+								}
+								parseit( doclin, &closerow, linnum, numsort + 2, 4);
+							}
+							else
+							{
+								sprintf( doclin, "%s%s", caldayHeb, "\0" );
+								parseit2( doclin, &closerow, &dayweek, 0, 1);
+								if (!optionheb)
+								{
+									if ( strstr( calday, "Shabbos") ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s%s%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "   Sof Zman Sreifas Chometz: ", SofZmanSreifaStr, "\0");
+									}
+								}
+								else
+								{
+									if ( strstr(calday, &heb4[7][0]) ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s: %s   %s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, &holidays[0][14][0], SofZmanSreifaStr, "\0");
+									}
+								}
+								parseit2( doclin, &closerow, &dayweek, numsort + 2, 4);
+							}
+							//add end of row tag
+							fprintf( stdout, "%s\n", "    </tr>");
+						
+						}
+						///////////////////////sof zman Achila/Sreifa////////////////////////////////
+
+						/////////////////////////add sefiras haomer////////////081126//////////////////
+						//if regular year of 12 months
+						//sefiras hayom is from 7th Hebrew month on the 16th day to the 9th Hebrew month on the 5th day
+
+						//if leap year with 13 months
+						//sefiras hayom is from 8th Hebrew month on the 16th day to the 10th Hebrew month on the 5th day
+						//nusach = 0 for Ashkenazi counting
+						//nusach = 1 for nusach Spherad
+						short nusach = 0;
+						if (nusachSefard) nusach = 1;
+						if (sefira)
+						{
+
+							if ( ( endyr == 12 && //regular 12 month year
+								((i == 7 && j >= g_mmdate[0][i - 1] + 15) || //Nisan 16 - 30
+								(i == 8) ||									 //Iyar 1-29
+								(i == 9 && j <= g_mmdate[0][i - 1] + 4)) )	 //Sivan 1-5
+								|| 
+							   ( endyr == 13 && //leap year (13 months)
+							   ((i == 8 && j >= g_mmdate[0][i - 1] + 15) ||  //Nisan 16 - 30
+							   (i == 9) ||									 //Iyar 1-29
+							   (i == 10 && j <= g_mmdate[0][i - 1] + 4)) ) ) //Sivan 1-5
+							{
+								omer_count++;
+								fprintf( stdout, "%s\n", "    </tr>");
+
+								if (!NewZmanTableFormat) 
+								{
+									sprintf( doclin, "%s%s", caldayHeb, "\0" );
+									parseit( doclin, &closerow, linnum, 0, 1);
+									sprintf( doclin, "%s", omer_output(omer_count, optionheb, 0, nusach)); //abbreviated count
+									parseit( doclin, &closerow, linnum, 0, 2);
+									sprintf( doclin, "%s", omer_output(omer_count, optionheb, 1, nusach)); //full count
+									parseit( doclin, &closerow, linnum, numsort + 1, 4);
+								}
+								else
+								{
+									sprintf( doclin, "%s%s", caldayHeb, "\0" );
+									parseit2( doclin, &closerow, &dayweek, 0, 1);
+									sprintf( doclin, "%s", omer_output(omer_count, optionheb, 0, nusach)); //abbreviated count
+									parseit2( doclin, &closerow, &dayweek, 0, 2);
+									sprintf( doclin, "%s", omer_output(omer_count, optionheb, 1, nusach)); //full count
+									parseit2( doclin, &closerow, &dayweek, numsort + 1, 4);
+								}+
+
+								//add end of row tag
+								fprintf( stdout, "%s\n", "    </tr>");
+							}
+
 						}
 
 					}
@@ -4124,13 +4357,65 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 
 			}
 		}
-		else if (g_mmdate[1][i - 1] < g_mmdate[0][i - 1])
+		else if (g_mmdate[1][i - 1] < g_mmdate[0][i - 1]) //Hebrew months that span the Civil New Year so the beginning civil day number of previous year  > ending civil day number of new year
 		{
 			k = 0;
 			//strcpy( totdoc, "\0" );
 
 			for (j = g_mmdate[0][i - 1]; j <= yrend[0]; j++) //yl1%
 			{
+
+				//divide zemanim table according to months, a table for each month, and add legend bar on top of each month
+				if (NewZmanTableFormat && ( (!SingleDay && j == g_mmdate[0][i - 1]) || (SingleDay && SingleYr == nyr && SingleDayNum == j ))) //print out new number legend
+				{
+					//end last table for last month, and begin new one
+					fprintf( stdout, "%s\n", "          </table>");
+
+					fprintf( stdout, "%s\n", "<p></p>");
+
+					if (optionheb)
+					{
+						fprintf( stdout, "%s\n", "<table border='1' cellpadding='1' cellspacing='1' align='center' dir='rtl'>");
+					}
+					else
+					{
+						fprintf( stdout, "%s\n", "<table border='1' cellpadding='1' cellspacing='1' align='center'>");
+					}
+
+
+					//create table's column headers
+					linnum = 1; //column headers are first row in the htm document
+
+					doclin[0] = '\0'; //initialzie "doclin"
+
+					//add new line tag for this first line
+					fprintf( stdout, "%s\n", "    <tr>");
+
+					nn = 0;
+					for (m = 1; m <= numsort + 3; m++)
+					{
+						if (optionheb)
+						{
+							hebnum(m, ch);
+						}
+						else
+						{
+							nn = nn + 1;
+							itoa( nn, ch, 10);
+						}
+
+						strcpy( doclin, ch);
+
+						if (m == numsort + 3)
+						{
+							closerow = true;
+						}
+        					parseit( doclin, &closerow, linnum, 0, 0);
+						//doclin$ = doclin$ & comma$ & spacerb$ & ch$ & spacera$
+					}
+					
+				}
+
 				numday++;
 				k++;
 
@@ -4161,20 +4446,20 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 					if (!NewZmanTableFormat) 
 					{
 						sprintf( doclin, "%s%s", caldayHeb, "\0" );
-						parseit( doclin, &closerow, linnum, 1);
+						parseit( doclin, &closerow, linnum, 0, 1);
 						sprintf( doclin, "%s%s", calday, "\0");
-						parseit( doclin, &closerow, linnum, 2);
+						parseit( doclin, &closerow, linnum, 0, 2);
 						sprintf( doclin, "%s%s", caldayEng, "\0" );
- 						parseit( doclin, &closerow, linnum, 3);
+ 						parseit( doclin, &closerow, linnum, 0, 3);
 					}
 					else
 					{
 						sprintf( doclin, "%s%s", caldayHeb, "\0" );
-						parseit2( doclin, &closerow, &dayweek, 1);
+						parseit2( doclin, &closerow, &dayweek, 0, 1);
 						sprintf( doclin, "%s%s", calday, "\0");
-						parseit2( doclin, &closerow, &dayweek, 2);
+						parseit2( doclin, &closerow, &dayweek, 0, 2);
 						sprintf( doclin, "%s%s", caldayEng, "\0" );
- 						parseit2( doclin, &closerow, &dayweek, 3);
+ 						parseit2( doclin, &closerow, &dayweek, 0, 3);
 					}
 
 					if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
@@ -4192,9 +4477,92 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 							{
 								closerow = true;
 							}
-							//parseit( doclin, &closerow, linnum, 0);
-							parseit2( doclin, &closerow, &dayweek, 0);
+
+							if (!NewZmanTableFormat) 
+							{
+								parseit( doclin, &closerow, linnum, 0, 0);
+							}
+							else
+							{
+								parseit2( doclin, &closerow, &dayweek, 0, 0);
+							}
 						}
+
+
+
+						////////////////////////sof zman Achila/Sreifa 081026//////////////////////////////////////////
+						
+						if  (	( !strcmp(caldayHeb, &heb6[5][0]) || !strcmp(caldayHeb, "14-Nisan") ) 
+							 && (SofZmanAchila != -9999 && SofZmanSreifa != -9999) )
+						{
+							Trim(Replace( &holidays[0][13][0], '_', ' ' ));
+							Trim(Replace( &holidays[0][14][0], '_', ' ' ));
+							
+							fprintf( stdout, "%s\n", "    </tr>");
+
+							if (!NewZmanTableFormat) 
+							{
+								sprintf( doclin, "%s%s", caldayHeb, "\0" );
+								parseit( doclin, &closerow, linnum, 0, 1);
+
+								if (!optionheb)
+								{
+									if ( strstr( calday, "Shabbos") ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s%s%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "   Sof Zman Sreifas Chometz: ", SofZmanSreifaStr, "\0");
+									}
+								}
+								else
+								{
+									if ( strstr(calday, &heb4[7][0]) ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s: %s   %s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, &holidays[0][14][0], SofZmanSreifaStr, "\0");
+									}
+								}
+								parseit( doclin, &closerow, linnum, numsort + 2, 4);
+							}
+							else
+							{
+								sprintf( doclin, "%s%s", caldayHeb, "\0" );
+								parseit2( doclin, &closerow, &dayweek, 0, 1);
+								if (!optionheb)
+								{
+									if ( strstr( calday, "Shabbos") ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s%s%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "   Sof Zman Sreifas Chometz: ", SofZmanSreifaStr, "\0");
+									}
+								}
+								else
+								{
+									if ( strstr(calday, &heb4[7][0]) ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s: %s   %s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, &holidays[0][14][0], SofZmanSreifaStr, "\0");
+									}
+								}
+								parseit2( doclin, &closerow, &dayweek, numsort + 2, 4);
+							}
+							//add end of row tag
+							fprintf( stdout, "%s\n", "    </tr>");
+						
+						}
+						///////////////////////sof zman Achila/Sreifa////////////////////////////////
+
 
 					}
 					else
@@ -4211,6 +4579,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 
 			for (j = 1; j <= g_mmdate[1][i - 1]; j++)
 			{
+				
 				numday++;
 				k++;
 
@@ -4241,20 +4610,20 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 					if (!NewZmanTableFormat) 
 					{
 						sprintf( doclin, "%s%s", caldayHeb, "\0" );
-						parseit( doclin, &closerow, linnum, 1);
+						parseit( doclin, &closerow, linnum, 0, 1);
 						sprintf( doclin, "%s%s", calday, "\0");
-						parseit( doclin, &closerow, linnum, 2);
+						parseit( doclin, &closerow, linnum, 0, 2);
 						sprintf( doclin, "%s%s", caldayEng, "\0" );
- 						parseit( doclin, &closerow, linnum, 3);
+ 						parseit( doclin, &closerow, linnum, 0, 3);
 					}
 					else
 					{
 						sprintf( doclin, "%s%s", caldayHeb, "\0" );
-						parseit2( doclin, &closerow, &dayweek, 1);
+						parseit2( doclin, &closerow, &dayweek, 0, 1);
 						sprintf( doclin, "%s%s", calday, "\0");
-						parseit2( doclin, &closerow, &dayweek, 2);
+						parseit2( doclin, &closerow, &dayweek, 0, 2);
 						sprintf( doclin, "%s%s", caldayEng, "\0" );
- 						parseit2( doclin, &closerow, &dayweek, 3);
+ 						parseit2( doclin, &closerow, &dayweek, 0, 3);
 					}
 
 					if ( !(newzemanim( &nyr, &j, &air, &lr, &tf, &dyo, &hgto, &yro, &td,
@@ -4272,9 +4641,89 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 							{
 								closerow = true;
 							}
-							//parseit( doclin, &closerow, linnum, 0);
-							parseit2( doclin, &closerow, &dayweek, 0);
+
+							if (!NewZmanTableFormat) 
+							{
+								parseit( doclin, &closerow, linnum, 0, 0);
+							}
+							else
+							{
+								parseit2( doclin, &closerow, &dayweek, 0, 0);
+							}
 						}
+
+						////////////////////////sof zman Achila/Sreifa 081026//////////////////////////////////////////
+						
+						if  (	( !strcmp(caldayHeb, &heb6[5][0]) || !strcmp(caldayHeb, "14-Nisan") ) 
+							 && (SofZmanAchila != -9999 && SofZmanSreifa != -9999) )
+						{
+							Trim(Replace( &holidays[0][13][0], '_', ' ' ));
+							Trim(Replace( &holidays[0][14][0], '_', ' ' ));
+							
+							fprintf( stdout, "%s\n", "    </tr>");
+
+							if (!NewZmanTableFormat) 
+							{
+								sprintf( doclin, "%s%s", caldayHeb, "\0" );
+								parseit( doclin, &closerow, linnum, 0, 1);
+
+								if (!optionheb)
+								{
+									if ( !strcmp( calday, "Shabbos") ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s%s%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "   Sof Zman Sreifas Chometz: ", SofZmanSreifaStr, "\0");
+									}
+								}
+								else
+								{
+									if ( !strcmp(calday, &heb4[7][0]) ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s: %s   %s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, &holidays[0][14][0], SofZmanSreifaStr, "\0");
+									}
+								}
+								parseit( doclin, &closerow, linnum, numsort + 2, 4);
+							}
+							else
+							{
+								sprintf( doclin, "%s%s", caldayHeb, "\0" );
+								parseit2( doclin, &closerow, &dayweek, 0, 1);
+								if (!optionheb)
+								{
+									if ( !strcmp( calday, "Shabbos") ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s%s%s%s%s", "Sof Zman Achilas Chometz: ", SofZmanAchilaStr, "   Sof Zman Sreifas Chometz: ", SofZmanSreifaStr, "\0");
+									}
+								}
+								else
+								{
+									if ( !strcmp(calday, &heb4[7][0]) ) //no Sreifas chometz on Shabbos
+									{
+										sprintf( doclin, "%s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, "\0");
+									}
+									else
+									{
+										sprintf( doclin, "%s: %s   %s: %s%s", &holidays[0][13][0], SofZmanAchilaStr, &holidays[0][14][0], SofZmanSreifaStr, "\0");
+									}
+								}
+								parseit2( doclin, &closerow, &dayweek, numsort + 2, 4);
+							}
+							//add end of row tag
+							fprintf( stdout, "%s\n", "    </tr>");
+						
+						}
+						///////////////////////sof zman Achila/Sreifa////////////////////////////////
 
 					}
 					else
@@ -4295,171 +4744,206 @@ short WriteTables(char TitleZman[], short numsort, short numzman,
 
 
 ////////////////parseit//////////////////////////////////////////////
-void parseit( char outdoc[], bool *closerow, short linnum, short mode)
+void parseit( char outdoc[], bool *closerow, short linnum, short numcol, short mode )
 {
-	//parseit: adds tags to html, and accumlates text for the csv file
+    char widthtim[4] = "";
+    static char timlet[255] = "";
 
-	char widthtim[4] = "";
-	static char timlet[255] = "";
-	//static char l_buff[255] = "";
+    strcpy(timlet, Trim(&outdoc[0]));
 
-	strcpy( timlet, Trim(&outdoc[0]) );
+    // MODE 4: full-row colspan output
+    if (mode == 4)
+    {
+        // Determine background color based on linnum (even rows highlighted)
+        if (linnum % 2 == 0)
+        {
+            fprintf(stdout,
+                "        <td colspan=\"%d\" bgcolor=\"#ffff00\" align=\"center\">\n",
+                numcol);
+        }
+        else
+        {
+            fprintf(stdout,
+                "        <td colspan=\"%d\" align=\"center\">\n",
+                numcol);
+        }
 
-	if (WIDTHFIELD)
-	{
-		//program will independently determine witdth field
-		itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
-	}
-	else
-	{
-		//use set values for the different fields
+        fprintf(stdout,
+            "            <p align=\"center\"><font size=\"2\">%s</font></p>\n",
+            Trim(timlet));
 
-		switch (mode)
-		{
-		case -1:
-			itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
-			break;
-		case 0: //time string, example 4:32, 17:32
-			strcpy( widthtim, "30" );
-			break;
-		case 1: //Hebrew date
-		    if (optionheb)
-		    {
-      			strcpy( widthtim, "70" );
-            }
+        fprintf(stdout, "        </td>\n");
+
+        if (*closerow)
+        {
+            fprintf(stdout, "    </tr>\n");
+            *closerow = false;
+        }
+
+        return;   // Skip normal logic
+    }
+
+    // NORMAL MODES 0–3
+    if (WIDTHFIELD)
+    {
+        itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
+    }
+    else
+    {
+        switch (mode)
+        {
+        case -1:
+            itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
+            break;
+        case 0:
+            strcpy(widthtim, "30");
+            break;
+        case 1:
+            if (optionheb)
+                strcpy(widthtim, "70");
             else
-            {
-      			strcpy( widthtim, "90" );
-            }
-			break;
-		case 2: //Day plus holidays
-		    if (optionheb)
-		    {
-      			strcpy( widthtim, "120" );
-            }
+                strcpy(widthtim, "90");
+            break;
+        case 2:
+            if (optionheb)
+                strcpy(widthtim, "120");
             else
-            {
-      			strcpy( widthtim, "200" );
-            }
-			break;
-		case 3: //Civil date
-			strcpy( widthtim, "80" );
-			break;
-		}
-	}
+                strcpy(widthtim, "200");
+            break;
+        case 3:
+            strcpy(widthtim, "80");
+            break;
+        }
+    }
 
-	//parse lines looking for spaces
+    // Normal cell printing
+    if (linnum % 2 == 0)
+    {
+        sprintf(buff1, "        <td width=\"%s\" bgcolor=\"#ffff00\" >", widthtim);
+        fprintf(stdout, "%s\n", buff1);
+    }
+    else
+    {
+        sprintf(buff1, "        <td width=\"%s\" >", widthtim);
+        fprintf(stdout, "%s\n", buff1);
+    }
 
-	if (linnum % 2 == 0)
-	{
+    sprintf(buff1,
+        "            <p align=\"center\"><font size=\"2\">%s</font></p>",
+        Trim(timlet));
+    fprintf(stdout, "%s\n", buff1);
+    fprintf(stdout, "        </td>\n");
 
-		sprintf( buff1, "%s%s%s", "        <td width=\"", widthtim, "\" bgcolor=\"#ffff00\" >" );
-		fprintf(stdout, "%s\n", buff1 );
-	}
-	else
-	{
-		sprintf( buff1, "%s%s%s", "        <td width=\"", widthtim, "\" >" );
-		fprintf(stdout, "%s\n", buff1 );
-	}
-
-	sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font size=\"2\" >", Trim(timlet), "</font></p>" );
-	fprintf(stdout, "%s\n", buff1);
-	fprintf(stdout, "%s\n", "        </td>");
-
-
-	if (*closerow) //end of row signaled, so print end of row tags
-	{
-		fprintf(stdout, "%s\n", "    </tr>");
-		*closerow = false;
-	}
-
-
+    if (*closerow)
+    {
+        fprintf(stdout, "    </tr>\n");
+        *closerow = false;
+    }
 }
+
+
 
 ////////////////parseit2//uses daynum to highlight only Shabbosim//////////////////////////
-void parseit2( char outdoc[], bool *closerow, short *daynum, short mode)
+void parseit2( char outdoc[], bool *closerow, short *daynum, short numcol, short mode )
 {
-	//parseit: adds tags to html, and accumlates text for the csv file
+    char widthtim[4] = "";
+    static char timlet[255] = "";
 
-	char widthtim[4] = "";
-	static char timlet[255] = "";
-	//static char l_buff[255] = "";
+    strcpy(timlet, Trim(&outdoc[0]));
 
-	strcpy( timlet, Trim(&outdoc[0]) );
+    // MODE 4: full-row colspan output
+    if (mode == 4)
+    {
+        // Shabbos highlighting logic
+        if (*daynum % 7 == 0)
+        {
+            fprintf(stdout,
+                "        <td colspan=\"%d\" bgcolor=\"#ffff00\" align=\"center\">\n",
+                numcol);
+        }
+        else
+        {
+            fprintf(stdout,
+                "        <td colspan=\"%d\" align=\"center\">\n",
+                numcol);
+        }
 
-	if (WIDTHFIELD)
-	{
-		//program will independently determine witdth field
-		itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
-	}
-	else
-	{
-		//use set values for the different fields
+        fprintf(stdout,
+            "            <p align=\"center\"><font size=\"2\">%s</font></p>\n",
+            Trim(timlet));
 
-		switch (mode)
-		{
-		case -1:
-			itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
-			break;
-		case 0: //time string, example 4:32, 17:32
-			strcpy( widthtim, "30" );
-			break;
-		case 1: //Hebrew date
-		    if (optionheb)
-		    {
-      			strcpy( widthtim, "70" );
-            }
+        fprintf(stdout, "        </td>\n");
+
+        if (*closerow)
+        {
+            fprintf(stdout, "    </tr>\n");
+            *closerow = false;
+        }
+
+        return;   // Skip normal logic
+    }
+
+    // NORMAL MODES 0–3
+    if (WIDTHFIELD)
+    {
+        itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
+    }
+    else
+    {
+        switch (mode)
+        {
+        case -1:
+            itoa((int)(strlen(timlet) * 4.5), widthtim, 10);
+            break;
+        case 0:
+            strcpy(widthtim, "30");
+            break;
+        case 1:
+            if (optionheb)
+                strcpy(widthtim, "70");
             else
-            {
-      			strcpy( widthtim, "90" );
-            }
-			break;
-		case 2: //Day plus holidays
-		    if (optionheb)
-		    {
-      			strcpy( widthtim, "120" );
-            }
+                strcpy(widthtim, "90");
+            break;
+        case 2:
+            if (optionheb)
+                strcpy(widthtim, "120");
             else
-            {
-      			strcpy( widthtim, "200" );
-            }
-			break;
-		case 3: //Civil date
-			strcpy( widthtim, "80" );
-			break;
-		}
-	}
+                strcpy(widthtim, "200");
+            break;
+        case 3:
+            strcpy(widthtim, "80");
+            break;
+        }
+    }
 
-	//parse lines looking for spaces
+    // Normal cell printing
+    if (*daynum % 7 == 0)
+    {
+        sprintf(buff1, "        <td width=\"%s\" bgcolor=\"#ffff00\" >", widthtim);
+        fprintf(stdout, "%s\n", buff1);
+    }
+    else
+    {
+        sprintf(buff1, "        <td width=\"%s\" >", widthtim);
+        fprintf(stdout, "%s\n", buff1);
+    }
 
-	if (*daynum % 7 == 0)  //on Shabbos *daynum = 7, so highlight it only
-	{
+    sprintf(buff1,
+        "            <p align=\"center\"><font size=\"2\">%s</font></p>",
+        Trim(timlet));
+    fprintf(stdout, "%s\n", buff1);
+    fprintf(stdout, "        </td>\n");
 
-		sprintf( buff1, "%s%s%s", "        <td width=\"", widthtim, "\" bgcolor=\"#ffff00\" >" );
-		fprintf(stdout, "%s\n", buff1 );
-	}
-	else
-	{
-		sprintf( buff1, "%s%s%s", "        <td width=\"", widthtim, "\" >" );
-		fprintf(stdout, "%s\n", buff1 );
-	}
-
-	sprintf( buff1, "%s%s%s", "            <p align=\"center\"><font size=\"2\" >", Trim(timlet), "</font></p>" );
-	fprintf(stdout, "%s\n", buff1);
-	fprintf(stdout, "%s\n", "        </td>");
-
-
-	if (*closerow) //end of row signaled, so print end of row tags
-	{
-		fprintf(stdout, "%s\n", "    </tr>");
-		*closerow = false;
-	}
-
-
+    if (*closerow)
+    {
+        fprintf(stdout, "    </tr>\n");
+        *closerow = false;
+    }
 }
 
-
+//////////////////////heb12monthHTML///////////////////////////
 void heb12monthHTML(short setflag)
+//////////////////////////////////////////////////////////////////
 {
 	char ch[6] = "";
 	short j = 0;
@@ -5557,6 +6041,38 @@ void heb13monthHTML(short setflag)
 
 }
 
+////////////////////////diagnostics///////////////////////////////
+void WriteErrorString(char *errorstr, int *Write_flag )
+//write error string to cgi-bin folder
+{
+	FILE *stream;
+	char filerror[255] = "";
+
+	sprintf( filerror, "%s%s", drivweb, "errorlog.log");
+	if (*Write_flag == 0)
+	{
+		if ( stream = fopen( filerror, "w" ) ) //supposed to be "w" but doesn't have permission
+		{
+			fprintf( stream, "%s\n", "*******************Error/Warning***************" );
+			fprintf( stream, "%s\n", errorstr);
+			fclose(stream);
+		}
+		*Write_flag = 1;
+	}
+	else if (*Write_flag == 1)
+	{
+		if ( stream = fopen( filerror, "a" ) )
+		{
+			fprintf( stream, "%s\n", "*******************Error/Warning***************" );
+			fprintf( stream, "%s\n", errorstr);
+			fclose(stream);
+		}
+		*Write_flag = 1;
+	}
+
+}
+////////////////////////////////////////////////////////////////////
+
  ////////////////////////////////////////////////////////////////////////////////////////////
 short WriteUserLog( int UserNumber, short zmanyes, short typezman, char *errorstr )
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -6202,12 +6718,10 @@ void ErrorHandler( short mode, short ier )
 				//can't open profile file
 				InternalError = true;
 				errornum = 28;
-				/*
-				//diagnostics
-				sprintf(errorstr, "Can't open profile file: %s in routine netzski6",Errorbuff);
-				//diagnostics
-				*/
-				strcpy (errorstr, "Can't open profile file in routine netzski6" ); //<--comment out for diagnostics
+				if (diagnostics) //diagnostics
+					sprintf(errorstr, "Can't open profile file: %s in routine netzski6",Errorbuff);
+				else
+					strcpy (errorstr, "Can't open profile file in routine netzski6" ); //<--comment out for diagnostics
 			}
 			else if (ier == -3)
 			{
@@ -6326,7 +6840,10 @@ void ErrorHandler( short mode, short ier )
 				//can't find zma table'
 				InternalError = true;
 				errornum = 31;
-				strcpy (errorstr, "Can't open the zma file in routine PrintMultiColTable" );
+				if (diagnostics3)
+					sprintf( errorstr, "Can't open the zman file: %s ,reported in PrintMulticolTable", Errorbuff);
+				else
+					strcpy (errorstr, "Can't open the zma file in routine PrintMultiColTable" );
 			}
 			break;
 		case 13: //LoadTitlesSponsors
@@ -6768,6 +7285,7 @@ short calnearsearch( char *bat, char *sun )
 		}
 		else //extract text
 		{
+			/*
 			//bat file name
 			strcpy( buff, &strarr[0][0] );
 			//remove the Windows directory name
@@ -6776,7 +7294,103 @@ short calnearsearch( char *bat, char *sun )
 			//remove the "\"'s'
 			Trim(Replace(buff, '\\', ' ' ));
 			//rsuch extract the last 12 letters which compose the profile name
-			Mid( buff, strlen(buff) - 11, 12 );
+
+			//Mid( buff, strlen(buff) - 11, 12 );
+
+			////////////////////////////////////////////////////////////////
+			
+			//Copilot version 081326 using standard c//////////////////////
+			// bat file name
+			strcpy(buff, strarr[0]);
+
+			Trim(Replace(buff, '"', ' ' ));
+			//remove the "\"'s'
+			Trim(Replace(buff, '\\', ' ' ));
+
+
+			if (diagnostics)
+			{
+				Errorbuff[0] = 0;
+				sprintf(Errorbuff, "calnearsearch Errorbuff = %s",strarr[0]);
+				WriteErrorString(Errorbuff, &Write_flag);
+			}
+
+			// extract last 12 characters safely
+			//remove quotes
+
+			if (InStr( buff, "\"") )
+			{
+				size_t len = strlen(buff);
+				if (len >= 12) {
+					memmove(buff, buff + (len - 13), 12);
+					buff[12] = '\0';
+				} else {
+					// filename shorter than 12 chars ? copy whole thing
+					// (or handle however you prefer)
+					// buff already contains the filename
+				}
+			}
+			else
+			{
+
+				size_t len = strlen(buff);
+				if (len >= 12) {
+					memmove(buff, buff + (len - 12), 12);
+					buff[12] = '\0';
+				} else {
+					// filename shorter than 12 chars ? copy whole thing
+					// (or handle however you prefer)
+					// buff already contains the filename
+				}
+			}
+			
+			//////////////////////////////////////////////////////////////
+
+			if (diagnostics)
+			{
+				Errorbuff[0] = 0;
+				sprintf(Errorbuff, "Netzskiy Errorbuff2 = %s", buff );
+				WriteErrorString(Errorbuff, &Write_flag);
+			}
+
+			*/
+			//////////////////////latest Copilot 082226/////////////////////////
+			if (diagnostics)
+			{
+				Errorbuff[0] = 0;
+				sprintf(Errorbuff, "calnearsearch Errorbuff = %s",strarr[0]);
+				WriteErrorString(Errorbuff, &Write_flag);
+			}
+
+			// bat file name
+			strcpy(buff, strarr[0]);
+
+			// remove quotes and backslashes
+			for (char *p = buff; *p; ++p) {
+				if (*p == '"' || *p == '\\')
+					*p = ' ';
+			}
+			Trim(buff);
+
+			// now buff contains something like:
+			// c: ford tm netz 398C-ram.pr1
+
+			// find the last 12-character filename
+			size_t len = strlen(buff);
+			if (len >= 12) {
+				memmove(buff, buff + (len - 12), 12);
+				buff[12] = '\0';
+			}
+
+			if (diagnostics)
+			{
+				Errorbuff[0] = 0;
+				sprintf(Errorbuff, "Netzskiy Errorbuff2 = %s", buff );
+				WriteErrorString(Errorbuff, &Write_flag);
+			}
+
+			///////////////////////////////////////////////////////////////////////
+
 			buff[12] = 0;
 			sprintf( citnam, "%s%s%s%s", currentdir, sun, "/", buff );
 
@@ -6905,6 +7519,13 @@ cn500:
 				avekmx[0] = avekmx[0] + lon;
 			    avekmy[0] = avekmy[0] + lat;
 			    avehgt[0] = avehgt[0] + hgt;
+
+				if (diagnostics)
+				{
+					Errorbuff[0] = 0;
+					sprintf(Errorbuff, "calnearsearch Errorbuff2 = %s",citnam);
+					WriteErrorString(Errorbuff, &Write_flag);
+				}
 
 			}
 			else if ( InStr( sun, "skiy" ) || findnetz == 1 )
@@ -7043,12 +7664,56 @@ short netzskiy( char *bat, char *sun )
 		}
 		else //extract text
 		{
+			
 			//bat file name
 			strcpy( buff, &strarr[0][0] );
 			//rsuch extract the last 12 letters which compose the profile name
 			Mid( buff, strlen(buff) - 11, 12 );
+			
+
+			/////////////////////////worked, now go back to original fixed version/////
+			/*
+			//Copilot version 081326 using standard c//////////////////////
+			// bat file name
+			strcpy(buff, strarr[0]);
+
+			if (diagnostics)
+			{
+				Errorbuff[0] = 0;
+				sprintf(Errorbuff, "Netzskiy Errorbuff = %s",strarr[0]);
+				WriteErrorString(Errorbuff);
+			}
+
+			// extract last 12 characters safely
+			size_t len = strlen(buff);
+			if (len >= 12) {
+				memmove(buff, buff + (len - 13), 12);
+				buff[12] = '\0';
+			} else {
+				// filename shorter than 12 chars ? copy whole thing
+				// (or handle however you prefer)
+				// buff already contains the filename
+			}
+			*/
+			//////////////////////////////////////////////////////////////
+
+			if (diagnostics)
+			{
+				Errorbuff[0] = 0;
+				sprintf(Errorbuff, "Netzskiy Errorbuff2 = %s", buff );
+				WriteErrorString(Errorbuff, &Write_flag);
+			}
+
+
 			buff[12] = 0;
 			sprintf( myfile, "%s%s%s%s", currentdir, sun, "/", buff );
+
+			if (diagnostics)
+			{
+				Errorbuff[0] = 0;
+				sprintf(Errorbuff, "Netzskiy Errorbuff3 = %s", myfile);
+				WriteErrorString(Errorbuff, &Write_flag);
+			}
 
 			kmx = atof( &strarr[1][0] );
 			kmy = atof( &strarr[2][0] );
@@ -7194,12 +7859,13 @@ ny500:
 			}
 			strcpy( &fileo[0][nplac[0] - 1][0], myfile );
 
-			/*
-			//diagnostics -add name to log file
-			Errorbuff[0]=0;
-			sprintf(Errorbuff, "netzskiy file added: %s",myfile);
-			//diagnostics
-			*/
+			if (diagnostics)
+			{
+				//diagnostics -add name to log file
+				Errorbuff[0]=0;
+				sprintf(Errorbuff, "netzskiy file added: %s",myfile);
+				//diagnostics
+			}
 
 
 			latbat[0][nplac[0] - 1] = kmy;
@@ -7421,12 +8087,13 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 
 		}
 
-		/*
-		//diagnostics -add name to log file
-		Errorbuff[0]=0;
-		sprintf(Errorbuff, "netzskiy file added: %s",myfile);
-		//diagnostics
-		*/
+		if (diagnostics)
+		{
+			//diagnostics -add name to log file
+			Errorbuff[0]=0;
+			sprintf(Errorbuff, "netzskiy file added: %s",myfile);
+			//diagnostics
+		}
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
 					    &nweather, &meantemp, adhocrise, adhocset, &ns1, &ns2, &ns3, &ns4, &WinTemp,
@@ -7650,12 +8317,13 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 
 		}
 
-		/*
-		//diagnostics -add name to log file
-		Errorbuff[0]=0;
-		sprintf(Errorbuff, "netzskiy file added: %s",myfile);
-		//diagnostics
-		*/
+		if (diagnostics)
+		{
+			//diagnostics -add name to log file
+			Errorbuff[0]=0;
+			sprintf(Errorbuff, "netzskiy file added: %s",myfile);
+			//diagnostics
+		}
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
 					    &nweather, &meantemp, adhocrise, adhocset, &ns1, &ns2, &ns3, &ns4, &WinTemp,
@@ -7939,12 +8607,13 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 			SRTMflag = 11; //calculate visible sunset profile/sunset table for the  golden light coordinates
 		}
 
-		/*
-		//diagnostics -add name to log file
-		Errorbuff[0]=0;
-		sprintf(Errorbuff, "netzskiy file added: %s",myfile);
-		//diagnostics
-		*/
+		if (diagnostics)
+		{
+			//diagnostics -add name to log file
+			Errorbuff[0]=0;
+			sprintf(Errorbuff, "netzskiy file added: %s",myfile);
+			//diagnostics
+		}
 
 		ier = netzski6( myfile, lg, lt, hgt, aprn, geotz, nsetflag, i, 
 					    &nweather, &meantemp, adhocrise, adhocset, &ns1, &ns2, &ns3, &ns4, &WinTemp,
@@ -10687,8 +11356,8 @@ char *Mid(char *str, short nstart, short nsize)
 	return str;
 }
 */
-
-////////////////// emulation of Mid function with 3 parameters ///////////////////////
+/*
+////////////////// replacement emulation of Mid function with 3 parameters ///////////////////////
 char *Mid(char *str, int nstart, int nsize)
 // used for changing the original string -- i.e., used for truncating string
 ////////////////////////////////////////////////////////////////////////////////////
@@ -10715,8 +11384,37 @@ char *Mid(char *str, int nstart, int nsize)
 
     return str;
 }
+*/
 
+/////////////////////////////Copilot replacement 081326 that is system independent//////////
+char *Mid(char *str, int nstart, int nsize)
+///////////////////////////////////////////////////////////////////////////////////
+{
+    int len = strlen(str);
 
+    // VB-style: positions start at 1
+    if (nstart < 1)
+        nstart = 1;
+
+    // If start is beyond end ? empty string
+    if (nstart > len) {
+        str[0] = '\0';
+        return str;
+    }
+
+    // Adjust size if substring runs past end
+    if (nstart - 1 + nsize > len)
+        nsize = len - (nstart - 1);
+
+    // Move substring to beginning (safe for overlap)
+    memmove(str, str + (nstart - 1), nsize);
+
+    // Null terminate
+    str[nsize] = '\0';
+
+    return str;
+}
+//////////////////////////////////////////////////////////////////////////////
 
 ///////////////////emulation of InStr(3 parameters)////////////////////
 int InStr( short nstart, char * str, char * str2 )
@@ -10887,6 +11585,7 @@ double Sgn(double a)
 	}
 }
 
+/*
 ///////////////RemoveCRLF/////////////////
 char *RemoveCRLF( char *str )
 ///////////////////////////////////////
@@ -10908,7 +11607,25 @@ char *RemoveCRLF( char *str )
 
 	return str;
 }
+*/
+/////////////////////RemoveCRLF Copilot version, supposed to be machine independent///////////////////////
+char *RemoveCRLF(char *str)
+//////////////////////081326///////////////////////////////
+{
+    char *p = str;
 
+    while (*p) {
+        if (*p == '\r' || *p == '\n') {
+            *p = '\0';
+            break;      // stop at first CR or LF
+        }
+        p++;
+    }
+
+    return str;
+}
+
+/*
 //////////////fgets_CR////////////////////////
 char *fgets_CR( char *str, short strsize, FILE *stream )
 ///////////////////////////////////////////////
@@ -10921,6 +11638,21 @@ char *fgets_CR( char *str, short strsize, FILE *stream )
 	//RemoveCRLF( str ); //remove CR and LF at end of MS line
 	return str;
 }
+*/
+
+///////////////fgets_CR Copilot version supposed to be machine independent/////////
+char *fgets_CR(char *str, int strsize, FILE *stream)
+////////////////////081326/////////////////////////////////////
+{
+    if (!fgets(str, strsize, stream))
+        return NULL;   // handle EOF or read error safely
+
+    RemoveCRLF(str);
+    return str;
+}
+///////////////////////////////////////////////////////////////////////
+
+
 /////////////////itoa///////////////////////////
 char *itoa ( int value, char *str, int base )
 ////////////////////////////////////////////////
@@ -11306,6 +12038,12 @@ short LoadConstants( short zmanyes, short typezman, char filzman[] )
 				{
 					sprintf( filzman, "%s%s", drivcities, doclin );
 					ipath = 0;
+					if (diagnostics2)
+					{
+						Errorbuff[0] = 0;
+						sprintf(Errorbuff, "LoadConstants, Eng zemanim: numzmantype = %d, typezman = %d, zemanim name = %s",numzmantype, typezman, filzman);
+						WriteErrorString(Errorbuff, &Write_flag);
+					}					
 					break;
 				}
 				numzmantype++;
@@ -11317,6 +12055,13 @@ short LoadConstants( short zmanyes, short typezman, char filzman[] )
 				{
 					sprintf( filzman, "%s%s", drivcities, doclin );
 					ipath = 0;
+					if (diagnostics2)
+					{
+						Errorbuff[0] = 0;
+						sprintf(Errorbuff, "LoadConstants, Heb zemanim: numzmantype = %d, typezman = %d, zemanim name = %s",numzmantype, typezman, filzman);
+						WriteErrorString(Errorbuff, &Write_flag);
+					}					
+
 					break;
 				}
 				numzmantype++;
@@ -15393,7 +16138,7 @@ short AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t
 }
 
 ////////////////////PrintMultiColTable//////////////////////////////////
-short PrintMultiColTable(char filzman[], short ExtTemp[] )
+short PrintMultiColTable(char filzman[], short ExtTemp[], bool sefira, bool nusachSefard)
 //////////////////////////////////////////////////////////////
 //loads zemanim info into zemanim buffer then calculates
 //and prints zemanim to output stream
@@ -15403,9 +16148,9 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 {
 
 	//static char doclin[255] = "";
-	static char zmannamestmp[50][100];
-	static char zmanstring[255] = "";
-	static char TitleZman[255] = "";
+	static char zmannamestmp[50][1255];
+	static char zmanstring[1255] = "";
+	static char TitleZman[1255] = "";
 //	char zmannamestmp[50][100];
 	short typeread = 0;
 	short pos1 = 0, pos2 = 0, numzman = 0, numsort = 0;
@@ -15432,11 +16177,23 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 	if ( !( stream = fopen( filzman, "r")) )
 
 	{
+		if (diagnostics3)
+		{
+			sprintf(Errorbuff, "%s", filzman);
+		}
 		ErrorHandler(12, 1);
 		return -1; //zma file not found
 	}
 	else
 	{
+
+		if (diagnostics2)
+		{
+			Errorbuff[0] = 0;
+			sprintf(Errorbuff, "PrintMultiColTable, zemanim name = %s",filzman);
+			WriteErrorString(Errorbuff, &Write_flag);
+		}
+
 		while (!feof(stream) )
 		{
 			if (typeread == 0)
@@ -15459,26 +16216,72 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 				}
 				else if (strlen(Trim(doclin)) > 1 && typeread !=3 )
 				{
-					strncpy( zmanstring, doclin, strlen(doclin) - 1);
-					zmanstring[strlen(doclin) - 1] = 0;
+					//strncpy( zmanstring, doclin, strlen(doclin) - 1);
+					//zmanstring[strlen(doclin) - 1] = 0;
 
-					//parse out the zemanim elements
+					if (diagnostics4)
+					{
+						Errorbuff[0] = 0;
+						sprintf(Errorbuff, "filzman = %s",filzman);
+						int Write_flag = 1;
+						WriteErrorString(Errorbuff, &Write_flag);
+						Errorbuff[0] = 0;
+						sprintf(Errorbuff, "doclin = %s",doclin);
+						WriteErrorString(Errorbuff, &Write_flag);
+					}
+
+					size_t len = strlen(doclin);
+
+					if (len >= MAXDBLSIZE)
+						len = MAXDBLSIZE - 1;
+
+					memcpy(zmanstring, doclin, len);
+					zmanstring[len] = '\0';
+
+					if (diagnostics4)
+					{
+						Errorbuff[0] = 0;
+						sprintf(Errorbuff, "zmanstring = %s",zmanstring);
+						WriteErrorString(Errorbuff, &Write_flag);
+					}
+
+					//parse out the zemanim elements //check here <----------------------
 					pos1 = 1;
 					for (short j = 0; j < 8; j++)
 					{
 						//now parse zman components and enter them into
 						//unsorted zman description array: zmannames
 
-						pos2 = InStr(pos1 + 1, zmanstring, "," );
+						pos2 = InStr(pos1 + 1, zmanstring, "," ); //not working right on the server anymore
 						if ( pos2 != 0 )
 						{
-							strncpy (&zmannames[numzman][j][0], &zmanstring[pos1], pos2 - pos1 - 1);
+							//strncpy (&zmannames[numzman][j][0], &zmanstring[pos1], pos2 - pos1 - 1);
+							int len = pos2 - pos1 - 1;
+							if (len >= MAXDBLSIZE) len = MAXDBLSIZE - 1;
+
+							memcpy(&zmannames[numzman][j][0], &zmanstring[pos1], len);
+							zmannames[numzman][j][len] = '\0';
+
 							Trim(Replace( &zmannames[numzman][j][0], '\"', ' ' )); //get rid of VB style quotation marks
 							pos1 = pos2 + 1;
+
+							if (diagnostics4)
+							{
+								Errorbuff[0] = 0;
+								sprintf(Errorbuff, "description = %s",&zmannames[numzman][j][0]);
+								WriteErrorString(Errorbuff, &Write_flag);
+							}
+
 						}
 						else //last parameter
 						{
-							strncpy (&zmannames[numzman][j][0], &zmanstring[pos1], strlen(doclin) - pos1 - 1);
+							int len = strlen(zmanstring) - pos1;
+							if (len >= MAXDBLSIZE) len = MAXDBLSIZE - 1;
+
+							memcpy(&zmannames[numzman][j][0], &zmanstring[pos1], len);
+							zmannames[numzman][j][len] = '\0';
+
+							//strncpy (&zmannames[numzman][j][0], &zmanstring[pos1], strlen(doclin) - pos1 - 1);
 							Trim(Replace( &zmannames[numzman][j][0], '\"', ' ' )); //get rid of VB style quotation marks
 							}
 					}
@@ -15542,13 +16345,63 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
    {
 	   strcpy( &zmannamestmp[j][0], &zmannames[j][0][0] ); //copy to temporary array
 
+		if (diagnostics4)
+		{
+			Errorbuff[0] = 0;
+			sprintf(Errorbuff, "copy to temporary array = %s",&zmannamestmp[j][0]);
+			WriteErrorString(Errorbuff, &Write_flag);
+		}
+
+		// remove the "Zmanim:", "Dawn:", etc from the name
+		char *p = strchr(zmannamestmp[j], ':');
+		if (p != NULL) {
+			// move everything after ':' to the start of the same buffer
+			// skip the ':' and any following space
+			p++; 
+			while (*p == ' ' || *p == '\t')
+				p++;
+
+			memmove(zmannamestmp[j], p, strlen(p) + 1);  // +1 to copy '\0'
+			Trim(zmannamestmp[j]);
+
+		} else {
+			// no colon: just trim the original string
+			Trim(zmannamestmp[j]);
+		}
+
+		if (diagnostics4)
+		{
+			Errorbuff[0] = 0;
+			sprintf(Errorbuff, "after trimming off prefx, zmannamestmp = %s",zmannamestmp[j]);
+			WriteErrorString(Errorbuff, &Write_flag);
+		}
+
+
+	   /*
 	   //remove the "Zmanim", etc from the name
 	   pos1 = InStr(&zmannamestmp[j][0], ":");
 	   if (pos1 != 0)
 	   {
 		   Trim(Mid( &zmannamestmp[j][0], pos1 + 1, strlen(&zmannamestmp[j][0]) - pos1, doclin) );
-		   sprintf( &zmannamestmp[j][0], "%s", doclin );
+
+			if (diagnostics4)
+			{
+				Errorbuff[0] = 0;
+				sprintf(Errorbuff, "after Trim(Mid()) = %s",doclin);
+				WriteErrorString(Errorbuff, &Write_flag);
+			}
+			
+			sprintf( &zmannamestmp[j][0], "%s", doclin );
+
+			if (diagnostics4)
+			{
+				Errorbuff[0] = 0;
+				sprintf(Errorbuff, "after write to zmannames = %s",&zmannamestmp[j][0]);
+				WriteErrorString(Errorbuff, &Write_flag);
+			}
+
 	   }
+	   */
 	   
 	   /*
 	   if (optionheb) // Then 'convert zemanim labels into hebrew
@@ -15657,7 +16510,7 @@ short PrintMultiColTable(char filzman[], short ExtTemp[] )
 		return -1;
 	}
 
-	if ( WriteTables(TitleZman, numsort, numzman,
+	if ( WriteTables(TitleZman, numsort, numzman, sefira, nusachSefard,
 		             &lg, &lt, &avehgtzman,
 					 MinTemp, AvgTemp, MaxTemp, ExtTemp ) )
 	{
@@ -16474,6 +17327,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 					 t3sub = -9999;
 				  }
 			   }
+
 			   break;
 			 case 2: //use clock hours after dawn
 			   dawn = zmantimes[zmannumber[0][atoi(&zmannames[n][2][0])]];
@@ -16493,6 +17347,37 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 		 sprintf( &c_zmantimes[n][0], "%s", t3subb );
 		 //sprintf( &zmantitles[num][0], "%s", &zmannames[n][0][0] );
 
+		//now add calculation for earliest Sof Zman Achila and earliest Sreifa on Erev Pesach, 14th of Nisan
+		//earliest will depend on the earliest dawn and smallest haourszemanios defined in the template
+		if 	(!strcmp( caldayHeb, &heb6[5][0] ) || !strcmp( caldayHeb, "14-Nisan" ) )
+		{
+			if (dawn != -9999 && twilight != -9999)
+			{
+				if (SofZmanAchila == -9999) 
+				{
+					SofZmanAchila = dawn + 4 * hourszemanios;
+				}
+				else
+				{
+					if (dawn + 4 * hourszemanios < SofZmanAchila) SofZmanAchila = dawn + 4 * hourszemanios;
+				}
+				round( SofZmanAchila, 60, 0, -1, DST, t3subb, 1 );
+				sprintf( SofZmanAchilaStr, "%s", t3subb );
+
+
+				if (SofZmanSreifa == -9999) 
+				{
+					SofZmanSreifa = dawn + 5 * hourszemanios;
+				}
+				else
+				{
+					if (dawn + 5 * hourszemanios < SofZmanSreifa) SofZmanSreifa = dawn + 5 * hourszemanios;
+				}
+				round( SofZmanSreifa, 60, 0, -1, DST, t3subb, 1 );
+				sprintf( SofZmanSreifaStr, "%s", t3subb );
+			}
+		}
+
 	  }
 	  else if ( InStr( Mid(strlwr(&zmannames[n][0][0]), 1, 7, buff), "candles" ) )
 	  {
@@ -16511,7 +17396,7 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 			  //also list the candle lighting for erev yom tov
 
 			  if ( !strcmp( caldayHeb, &heb6[1][0] ) ||
-	            !strcmp( caldayHeb, &heb6[2][0] ) ||
+	               !strcmp( caldayHeb, &heb6[2][0] ) ||
 				   !strcmp( caldayHeb, &heb6[3][0] ) ||
 				   !strcmp( caldayHeb, &heb6[4][0] ) ||
 				   !strcmp( caldayHeb, &heb6[5][0] ) ||
@@ -16556,11 +17441,10 @@ short newzemanim(short *yr, short *jday, double *air, double *lr, double *tf, do
 	   }
 
 
-//		}
+	} //end of zemanim list
 
-	}
 
-    return 0;
+return 0;
 
 }
 
@@ -16632,6 +17516,8 @@ short ParseData( char *doclin, char *sep, double arr[], short NUMENTRIES, short 
 	return 0;
 }
 
+
+/*
 //////////////////////////ParseString///////////////////////////
 short ParseString( char *doclin, char *sep, char arr[][MAXDBLSIZE], short NUMENTRIES )
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -16662,6 +17548,52 @@ short ParseString( char *doclin, char *sep, char arr[][MAXDBLSIZE], short NUMENT
 
 	return 0;
 }
+*/
+
+//////////////////////////CoPilot replacement that is machine independt/////////////
+short ParseString(const char *doclin, const char *sep,
+                  char arr[][MAXDBLSIZE], short NUMENTRIES)
+///////////////////////////////////////081326/////////////////////////////////////////
+{
+    if (NUMENTRIES == 0)
+        return -1;
+
+    int seplen = strlen(sep);
+    int idx = 0;            // which token we are filling
+    const char *p = doclin; // scan pointer
+
+    while (*p && idx < NUMENTRIES) {
+
+        // find next separator
+        const char *q = strstr(p, sep);
+
+        int toklen;
+        if (q) {
+            toklen = q - p;
+        } else {
+            toklen = strlen(p); // last token
+        }
+
+        // clamp token length to buffer size - 1
+        if (toklen >= MAXDBLSIZE)
+            toklen = MAXDBLSIZE - 1;
+
+        // copy token
+        memcpy(arr[idx], p, toklen);
+        arr[idx][toklen] = '\0';
+
+        idx++;
+
+        if (!q)
+            break; // no more separators
+
+        p = q + seplen; // move past separator
+    }
+
+    // If fewer tokens than expected, caller decides what to do
+    return (idx == NUMENTRIES ? 0 : -1);
+}
+//////////////////////////////////////////////////////////////
 
 
 /*********************************************************************
@@ -20810,6 +21742,300 @@ int replaceSpaces(char str[], const short MaxLength)
  
     return new_length;
 }
+
+//////////////////////////sefiras haomer routines devised by Copilot/////081026/////////////////
+
+char *load(const char *key)
+{
+    char filname[255];
+    sprintf(filname, "%somer_strings.txt", drivjk);
+
+    static char line[256];
+    FILE *fp = fopen(filname, "r");
+    if (!fp) return "";
+
+    while (fgets(line, sizeof(line), fp)) {
+        char *eq = strchr(line, '=');
+        if (!eq) continue;
+        *eq = '\0';
+        if (strcmp(line, key) == 0) {
+            char *val = strdup(eq + 1);   // <-- NEW: allocate new memory
+            val[strcspn(val, "\n")] = '\0';
+            fclose(fp);
+            return val;
+        }
+    }
+    fclose(fp);
+    return "";
+}
+
+
+char *hebrew_number(int n)
+{
+    char *tens, *ones;
+    char buf[256];
+
+    if (n <= 19) {
+        char key[32];
+        sprintf(key, "HE_NUM_%d", n);
+        return strdup(load(key));   // copy result
+    }
+
+    int t = (n / 10) * 10;
+    int o = n % 10;
+
+    char key_tens[32];
+    sprintf(key_tens, "HE_NUM_%d", t);
+    tens = load(key_tens);
+
+    if (o == 0)
+        return strdup(tens);
+
+    ones = hebrew_number(o);
+
+    sprintf(buf, "%s%s%s%s", tens, " ", load("HE_AND"), ones);
+    return strdup(buf);
+}
+
+
+char *hebrew_abbrev(int n)
+{
+    char key[32];
+    sprintf(key, "HE_ABBR_%d", n);
+    return strdup(load(key));
+}
+
+/////////////////counting of the omer 081226///////////////////////
+char *omer_output(int day, int optionheb, int fullcount, short mode)
+/////////////////////////////////////////////////////////////////
+//mode = 0  Ashkenazi counting
+//mode = 1  Sefard counting
+{
+    static char out[512];
+
+    if (day < 1 || day > 49) {
+        return optionheb ? load("NOT_OMER_HEB") : load("NOT_OMER");
+    }
+
+    int weeks = day / 7;
+    int days  = day % 7;
+
+    /* ===========================
+       ENGLISH OUTPUT
+       =========================== */
+    if (!optionheb) {
+
+        /* Abbreviated English */
+        if (!fullcount) {
+            sprintf(out, "%s day of the Omer", english_ordinal(day));
+            return out;
+        }
+
+        /* Full English — special case: no weeks yet */
+        if (weeks == 0) {
+			if (day == 1) 
+			{
+				sprintf(out,
+					"%s %d day of the Omer",
+					load("EN_TODAY_IS"),
+					day);
+				return out;
+			}
+			else
+			{
+				sprintf(out,
+					"%s %d days of the Omer",
+					load("EN_TODAY_IS"),
+					day);
+				return out;
+			}
+			/*
+            sprintf(out,
+                "%s the %s day of the Omer",
+                load("EN_TODAY_IS"),
+                english_ordinal(day));
+            return out;
+			*/
+        }
+
+        /* Cache load() results */
+        char en_today[64], en_days[64], en_week[64], en_weeks[64], en_omer[64], en_day[48];
+        strcpy(en_today, load("EN_TODAY_IS"));
+        strcpy(en_days,  load("EN_DAYS"));
+        strcpy(en_week,  load("EN_WEEK"));
+        strcpy(en_weeks, load("EN_WEEKS"));
+        strcpy(en_omer,  load("EN_OF_THE_OMER"));
+		strcpy(en_day,	 load("EN_DAY"));
+
+		if (days == 0)
+		{
+ 			sprintf(out,
+				"%s %d %s which are %d %s %s",
+				en_today,
+				day,
+				en_days,
+				weeks,
+				(weeks == 1 ? en_week : en_weeks),
+				en_omer);
+		}
+		else if (days == 1)
+		{
+ 			sprintf(out,
+				"%s %d %s which are %d %s and %d %s %s",
+				en_today,
+				day,
+				en_days,
+				weeks,
+				(weeks == 1 ? en_week : en_weeks),
+				days,
+				en_day,
+				en_omer);
+		}
+		else if (days > 1)
+		{
+			sprintf(out,
+				"%s %d %s which are %d %s and %d %s %s",
+				en_today,
+				day,
+				en_days,
+				weeks,
+				(weeks == 1 ? en_week : en_weeks),
+				days,
+				en_days,
+				en_omer);
+		}
+        return out;
+    }
+
+    /* ===========================
+       HEBREW OUTPUT
+       =========================== */
+
+    /* Abbreviated Hebrew */
+	if (!fullcount) {
+		char he_abbr[64], he_omer[64];
+		strcpy(he_abbr, hebrew_abbrev(day));
+		if (mode == 0)
+		{
+			strcpy(he_omer, load("HE_OF_THE_OMER"));
+		}
+		else
+		{
+			strcpy(he_omer, load("HE_OF_THE_OMER2"));
+		}
+		sprintf(out, "%s %s", he_abbr, he_omer);
+		return out;
+	}
+
+    /* Full Hebrew */
+    char he_today[64], he_days[64], he_shehem[64], he_oneweek[64], he_weeks[64], he_omer[64], he_and[8], he_day[48];
+    strcpy(he_today,  load("HE_TODAY_IS"));
+    strcpy(he_days,   load("HE_DAYS"));
+    strcpy(he_shehem, load("HE_SHEHEM"));
+    strcpy(he_oneweek,load("HE_ONE_WEEK"));
+    strcpy(he_weeks,  load("HE_WEEKS"));
+	if (mode == 0)
+	{
+		strcpy(he_omer,   load("HE_OF_THE_OMER"));
+	}
+	else if (mode == 1)
+	{
+		strcpy(he_omer,   load("HE_OF_THE_OMER2"));
+	}
+    strcpy(he_and,    load("HE_AND"));   // "ו"
+	strcpy(he_day,	  load("HE_DAY"));   // "יום"
+
+    /* Case 1: Days 1–7 (no weeks yet) */
+    if (weeks == 0)
+    {
+		if (day == 1) 
+		{
+			sprintf(out,
+				"%s %s %s %s",
+				he_today,              // היום
+				he_day,				   // יום
+				hebrew_number(day),    // אחד.
+				he_omer);              // בעומר
+
+			return out;
+		}
+		else
+		{
+			sprintf(out,
+				"%s %s %s %s",
+				he_today,              // היום
+				hebrew_number(day),    // יום אחד. שני. שלשה.
+				he_days,               // ימים
+				he_omer);              // בעומר
+
+			return out;
+		}
+    }
+
+    /* Case 2: Days 8–49 (weeks exist) */
+
+    char weekbuf[128] = "";
+    char daybuf[128]  = "";
+
+    /* Build week phrase */
+    if (weeks == 1)
+        sprintf(weekbuf, "%s", he_oneweek);
+    else
+        sprintf(weekbuf, "%s %s", hebrew_number(weeks), he_weeks);
+
+    /* Build day phrase */
+    if (days > 1)
+    {
+        /* Insert leading ? only if weeks > 0 */
+        sprintf(daybuf, "%s%s %s", he_and, hebrew_number(days), he_days);
+    }
+	else if (days == 1)
+	{
+        sprintf(daybuf, "%s%s %s", he_and,  he_day, hebrew_number(days));
+	}
+
+    /* Assemble final Hebrew sentence */
+    if (days > 0)
+		sprintf(out,
+			"%s %s %s %s %s %s %s",
+			he_today,              // היום
+			hebrew_number(day),    // 
+			he_days,               // ימים
+			he_shehem,             // שהם
+			weekbuf,               // שבועה אחד. שני שבבועוך...
+			daybuf,                // ויום אחד. שני ימים...
+			he_omer);              // בעומר
+
+    else
+		sprintf(out,
+			"%s %s %s %s %s %s",   // היום
+			he_today,			   // 
+			hebrew_number(day),    // 
+			he_days,			   // שהם
+			he_shehem,			   // שבועה אחד. שני שבבועוך..
+			weekbuf,
+			he_omer);
+
+    return out;
+}
+
+
+
+char *english_ordinal(int n)
+{
+    static char buf[64];
+    char *suffix = "th";
+    if (n % 10 == 1 && n != 11) suffix = "st";
+    else if (n % 10 == 2 && n != 12) suffix = "nd";
+    else if (n % 10 == 3 && n != 13) suffix = "rd";
+
+    sprintf(buf, "%d%s", n, suffix);
+    return buf;
+}
+
+
+///////////////////////end of Sefiras Haomer functions generated by Copilot 081126///////////////
+
 
 
 /////////////////remove non-printable characters from legend, etc////j080426///////
