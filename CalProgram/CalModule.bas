@@ -45,7 +45,7 @@ Public currentdrive As String, startedscan As Boolean, nearauto As Boolean, near
 Public nearyesval As Boolean, netzskiyok As Boolean, arrStrSedra(1, 54) As String
 Public ntmp%, nstat%, nstato%, tmpsetflg%, CN4netz$, CN4skiy$, arrStrParshiot(1, 62) As String
 Public paperheight, paperwidth, leftmargin, rightmargin, topmargin, bottommargin
-Public captmp$, suntop%, nn4%, numchecked%, rescale As Boolean, holidays(3, 13) As String
+Public captmp$, suntop%, nn4%, numchecked%, rescale As Boolean, holidays(3, 16) As String
 Public netzski$(1, 1000), First As Boolean, hebleapyear As Boolean, dayRoshHashono%, PaperFormatVis As Boolean
 Public nchecked%(999), magnify As Boolean, nearcolor As Boolean, yeartype%, RefHebYear%, RefCivilYear%
 Public newhebout As Boolean, hebcal As Boolean, Marginshow As Boolean, SponsorLine$, TitleLine$
@@ -2301,7 +2301,7 @@ If DSTadd Then
       Case "USA", "Canada" 'English {USA DST rules}
 
         'not all states in the US have DST
-        If InStr(eroscity$, "Phoenix") Or InStr(eroscity$, "Honolulu") Or InStr(eroscity$, "Regina") Or InStr(erosState, "AZ") Or InStr(erosState, "HI") Then
+        If InStr(eroscity$, "Phoenix") Or InStr(eroscity$, "Honolulu") Or InStr(eroscity$, "Regina") Or InStr(erosState, "AZ") Or InStr(eroscity$, "HI") Or InStr(erosState, "BC") Or InStr(erosState, "AB") Or InStr(erosState, "MD") Or InStr(erosState, "YT") Then
            DSTadd = False
         Else
 
