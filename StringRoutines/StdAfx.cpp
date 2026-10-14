@@ -250,6 +250,20 @@ short DayNumber(short ylyd, short mon, short mday);
 short IsDST(char *country, char *city, short StartDay[], short EndDay[] );
 /////////////////////////////////////////////////////////////////////
 
+////////////////Moladim functions//////////////////
+void Molad(
+    int hebyr,
+    int hebmonth,
+    short *daynum,
+    char *moladtim,
+    char *timemolad,
+    int *leapyear,
+    double difhr
+);
+
+char *WeekDay(short daynum);
+///////////////////////////////////////
+
 /////////////sefiras Haomer functions///////////////////
 static char *load(const char *key);
 char *hebrew_number(int n);
@@ -606,6 +620,11 @@ char SofZmanAchilaStr[255] = "";
 char SofZmanSreifaStr[255] = "";
 double SofZmanAchila = -9999;
 double SofZmanSreifa = -9999;
+
+//////////////////moladim/////////////////
+int SynodicChazal = 1;   /* Use Synodic Period of Chazal */
+double Meridian = 35.21667;     /* Meridian# of Jewish calendar */
+
 
 /************************Conversions from ITM to WGS84, etc*********************/
 //*****************************************************************************************************
@@ -1240,25 +1259,25 @@ __asm{
 		CGI = 1;
 
    }
-/*<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
+/*///*<-- leave only "/*" for CGI, comment out the "/*" -> "///*" for debugging
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
 		strcpy( TableType, "Chai"); //;"BY" ); //"Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "Jerusalem" ); //"acco" ); //"Baltimore"); //"Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
-		strcpy( country, "Israel" ); //"USA" ); //"Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
+		strcpy( MetroArea, "Vancouver"); //"Jerusalem" ); //"acco" ); //"Baltimore"); //"Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( country, "Canada" ); //"Israel" ); //"USA" ); //"Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
-		g_yrheb = 5786; //5783; //5782; //5781; //5779;//5776; //5775;
-		zmanyes = 1; //0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
+		g_yrheb = 5787; //5783; //5782; //5781; //5779;//5776; //5775;
+		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
 		typezman = 8; //3; //8; // acc. to which opinion
 		optionheb = false; //true; //false; //true; //false; //true; //false; //true;//false;
 		RoundSecondsin = 5; //1;//5;
 
 		///unique to Chai tables
-		numUSAcities1 = 3; //4; //29; //27; //4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area  (in c:/cities Lakewood = 29, but in web it is 27)
-		numUSAcities2 = 78; //19; //1; //4; //1; //2; //7;//0; //75; //city area
-		searchradius = 1.0; //0.8; //3; //0.4; //8; //1; //8; //1;//4;//1; //search area
+		numUSAcities1 = 12; //3; //4; //29; //27; //4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area  (in c:/cities Lakewood = 29, but in web it is 27)
+		numUSAcities2 = 13; //78; //19; //1; //4; //1; //2; //7;//0; //75; //city area
+		searchradius = 4.0; //1.0; //0.8; //3; //0.4; //8; //1; //8; //1;//4;//1; //search area
 		yesmetro = 0; //0; //1; //0;  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
 		GoldenLight = 0; //1;
 
@@ -1742,7 +1761,7 @@ __asm{
 
 		//remove _area_ and USA to form two character USA state abbreviation
 		//erosState = portion of erosareabat that contains USA state abbrev. 082024
-		if (InStr(eroscountry, "USA") ) Mid(erosareabat, InStr(erosareabat, "area_") + 5, 2, erosState );
+		if (InStr(eroscountry, "USA") || InStr(eroscountry, "Canada")) Mid(erosareabat, InStr(erosareabat, "area_") + 5, 2, erosState );
 
 		if (Geofinder) //allready collected all the info needed to redirect to chai_geofinder.php
 		{
@@ -21390,9 +21409,10 @@ short IsDST(char *country, char *city, short StartDay[], short EndDay[])
 	else if (strstr(country, "USA") || strstr(country, "Canada") || strstr(city, "USA") || strstr(city, "Canada"))
 	{
 		//not all states in the US have DST
-		if (strstr(city, "Phoenix") || strstr(city, "Honolulu") || strstr(city, "Regina") || strstr(erosState, "AZ") || strstr(erosState, "HI"))
+		if (strstr(city, "Phoenix") || strstr(city, "Honolulu") || strstr(city, "Regina") || strstr(erosState, "AZ") || strstr(erosState, "HI")
+			|| strstr(erosState, "BC") || strstr(erosState, "AB")  || strstr(erosState, "MB") || strstr(erosState, "YT"))
 		{
-			return -1; //no DST observed in these cities
+			return -1; //no DST observed in these cities or perpetual DST observed
 		}
 	
 	  //the rest of the USA, Candada
@@ -22104,8 +22124,178 @@ void sanitize_utf8(char *s)
     *w = '\0';
 }
 
+/////////////////Molad subroutine from SoidHaibure/////////////////
+/*'---------------------------------------------------------------------------------------
+' Procedure : Molad
+' DateTime  : 5/20/2006 23:05
+' Author    : Ed Keller
+' Purpose   : Calculates time of molad for inputed hebrew year, hebyr%,
+'             and hebrew month 1-13 = hebmonth%
+'    input  : hebyr%, hebmonth% (1-13), difhr# (difference of hours due to changing synodic period)
+'    output : daynum%,moladtim$,timemolad$,leapyear%(0=regular,1=leap year)
+'---------------------------------------------------------------------------------------*/
+//Used for calculating the details of the moladim for any Hebrew Year = bebyr
+//Input parameter: Hebrew Year, hebyr
+//				   Hebrew Month (1-13(, hebmonth
+//Output		   daynum, day number of that month's molad 1-7 corresponding to Sun to Shabbos
+//				   moladim: molad's time string in hours, minutes, and chalokim
+//				   timemolad: molad's time in format hr:min:sec
+//				   leapyear = 0 if regular year, 1 if leap year
+//				   difhr = 0 for using synodic period of Chazal at Jeursalem's longitude
 
+/* ---------------------------------------------------------
+   Convert VB6 Molad() to ANSI C (VC6 compatible)
+   --------------------------------------------------------- */
+void Molad(
+    int hebyr,
+    int hebmonth,
+    short *daynum,
+    char *moladtim,
+    char *timemolad,
+    int *leapyear,
+    double difhr
+)
+{
+    long numcycle, nummonths;
+    int yearstart;
+    int i;
+    long numDays;
+    long numHours;
+    double numchelek;
+    int nummin, numsec;
 
+    /* ---------------------------------------------------------
+       Calculate number of complete 19-year cycles
+       --------------------------------------------------------- */
+    numcycle = (long)((hebyr - 1) / 19);
+    nummonths = numcycle * 235;
+
+    /* years left after complete cycles */
+    yearstart = hebyr - 1 - numcycle * 19;
+
+    /* months in remaining years */
+    for (i = 1; i <= yearstart; i++) {
+        switch (i) {
+            case 3: case 6: case 8: case 11:
+            case 14: case 17: case 19:
+                nummonths += 13;   /* leap year */
+                break;
+            default:
+                nummonths += 12;   /* regular year */
+        }
+    }
+
+    /* determine if THIS year is leap year */
+    switch (yearstart + 1) {
+        case 3: case 6: case 8: case 11:
+        case 14: case 17: case 19:
+            *leapyear = 1;
+            break;
+        default:
+            *leapyear = 0;
+    }
+
+    /* add month number */
+    nummonths += (hebmonth - 1);
+
+    /* ---------------------------------------------------------
+       Molad calculation
+       --------------------------------------------------------- */
+
+    /* chalokim */
+    numchelek = 793.0 * nummonths + 6.0 + (11.0 / 60.0) * 1080.0;
+
+    /* hours */
+    numHours = 12 * nummonths + 23;
+
+    /* days */
+    numDays = 29 * nummonths + 1;
+
+    /* adjust for synodic period change */
+    if (!SynodicChazal) {
+        numchelek += (long)((difhr + 2.0 - Meridian / 15.0) * 1080.0);
+    }
+
+    /* carry chalokim ? hours */
+    numHours += (long)(numchelek / 1080.0);
+    numchelek -= (long)(numchelek / 1080.0) * 1080.0;
+
+    /* carry hours ? days */
+    numDays += (long)(numHours / 24.0);
+    numHours -= 24 * (long)(numHours / 24.0);
+
+    /* day of week (1–7) */
+    *daynum = numDays - 7 * (long)(numDays / 7);
+    if (*daynum == 0) *daynum = 7;
+
+    /* ---------------------------------------------------------
+       Format output strings
+       --------------------------------------------------------- */
+
+    /* minutes */
+    nummin = (int)(60.0 * (numchelek / 1080.0));
+    numchelek -= (long)((nummin * 1080.0) / 60.0);
+
+    /* seconds */
+    numsec = (int)(numchelek * (10.0 / 3.0));
+
+    /* build moladtim string */
+    sprintf(
+        moladtim,
+        "%02ld:%02d and %ld chalokim",
+        numHours,
+        nummin,
+        (long)numchelek
+    );
+
+    /* build timemolad string */
+    sprintf(
+        timemolad,
+        "%02ld:%02d:%02d",
+        numHours,
+        nummin,
+        numsec
+    );
+}
+
+/////////////////convert daynumber to day name///////////////
+char *WeekDay(short daynum)
+{
+	char ch[25] = "";
+	//Hebrew weekdays
+	if (optionheb)
+	{
+		return hebweek(daynum, ch);
+	}
+	else	//convert Hebrew weekdays to English weekdays
+	{
+		switch (daynum)
+		{
+		case 1:
+			return "Sunday";
+			break;
+		case 2:
+			return "Monday";
+			break;
+		case 3:
+			return "Tuesday";
+			break;
+		case 4:
+			return "Wednesday";
+			break;
+		case 5:
+			return "Thursday";
+			break;
+		case 6:
+			return "Friday";
+			break;
+		case 7:
+		case 0:
+			return "Shabbos";
+			break;
+		}
+	}
+}
 
 ////////////////////////ARCHIVES////////////////////////////
 /////////////////////////////////////////////////////////////
