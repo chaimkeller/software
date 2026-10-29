@@ -1,0 +1,74 @@
+﻿# Configuration Action Buttons
+BTN_PRINT_ORIGINAL=הדפסת עמוד מקורי
+BTN_GENERATE_LUACH=יצירת לוח מפואר להדפסה (דף לכל חודש)
+
+# Layout
+TXT_DIRECTION=rtl
+
+# General Messages
+TXT_POPUP_WARNING=Please allow popups to open the calendar.
+
+# Title Indicators
+TXT_TITLE=לוח "בכורי יוסף" - קהילת עכו
+TXT_SUBTITLE=חודש %s - שנת תשפ"ז (אופק נראה לעיר עכו)
+TXT_PAGE_TITLE=לוח מפואר להדפסה
+
+# Structural Column Header Elements
+TXT_DAY=יום
+TXT_WEEKDAY=שבוע
+TXT_CIVIL=לועזי
+TXT_VIS_SUN=נץ ושקיעה נראים
+TXT_SOF_ZMANIM=סוף זמן ק"ש ותפילה
+TXT_MINCHA_CHATZOT=מנחה וחצות
+TXT_MINCHAS=מנחה
+TXT_CANDLES_SUNSET=הדלקת נרות ושקיעה
+TXT_TZEIT_STARS=צאת הכוכבים
+
+# Sub-Header Grid Elements
+TXT_VIS_SUNRISE=נץ הנראה
+TXT_VIS_SUNSET=שקיעה הנראית
+TXT_ALOT_HASHACHAR=עלות השחר
+TXT_KRIAT_SHMA_GRA=ק"ש גר"א
+TXT_TEFILAH_GRA=תפילה גר"א
+TXT_KRIAT_SHMA_MA=ק"ש מ"א
+TXT_TEFILAH_MA=תפילה מ"א
+TXT_CHATZOT_HAYOM=חצות היום
+TXT_MINCHA_GEDOLAH=מנחה גדולה
+TXT_MINCHA_KTANAH=מנחה קטנה
+TXT_MINCHA_PLAG=פלג המנחה
+TXT_CANDLES_40=נרות (40)
+TXT_CANDLES_20=נרות (20)
+TXT_SUNSET_MISHOR=שקיעה מישור
+TXT_SUNSET_ASTRO=שקיעה מגובה
+TXT_TZEIT_A=צה"כ א
+TXT_TZEIT_SHABBAT=צאת שבת
+TXT_TZEIT_RT=צאת ר"ת
+TXT_CHOMETZ=חמץ
+TXT_MEVORCHIM=מברכים
+TXT_MOLAD=מולד
+TXT_BOMER=בעומר
+TXT_LUACH_SEFIRAS_HAOMER=לוח ספירת העומר
+TXT_HEBREW_DATE=תאריך
+TXT_SEFIRAH=ספירה
+TXT_NUSACH_MALEH=נוסח מלא
+
+# Special Filter Assertions
+TXT_SHABBAT=שבת
+TXT_ROSH_HASHANAH=ראש השנה
+TXT_YOM_KIPPUR=יום הכיפורים
+TXT_MONTH=חודש
+
+# Month Name Identifiers
+M_1=תשרי
+M_2=מרחשון
+M_3=כסלו
+M_4=טבת
+M_5=שבט
+M_6=אדר א
+M_7=אדר ב
+M_8=ניסן
+M_9=אייר
+M_10=סיון
+M_11=תמוז
+M_12=אב
+M_13=אלול

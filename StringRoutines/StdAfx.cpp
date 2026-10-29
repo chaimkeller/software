@@ -88,7 +88,7 @@ void InsertHolidays(char *caldayHeb, char *caldayEng, char *calday,
 					short yl, short *ntotshabos, short *dayweek, short *fshabos,
 					short *nshabos,	short *addmon, short iheb );
 char *hebyear(char *yrcal, short yr);
-short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, bool nusachSefard,
+short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, bool nusachSefard, bool ShowMoladim,
 				  double *avekmxzman, double *avekmyzman, double *avehgtzman,
 				  short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[]);
 void heb12monthHTML(short setflag);
@@ -123,7 +123,7 @@ char *RemoveCRLF( char *str );
 char *IsoToUnicode( char *str );
 short LoadConstants(short zmanyes, short typezman, char filzman[] );
 short LoadTitlesSponsors();
-short PrintMultiColTable(char filzman[], short ExtTemp[], bool sefira, bool nusachSefard);
+short PrintMultiColTable(char filzman[], short ExtTemp[], bool sefira, bool nusachSefard, bool ShowMoladim);
 char *round( double tim, short stepps, short accurr, short sp, short *DST, 
 			 char t3subb[], const short mode );
 char *EngCalDate(short ndy, short EngYear, short yl, char *caldate );
@@ -131,7 +131,7 @@ void PST_iterate( short *k, short *j, short *i, short *ntotshabos, short *daywee
 				 , short *yrn, short *fshabos, short *nshabos, short *addmon
 				 , short setflag, short sp, short *DST, short types, short yl, short iheb );
 short WriteHtmlHeader();
-short WriteHtmlClosing();
+short WriteHtmlClosing(	short types, short zmanyes, short typezman);
 short decl_(double *dy1, double *mp, double *mc, double *ap, double *ac
 	      , double *ms, double *aas, double *es, double *ob, double *d__);
 short casgeo_(double *gn, double *ge, double *l1, double *l2);
@@ -250,13 +250,15 @@ short DayNumber(short ylyd, short mon, short mday);
 short IsDST(char *country, char *city, short StartDay[], short EndDay[] );
 /////////////////////////////////////////////////////////////////////
 
+void to_lowercase(char *str);
+
 ////////////////Moladim functions//////////////////
 void Molad(
     int hebyr,
     int hebmonth,
     short *daynum,
-    char *moladtim,
-    char *timemolad,
+    char moladtim[],
+    char timemolad[],
     int *leapyear,
     double difhr
 );
@@ -264,13 +266,35 @@ void Molad(
 char *WeekDay(short daynum);
 ///////////////////////////////////////
 
+////////////////neat print function/////////
+#define MAX_RESOURCES 64
+#define MAX_STRING_LEN 128
+
+/* Structure to store string lookups dynamically */
+typedef struct {
+    int id;
+    char key[64];
+    char text[MAX_STRING_LEN];
+} ResourceString;
+
+ResourceString res_table[MAX_RESOURCES];
+int res_count = 0;
+
+/* Clean loading routine to map the resource mapping layout at startup */
+//int load_resources(const char* filepath);
+void print_calendar_footer_with_script(short typezman);
+//const char* get_res_string(int id);
+char *load_cal_string(const char *key);
+//static void print_js_string(const char *s);
+static void calendar_html_text(const char *s);
+static void calendar_js_string(const char *s);
+
 /////////////sefiras Haomer functions///////////////////
 static char *load(const char *key);
 char *hebrew_number(int n);
 char *hebrew_abbrev(int n);
 char *english_ordinal(int n);
 char *omer_output(int day, int optionheb, int fullcount, short mode);
-bool ShowSefira = true;
 
 /************file folder paths/weather modeling****************/
 //eventually these will be stored in a file with a php interface
@@ -354,6 +378,7 @@ char heb7[30][100];//Hebrew alphabet in Unicode
 char heb8[25][255];//Hebrew error messages
 char heb9[16][255]; //PlotGraphHTML5 Hebrew strings
 char heb10[12][255]; //Hebrew fast dates
+char heb11[8][255]; //Moladim strings
 char holidays[4][16][255]; //NOTICE: largest holiday string is 40 characters long
 char arrStrParshiot[2][63][255]; //NOTICE: largest parshia name is 40 characters long
 char arrStrSedra[2][63][255]; //NOTICE: Sedra length must equla Parshiot name
@@ -433,7 +458,7 @@ char myfile[255] = "";
 /////////////////diagnostic error buffer///////////////////////////
 char Errorbuff[1500] = "";  //uncomment for diagnostics
 void WriteErrorString(char *errorstr, int *Write_flag );
-bool diagnostics = false;
+bool diagnostics = true;
 bool diagnostics2 = false;
 bool diagnostics3 = false;
 bool diagnostics4 = false;
@@ -992,7 +1017,9 @@ The values set for debugging the program are simply the cgi arguments that are p
 42 added global warming add hoc fix to the Temperatures model when GlobalWarmingCorrection = year to start correction
 43 added new DTM directory that contains the NED 30 m DEM and the SRTM 30 m DTM that used to reside in the US server (now defunct)
    cgi determines which directory to use and sets DTMflag which is now global variable
-42 added taanisim, sof zman achila and sreifa, and serifas haomer to zamenei hayom
+44 added taanisim, sof zman achila and sreifa, and serifas haomer to zamenei hayom
+45 added Moladim zemanim to zemanei hayom
+46 added fancy table print button and support, so far supports MA 72 min, 90 min,  Gro mishor, astro Hebrew zemanim tables
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////*/
 
@@ -1033,8 +1060,9 @@ int main(int argc, char* argv[])
 	short foundcity = 0;
 	bool adhocrise = true;
 	bool adhocset = false;
-	bool sefira;
-	bool nusachSefard;
+	bool sefira; //flag for sefiras Haomer in zemanei hayom listing
+	bool nusachSefard; //flag for Nusach Sefard
+	bool ShowMoladim;
 
 	////////////////////if first entry is not = -9999, then using external temperatures inputed by user/////
 	////////////////////to calculat the vdw scaling factors//////////////////////////////////////
@@ -1245,15 +1273,22 @@ __asm{
 		sefira = false;
 		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_sefira")), "ON") )
 		{
-			sefira = true; //add cushions for thermal inversion region for simsets
+			sefira = true; //add Sefiras Haomer to zemanei hayom listings
 		}
 
 		////////////////////////Nusach Sefard////////////////////////
 		nusachSefard = false;
 		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_nusach")), "ON") )
         {
-			nusachSefard = true; //add cushions for thermal inversion region for simsets
+			nusachSefard = true; //yse nusach Sfard for Sefira
 		}
+
+		///////////////////////Show Moladim//////////////////////////
+		ShowMoladim = false;
+		if ( strstr(Trim(getpair(&NumCgiInputs, "cgi_Moladim")), "ON") )
+        {
+			ShowMoladim = true; //add cushions for thermal inversion region for simsets
+		}		
 
 
 		CGI = 1;
@@ -1263,21 +1298,21 @@ __asm{
 	else if (argc == 1) //not using console
 	{
 		//http://162.253.153.219/cgi-bin/ChaiTables.cgi/?cgi_TableType=Astr&cgi_country=Astro&cgi_USAcities1=1&cgi_USAcities2=0&cgi_searchradius=&cgi_Placename=United_Kingdom&cgi_eroslatitude=55.398869&cgi_eroslongitude=3.388176&cgi_eroshgt=700.55&cgi_geotz=0&cgi_exactcoord=OFF&cgi_MetroArea=&cgi_types=11&cgi_ignoretiles=OFF&cgi_RoundSecond=-1&cgi_AddCushion=1&cgi_24hr=&cgi_typezman=7&cgi_yrheb=5782&cgi_optionheb=1&cgi_UserNumber=5298&cgi_Language=English&cgi_erosaprn=0.5&cgi_erosdiflat=1&cgi_erosdiflon=1&cgi_DTMs=1&cgi_AllowShaving=ON
-		strcpy( TableType, "Chai"); //;"BY" ); //"Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
+		strcpy( TableType, "Chai" ); //"BY" ); //"Chai" ); //"Astr" ); //"BY"); //"Astr"); //"Chai" ); //"BY"); //"Astr"); //"Chai"); //"BY"); //"Astr"); //"BY");//"Chai" ); //"BY" ); //"Chai" );//"Astr" );//"Chai" )//"BY" );
 		//yesmetro = 0;
-		strcpy( MetroArea, "Vancouver"); //"Jerusalem" ); //"acco" ); //"Baltimore"); //"Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
-		strcpy( country, "Canada" ); //"Israel" ); //"USA" ); //"Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
+		strcpy( MetroArea, "Jerusalem" ); //"Vancouver"); //"Jerusalem" ); //"acco" ); //"Baltimore"); //"Lakewood" ); //"beit_shemes_combined" ); //"Lakewood" ); //"Baltimore" ); //"beit_ariyeh"); //"Astr"); //"Baltimore" ); //"Lakewood" ); //"Jerusalem" ); //"Lakewood" ); //"chazon" ); //"jerusalem");//"beit-shemes"); //"jerusalem"); //"London"); //"jerusalem"); //"Kfar Pinas");//"Mexico");//"jerusalem"); //"almah"); //"jerusalem" ); //"telz_stone_ravshulman"; //"???_????";
+		strcpy( country, "Israel" ); //"Canada" ); //"Israel" ); //"USA" ); //"Israel" ); //"USA" ); //"Israel" ); //"Astro"); //"USA" ); //"Israel" ); //"USA" ); //"Israel");//"England"); //"Israel");//"Mexico");//"Israel" ); //"USA" ); //"Reykjavik, Iceland" ); //"USA" );//"Israel";
 		UserNumber = 302343;
 		g_yrheb = 5787; //5783; //5782; //5781; //5779;//5776; //5775;
-		zmanyes = 0; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
-		typezman = 8; //3; //8; // acc. to which opinion
-		optionheb = false; //true; //false; //true; //false; //true; //false; //true;//false;
+		zmanyes = 1; //1; //0; //1;//1; //0; //1; //0 = no zemanim, 1 = zemanim
+		typezman = 2; //8; //3; //8; // acc. to which opinion
+		optionheb = true; //true; //false; //true; //false; //true; //false; //true;//false;
 		RoundSecondsin = 5; //1;//5;
 
 		///unique to Chai tables
-		numUSAcities1 = 12; //3; //4; //29; //27; //4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area  (in c:/cities Lakewood = 29, but in web it is 27)
-		numUSAcities2 = 13; //78; //19; //1; //4; //1; //2; //7;//0; //75; //city area
-		searchradius = 4.0; //1.0; //0.8; //3; //0.4; //8; //1; //8; //1;//4;//1; //search area
+		numUSAcities1 = 3; //12; //3; //4; //29; //27; //4; //27; //3; //27; //3;//1; //2;//11; //2; //Metro area  (in c:/cities Lakewood = 29, but in web it is 27)
+		numUSAcities2 = 19; //13; //78; //19; //1; //4; //1; //2; //7;//0; //75; //city area
+		searchradius = 1.0; //4.0; //1.0; //0.8; //3; //0.4; //8; //1; //8; //1;//4;//1; //search area
 		yesmetro = 0; //0; //1; //0;  //yesmetro = 0 if found city, = 1 if didn't find city and providing coordinates
 		GoldenLight = 0; //1;
 
@@ -1300,7 +1335,7 @@ __asm{
 		//////////////////////////////////////////////////////////
 
 		////////////table type (see below for key)///////
-		types = 0; //10; //0; //10; //0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
+		types = 6; //0; //10; //0; //10; //0;//10; //0; //11; //0; //2; //0; //10; //0; //11; //13; //1;//10; //0; //10;//0; //5;//0;//2; //3; //10;//10; //0;//10;//2; //10;//10;//0;
 		SRTMflag = 0; //10; //0; //10; //0;//10; //0; //11; //0;//10; //0; //11;//13; //0;//10; //0; //10; //10;//10; //0;//10;//0; //10; //10;
 		////////////////////////////////////////////////
 
@@ -1323,6 +1358,8 @@ __asm{
 		////////////////////////////////////////////////////////////////////////////////////////////////
 
 		AddCushion = true; //false; //true;
+
+		ShowMoladim = true;
 
 		/////////////////diagnostics  032421 /////////////////
 		//http://localhost/cgi-bin/ChaiTables.cgi/?cgi_TableType=BY&cgi_country=Eretz_Yisroel&cgi_USAcities1=1&cgi_USAcities2=0
@@ -1646,6 +1683,10 @@ __asm{
 			fgets_CR(doclin, 255, stream2); //read in line of text
 			strcpy( hebcityname, doclin );
 			Trim(hebcityname);
+
+			//convert to same case in case for comparison
+			to_lowercase(MetroArea);
+			to_lowercase(engcityname);
 
 			if ( ( !HebrewInterface && !strcmp(MetroArea, engcityname) ) ||
 				  (  HebrewInterface && !strcmp(MetroArea, hebcityname) )    )
@@ -2226,10 +2267,10 @@ __asm{
 
 	if (zmanyes) //print zemanim tables
 	{
-		if (PrintMultiColTable(filzman, ExtTemp, sefira, nusachSefard)) return -1;
+		if (PrintMultiColTable(filzman, ExtTemp, sefira, nusachSefard, ShowMoladim)) return -1;
 	}
 
-	if (WriteHtmlClosing()) return -1; //write the html closing info and close the stream
+	if (WriteHtmlClosing(types, zmanyes, typezman)) return -1; //write the html closing info and close the stream
 
 	return 0;
 }
@@ -2390,6 +2431,11 @@ short RdHebStrings()
 					flgheb = 8;
 					iheb = 0;
 				}
+				else if (strstr( doclin,"[moladim]" ))
+				{
+					flgheb = 9;
+					iheb = 0;
+				}
 
 				if (strlen(Trim(doclin)) > 0 ) //ignore blank lines containing just "\n"
 				{
@@ -2432,6 +2478,10 @@ short RdHebStrings()
 						case 8:
 							strcpy( &heb10[iheb][0], doclin );
 							if (checkForSpaces) newlen = replaceSpaces(&heb10[iheb][0], 255);
+							break;
+						case 9:
+							strcpy( &heb11[iheb][0], doclin );
+							if (checkForSpaces) newlen = replaceSpaces(&heb11[iheb][0], 255);
 							break;
 					}
 
@@ -3733,7 +3783,7 @@ char *hebyear(char *yrcal, short yr)
 
 
 //////////////////////////////////1////////////////////////////////
-short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, bool nusachSefard,
+short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, bool nusachSefard, bool ShowMoladim,
 				  double *avekmxzman, double *avekmyzman, double *avehgtzman,
 				  short MinTemp[], short AvgTemp[], short MaxTemp[], short ExtTemp[])
 ///////////////////////////////////////////////////////////////////////
@@ -3809,6 +3859,12 @@ short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, b
 	ntotshabos = 0;
 	fshabos = fshabos0;
  	if (!(optionheb)) iheb = 1;
+
+	////////////////variables for Molad//////////added 10/18/26
+	short daynum;
+	char moladim[255];
+	char timemolad[255];
+	int leapyear;
 
 	//////////////////added 090121 DST support////////////////////////////////
 	if (DSTcheck)  //calcualte onset and end of DST
@@ -4286,6 +4342,7 @@ short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, b
 							{
 								sprintf( doclin, "%s%s", caldayHeb, "\0" );
 								parseit2( doclin, &closerow, &dayweek, 0, 1);
+
 								if (!optionheb)
 								{
 									if ( strstr( calday, "Shabbos") ) //no Sreifas chometz on Shabbos
@@ -4365,6 +4422,61 @@ short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, b
 								fprintf( stdout, "%s\n", "    </tr>");
 							}
 
+						}
+
+						if (ShowMoladim && i < endyr)
+						{
+							//keep track of Shabbosim for Kiddush HaChodesh, which will occur
+							//on last Shabbos before Rosh Chodesh, i.e., j - g_mdate < 7
+							if (fshabos + (nshabos - 1) * 7 == j && ShowMoladim && fabs(j - g_mmdate[1][i - 1]) < 7)
+							{
+								//this is Shabbos Mevorchim, print out Molad of this month
+								moladim[0] = 0;
+								timemolad[0] = 0;
+								Molad((int)g_yrheb, i + 1, &daynum, moladim, timemolad, &leapyear, 0);
+
+								fprintf( stdout, "%s\n", "    </tr>");
+
+								if (!NewZmanTableFormat) 
+								{
+									sprintf( doclin, "%s%s", caldayHeb, "\0" );
+									parseit( doclin, &closerow, linnum, 0, 1);
+									sprintf( doclin, "%s%s", calday, "\0");
+									parseit( doclin, &closerow, linnum, 0, 2);
+
+									if (!optionheb)
+									{
+										//convert daynum to day name
+										sprintf( doclin, "%s%s%s%s%s%s", "Shabbos Mevorchim, molad of ", &monthh[1][i][0], " is on ", WeekDay(daynum), " at ", moladim);
+									}
+									else
+									{
+										sprintf( doclin, "%s %s%s%s %s %s",&heb11[1][0],  &monthh[0][i][0], &heb11[2][0], WeekDay(daynum),  &heb11[3][0], moladim );
+									}
+									parseit( doclin, &closerow, linnum, numsort + 3, 4);
+								}
+								else
+								{
+									sprintf( doclin, "%s%s", caldayHeb, "\0" );
+									parseit2( doclin, &closerow, &dayweek, 0, 1);
+									sprintf( doclin, "%s%s", calday, "\0");
+									parseit2( doclin, &closerow, &dayweek, 0, 2);
+
+									if (!optionheb)
+									{
+										sprintf( doclin, "%s%s%s%s%s%s", "Shabbos Mevorchim, Molad of ", &monthh[1][i][0], " is on ", WeekDay(daynum), " at ", moladim);
+									}
+									else
+									{
+										sprintf( doclin, "%s %s%s%s %s %s",&heb11[1][0],  &monthh[0][i][0], &heb11[2][0], WeekDay(daynum),  &heb11[3][0], moladim );
+									}
+									parseit2( doclin, &closerow, &dayweek, numsort + 3, 4);
+								}
+
+								//add end of row tag
+								fprintf( stdout, "%s\n", "    </tr>");
+
+							}
 						}
 
 					}
@@ -4583,6 +4695,62 @@ short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, b
 						///////////////////////sof zman Achila/Sreifa////////////////////////////////
 
 
+						if (ShowMoladim && i < endyr)
+						{
+							//keep track of Shabbosim for Kiddush HaChodesh, which will occur
+							//on last Shabbos before Rosh Chodesh, i.e., j - g_mdate < 7
+							if (fshabos + (nshabos - 1) * 7 == j && ShowMoladim && fabs(j - yrend[0]) < 7)
+							{
+								//this is Shabbos Mevorchim, print out Molad of this month
+								moladim[0] = 0;
+								timemolad[0] = 0;
+								Molad((int)g_yrheb, i + 1, &daynum, moladim, timemolad, &leapyear, 0);
+
+								fprintf( stdout, "%s\n", "    </tr>");
+
+
+								if (!NewZmanTableFormat) 
+								{
+									sprintf( doclin, "%s%s", caldayHeb, "\0" );
+									parseit( doclin, &closerow, linnum, 0, 1);
+									sprintf( doclin, "%s%s", calday, "\0");
+									parseit( doclin, &closerow, linnum, 0, 2);
+
+									if (!optionheb)
+									{
+										//convert daynum to day name
+										sprintf( doclin, "%s%s%s%s%s%s", "Shabbos Mevorchim, molad of ", &monthh[1][i][0], " is on ", WeekDay(daynum), " at ", moladim);
+									}
+									else
+									{
+										sprintf( doclin, "%s %s%s%s %s %s",&heb11[1][0],  &monthh[0][i][0], &heb11[2][0], WeekDay(daynum),  &heb11[3][0], moladim );
+									}
+									parseit( doclin, &closerow, linnum, numsort + 3, 4);
+								}
+								else
+								{
+									sprintf( doclin, "%s%s", caldayHeb, "\0" );
+									parseit2( doclin, &closerow, &dayweek, 0, 1);
+									sprintf( doclin, "%s%s", calday, "\0");
+									parseit2( doclin, &closerow, &dayweek, 0, 2);
+
+									if (!optionheb)
+									{
+										sprintf( doclin, "%s%s%s%s%s%s", "Shabbos Mevorchim, Molad of ", &monthh[1][i][0], " is on ", WeekDay(daynum), " at ", moladim);
+									}
+									else
+									{
+										sprintf( doclin, "%s %s%s%s %s %s",&heb11[1][0],  &monthh[0][i][0], &heb11[2][0], WeekDay(daynum),  &heb11[3][0], moladim );
+									}
+									parseit2( doclin, &closerow, &dayweek, numsort + 3, 4);
+								}
+
+								//add end of row tag
+								fprintf( stdout, "%s\n", "    </tr>");
+
+							}
+						}
+
 					}
 					else
 					{
@@ -4744,6 +4912,62 @@ short WriteTables(char TitleZman[], short numsort, short numzman, bool sefira, b
 						}
 						///////////////////////sof zman Achila/Sreifa////////////////////////////////
 
+						if (ShowMoladim && i < endyr)
+						{
+							//keep track of Shabbosim for Kiddush HaChodesh, which will occur
+							//on last Shabbos before Rosh Chodesh, i.e., j - g_mdate < 7
+							if (fshabos + (nshabos - 1) * 7 == j && ShowMoladim && fabs(j - g_mmdate[1][i - 1]) < 7)
+							{
+								//this is Shabbos Mevorchim, print out Molad of this month
+								moladim[0] = 0;
+								timemolad[0] = 0;
+								Molad((int)g_yrheb, i + 1, &daynum, moladim, timemolad, &leapyear, 0);
+
+								fprintf( stdout, "%s\n", "    </tr>");
+
+
+								if (!NewZmanTableFormat) 
+								{
+									sprintf( doclin, "%s%s", caldayHeb, "\0" );
+									parseit( doclin, &closerow, linnum, 0, 1);
+									sprintf( doclin, "%s%s", calday, "\0");
+									parseit( doclin, &closerow, linnum, 0, 2);
+
+									if (!optionheb)
+									{
+										//convert daynum to day name
+										sprintf( doclin, "%s%s%s%s%s%s", "Shabbos Mevorchim, molad of ", &monthh[1][i][0], " is on ", WeekDay(daynum), " at ", moladim);
+									}
+									else
+									{
+										sprintf( doclin, "%s %s%s%s %s %s",&heb11[1][0],  &monthh[0][i][0], &heb11[2][0], WeekDay(daynum),  &heb11[3][0], moladim );
+									}
+									parseit( doclin, &closerow, linnum, numsort + 3, 4);
+								}
+								else
+								{
+									sprintf( doclin, "%s%s", caldayHeb, "\0" );
+									parseit2( doclin, &closerow, &dayweek, 0, 1);
+									sprintf( doclin, "%s%s", calday, "\0");
+									parseit2( doclin, &closerow, &dayweek, 0, 2);
+
+									if (!optionheb)
+									{
+										sprintf( doclin, "%s%s%s%s%s%s", "Shabbos Mevorchim, Molad of ", &monthh[1][i][0], " is on ", WeekDay(daynum), " at ", moladim);
+									}
+									else
+									{
+										sprintf( doclin, "%s %s%s%s %s %s",&heb11[1][0],  &monthh[0][i][0], &heb11[2][0], WeekDay(daynum),  &heb11[3][0], moladim );
+									}
+									parseit2( doclin, &closerow, &dayweek, numsort + 3, 4);
+								}
+
+								//add end of row tag
+								fprintf( stdout, "%s\n", "    </tr>");
+
+							}
+						}
+
 					}
 					else
 					{
@@ -4777,7 +5001,7 @@ void parseit( char outdoc[], bool *closerow, short linnum, short numcol, short m
         if (linnum % 2 == 0)
         {
             fprintf(stdout,
-                "        <td colspan=\"%d\" bgcolor=\"#ffff00\" align=\"center\">\n",
+                "        <td colspan=\"%d' bgcolor=\"#ffff00\" align=\"center\">\n",
                 numcol);
         }
         else
@@ -7019,7 +7243,7 @@ void ErrorHandler( short mode, short ier )
 	//ier = checkenviron();
 	///////////////////////////////////////////////
 
-	WriteHtmlClosing();
+	WriteHtmlClosing(0, 0,0);
 
 }
 ////////////////////////////////////////////////////////////////
@@ -8124,6 +8348,14 @@ short SunriseSunset( short types, bool *adhocrise, bool *adhocset, short ExtTemp
 			                       //-2 = can't open profile file
 			                       //-3 = can't allocate memory for elev array
 			                       //-4 = can't find DTM tile file
+			if (diagnostics)
+			{
+				if (ier == -2)
+				{
+					Errorbuff[0] = 0;
+					sprintf(Errorbuff, "bad profile file name = %s", myfile );
+				}
+			}
 			return -1;
 		}
 
@@ -10221,6 +10453,7 @@ void HebCal(short yrheb)
 	strncpy( g_hdryr + 1, buff, 4);
 
 	engdate();
+
 	iheb = 1;
 	strcpy( &g_mdates[0][0][0], &monthh[1][0][0]);
 	strncpy( &g_mdates[1][0][0], g_dates, 11);
@@ -10921,7 +11154,9 @@ char *EngCalDate(short ndy, short EngYear, short yl, char caldate[] )
 
       if (yl == 366) nleap = 1;
 
-      if (ndy <= 31)
+	  if (!optionheb)
+	  {
+		if (ndy <= 31)
 		{
 			sprintf( caldate, "%s%02d-%4d%s", "Jan-", ndy,  EngYear, "\0" );
 		}
@@ -10975,6 +11210,64 @@ char *EngCalDate(short ndy, short EngYear, short yl, char caldate[] )
 		{
             sprintf( caldate, "%s%02d-%4d%s", "Dec-", ndy - 334 - nleap,  EngYear, "\0" );
         }
+	  }
+	  else
+	  {
+		if (ndy <= 31)
+		{
+			sprintf( caldate, "%d.%s.%4d%s", ndy, "1",  EngYear, "\0" );
+		}
+        else if ((yl == 365) && (ndy > 31) && (ndy <= 59))
+		{
+ 			sprintf( caldate, "%d.%s.%4d%s", ndy - 31, "2",  EngYear, "\0" );
+            nleap = 0;
+		}
+        else if ((yl == 366) && (ndy > 31) && (ndy <= 60))
+		{
+ 			sprintf( caldate, "%d.%s.%4d%s", ndy - 31, "2",  EngYear, "\0" );
+            nleap = 1;
+		}
+        else if ((ndy >  59+nleap) && (ndy <=  90+nleap))
+		{
+   			sprintf( caldate, "%d.%s.%4d%s", ndy - 59 - nleap, "3",  EngYear, "\0" );
+		}
+        else if ((ndy >  90+nleap) && (ndy <=  120+nleap))
+		{
+   			sprintf( caldate, "%d.%s.%4d%s", ndy - 90 - nleap, "4",  EngYear, "\0" );
+		}
+        else if ((ndy >  120+nleap) && (ndy <=  151+nleap))
+		{
+   			sprintf( caldate, "%d.%s.%4d%s", ndy - 120 - nleap, "5",  EngYear, "\0" );
+		}
+        else if ((ndy >  151+nleap) && (ndy <=  181+nleap))
+		{
+   			sprintf( caldate, "%d.%s.%4d%s", ndy - 151 - nleap, "6",  EngYear, "\0" );
+		}
+        else if ((ndy >  181 + nleap) && (ndy <=  212+nleap))
+		{
+   			sprintf( caldate, "%d.%s.%4d%s", ndy - 181 - nleap, "7",  EngYear, "\0" );
+		}
+        else if ((ndy >  212+nleap) && (ndy  <=  243+nleap))
+		{
+    		sprintf( caldate, "%d.%s.%4d%s", ndy - 212 - nleap, "8",  EngYear, "\0" );
+		}
+        else if ((ndy >  243+nleap) && (ndy  <=  273+nleap))
+		{
+    		sprintf( caldate, "%d.%s.%4d%s", ndy - 243 - nleap, "9",  EngYear, "\0" );
+		}
+        else if ((ndy >  273+nleap) && (ndy  <=  304+nleap))
+		{
+     		sprintf( caldate, "%d.%s.%4d%s", ndy - 273 - nleap, "10",  EngYear, "\0" );
+		}
+        else if ((ndy >  304+nleap) && (ndy  <=  334+nleap))
+		{
+      		sprintf( caldate, "%d.%s.%4d%s", ndy - 304 - nleap, "11",  EngYear, "\0" );
+		}
+        else if (ndy  >  334 + nleap)
+		{
+      		sprintf( caldate, "%d.%s.%4d%s", ndy - 334 - nleap, "12",  EngYear, "\0" );
+        }
+	  }
 
         return caldate;
 
@@ -11138,6 +11431,15 @@ char *round( double tim, short stepps, short accurr, short sp, short *DST, char 
 
 	minad = 0;
 	//if (secmin % steps[setflag] == 0) //no need for rounding
+	if (stepps == 0)
+	{
+		stepps = 60; //something wrong in template, can't find rounding value, use default
+	}
+	if (sp == 0)
+	{
+		sp = -1; //something wrong in template, can't find rounding direction, use default
+	}
+
 	if (secmin % (int)stepps == 0) //no need for rounding
 	{
 		goto rnd50;
@@ -14695,7 +14997,7 @@ short WriteHtmlHeader()
 }
 
 /////////////////////////HTML closing/////////////////////////
-short WriteHtmlClosing()
+short WriteHtmlClosing(	short types, short zmanyes, short typezman)
 //////////////////////wrties HTML closing lines//////////////
 {
 
@@ -14703,11 +15005,14 @@ short WriteHtmlClosing()
 
 	fprintf(stdout,"%s\n", "<hr>");
 
-	if (!HebrewInterface)
+	if (!HebrewInterface )
 	{
-		fprintf(stdout,"%s\n", "<p align = left><input type=\"button\" value=\"Print This Page\" onClick=\"window.print()\"/></p>" );
+		if (!(types == 6 && zmanyes == 1 && typezman >=0 && typezman <= 3 && optionheb))
+		{
+			fprintf(stdout,"%s\n", "<p align = left><input type=\"button\" value=\"Print This Page\" onClick=\"window.print()\"/></p>" );
+		}
 	}
-	else
+	else if (HebrewInterface && !(zmanyes == 1 && types == 6 && typezman >=0 && typezman <= 3)) //otherwise print out fancy button below
 	{
 		fprintf(stdout,"%s%s%s\n", "<p align = right><input type=\"button\" value=\"", &heb8[15][0], "\" onClick=\"window.print()\"/></p>" );
 	}
@@ -14736,6 +15041,12 @@ short WriteHtmlClosing()
 		"  cleanText(document.body);\n"
 		"})();\n"
 		"</script>\n");
+	}
+
+	//for certain zemanim opinons, show button for fancy calendar 
+	if (types == 6 && zmanyes == 1 && typezman >=0 && typezman <= 3 && optionheb)
+	{
+		print_calendar_footer_with_script(typezman);
 	}
 
 	//////////////////////////////////////////////////////
@@ -16157,7 +16468,7 @@ short AstronSunrise(short *ndirec, double *dy, double *lr, double *lt, double *t
 }
 
 ////////////////////PrintMultiColTable//////////////////////////////////
-short PrintMultiColTable(char filzman[], short ExtTemp[], bool sefira, bool nusachSefard)
+short PrintMultiColTable(char filzman[], short ExtTemp[], bool sefira, bool nusachSefard, bool ShowMoladim)
 //////////////////////////////////////////////////////////////
 //loads zemanim info into zemanim buffer then calculates
 //and prints zemanim to output stream
@@ -16529,7 +16840,7 @@ short PrintMultiColTable(char filzman[], short ExtTemp[], bool sefira, bool nusa
 		return -1;
 	}
 
-	if ( WriteTables(TitleZman, numsort, numzman, sefira, nusachSefard,
+	if ( WriteTables(TitleZman, numsort, numzman, sefira, nusachSefard, ShowMoladim,
 		             &lg, &lt, &avehgtzman,
 					 MinTemp, AvgTemp, MaxTemp, ExtTemp ) )
 	{
@@ -21813,8 +22124,8 @@ char *hebrew_number(int n)
 
     ones = hebrew_number(o);
 
-    sprintf(buf, "%s%s%s%s", tens, " ", load("HE_AND"), ones);
-    return strdup(buf);
+    sprintf(buf, "%s%s%s", tens, load("HE_AND"), ones);
+   return strdup(buf);
 }
 
 
@@ -22124,6 +22435,14 @@ void sanitize_utf8(char *s)
     *w = '\0';
 }
 
+////////////////convert string to lower case//////////
+void to_lowercase(char *str) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        str[i] = tolower((unsigned char)str[i]);
+    }
+}
+
+
 /////////////////Molad subroutine from SoidHaibure/////////////////
 /*'---------------------------------------------------------------------------------------
 ' Procedure : Molad
@@ -22150,8 +22469,8 @@ void Molad(
     int hebyr,
     int hebmonth,
     short *daynum,
-    char *moladtim,
-    char *timemolad,
+    char moladtim[],
+    char timemolad[],
     int *leapyear,
     double difhr
 )
@@ -22163,6 +22482,7 @@ void Molad(
     long numHours;
     double numchelek;
     int nummin, numsec;
+	bool verbose = false;
 
     /* ---------------------------------------------------------
        Calculate number of complete 19-year cycles
@@ -22240,13 +22560,50 @@ void Molad(
     numsec = (int)(numchelek * (10.0 / 3.0));
 
     /* build moladtim string */
-    sprintf(
-        moladtim,
-        "%02ld:%02d and %ld chalokim",
-        numHours,
-        nummin,
-        (long)numchelek
-    );
+
+
+	if (optionheb)
+	{
+		if (verbose)
+		{
+			/* Hebrew verbose:
+			   <chalokim> ????? ? <minutes> ???? ? <hours> ????
+			*/
+			sprintf(moladtim,
+					"%ld %s %s %d %s %s %ld %s",
+					(long)numchelek, &heb11[7][0],   /* ????? */
+					&heb11[6][0], nummin, &heb11[5][0],  /* ? ???? */
+					&heb11[6][0], numHours, &heb11[4][0] /* ? ???? */
+			);
+		}
+		else
+		{
+			/* Hebrew short:
+			   HH:MM ? <chalokim> ?????
+			*/
+			sprintf(moladtim,
+					"%02ld:%02d %s %ld %s",
+					numHours, nummin,
+					&heb11[6][0],        /* ? */
+					(long)numchelek,
+					&heb11[7][0]         /* ????? */
+			);
+		}
+	}
+	else
+	{
+		/* Your original English version */
+		if (verbose)
+		{
+			sprintf(moladtim,"%02ld hours %02d minutes and %ld chalokim",
+					numHours, nummin, (long)numchelek);
+		}
+		else
+		{
+			sprintf(moladtim,"%02ld:%02d and %ld chalokim",
+					numHours, nummin, (long)numchelek);
+		}
+	}
 
     /* build timemolad string */
     sprintf(
@@ -22297,6 +22654,757 @@ char *WeekDay(short daynum)
 	}
 }
 
+////////////////////Gemini created print button conversion to nice table format///////////
+//101926
+///////////////////////////parsing engine////////////////////////////////////
+char *load_cal_string(const char *key)
+{
+    char filename[255];
+    /* Adapts to your established CGI directory configuration layout safely */
+	if (optionheb)
+	{
+		sprintf(filename, "%scalendar_strings_he.txt", drivjk);
+	}
+	else
+	{
+		sprintf(filename, "%scalendar_strings_en.txt", drivjk);
+	}
+
+
+    static char line[512]; /* Generous buffer size for deep nested HTML strings */
+    FILE *fp = fopen(filename, "r");
+    if (!fp) return "";
+
+    while (fgets(line, sizeof(line), fp)) {
+        /* Filter comment boundaries or blank line feeds instantly */
+        if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') continue;
+
+        char *eq = strchr(line, '=');
+        if (!eq) continue;
+        
+        *eq = '\0';
+        if (strcmp(line, key) == 0) {
+            char *val = strdup(eq + 1);   /* Duplicates memory securely into memory heap heap */
+            val[strcspn(val, "\r\n")] = '\0'; /* Strip away line breaks accurately */
+            fclose(fp);
+            return val;
+        }
+    }
+    fclose(fp);
+    return "";
+}
+
+
+//ChatGPT version along with other helper routine
+/* Add beside the existing load_cal_string declaration/definition.
+ * Replace the old print_calendar_footer_with_script function with this one.
+ * load_cal_string must return a NUL-terminated UTF-8 string (or NULL).
+ */
+
+static void calendar_html_text(const char *s) {
+    const unsigned char *p = (const unsigned char *)(s ? s : "");
+    for (; *p; ++p) {
+        switch (*p) {
+        case '&': fputs("&amp;", stdout); break;
+        case '<': fputs("&lt;", stdout); break;
+        case '>': fputs("&gt;", stdout); break;
+        case '"': fputs("&quot;", stdout); break;
+        case '\'': fputs("&#39;", stdout); break;
+        default: putchar(*p);
+        }
+    }
+}
+
+static void calendar_js_string(const char *s) {
+    const unsigned char *p = (const unsigned char *)(s ? s : "");
+    putchar('"');
+    for (; *p; ++p) {
+        /* Keep UTF-8 bytes unchanged, including Hebrew. */
+        switch (*p) {
+        case '"': fputs("\\\"", stdout); break;
+        case '\\': fputs("\\\\", stdout); break;
+        case '<': fputs("\\u003c", stdout); break;
+        case '>': fputs("\\u003e", stdout); break;
+        case '&': fputs("\\u0026", stdout); break;
+        default:
+            if (*p < 0x20) printf("\\u%04x", (unsigned int)*p);
+            else putchar(*p);
+        }
+    }
+    putchar('"');
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+//ChatGPT version 10/20/26
+void print_calendar_footer_with_script(short typezman) {
+    fputs("<!-- Action Buttons Layout Wrapper -->\n", stdout);
+    fputs("<div style=\"display:flex; gap:15px; align-items:center; justify-content:center; margin:30px 0;\" class=\"no-print\">\n", stdout);
+    fputs("  <input type=\"button\" style=\"background-color:#f4f1ea; color:#563300; border:1px solid #c2b49a; padding:10px 20px; cursor:pointer; font-weight:bold; font-size:11pt; border-radius:4px;\" value=\"", stdout);
+    calendar_html_text(load_cal_string("BTN_PRINT_ORIGINAL"));
+    fputs("\" onClick=\"window.print()\"/>\n", stdout);
+    fputs("  <input type=\"button\" style=\"background-color:#563300; color:#fff; border:1px solid #3d2400; padding:10px 24px; cursor:pointer; font-weight:bold; font-size:11pt; border-radius:4px; box-shadow:0 4px 6px rgba(0,0,0,0.1);\" value=\"", stdout);
+    calendar_html_text(load_cal_string("BTN_GENERATE_LUACH"));
+    fputs("\" onClick=\"generateBikureiYosefFormat()\"/>\n", stdout);
+    fputs("</div>\n", stdout);
+    fputs("<script type=\"text/javascript\">\n(function () {\nvar cal = {", stdout);
+    fputs("\"BTN_PRINT_ORIGINAL\":", stdout);
+    calendar_js_string(load_cal_string("BTN_PRINT_ORIGINAL"));
+    fputs(",\"BTN_GENERATE_LUACH\":", stdout);
+    calendar_js_string(load_cal_string("BTN_GENERATE_LUACH"));
+    fputs(",\"M_1\":", stdout);
+    calendar_js_string(load_cal_string("M_1"));
+    fputs(",\"M_2\":", stdout);
+    calendar_js_string(load_cal_string("M_2"));
+    fputs(",\"M_3\":", stdout);
+    calendar_js_string(load_cal_string("M_3"));
+    fputs(",\"M_4\":", stdout);
+    calendar_js_string(load_cal_string("M_4"));
+    fputs(",\"M_5\":", stdout);
+    calendar_js_string(load_cal_string("M_5"));
+    fputs(",\"M_6\":", stdout);
+    calendar_js_string(load_cal_string("M_6"));
+    fputs(",\"M_7\":", stdout);
+    calendar_js_string(load_cal_string("M_7"));
+    fputs(",\"M_8\":", stdout);
+    calendar_js_string(load_cal_string("M_8"));
+    fputs(",\"M_9\":", stdout);
+    calendar_js_string(load_cal_string("M_9"));
+    fputs(",\"M_10\":", stdout);
+    calendar_js_string(load_cal_string("M_10"));
+    fputs(",\"M_11\":", stdout);
+    calendar_js_string(load_cal_string("M_11"));
+    fputs(",\"M_12\":", stdout);
+    calendar_js_string(load_cal_string("M_12"));
+    fputs(",\"M_13\":", stdout);
+    calendar_js_string(load_cal_string("M_13"));
+    fputs(",\"TXT_PAGE_TITLE\":", stdout);
+    calendar_js_string(load_cal_string("TXT_PAGE_TITLE"));
+	fputs(",\"TXT_DIRECTION\":", stdout);
+	calendar_js_string(load_cal_string("TXT_DIRECTION"));
+	fputs(",\"TXT_POPUP_WARNING\":", stdout);
+	calendar_js_string(load_cal_string("TXT_POPUP_WARNING"));
+    fputs(",\"TXT_TITLE\":", stdout);
+    calendar_js_string(load_cal_string("TXT_TITLE"));
+    fputs(",\"TXT_SUBTITLE\":", stdout);
+    calendar_js_string(load_cal_string("TXT_SUBTITLE"));
+    fputs(",\"TXT_DAY\":", stdout);
+    calendar_js_string(load_cal_string("TXT_DAY"));
+    fputs(",\"TXT_WEEKDAY\":", stdout);
+    calendar_js_string(load_cal_string("TXT_WEEKDAY"));
+    fputs(",\"TXT_CIVIL\":", stdout);
+    calendar_js_string(load_cal_string("TXT_CIVIL"));
+    fputs(",\"TXT_VIS_SUN\":", stdout);
+    calendar_js_string(load_cal_string("TXT_VIS_SUN"));
+    fputs(",\"TXT_SOF_ZMANIM\":", stdout);
+    calendar_js_string(load_cal_string("TXT_SOF_ZMANIM"));
+    fputs(",\"TXT_MINCHA_CHATZOT\":", stdout);
+    calendar_js_string(load_cal_string("TXT_MINCHA_CHATZOT"));
+    fputs(",\"TXT_CANDLES_SUNSET\":", stdout);
+    calendar_js_string(load_cal_string("TXT_CANDLES_SUNSET"));
+    fputs(",\"TXT_TZEIT_STARS\":", stdout);
+    calendar_js_string(load_cal_string("TXT_TZEIT_STARS"));
+    fputs(",\"TXT_VIS_SUNRISE\":", stdout);
+    calendar_js_string(load_cal_string("TXT_VIS_SUNRISE"));
+    fputs(",\"TXT_VIS_SUNSET\":", stdout);
+    calendar_js_string(load_cal_string("TXT_VIS_SUNSET"));
+    fputs(",\"TXT_ALOT_HASHACHAR\":", stdout);
+    calendar_js_string(load_cal_string("TXT_ALOT_HASHACHAR"));
+    fputs(",\"TXT_KRIAT_SHMA_GRA\":", stdout);
+    calendar_js_string(load_cal_string("TXT_KRIAT_SHMA_GRA"));
+    fputs(",\"TXT_TEFILAH_GRA\":", stdout);
+    calendar_js_string(load_cal_string("TXT_TEFILAH_GRA"));
+    fputs(",\"TXT_CHATZOT_HAYOM\":", stdout);
+    calendar_js_string(load_cal_string("TXT_CHATZOT_HAYOM"));
+    fputs(",\"TXT_MINCHA_GEDOLAH\":", stdout);
+    calendar_js_string(load_cal_string("TXT_MINCHA_GEDOLAH"));
+    fputs(",\"TXT_MINCHA_KTANAH\":", stdout);
+    calendar_js_string(load_cal_string("TXT_MINCHA_KTANAH"));
+    fputs(",\"TXT_CANDLES_40\":", stdout);
+    calendar_js_string(load_cal_string("TXT_CANDLES_40"));
+    fputs(",\"TXT_CANDLES_20\":", stdout);
+    calendar_js_string(load_cal_string("TXT_CANDLES_20"));
+    fputs(",\"TXT_SUNSET_MISHOR\":", stdout);
+    calendar_js_string(load_cal_string("TXT_SUNSET_MISHOR"));
+    fputs(",\"TXT_TZEIT_A\":", stdout);
+    calendar_js_string(load_cal_string("TXT_TZEIT_A"));
+    fputs(",\"TXT_TZEIT_SHABBAT\":", stdout);
+    calendar_js_string(load_cal_string("TXT_TZEIT_SHABBAT"));
+    fputs(",\"TXT_TZEIT_RT\":", stdout);
+    calendar_js_string(load_cal_string("TXT_TZEIT_RT"));
+    fputs(",\"TXT_SHABBAT\":", stdout);
+    calendar_js_string(load_cal_string("TXT_SHABBAT"));
+    fputs(",\"TXT_ROSH_HASHANAH\":", stdout);
+    calendar_js_string(load_cal_string("TXT_ROSH_HASHANAH"));
+    fputs(",\"TXT_YOM_KIPPUR\":", stdout);
+    calendar_js_string(load_cal_string("TXT_YOM_KIPPUR"));
+
+	/////////////added Hebrew word for "month"/////////////////
+    fputs(",\"TXT_MONTH\":", stdout);
+    calendar_js_string(load_cal_string("TXT_MONTH"));
+	/////////////////add AST SUNSET//////////////////////
+    fputs(",\"TXT_SUNSET_ASTRO\":", stdout);
+    calendar_js_string(load_cal_string("TXT_SUNSET_ASTRO"));
+	//////////////////add PLAG//////////////////////
+    fputs(",\"TXT_MINCHA_PLAG\":", stdout);
+    calendar_js_string(load_cal_string("TXT_MINCHA_PLAG"));
+	////////////////////////add solely MINCHA category/////////////////
+    fputs(",\"TXT_MINCHAS\":", stdout);
+    calendar_js_string(load_cal_string("TXT_MINCHAS"));
+	///////////////////add MA categories//////////////////////////////////
+    fputs(",\"TXT_KRIAT_SHMA_MA\":", stdout);
+    calendar_js_string(load_cal_string("TXT_KRIAT_SHMA_MA"));
+    fputs(",\"TXT_TEFILAH_MA\":", stdout);
+    calendar_js_string(load_cal_string("TXT_TEFILAH_MA"));
+	////////////////////add CHOMETZ,MEVORCHIM,MOLAD,BOMER,//////////////////////////////
+    fputs(",\"TXT_CHOMETZ\":", stdout);
+    calendar_js_string(load_cal_string("TXT_CHOMETZ"));
+    fputs(",\"TXT_CHOMETZ\":", stdout);
+    calendar_js_string(load_cal_string("TXT_CHOMETZ"));
+    fputs(",\"TXT_MOLAD\":", stdout);
+    calendar_js_string(load_cal_string("TXT_MOLAD"));
+    fputs(",\"TXT_BOMER\":", stdout);
+    calendar_js_string(load_cal_string("TXT_BOMER"));
+    fputs(",\"TXT_NUSACH_MALEH\":", stdout);
+    calendar_js_string(load_cal_string("TXT_NUSACH_MALEH"));
+    fputs(",\"TXT_LUACH_SEFIRAS_HAOMER\":", stdout);
+    calendar_js_string(load_cal_string("TXT_LUACH_SEFIRAS_HAOMER"));
+    fputs(",\"TXT_HEBREW_DATE\":", stdout);
+    calendar_js_string(load_cal_string("TXT_HEBREW_DATE"));
+    fputs(",\"TXT_SEFIRAH\":", stdout);
+    calendar_js_string(load_cal_string("TXT_SEFIRAH"));
+    fputs(",\"TXT_MEVORCHIM\":", stdout);
+    calendar_js_string(load_cal_string("TXT_MEVORCHIM"));
+	////////////////////////////////////////////////////////////////////
+
+    fputs("};\n", stdout);
+    fputs("function escapeHtml(value) {\n", stdout);
+    fputs("    return String(value == null ? '' : value).replace(/[&<>\"']/g, function (ch) {\n", stdout);
+    //fputs("        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;'}[ch];\n", stdout);
+	/////////////////////CoPilot fix//////////////////////////////////////
+	fputs("        return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[ch];\n", stdout);
+	///////////////////////////////////////////////////////////////////////////
+    fputs("    });\n", stdout);
+    fputs("}\n", stdout);
+	////////////////////Copilot fix////////////////////////////
+	fputs("function extractDayKey(text) {\n", stdout);
+	fputs("    text = String(text || '').trim();\n", stdout);
+	fputs("    var m = text.match(/^([0-9]+|[\\u0590-\\u05FF\\u05F0-\\u05F4]+)/);\n", stdout);
+	fputs("    return m ? m[1] : text;\n", stdout);
+	fputs("}\n", stdout);
+
+	fputs("function containsMonth(text, month) {\n", stdout);
+	fputs("    return String(text || '').toLowerCase().indexOf(String(month || '').toLowerCase()) !== -1;\n", stdout);
+	fputs("}\n", stdout);
+	///////////////////////////////////////////////////////////////////
+
+    fputs("window.generateBikureiYosefFormat = function () {\n", stdout);
+    fputs("    var monthsList = [cal.M_1,cal.M_2,cal.M_3,cal.M_4,cal.M_5,cal.M_6,cal.M_7,cal.M_8,cal.M_9,cal.M_10,cal.M_11,cal.M_12,cal.M_13];\n", stdout);
+    fputs("    var tables = document.getElementsByTagName('table');\n", stdout);
+    fputs("    var sunriseTable = tables[4];\n", stdout);
+    fputs("    var sunsetTable = tables[8];\n", stdout);
+    fputs("    var sunriseData = {};\n", stdout);
+    fputs("    var sunsetData = {};\n", stdout);
+    fputs("    \n", stdout);
+    fputs("    if(sunriseTable) {\n", stdout);
+    fputs("        var rows = sunriseTable.rows;\n", stdout);
+    fputs("        for(var i = 0; i < rows.length; i++) {\n", stdout);
+    fputs("            var cells = rows[i].cells;\n", stdout);
+    fputs("            if(cells && cells.length >= 15) {\n", stdout);
+    //fputs("                var dayText = cells[0].textContent.replace(/[^\\u0590-\\u05FF]/g, '').trim();\n", stdout);
+	///////////////////////////////////CoPilot replacement//////////////////////////////////////
+	fputs("                var dayText = cells[0].textContent.trim();\n", stdout);
+	fputs("                var dayMatch = dayText.match(/^([0-9]+|[\\u0590-\\u05FF\\u05F0-\\u05F4]+)/);\n", stdout);
+	fputs("                dayText = dayMatch ? dayMatch[1] : dayText;\n", stdout);
+	///////////////////////////////////////////////////////////////////////////
+    fputs("                if(dayText) {\n", stdout);
+    fputs("                    sunriseData[dayText] = [];\n", stdout);
+    fputs("                    for(var dst = 1; dst <= 13; dst++) {\n", stdout);
+    fputs("                        sunriseData[dayText][dst-1] = cells[dst].textContent.trim();\n", stdout);
+    fputs("                    }\n", stdout);
+    fputs("                }\n", stdout);
+    fputs("            }\n", stdout);
+    fputs("        }\n", stdout);
+    fputs("    }\n", stdout);
+    fputs("    \n", stdout);
+    fputs("    if(sunsetTable) {\n", stdout);
+    fputs("        var rows = sunsetTable.rows;\n", stdout);
+    fputs("        for(var i = 1; i < rows.length; i++) {\n", stdout);
+    fputs("            var cells = rows[i].cells;\n", stdout);
+    fputs("            if(cells && cells.length >= 15) {\n", stdout);
+    //fputs("                var dayText = cells[0].textContent.replace(/[^\\u0590-\\u05FF]/g, '').trim();\n", stdout);
+ 	///////////////////////////////////CoPilot replacement//////////////////////////////////////
+	fputs("                var dayText = cells[0].textContent.trim();\n", stdout);
+	fputs("                var dayMatch = dayText.match(/^([0-9]+|[\\u0590-\\u05FF\\u05F0-\\u05F4]+)/);\n", stdout);
+	fputs("                dayText = dayMatch ? dayMatch[1] : dayText;\n", stdout);
+	///////////////////////////////////////////////////////////////////////////
+    fputs("                if(dayText) {\n", stdout);
+    fputs("                    sunsetData[dayText] = [];\n", stdout);
+    fputs("                    for(var dst = 1; dst <= 13; dst++) {\n", stdout);
+    fputs("                        sunsetData[dayText][dst-1] = cells[dst].textContent.trim();\n", stdout);
+    fputs("                    }\n", stdout);
+    fputs("                }\n", stdout);
+    fputs("            }\n", stdout);
+    fputs("        }\n", stdout);
+    fputs("    }\n", stdout);
+    fputs("    \n", stdout);
+
+	////////////////////Copilot fix 102426//////////////////////////
+	fputs("var zmanimRows = [];\n", stdout);
+	/////////////////////Copilot additions 10/28/26 for SHO,SCH////////////////
+	fputs("var omerRows = [];\n", stdout);
+	fputs("var weekdayMap = [];\n", stdout);
+	fputs("var specialRows = [];\n", stdout);
+	////////////////////////////////////////////////////
+
+
+	// Month tables are tables 12-24
+	fputs("for (var t = 12; t <= 24; t++) {\n", stdout);
+
+    fputs("   var tbl = tables[t];\n", stdout);
+    fputs("   if (!tbl) continue;\n", stdout);
+
+    fputs("       var rows = tbl.rows;\n", stdout);
+
+    fputs("       for (var i = 1; i < rows.length; i++) {\n", stdout);
+
+    fputs("           var cells = rows[i].cells;\n", stdout);
+
+/////////////////Copilot fix 102926////new fix////////
+    fputs("          var rowText = rows[i].textContent.trim();\n", stdout);
+
+    fputs("          if (\n", stdout);
+    fputs("              rowText.indexOf(cal.TXT_CHOMETZ) !== -1 ||\n", stdout);
+    fputs("              rowText.indexOf(cal.TXT_MEVORCHIM) !== -1 ||\n", stdout);
+    fputs("              rowText.indexOf(cal.TXT_MOLAD) !== -1\n", stdout);
+    fputs("          )\n", stdout);
+    fputs("          {\n", stdout);
+    fputs("             specialRows.push({\n", stdout);
+
+    fputs("                 dayMonth :\n", stdout);
+    fputs("                      cells[0]\n", stdout);
+    fputs("                         ? cells[0].textContent.trim()\n", stdout);
+    fputs("                          : '',\n", stdout);
+
+    fputs("                  text :\n", stdout);
+    fputs("                     cells[cells.length - 1]\n", stdout);
+    fputs("                          ? cells[cells.length - 1].textContent.trim()\n", stdout);
+    fputs("                         : rowText\n", stdout);
+
+    fputs("              });\n", stdout);
+
+    fputs("              continue;\n", stdout);
+    fputs("          }\n", stdout);
+////////////////////////
+	//sefiras haomer modifcations///////////////////////////
+	fputs("           if (cells && cells.length === 3 &&\n", stdout);
+	fputs("           	cells[1].textContent.indexOf(cal.TXT_BOMER) !== -1)\n", stdout);
+	fputs("           {\n", stdout);
+	fputs("           	omerRows.push({\n", stdout);
+	fputs("           	    dayMonth: cells[0].textContent.trim(),\n", stdout);
+	fputs("           	    shortText: cells[1].textContent.trim(),\n", stdout);
+	fputs("           	    fullText: cells[2].textContent.trim()\n", stdout);
+	fputs("           	});\n", stdout);
+	
+	fputs("           	continue;\n", stdout);
+	fputs("           }\n", stdout);
+	////////////////////////////////////////////
+
+	////////////////Copilot fix 102526//////////////////////
+
+    //fputs("           if (!cells || cells.length < 20)\n", stdout);
+    //fputs("              continue;\n", stdout);
+	///////////////Copilot fix for any num of columns 102526////
+    fputs("           var rowData = [];\n", stdout);
+	
+	fputs("           if (!cells || !cells[0])\n", stdout);
+	fputs("              continue;\n", stdout);
+	
+	fputs("           var firstCell = cells[0].textContent.trim();\n", stdout);
+	
+	fputs("           if (firstCell.indexOf('-') === -1)\n", stdout);
+	fputs("              continue;\n", stdout);
+
+    fputs("           for (var c = 0; c < cells.length; c++) {\n", stdout);
+    fputs("              rowData.push(cells[c].textContent.trim());\n", stdout);
+    fputs("           }\n", stdout);
+
+    fputs("           zmanimRows.push(rowData);\n", stdout);
+    fputs("      }\n", stdout);
+	fputs("}\n", stdout);
+	///////////////////////////////////////////////////////
+
+
+    fputs("    var printWindow = window.open('', '_blank');\n", stdout);
+    //fputs("    if (!printWindow) { window.alert('Please allow popups to open the calendar.'); return; }\n", stdout);
+	/////////////////////////////Copilot replacement/////////////////////////////
+	fputs("    if (!printWindow) { window.alert(cal.TXT_POPUP_WARNING); return; }\n", stdout);
+	/////////////////////////////////////////////////////////////////////////////////////////////
+
+    fputs("    var html = '<!doctype html><html><head><meta charset=\"UTF-8\"><title>' + escapeHtml(cal.TXT_PAGE_TITLE) + '</title>';\n", stdout);
+    fputs("    html += '<style>';\n", stdout);
+    fputs("    html += '@media print { @page { size: landscape; margin: 8mm 10mm; } ';\n", stdout);
+    fputs("    html += 'body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } ';\n", stdout);
+    fputs("    html += '.page-break { page-break-after: always; break-after: page; } } ';\n", stdout);
+    //fputs("    html += 'body { font-family: \"Arial\", sans-serif; direction: rtl; background: #fff; color: #333; margin: 0; padding: 0; } ';\n", stdout);
+	///////////////////////////////////Copilot replacement/////////////////////////////////////
+	fputs("    html += 'body { font-family: \"Arial\", sans-serif; direction:' + cal.TXT_DIRECTION + '; background:#fff; color:#333; margin:0; padding:0; } ';\n", stdout);
+	///////////////////////////////////////////////////////////////////////////////////////////////
+
+    fputs("    html += '.month-container { width: 100%; max-width: 297mm; margin: 0 auto; box-sizing: border-box; } ';\n", stdout);
+    fputs("    html += '.calendar-header { text-align: center; border: 3px double #bfa276; padding: 10px; margin-bottom: 15px; background-color: #fdfbf7; } ';\n", stdout);
+    fputs("    html += '.calendar-header h1 { margin: 0; font-size: 22pt; color: #563300; } ';\n", stdout);
+    fputs("    html += '.calendar-header h3 { margin: 5px 0 0 0; font-size: 13pt; color: #bfa276; font-weight: normal; } ';\n", stdout);
+    fputs("    html += 'table.elegant-table { width: 100%; border-collapse: collapse; border: 2px solid #563300; } ';\n", stdout);
+    fputs("    html += 'table.elegant-table th { background-color: #563300 !important; color: #ffffff !important; font-size: 8.5pt; border: 1px solid #bfa276; padding: 6px 2px; text-align: center; } ';\n", stdout);
+    fputs("    html += 'table.elegant-table td { border: 1px solid #dfd3b6; padding: 5px 3px; font-size: 8pt; text-align: center; } ';\n", stdout);
+    fputs("    html += '.shabbat-row td { background-color: #fdfaf2 !important; font-weight: bold !important; border-top: 1.5px solid #563300 !important; border-bottom: 1.5px solid #563300 !important; } ';\n", stdout);
+    fputs("    html += '.day-cell { background-color: #f5ece1 !important; font-weight: bold !important; color: #563300 !important; font-size: 10pt !important; width: 35px; border-left: 2px solid #563300 !important; } ';\n", stdout);
+    fputs("    html += '.zeman-highlight { font-weight: bold; color: #563300; }';\n", stdout);
+    /////////////////////sefiras haomer modification////////////////
+    fputs("    html += '.omer-table td { font-size:11pt !important; } ';\n", stdout);
+    fputs("    html += '.omer-table th { font-size:12pt !important; } ';\n", stdout);
+    //////////////////////////////////////////////////////////
+    ///////////////sreifas chometz, Shabbos mevorchim modifcation/
+	/////////////////////new fix 10/29/26
+    fputs("    html += '.special-row td { ';\n", stdout);
+    fputs("    html += 'background:#fff5b8 !important; ';\n", stdout);
+    fputs("    html += 'font-weight:bold; ';\n", stdout);
+    fputs("    html += 'font-size:11pt !important; ';\n", stdout);
+    fputs("    html += 'color:#563300; ';\n", stdout);
+    fputs("    html += '} ';\n", stdout);
+    fputs("    html += '.molad-row td { ';\n", stdout);
+    fputs("    html += 'background:#fff5b8 !important; ';\n", stdout);
+    fputs("    html += 'font-weight:bold; ';\n", stdout);
+    fputs("    html += 'font-size:12pt !important; ';\n", stdout);
+    fputs("    html += 'padding-top:8px !important; ';\n", stdout);
+    fputs("    html += 'padding-bottom:8px !important; ';\n", stdout);
+    fputs("    html += 'text-align:center !important; ';\n", stdout);
+    fputs("    html += 'color:#563300; ';\n", stdout);
+    fputs("    html += '} ';\n", stdout);
+    ///////////////////////////////
+
+    fputs("    html += '</style></head><body>';\n", stdout);
+    fputs("    \n", stdout);
+    fputs("    for(var m = 0; m < monthsList.length; m++) {\n", stdout);
+    fputs("        var currentMonthName = monthsList[m];\n", stdout);
+	fputs("        var monthDisplayTitle = cal.TXT_MONTH + ': ' + currentMonthName;\n", stdout);
+    fputs("        var monthHasContent = false;\n", stdout);
+    fputs("        var monthHtml = '';\n", stdout);
+    fputs("        \n", stdout);
+    //fputs("        monthHtml += '<div class=\"month-container page-break\"><br>';\n", stdout);
+    fputs("        monthHtml += '<div class=\"month-container\" style=\"page-break-after:always;\"><br>';\n", stdout);
+    fputs("        monthHtml += '  <div class=\"calendar-header\">';\n", stdout);
+    //fputs("        monthHtml += '     <h1>' + escapeHtml(cal.TXT_TITLE) + '</h1>';\n", stdout);
+    //fputs("        monthHtml += '<h3>' + escapeHtml(cal.TXT_SUBTITLE.replace('%s', currentMonthName)) + '</h3>';\n", stdout);
+	
+	fputs("        var realTitle =\n", stdout);
+	fputs("        document.querySelector('h2')\n", stdout);
+	fputs("            ? document.querySelector('h2').textContent.trim()\n", stdout);
+	fputs("            : cal.TXT_TITLE;\n", stdout);
+	
+	fputs("        monthHtml +=\n", stdout);
+	fputs("        '<h1>' +\n", stdout);
+	fputs("        escapeHtml(realTitle) +\n", stdout);
+	fputs("        '</h1>';\n", stdout);
+	
+	fputs("        var realSubtitle = '';\n", stdout);
+	
+	fputs("        var h4 = document.querySelector('h4');\n", stdout);
+	fputs("        if (h4)\n", stdout);
+	fputs("           realSubtitle = h4.textContent.trim();\n", stdout);
+	
+	fputs("        monthHtml += '<h3>' +\n", stdout);
+	fputs("           escapeHtml(realSubtitle) +\n", stdout);
+	fputs("          '</h3>';\n", stdout);
+	
+	fputs("        monthHtml += '<div style=\"margin-top:10px;font-size:16pt;font-weight:bold;color:#563300;border-top:1px solid #cbb38a;padding-top:6px;\">' +\n", stdout);
+	fputs("          escapeHtml(monthDisplayTitle) +\n", stdout);
+	fputs("        '</div>';\n", stdout);
+
+
+    fputs("        monthHtml += '  </div>';\n", stdout);
+    fputs("        monthHtml += '  <table class=\"elegant-table\">';\n", stdout);
+    fputs("        monthHtml += '     <thead>';\n", stdout);
+
+	////////////////////////////////////////////TOP CATEGORIES/////////////////////////////////////////////////////
+    fputs("        monthHtml += '       <tr>';\n", stdout);
+	/////////////day,weekday,civil categories and not sub categories///////////////////////////
+    fputs("        monthHtml += '         <th rowspan=\"2\" style=\"width:30px;\">' + escapeHtml(cal.TXT_DAY) + '</th>';\n", stdout);
+    fputs("        monthHtml += '         <th rowspan=\"2\" style=\"width:45px;\">' + escapeHtml(cal.TXT_WEEKDAY) + '</th>';\n", stdout);
+    fputs("        monthHtml += '         <th rowspan=\"2\" style=\"width:65px;\">' + escapeHtml(cal.TXT_CIVIL) + '</th>';\n", stdout);
+	/////////////////visible zemanim top category////////////////////
+    fputs("        monthHtml += '         <th colspan=\"2\" style=\"background-color:#bfa276 !important; color:#000 !important;\">' + escapeHtml(cal.TXT_VIS_SUN) + '</th>';\n", stdout);
+    ///////////////////sof zemanim top category//////////////////////////////////////////////
+	fputs("        monthHtml += '         <th colspan=\"3\">' + escapeHtml(cal.TXT_SOF_ZMANIM) + '</th>';\n", stdout);
+	////////////////////minchas and chatzot top category////////////////////////////////////
+	if (typezman < 2)
+	{
+		fputs("        monthHtml += '         <th colspan=\"3\">' + escapeHtml(cal.TXT_MINCHAS) + '</th>';\n", stdout);
+	}
+	else //instead of plag, display chatzot
+	{
+		fputs("        monthHtml += '         <th colspan=\"3\">' + escapeHtml(cal.TXT_MINCHA_CHATZOT) + '</th>';\n", stdout);
+	}
+	///////////////////////////////////cnadles and sunset top category////////////////////////////////////////////////////
+    fputs("        monthHtml += '         <th colspan=\"3\">' + escapeHtml(cal.TXT_CANDLES_SUNSET) + '</th>';\n", stdout);
+    ///////////////////////////////////////TZEIS top category////////////////////////////
+	fputs("        monthHtml += '         <th colspan=\"3\">' + escapeHtml(cal.TXT_TZEIT_STARS) + '</th>';\n", stdout);
+    fputs("        monthHtml += '       </tr><tr>';\n", stdout);
+	//////////////////////////////////////////////END OF TOP CATEGORY////////////////////////////////////////////
+
+	/////////////////////////////////////////////////SUB CATEGORIES//////////////////////////////////////////////
+	//////////////////////////visible times///////////////////////////////////////////////////
+    fputs("        monthHtml += '         <th style=\"background-color:#7c5226 !important;\">' + escapeHtml(cal.TXT_VIS_SUNRISE) + '</th>';\n", stdout);
+    fputs("        monthHtml += '         <th style=\"background-color:#7c5226 !important;\">' + escapeHtml(cal.TXT_VIS_SUNSET) + '</th>';\n", stdout);
+	///////////////////////////Alos, sof zemanim, chatzot and minchas//////////////////////////////////
+	///////////////////sub categories depend on the typezman////////////////////////////
+
+	if (typezman == 0) //MA 72min
+	{
+		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_ALOT_HASHACHAR) + '</th><th>' + escapeHtml(cal.TXT_KRIAT_SHMA_MA) + '</th><th>' + escapeHtml(cal.TXT_TEFILAH_MA) + '</th><th>' + escapeHtml(cal.TXT_MINCHA_GEDOLAH) + '</th><th>' + escapeHtml(cal.TXT_MINCHA_KTANAH) + '</th>';\n", stdout);
+		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_MINCHA_PLAG) + '</th><th>' + escapeHtml(cal.TXT_CANDLES_40) + '</th><th>' + escapeHtml(cal.TXT_CANDLES_20) + '</th><th>' + escapeHtml(cal.TXT_SUNSET_MISHOR) + '</th><th>' + escapeHtml(cal.TXT_TZEIT_A) + '</th>';\n", stdout);
+
+	}
+	else if (typezman == 1) //MA 90 min
+	{
+		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_ALOT_HASHACHAR) + '</th><th>' + escapeHtml(cal.TXT_KRIAT_SHMA_MA) + '</th><th>' + escapeHtml(cal.TXT_TEFILAH_MA) + '</th><th>' + escapeHtml(cal.TXT_MINCHA_GEDOLAH) + '</th><th>' + escapeHtml(cal.TXT_MINCHA_KTANAH) + '</th>';\n", stdout);
+		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_MINCHA_PLAG) + '</th><th>' + escapeHtml(cal.TXT_CANDLES_40) + '</th><th>' + escapeHtml(cal.TXT_CANDLES_20) + '</th><th>' + escapeHtml(cal.TXT_SUNSET_MISHOR) + '</th>';\n", stdout);
+	}
+	else if (typezman == 2) //Gaon mishor
+	{
+		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_ALOT_HASHACHAR) + '</th><th>' + escapeHtml(cal.TXT_KRIAT_SHMA_GRA) + '</th><th>' + escapeHtml(cal.TXT_TEFILAH_GRA) + '</th><th>' + escapeHtml(cal.TXT_CHATZOT_HAYOM) + '</th><th>' + escapeHtml(cal.TXT_MINCHA_GEDOLAH) + '</th>';\n", stdout);
+		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_MINCHA_KTANAH) + '</th><th>' +  escapeHtml(cal.TXT_CANDLES_40) + '</th><th>' + escapeHtml(cal.TXT_CANDLES_20) + '</th><th>' + escapeHtml(cal.TXT_SUNSET_MISHOR) + '</th><th>' + escapeHtml(cal.TXT_TZEIT_A) + '</th>';\n", stdout);
+	}
+	else if (typezman == 3) //Gaon astron
+	{
+		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_ALOT_HASHACHAR) + '</th><th>' + escapeHtml(cal.TXT_KRIAT_SHMA_GRA) + '</th><th>' + escapeHtml(cal.TXT_TEFILAH_GRA) + '</th><th>' + escapeHtml(cal.TXT_CHATZOT_HAYOM) + '</th><th>' + escapeHtml(cal.TXT_MINCHA_GEDOLAH) + '</th>';\n", stdout);
+		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_MINCHA_KTANAH) + '</th><th>'  + escapeHtml(cal.TXT_CANDLES_40) + '</th><th>' + escapeHtml(cal.TXT_CANDLES_20) + '</th><th>' + escapeHtml(cal.TXT_SUNSET_ASTRO) + '</th><th>' + escapeHtml(cal.TXT_TZEIT_A) + '</th>';\n", stdout);
+	}
+	///////////////////////////////////////////////////////////////////////////////////
+
+	fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_TZEIT_SHABBAT) + '</th><th>' + escapeHtml(cal.TXT_TZEIT_RT) + '</th>';\n", stdout);
+    fputs("        monthHtml += '       </tr>';\n", stdout);
+
+    fputs("        monthHtml += '     </thead><tbody>';\n", stdout);
+    fputs("        \n", stdout);
+    fputs("        for(var d = 0; d < zmanimRows.length; d++) {\n", stdout);
+    fputs("            var zRow = zmanimRows[d];\n", stdout);
+
+	fputs("			   var dayMonth = zRow[0].trim();\n", stdout);
+			   ///////////////sefiras haomer additon//////////////////////
+	fputs("            weekdayMap[dayMonth] = zRow[1];\n", stdout);
+			   //////////////////////////////////////////
+
+	fputs("			   var parts = dayMonth.split('-');\n", stdout);
+
+	fputs("			   var dayKey = parts[0].trim();\n", stdout);
+			   //////////////sefiras haomer modifcations/////////////////
+	fputs("	           var omerShort = '';\n", stdout);
+				
+	fputs("            for (var oi = 0; oi < omerRows.length; oi++) {\n", stdout);
+				
+	fputs("               if (omerRows[oi].dayMonth === dayMonth) {\n", stdout);
+				
+	fputs("	                  omerShort = omerRows[oi].shortText;\n", stdout);
+	fputs("                   break;\n", stdout);
+	fputs("	              }\n", stdout);
+	fputs("            }\n", stdout);
+			  ////////////////////////////////////////////////////
+	fputs("			   var rowMonthField = parts.length > 1 ? parts[1].trim() : '';\n", stdout);
+
+	fputs("            if(containsMonth(rowMonthField, currentMonthName)) {\n", stdout);
+	///////////////////////////////////////////////////////////////////
+	fputs("				   monthHasContent = true;\n", stdout);
+	
+	
+	fputs("                var isShabbat = (zRow[1].indexOf(cal.TXT_SHABBAT) !== -1 || zRow[1].indexOf(cal.TXT_ROSH_HASHANAH) !== -1 || zRow[1].indexOf(cal.TXT_YOM_KIPPUR) !== -1);\n", stdout);
+	//////////////////////////////////////////////////////////////////////
+
+	fputs("                var rowClass = isShabbat ? 'class=\\x22shabbat-row\\x22' : '';\n", stdout);
+    fputs("                var visSunrise = (sunriseData[dayKey] && sunriseData[dayKey][m]) ? sunriseData[dayKey][m] : '---';\n", stdout);
+    fputs("                var visSunset = (sunsetData[dayKey] && sunsetData[dayKey][m]) ? sunsetData[dayKey][m] : '---';\n", stdout);
+    fputs("                \n", stdout);
+    fputs("                monthHtml += '       <tr ' + rowClass + '>';\n", stdout);
+    fputs("                monthHtml += '         <td class=\\x22day-cell\\x22>' + escapeHtml(dayKey) + '</td>';\n", stdout);
+ 	////////////////////sefiras haomer modifications////////////////////////////////
+   //fputs("                monthHtml += '         <td>' + escapeHtml(zRow[1]) + '</td>';\n", stdout);
+	fputs("                	monthHtml += '<td>';\n", stdout);
+		
+	fputs("                	monthHtml += escapeHtml(zRow[1]);\n", stdout);
+		
+	fputs("                	if (omerShort) {\n", stdout);
+		
+	fputs("                	    monthHtml +=\n", stdout);
+	fputs("                	    '<div style=\"font-size:7pt;color:#563300;margin-top:2px;\">' +\n", stdout);
+	fputs("                	    escapeHtml(omerShort) +\n", stdout);
+	fputs("                	    '</div>';\n", stdout);
+	fputs("                	}\n", stdout);
+		
+	fputs("                	monthHtml += '</td>';\n", stdout);
+
+		/////////////////////////////////////////////////////////////////////////////
+    fputs("                monthHtml += '         <td style=\\x22font-size:7.5pt;\\x22>' + escapeHtml(zRow[2]) + '</td>';\n", stdout);
+    fputs("                monthHtml += '         <td class=\\x22zeman-highlight\\x22 style=\\x22background-color:#fffdf2 !important;\\x22>' + escapeHtml(visSunrise) + '</td>';\n", stdout);
+    fputs("                monthHtml += '         <td class=\\x22zeman-highlight\\x22 style=\\x22background-color:#fffdf2 !important;\\x22>' + escapeHtml(visSunset) + '</td>';\n", stdout);
+
+    //////Copilot changes 10/25/26 //////////////////
+	//fputs("                for(var x = 3; x <= 14; x++) {\n", stdout);
+    //fputs("                    var cellStyle = (x === 5 || x === 7) ? 'class=\\x22zeman-highlight\\x22' : '';\n", stdout);
+    //fputs("                    monthHtml += '         <td ' + cellStyle + '>' + escapeHtml(zRow[x] || '---') + '</td>';\n", stdout);
+    //fputs("                }\n", stdout);
+
+	////////////every template will need its own displayCols/////////////
+	fputs("   var displayCols = [\n", stdout);
+
+	if (typezman == 0) //17 column MA 72 min
+	{
+		fputs(" 	    zRow[3],\n", stdout);   // Alos
+		fputs(" 	    zRow[6],\n", stdout);   // Sof Zman KS
+		fputs("		    zRow[7],\n", stdout);   // Sof Zman Tefilah
+		fputs("		    zRow[8],\n", stdout);   // Chatzos
+		fputs("		    zRow[9],\n", stdout);   // Mincha Gedola
+		fputs("		    zRow[10],\n", stdout);  // Mincha Ketana
+		fputs("		    zRow[11],\n", stdout);  // Candel lighting 40 min
+		fputs("		    zRow[13],\n", stdout);  // Candel lighting 20 min
+		fputs("		    zRow[14],\n", stdout);  // sunset
+		fputs("		    zRow[15],\n", stdout);  // 1st Tzeis
+		fputs("		    zRow[16],\n", stdout);  // Tzeis Shabbos
+		fputs("		    zRow[17]\n", stdout);   // Rebyanu Tam
+	}
+	else if (typezman == 1) //16 column MA 90 min
+	{
+		fputs(" 	    zRow[3],\n", stdout);   // Alos
+		fputs(" 	    zRow[6],\n", stdout);   // Sof Zman KS
+		fputs("		    zRow[7],\n", stdout);   // Sof Zman Tefilah
+		fputs("		    zRow[8],\n", stdout);   // Chatzos
+		fputs("		    zRow[9],\n", stdout);   // Mincha Gedola
+		fputs("		    zRow[10],\n", stdout);  // Mincha Ketana
+		fputs("		    zRow[11],\n", stdout);  // Candel lighting 40 min
+		fputs("		    zRow[13],\n", stdout);  // Candel lighting 20 min
+		fputs("		    zRow[14],\n", stdout);  // sunset
+		fputs("		    zRow[15],\n", stdout);  // 1st Tzeis
+		fputs("		    zRow[16],\n", stdout);  // Tzeis Shabbos
+	}
+	else if (typezman == 2 || typezman == 3) //18 columns Gro mishor or astro
+	{
+		fputs(" 	    zRow[3],\n", stdout);   // Alos
+		fputs(" 	    zRow[6],\n", stdout);   // Sof Zman KS
+		fputs("		    zRow[7],\n", stdout);   // Sof Zman Tefilah
+		fputs("		    zRow[8],\n", stdout);   // Chatzos
+		fputs("		    zRow[9],\n", stdout);   // Mincha Gedola
+		fputs("		    zRow[10],\n", stdout);  // Mincha Ketana
+		fputs("		    zRow[12],\n", stdout);  // Candel lighting 40 min
+		fputs("		    zRow[14],\n", stdout);  // Candel lighting 20 min
+		fputs("		    zRow[15],\n", stdout);  // sunset
+		fputs("		    zRow[16],\n", stdout);  // 1st Tzeis
+		fputs("		    zRow[17],\n", stdout);  // Tzeis Shabbos
+		fputs("		    zRow[18]\n", stdout);   // Rebyanu Tam
+	}
+
+	fputs("		];\n", stdout);
+		
+	fputs("		for(var x = 0; x < displayCols.length; x++) {\n", stdout);
+		
+	fputs(" 	    monthHtml +=\n", stdout);
+	fputs(" 	        '<td>' +\n", stdout);
+	fputs(" 	        escapeHtml(displayCols[x] || \"---\") +\n", stdout);
+	fputs("		        '</td>';\n", stdout);
+	fputs("		}\n", stdout);
+
+	////////////////////////////////////////
+    fputs("                monthHtml += '       </tr>';\n", stdout);
+
+	//////////////////sreifas, Shabbos Mevorchim modifications//////////
+	fputs("     for (var si = 0; si < specialRows.length; si++) {\n", stdout);
+	
+	fputs("         if (specialRows[si].dayMonth === dayMonth) {\n", stdout);
+    ////////////////////////////new fix 102926//////////////////	
+	fputs("                 var rowType = 'special-row';\n", stdout);
+
+	fputs("                 monthHtml +=\n", stdout);
+	fputs("                 '<tr class=\"' + rowType + '\">' +\n", stdout);
+	////////////////////////////////////////////////////////
+	fputs("                 '<td class=\"day-cell\">' +\n", stdout);
+	fputs("                 escapeHtml(dayKey) +\n", stdout);
+	fputs("                 '</td>' +\n", stdout);
+	
+	fputs("                 '<td colspan=\"16\">' +\n", stdout);
+	fputs("                 escapeHtml(specialRows[si].text) +\n", stdout);
+	fputs("                 '</td>' +\n", stdout);
+	
+	fputs("                 '</tr>';\n", stdout);
+	fputs("         }\n", stdout);
+	fputs("     }\n", stdout);
+	////////////////////////////////////////////
+
+    fputs("    }\n", stdout);
+    fputs(" }\n", stdout);
+    fputs("        monthHtml += '</tbody></table></div>';\n", stdout);
+    fputs("        if (monthHasContent) html += monthHtml;\n", stdout);
+    fputs("    }\n", stdout);
+    //////////////////////////sefiros haomer modifcations///////////////////////////////
+	fputs("    if (omerRows.length > 0) {\n", stdout);
+
+	fputs("    	html += '<pr><br/></pr>';\n", stdout);
+
+	//fputs("        html += '<div class=\"month-container\" style=\"page-break-before:always; page-break-after:always;\">';\n", stdout);
+	fputs("        html += '<div class=\"month-container\" style=\"page-break-before:always;\">';\n", stdout);
+	
+	fputs("        html += '<div class=\"calendar-header\">';\n", stdout);
+	fputs("        html += '<h1>' + escapeHtml(cal.TXT_LUACH_SEFIRAS_HAOMER) + '</h1>';\n", stdout);
+	fputs("        html += '</div>';\n", stdout);
+	
+	fputs("        html += '<table class=\"elegant-table omer-table\">';\n", stdout);
+	
+	fputs("        html += '<thead><tr>';\n", stdout);
+	//fputs("        html += '<th>' + escapeHtml(cal.TXT_HEBREW_DATE) + '</th>';\n", stdout);
+	//fputs("        html += '<th>' + escapeHtml(cal.TXT_DAY) + '</th>';\n", stdout);
+	//fputs("        html += '<th>' + escapeHtml(cal.TXT_SEFIRAH) + '</th>';\n", stdout);
+	//fputs("        html += '<th>' + escapeHtml(cal.TXT_NUSACH_MALEH) + '</th>';\n", stdout);
+	fputs("        html += '<th>' + escapeHtml(cal.TXT_HEBREW_DATE) + '</th>';\n", stdout);
+	fputs("        html += '<th>' + escapeHtml(cal.TXT_WEEKDAY) + '</th>';\n", stdout);
+	fputs("        html += '<th>' + escapeHtml(cal.TXT_DAY) + '</th>';\n", stdout);
+	fputs("        html += '<th>' + escapeHtml(cal.TXT_NUSACH_MALEH) + '</th>';\n", stdout);
+	fputs("        html += '</tr></thead>';\n", stdout);
+	
+	fputs("        html += '<tbody>';\n", stdout);
+	
+	fputs("        for (var oi = 0; oi < omerRows.length; oi++) {\n", stdout);
+	
+	fputs("            html += '<tr>';\n", stdout);
+	
+	fputs("    	html += '<td>' +\n", stdout);
+	fputs("    	    escapeHtml(omerRows[oi].dayMonth) +\n", stdout);
+	fputs("    	    '</td>';\n", stdout);
+		
+	fputs("    	html += '<td>' +\n", stdout);
+	fputs("    	    escapeHtml(\n", stdout);
+	fputs("    	       weekdayMap[omerRows[oi].dayMonth] || ''\n", stdout);
+	fputs("    	    ) +\n", stdout);
+	fputs("    	    '</td>';\n", stdout);
+		
+	fputs("    	html += '<td>' +\n", stdout);
+	fputs("    	    escapeHtml(omerRows[oi].shortText) +\n", stdout);
+	fputs("    	    '</td>';\n", stdout);
+		
+	fputs("    	html += '<td>' +\n", stdout);
+	fputs("    	    escapeHtml(omerRows[oi].fullText) +\n", stdout);
+	fputs("    	    '</td>';\n", stdout);
+	
+	fputs("            html += '</tr>';\n", stdout);
+	fputs("        }\n", stdout);
+	
+	fputs("        html += '</tbody></table></div>';\n", stdout);
+	fputs("    }\n", stdout);
+    /////////////////////////////////////////////////////////
+    fputs("    html += '</body></html>';\n", stdout);
+    fputs("    printWindow.document.open();\n", stdout);
+    fputs("    printWindow.document.write(html);\n", stdout);
+    fputs("    printWindow.document.close();\n", stdout);
+    fputs("    printWindow.focus();\n", stdout);
+    fputs("};\n", stdout);
+    fputs("})();\n</script>\n", stdout);
+}
 ////////////////////////ARCHIVES////////////////////////////
 /////////////////////////////////////////////////////////////
 
