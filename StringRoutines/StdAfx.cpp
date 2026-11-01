@@ -456,9 +456,10 @@ char filroot[255] = "";
 char myfile[255] = "";
 
 /////////////////diagnostic error buffer///////////////////////////
-char Errorbuff[1500] = "";  //uncomment for diagnostics
+char Errorbuff[1500] = "";  //used for diagnostics
+char Errorbuff2[1500] = ""; //used for diagnostics
 void WriteErrorString(char *errorstr, int *Write_flag );
-bool diagnostics = true;
+bool diagnostics = false;
 bool diagnostics2 = false;
 bool diagnostics3 = false;
 bool diagnostics4 = false;
@@ -6962,7 +6963,7 @@ void ErrorHandler( short mode, short ier )
 				InternalError = true;
 				errornum = 28;
 				if (diagnostics) //diagnostics
-					sprintf(errorstr, "Can't open profile file: %s in routine netzski6",Errorbuff);
+					sprintf(errorstr, "Can't open profile file: %s in routine netzski6, diag. filename: %s",Errorbuff, Errorbuff2);
 				else
 					strcpy (errorstr, "Can't open profile file in routine netzski6" ); //<--comment out for diagnostics
 			}
@@ -7605,7 +7606,9 @@ short calnearsearch( char *bat, char *sun )
 				WriteErrorString(Errorbuff, &Write_flag);
 			}
 
-			// bat file name
+			/*///////////Copilot on 110126 replaced this is not the way to find the
+			//////////last 12 characters, since it is prone to bugs//////////////////////////
+			// bat profile file name
 			strcpy(buff, strarr[0]);
 
 			// remove quotes and backslashes
@@ -7624,12 +7627,35 @@ short calnearsearch( char *bat, char *sun )
 				memmove(buff, buff + (len - 12), 12);
 				buff[12] = '\0';
 			}
+			*///////////////////////////////////////////
+
+			//Copilots new suggestion: 110126 for finding the last 12 characters of the string = 12 character DOS filename
+			char *p = strrchr(strarr[0], '\\');
+
+			if (p)
+				p++;
+			else
+				p = strarr[0];
+
+			strncpy(buff, p, sizeof(buff) - 1);
+			buff[sizeof(buff) - 1] = '\0';
+
+			/* strip quotes */
+			Trim(buff);
+
+			if (buff[0] == '"')
+				memmove(buff, buff + 1, strlen(buff));
+
+			char *q = strchr(buff, '"');
+			if (q)
+				*q = '\0';
+			/////////////////////////////////////////////////////////////////////////
 
 			if (diagnostics)
 			{
 				Errorbuff[0] = 0;
 				sprintf(Errorbuff, "Netzskiy Errorbuff2 = %s", buff );
-				WriteErrorString(Errorbuff, &Write_flag);
+				WriteErrorString(Errorbuff2, &Write_flag);
 			}
 
 			///////////////////////////////////////////////////////////////////////
@@ -15005,14 +15031,14 @@ short WriteHtmlClosing(	short types, short zmanyes, short typezman)
 
 	fprintf(stdout,"%s\n", "<hr>");
 
-	if (!HebrewInterface )
+	if (!HebrewInterface)
 	{
-		if (!(types == 6 && zmanyes == 1 && typezman >=0 && typezman <= 3 && optionheb))
+		if (!(types == 6 && zmanyes == 1 && typezman >=0 && typezman <= 5))
 		{
 			fprintf(stdout,"%s\n", "<p align = left><input type=\"button\" value=\"Print This Page\" onClick=\"window.print()\"/></p>" );
 		}
 	}
-	else if (HebrewInterface && !(zmanyes == 1 && types == 6 && typezman >=0 && typezman <= 3)) //otherwise print out fancy button below
+	else if (HebrewInterface && !(zmanyes == 1 && types == 6 && typezman >=0 && typezman <= 5)) //otherwise print out fancy button below
 	{
 		fprintf(stdout,"%s%s%s\n", "<p align = right><input type=\"button\" value=\"", &heb8[15][0], "\" onClick=\"window.print()\"/></p>" );
 	}
@@ -15044,7 +15070,7 @@ short WriteHtmlClosing(	short types, short zmanyes, short typezman)
 	}
 
 	//for certain zemanim opinons, show button for fancy calendar 
-	if (types == 6 && zmanyes == 1 && typezman >=0 && typezman <= 3 && optionheb)
+	if (types == 6 && zmanyes == 1 && typezman >=0 && typezman <= 5 && optionheb)
 	{
 		print_calendar_footer_with_script(typezman);
 	}
@@ -22092,6 +22118,14 @@ char *load(const char *key)
         if (strcmp(line, key) == 0) {
             char *val = strdup(eq + 1);   // <-- NEW: allocate new memory
             val[strcspn(val, "\n")] = '\0';
+
+			/* trim trailing spaces/tabs */
+			size_t len = strlen(val);
+			while (len > 0 && isspace((unsigned char)val[len - 1]))
+			{
+				val[--len] = '\0';
+			}
+
             fclose(fp);
             return val;
         }
@@ -22124,7 +22158,8 @@ char *hebrew_number(int n)
 
     ones = hebrew_number(o);
 
-    sprintf(buf, "%s%s%s", tens, load("HE_AND"), ones);
+    sprintf(buf, "%s%s%s", tens, &heb7[6][0], ones); //load("HE_AND"), ones); HE_AND causing a whitespace issue on LINUX
+
    return strdup(buf);
 }
 
@@ -22235,6 +22270,7 @@ char *omer_output(int day, int optionheb, int fullcount, short mode)
 				en_days,
 				en_omer);
 		}
+
         return out;
     }
 
@@ -22273,7 +22309,7 @@ char *omer_output(int day, int optionheb, int fullcount, short mode)
 	{
 		strcpy(he_omer,   load("HE_OF_THE_OMER2"));
 	}
-    strcpy(he_and,    load("HE_AND"));   // "ε"
+    strcpy(he_and,    &heb7[6][0]); //load("HE_AND"));   // "ε"
 	strcpy(he_day,	  load("HE_DAY"));   // "ιεν"
 
     /* Case 1: Days 1–7 (no weeks yet) */
@@ -22874,6 +22910,10 @@ void print_calendar_footer_with_script(short typezman) {
     calendar_js_string(load_cal_string("TXT_SEFIRAH"));
     fputs(",\"TXT_MEVORCHIM\":", stdout);
     calendar_js_string(load_cal_string("TXT_MEVORCHIM"));
+    fputs(",\"TXT_KRIAT_SHMA\":", stdout);
+    calendar_js_string(load_cal_string("TXT_KRIAT_SHMA"));
+    fputs(",\"TXT_TEFILAH\":", stdout);
+    calendar_js_string(load_cal_string("TXT_TEFILAH"));
 	////////////////////////////////////////////////////////////////////
 
     fputs("};\n", stdout);
@@ -23137,13 +23177,17 @@ void print_calendar_footer_with_script(short typezman) {
     ///////////////////sof zemanim top category//////////////////////////////////////////////
 	fputs("        monthHtml += '         <th colspan=\"3\">' + escapeHtml(cal.TXT_SOF_ZMANIM) + '</th>';\n", stdout);
 	////////////////////minchas and chatzot top category////////////////////////////////////
-	if (typezman < 2)
+	if (typezman < 2 ) //MA 16.1deg, 19.75 deg
 	{
 		fputs("        monthHtml += '         <th colspan=\"3\">' + escapeHtml(cal.TXT_MINCHAS) + '</th>';\n", stdout);
 	}
-	else //instead of plag, display chatzot
+	else if (typezman >=2 && typezman <= 3) //Gor mishor, astro, some of them have plag, but also chatzot
 	{
 		fputs("        monthHtml += '         <th colspan=\"3\">' + escapeHtml(cal.TXT_MINCHA_CHATZOT) + '</th>';\n", stdout);
+	}
+	else if (typezman >=4 && typezman <= 5) //Gor mishor, astro, some of them have plag, but also chatzot
+	{
+		fputs("        monthHtml += '         <th colspan=\"4\">' + escapeHtml(cal.TXT_MINCHA_CHATZOT) + '</th>';\n", stdout);
 	}
 	///////////////////////////////////cnadles and sunset top category////////////////////////////////////////////////////
     fputs("        monthHtml += '         <th colspan=\"3\">' + escapeHtml(cal.TXT_CANDLES_SUNSET) + '</th>';\n", stdout);
@@ -23179,6 +23223,11 @@ void print_calendar_footer_with_script(short typezman) {
 	{
 		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_ALOT_HASHACHAR) + '</th><th>' + escapeHtml(cal.TXT_KRIAT_SHMA_GRA) + '</th><th>' + escapeHtml(cal.TXT_TEFILAH_GRA) + '</th><th>' + escapeHtml(cal.TXT_CHATZOT_HAYOM) + '</th><th>' + escapeHtml(cal.TXT_MINCHA_GEDOLAH) + '</th>';\n", stdout);
 		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_MINCHA_KTANAH) + '</th><th>'  + escapeHtml(cal.TXT_CANDLES_40) + '</th><th>' + escapeHtml(cal.TXT_CANDLES_20) + '</th><th>' + escapeHtml(cal.TXT_SUNSET_ASTRO) + '</th><th>' + escapeHtml(cal.TXT_TZEIT_A) + '</th>';\n", stdout);
+	}
+	else if (typezman == 4 || typezman == 5) //include Chatzos and Plag, Ben Ish Chai, Chabad
+	{
+		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_ALOT_HASHACHAR) + '</th><th>' + escapeHtml(cal.TXT_KRIAT_SHMA) + '</th><th>' + escapeHtml(cal.TXT_TEFILAH) + '</th><th>' + escapeHtml(cal.TXT_CHATZOT_HAYOM) + '</th><th>' + escapeHtml(cal.TXT_MINCHA_GEDOLAH) + '</th><th>' + escapeHtml(cal.TXT_MINCHA_KTANAH) + '</th>';\n", stdout);
+		fputs("        monthHtml += '         <th>' + escapeHtml(cal.TXT_MINCHA_PLAG) + '</th><th>' + escapeHtml(cal.TXT_CANDLES_40) + '</th><th>' + escapeHtml(cal.TXT_CANDLES_20) + '</th><th>' + escapeHtml(cal.TXT_SUNSET_MISHOR) + '</th><th>' + escapeHtml(cal.TXT_TZEIT_A) + '</th>';\n", stdout);
 	}
 	///////////////////////////////////////////////////////////////////////////////////
 
@@ -23293,6 +23342,22 @@ void print_calendar_footer_with_script(short typezman) {
 		fputs("		    zRow[8],\n", stdout);   // Chatzos
 		fputs("		    zRow[9],\n", stdout);   // Mincha Gedola
 		fputs("		    zRow[10],\n", stdout);  // Mincha Ketana
+		fputs("		    zRow[12],\n", stdout);  // Candel lighting 40 min
+		fputs("		    zRow[14],\n", stdout);  // Candel lighting 20 min
+		fputs("		    zRow[15],\n", stdout);  // sunset
+		fputs("		    zRow[16],\n", stdout);  // 1st Tzeis
+		fputs("		    zRow[17],\n", stdout);  // Tzeis Shabbos
+		fputs("		    zRow[18]\n", stdout);   // Rebyanu Tam
+	}
+	else if (typezman == 4 || typezman == 5) //19 columns BIH, Chabad
+	{
+		fputs(" 	    zRow[3],\n", stdout);   // Alos
+		fputs(" 	    zRow[6],\n", stdout);   // Sof Zman KS
+		fputs("		    zRow[7],\n", stdout);   // Sof Zman Tefilah
+		fputs("		    zRow[8],\n", stdout);   // Chatzos
+		fputs("		    zRow[9],\n", stdout);   // Mincha Gedola
+		fputs("		    zRow[10],\n", stdout);  // Mincha Ketana
+		fputs("		    zRow[11],\n", stdout);  // Plag Hamincha
 		fputs("		    zRow[12],\n", stdout);  // Candel lighting 40 min
 		fputs("		    zRow[14],\n", stdout);  // Candel lighting 20 min
 		fputs("		    zRow[15],\n", stdout);  // sunset
