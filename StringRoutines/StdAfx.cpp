@@ -7630,10 +7630,11 @@ short calnearsearch( char *bat, char *sun )
 			*///////////////////////////////////////////
 
 			//Copilots new suggestion: 110126 for finding the last 12 characters of the string = 12 character DOS filename
-			char *p = strrchr(strarr[0], '\\');
+			//i.e., search for the last "\", and extract the characters that lie beyond it.
+			char *p = strrchr(strarr[0], '\\');  //finds last occurrence of "\"
 
 			if (p)
-				p++;
+				p++; //move pointer one beyond th last "\"
 			else
 				p = strarr[0];
 
@@ -22158,7 +22159,7 @@ char *hebrew_number(int n)
 
     ones = hebrew_number(o);
 
-    sprintf(buf, "%s%s%s", tens, &heb7[6][0], ones); //load("HE_AND"), ones); HE_AND causing a whitespace issue on LINUX
+    sprintf(buf, "%s %s%s", tens, &heb7[6][0], ones); //load("HE_AND"), ones); HE_AND causing a whitespace issue on LINUX
 
    return strdup(buf);
 }
